@@ -29,17 +29,35 @@ int main(){
     s=Valid();s.weaponContext=false;s.menu=true;Gate(s,"vr-menu");
     s=Valid();s.weaponContext=false;s.enabled=false;Gate(s,"disabled");
 
-    // Diagnostic labels agree with the REAL, unchanged production geometric
-    // predicate for pistol, ordinary long guns and Seeker, including rotations.
+    // Diagnostic labels agree with the REAL production geometric predicate
+    // for pistol, ordinary long guns and Seeker, including the opt-in near zone.
     for(unsigned gun:{5799u,8297u,11387u,11389u,12444u})
+    for(bool nearZone:{false,true})
     for(int x=-65;x<=65;x+=5)for(int y=-65;y<=65;y+=5)for(int z=-65;z<=65;z+=5){
         s=Valid();s.vertices=gun;s.pistol=gun==5799;
+        s.closeLongGun=nearZone&&(gun==8297u||gun==11387u||gun==11389u);
         s.delta[0]=x*.01f;s.delta[1]=y*.01f;s.delta[2]=z*.01f;
-        s.acquire=TwoHandGripAllowed(s.delta,s.forward,true,true,false,s.pistol);
+        s.acquire=TwoHandGripAllowed(s.delta,s.forward,true,true,false,s.pistol,s.closeLongGun);
         const bool diagnosticAccept=!std::strcmp(supportprobe::Gate(s),"eligible-unlatched");
         assert(s.acquire==diagnosticAccept);
         if(!s.acquire)assert(std::strcmp(supportprobe::Gate(s),"geometry-unclassified"));
     }
+    // Physical Volk probe: a tracked, pressed grip 16.8 cm from the primary
+    // controller failed only the raw forward-cone gate (alignment -0.2038).
+    // The ordinary route stays unchanged; the scoped near zone accepts it.
+    s=Valid();s.vertices=8297;s.delta[0]=.1645f;s.delta[1]=0;
+    s.delta[2]=.0341f;s.acquire=TwoHandGripAllowed(s.delta,s.forward,true,true,false);
+    assert(!s.acquire);
+    s.closeLongGun=true;
+    s.acquire=TwoHandGripAllowed(s.delta,s.forward,true,true,false,false,true);
+    assert(s.acquire);
+    assert(!TwoHandGripAllowed(s.delta,s.forward,false,true,false,false,true));
+    assert(!TwoHandGripAllowed(s.delta,s.forward,true,false,false,false,true));
+    // The same direction well away from the hand stays outside the near zone.
+    const float distant[3]={.40f,0,.08f};
+    assert(!TwoHandGripAllowed(distant,s.forward,true,true,false,false,true));
+    // Seeker keeps its separate back/support routing.
+    assert(!TwoHandGripAllowed(s.delta,s.forward,true,true,false,false,false));
     s=Valid();s.delta[0]=std::numeric_limits<float>::quiet_NaN();s.acquire=false;Gate(s,"invalid-distance");
     // Observe exactly the production latch order: identity reset, acquire,
     // distance-independent hold, release. Observation cannot change the latch.
@@ -65,5 +83,5 @@ int main(){
     s=Valid();assert(disabled.Observe(false,s).event==Event::None);
     assert(disabled.Observe(true,s).event==Event::None); // No invented rising edge on opt-in.
     s.raw=false;assert(disabled.Observe(true,s).event==Event::None);
-    puts("support grip probe: PASS (98,415 production gate cases; bounded receipts; latch behavior unchanged)");
+    puts("support grip probe: PASS (production gate matrix, measured Volk attempt, bounded receipts)");
 }

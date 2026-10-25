@@ -2413,6 +2413,7 @@ struct NextReloadVisual {
 static NextReloadVisual g_nextVisual;
 static weaponreload::Witness g_nextWitness;
 static int g_reloadPalmGrip=0; // default-OFF; measured native wrist, not AIM-space mount
+static bool g_reloadCarryContinuityProbe=false; // bounded read-only carry draw receipts
 static int g_volkCarryPoseProbe=0; // default-OFF; bounded same-frame wrist/magazine witness
 static int g_shoulderPickupProbe=0; // default-OFF; bounded local-frame pickup receipts
 static int g_nextShoulderExtraLeftCm[2]{18,18}; // Valkyrie, Volk; Kasimov unchanged
@@ -7013,6 +7014,7 @@ bool g_handPositionValid[2] = { false, false };
 bool g_handActionActive[2] = { false, false };
 volatile LONG g_twoHandEnabled = 1, g_twoHandActive = 0;
 static bool g_supportGripProbe=false; // read-only XR acquisition receipts, default OFF
+static bool g_supportGripNearZone=false; // opt-in close grip for ordinary long guns
 static int g_valkyrieAuthoredGrip = 0; // isolated A/B: retain UE3's authored two-hand relation
 static int g_valkyrieSingleGrip = 0; // isolated A/B: right glove follows the same weapon delta as pistol
 static int g_volkAuthoredGrip = 0; // default OFF: retain native shotgun hand/weapon relationship
@@ -11514,12 +11516,14 @@ void SyncXRInput(XrTime displayTime) {
                               g_handPoseValid[AimHand()] && g_handPoseValid[OffHand()];
     const bool supportWeaponValid=Rd(g_twoHandEnabled) && feedGame && WeaponPresentationInHands() &&
                                   !Rd(g_weaponHolstered) && !Rd(g_gamePaused) && !Rd(g_vrUiMenu);
-    // Pistol support is a close side-by-side grip, not a fore-end grip. The authored
-    // pistol pair (5799 vertices) is keyed in support_grip.h; use the relaxed acquisition
-    // gate only for that known mesh and keep long-gun alignment unchanged.
+    // Pistol support is a close side-by-side grip, not a fore-end grip. The
+    // ordinary long-gun near zone is separately gated by its explicit INI flag.
     const bool pistolSupport = InterlockedCompareExchange(&g_gunVerts, 0, 0) == 5799;
+    const LONG supportGun=InterlockedCompareExchange(&g_gunVerts,0,0);
+    const bool closeLongGun=g_supportGripNearZone&&
+        (supportGun==8297||supportGun==11387||supportGun==11389);
     const bool supportAcquire=TwoHandGripAllowed(supportDelta,supportForward,supportGrip,
-                                                  supportTracked,false,pistolSupport);
+                                                  supportTracked,false,pistolSupport,closeLongGun);
     if(!supportWeaponValid) g_supportLatch.Reset();
     else g_supportLatch.Update(supportGrip,supportAcquire?0.f:1e9f,supportTracked,
                                (uint32_t)Rd(g_weaponObj),GetTickCount64());
@@ -11536,7 +11540,7 @@ void SyncXRInput(XrTime displayTime) {
         s.reload=OffHand()==0&&(g_nextOwnsGrip||g_centurionOwnsGrip);
         s.cylinder=OffHand()==0&&g_centurionReload&&g_centurionConfig.cylinderGestures&&
             centurionreload::Active(g_centurionState.phase);
-        s.pistol=pistolSupport;s.acquire=supportAcquire;s.active=supportActive;
+        s.pistol=pistolSupport;s.closeLongGun=closeLongGun;s.acquire=supportAcquire;s.active=supportActive;
         s.hands=(int)Rd(g_handsStatus);s.aimHand=AimHand();s.offHand=OffHand();
         memcpy(s.delta,supportDelta,sizeof(s.delta));memcpy(s.forward,supportForward,sizeof(s.forward));
         s.primary[0]=primaryPos.x;s.primary[1]=primaryPos.y;s.primary[2]=primaryPos.z;
@@ -21135,6 +21139,40 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
     const int nextRegs=t==D3DPT_TRIANGLELIST&&(!g_nextNativeMagazine||
         (!boneRegN&&!independentRegs&&nSeg==1&&segStart[0]==startIndex&&segPrims[0]==primCount))?
         PrepareNextReload(dev,baseVertex,minIndex,numVertices,startIndex,primCount,nextSaved,nextReg,nextReplay):0;
+    if(g_reloadCarryContinuityProbe && t==D3DPT_TRIANGLELIST &&
+       (numVertices==8297 || numVertices==11387) && startIndex==0 &&
+       TryAcquireSRWLockShared(&g_nextVisualLock)){
+        const NextReloadVisual carryVisual=g_nextVisual;
+        const weaponcarry::Wrist carryWrist=g_nextWrist;
+        ReleaseSRWLockShared(&g_nextVisualLock);
+        if(carryVisual.valid && carryVisual.phase==weaponreload::Phase::Carrying &&
+           carryVisual.weapon==(uint32_t)Rd(g_weaponObj)){
+            const ULONGLONG now=GetTickCount64();
+            const bool wristCurrent=carryWrist.Current(carryVisual.kind,carryVisual.pawn,
+                carryVisual.weapon,carryVisual.since,now);
+            // One receipt per state transition, capped across the session. A
+            // continuous ready state while the image blinks falsifies the wrist
+            // eligibility hypothesis and directs the next probe to GPU content.
+            const unsigned state=(nextRegs?1u:0u)|(nextReplay.count?2u:0u)|
+                (wristCurrent?4u:0u)|(g_nextWristStaged.valid?8u:0u);
+            static unsigned lastState[3]={~0u,~0u,~0u};
+            static ULONGLONG lastTransaction[3]{};
+            static unsigned receipts[3]{};
+            const unsigned index=weaponreload::Index(carryVisual.kind);
+            if(index<3 && receipts[index]<48 &&
+               (state!=lastState[index] || carryVisual.since!=lastTransaction[index])){
+                lastState[index]=state;lastTransaction[index]=carryVisual.since;
+                ++receipts[index];
+                Log("reload carry continuity: kind=%d frame=%ld transaction=%llu state=%u prep=%d replay=%u wrist=%d staged=%d source=%d visualAge=%llu wristAge=%llu drawCount=%ld",
+                    int(carryVisual.kind),Rd(g_armPaletteFrameToken),
+                    (unsigned long long)carryVisual.since,state,nextRegs,nextReplay.count,
+                    wristCurrent?1:0,g_nextWristStaged.valid?1:0,int(carryWrist.source),
+                    (unsigned long long)(now>=carryVisual.sampledMs?now-carryVisual.sampledMs:0),
+                    (unsigned long long)(now>=carryWrist.tick?now-carryWrist.tick:0),
+                    Rd(g_nextNativeMagazineDraws));
+            }
+        }
+    }
     nativegloves::IndexGuard<> nativeIndices(dev,shortTmdBuffer?shortTmdBuffer:
         (cuffBuffer?cuffBuffer:(nativeCuff?g_nativeGloveRenderer.Ensure(dev):nullptr)),
         shortTmdBuffer?36369*2:(cuffBuffer?g_nativeCuffRenderer.SourceBytes(cuffProfile):16512*2));
@@ -36793,6 +36831,8 @@ void LoadIniSettings() {
         Rd(g_sceneFlatEnabled) ? "FLAT CINEMA" : "ALWAYS VR",
         Rd(g_sceneCinemaMask) ? "ON" : "OFF");
     g_twoHandEnabled = GetPrivateProfileIntA("Input", "TwoHandGrip", 1, path) ? 1 : 0;
+    g_supportGripNearZone=GetPrivateProfileIntA("Input","SupportGripNearZone",0,path)!=0;
+    Log("ini: SupportGripNearZone=%d (ordinary long gun near-hand acquisition; default OFF)",g_supportGripNearZone);
     g_supportGripProbe=GetPrivateProfileIntA("Diagnostic","SupportGripProbe",0,path)!=0;
     Log("ini: SupportGripProbe=%d (read-only; 24 squeezes, press/acquired/last-held; default OFF)",g_supportGripProbe);
     g_valkyrieAuthoredGrip = GetPrivateProfileIntA("Input", "ValkyrieAuthoredGrip", 0, path) ? 1 : 0;
@@ -36847,6 +36887,9 @@ void LoadIniSettings() {
     Log("ini: VolkAuthoredGrip=%d WeaponWheelObservedSelection=%d (default OFF)",g_volkAuthoredGrip,g_weaponWheelObserved);
     Log("ini: ValkyrieSingleGrip=%d (default OFF; one-hand right glove follows weapon delta)",g_valkyrieSingleGrip);
     g_reloadPalmGrip=GetPrivateProfileIntA("Input","ReloadPalmGrip",0,path)!=0;
+    g_reloadCarryContinuityProbe=GetPrivateProfileIntA("Diagnostic","ReloadCarryContinuityProbe",0,path)!=0;
+    Log("ini: ReloadCarryContinuityProbe=%d (bounded read-only carried-magazine transitions; default OFF)",
+        g_reloadCarryContinuityProbe?1:0);
     g_volkCarryPoseProbe=GetPrivateProfileIntA("Diagnostic","VolkCarryPoseProbe",0,path)!=0;
     g_shoulderPickupProbe=GetPrivateProfileIntA("Diagnostic","ShoulderPickupProbe",0,path)!=0;
     const auto shoulderSetting=[&](const char* key,int fallback,int low,int high){

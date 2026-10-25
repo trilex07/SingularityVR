@@ -10,7 +10,7 @@ struct Sample {
     std::uint32_t frame=0, pawn=0, weapon=0, vertices=0;
     bool raw=false, effective=false, tracked=false, weaponContext=false;
     bool enabled=false, gameplay=false, presented=false, holstered=false, paused=false, menu=false;
-    bool knife=false, reload=false, cylinder=false, pistol=false, acquire=false, active=false;
+    bool knife=false, reload=false, cylinder=false, pistol=false, closeLongGun=false, acquire=false, active=false;
     int hands=0, aimHand=1, offHand=0;
     float delta[3]{}, forward[3]{}, primary[3]{}, support[3]{};
     float Distance() const {return std::sqrt(delta[0]*delta[0]+delta[1]*delta[1]+delta[2]*delta[2]);}
@@ -40,7 +40,7 @@ inline const char* Gate(const Sample& s) {
     if(d>(s.pistol?.38f:.50f))return "too-far";
     // Gate thresholds are DIAGNOSTIC labels only. Production's acquire result
     // above stays authoritative and is also printed, preventing silent drift.
-    if(!(s.Alignment()>(s.pistol?-.35f:.50f)))return "forward-cone";
+    if(!(s.Alignment()>(s.pistol?-.35f:(s.closeLongGun&&d<=.30f?-.75f:.50f))))return "forward-cone";
     return "geometry-unclassified";
 }
 enum class Event { None, Press, Acquired, Release };

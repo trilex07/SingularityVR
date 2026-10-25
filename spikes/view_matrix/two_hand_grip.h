@@ -1,7 +1,8 @@
 #pragma once
 #include <cmath>
 inline bool TwoHandGripAllowed(const float delta[3], const float forward[3], bool held,
-                              bool tracked, bool wasActive, bool pistol = false) {
+                              bool tracked, bool wasActive, bool pistol = false,
+                              bool closeLongGun = false) {
     if (!held || !tracked) return false;
     const float distance = std::sqrt(delta[0]*delta[0]+delta[1]*delta[1]+delta[2]*delta[2]);
     // A pistol support hand is naturally beside the primary grip rather than in front of
@@ -16,5 +17,12 @@ inline bool TwoHandGripAllowed(const float delta[3], const float forward[3], boo
     if (!std::isfinite(distance) || distance < minDistance || distance > maxDistance) return false;
     const float alignment=(delta[0]*forward[0]+delta[1]*forward[1]+delta[2]*forward[2])/distance;
     if (pistol) return alignment > -0.35f;
+    // With the independently tracked TMD glove the raw controller's -Z cone
+    // does not coincide with the visible ordinary long-gun fore-end. A short,
+    // explicit near-hand zone accepts a physical supporting grip without
+    // weakening the existing 50 cm forward cone or Seeker's separate route.
+    // This is opt-in at the caller and still requires a live Grip + tracking.
+    if (closeLongGun && !wasActive && distance <= .30f && alignment > -.75f)
+        return true;
     return alignment > (wasActive ? .15f : .50f);
 }
