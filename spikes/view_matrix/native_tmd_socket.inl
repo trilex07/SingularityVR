@@ -26,9 +26,10 @@ static bool Rewrite(void* mesh,Name name,float* position,int* rot) {
         char text[96]{};
         if(name.number||!NameFromIndex(name.index,text,sizeof(text)))return false;
         uintptr_t pawn=0;const auto tmd=NativeTmdAim::LocalTmd(pawn);
-        static NativeOwnedInventory::MemberCache ownerMesh;
-        const int off=tmd?ownerMesh.Get(NativeOwnedInventory::P(tmd+OBJ_CLASS),"mOwnerMesh"):-1;
-        const auto owned=off>=0?NativeOwnedInventory::P(tmd+off):0;
+        // RvTMDPower_Age::CreateFX loads the actual owner component from the
+        // audited RvTMD argument at +204h. Reflection did not resolve this
+        // property in the physical census, so use the native read contract.
+        const auto owned=tmd?NativeOwnedInventory::P(tmd+0x204):0;
         if(!owned||owned!=(uintptr_t)mesh||!IsLive(owned)||
            !NativeTmdAim::ExactClass(NativeOwnedInventory::P(owned+OBJ_CLASS),"SkeletalMeshComponent")) {
             Note("not-owned-TMD-component");return false;

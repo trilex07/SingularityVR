@@ -48,6 +48,9 @@ def audit(exe, archive, package, dll):
     c = ins(create, 209)
     # The actual power creates/stores its curved beam then attaches that same
     # object to mOwnerMesh using the exact mMuzzleSocket FName pair.
+    # ESI is the RvTMD argument, not the power object's ECX receiver. The
+    # runtime must read these native offsets from that exact owned TMD.
+    has(c, 'mov', 'esi, dword ptr [ebp + 8]')
     for operand in ('dword ptr [esi + 0x530], eax', 'ecx, dword ptr [esi + 0x204]',
                     'eax, dword ptr [esi + 0x460]', 'edx, dword ptr [esi + 0x45c]',
                     'eax, dword ptr [esi + 0x530]'):

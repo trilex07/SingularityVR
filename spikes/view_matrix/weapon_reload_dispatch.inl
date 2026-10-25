@@ -459,7 +459,12 @@ static int PrepareNextReload(IDirect3DDevice9* dev,INT base,UINT min,UINT vertic
                 liveLeft,(std::uint64_t)InterlockedCompareExchange64(&g_handPoseSampleMs[0],0,0),
                 g_handTracked[0]&&g_handPositionValid[0]&&g_handPoseValid[0],
                 g_reloadCarryTrackedContinuity,currentTracking,&continued);
-            const bool placed=palm ? currentWrist&&weaponcarry::Matrix(kind,currentTracking,carried) :
+            static weaponcarry::FrameWrist frameWrist;
+            armbind::Mat stableTracking;bool reused=false;
+            const bool stableWrist=palm&&frameWrist.Select((std::uint32_t)Rd(g_armPaletteFrameToken),
+                kind,visual.pawn,visual.weapon,visual.since,currentWrist,currentTracking,
+                stableTracking,&reused);
+            const bool placed=palm ? stableWrist&&weaponcarry::Matrix(kind,stableTracking,carried) :
                 weaponreload::HandMatrix(clipTracking,visual.aim,pose,g_nextClipRenderer[index].SourceCentre(),carried,
                     visual.phase==weaponreload::Phase::Carrying?hipknife::V{0,0,-.06f}:hipknife::V{});
             if(continued){
@@ -468,7 +473,7 @@ static int PrepareNextReload(IDirect3DDevice9* dev,INT base,UINT min,UINT vertic
                     int(kind),(unsigned long long)(now-wrist.tick));
             }
             if(palm&&(kind==weaponreload::Kind::Volk||kind==weaponreload::Kind::Valkyrie))
-                note(!currentWrist?10:!placed?11:12);
+                note(!stableWrist?10:!placed?11:12);
             if(g_volkCarryPoseProbe&&palm&&kind==weaponreload::Kind::Volk&&currentWrist&&placed){
                 static unsigned samples=0;static ULONGLONG nextSample=0;
                 if(samples<8&&now>=nextSample){
@@ -492,9 +497,11 @@ static int PrepareNextReload(IDirect3DDevice9* dev,INT base,UINT min,UINT vertic
                     if(samples[index]++<32){
                         const unsigned slot=weaponreload::ClipSlot(kind);
                         const float* c=replay.spare[replay.count]+slot*12;
-                        Log("reload carry render: prepared kind=%d frame=%ld transaction=%llu sample=%u wristAge=%llu magSkinT=(%.6g %.6g %.6g) source=%d",
+                        Log("reload carry render: prepared kind=%d frame=%ld transaction=%llu sample=%u wristAge=%llu magTrackingT=(%.6g %.6g %.6g) magSkinT=(%.6g %.6g %.6g) source=%d reused=%d",
                             int(kind),Rd(g_armPaletteFrameToken),(unsigned long long)visual.since,samples[index],
-                            (unsigned long long)(now>=wrist.tick?now-wrist.tick:0),c[3],c[7],c[11],int(wrist.source));
+                            (unsigned long long)(now>=wrist.tick?now-wrist.tick:0),
+                            carried.m[3][0],carried.m[3][1],carried.m[3][2],
+                            c[3],c[7],c[11],int(wrist.source),reused?1:0);
                     }
                 }
                 ++replay.count;

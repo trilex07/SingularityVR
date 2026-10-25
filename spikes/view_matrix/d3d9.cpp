@@ -20725,6 +20725,9 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
             if(skippedNotes<8){++skippedNotes;
                 Log("tracked-depth-prime: omitted exact late-color sibling frame=%ld verts=%u first=%u tris=%u depthOnly=1 nativePrimeRange=1 stencil=0",
                     Rd(g_armPaletteFrameToken),numVertices,startIndex,primCount);}
+            // This draw never reaches StereoPair. Let the later colour sibling
+            // capture the actual submitted palette for the same pose event.
+            if(poseDue)g_dualPoseStages[poseSource.part]&=~1u;
             return D3D_OK;
         }
     }
@@ -20761,10 +20764,12 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
                 FgIdentityProbe(dev, baseVertex, minIndex, numVertices, startIndex, primCount);
         DpgRecord(2, 0.0f, 0.0f, (uint32_t)k, numVertices, primCount, (uint32_t)t);
         // WEAPON FX = HIDE PASS. Deliberately after the learn, per the note above and FgHideWholePass.
-        if (FgHideWholePass()) return D3D_OK;
+        if (FgHideWholePass()) {if(poseDue)g_dualPoseStages[poseSource.part]&=~1u;return D3D_OK;}
         if (FgHidden(dev,numVertices, startIndex, primCount,minIndex,t,&shortTmdAdmitted)) {
             if(seekerProbe)Log("Seeker glove refused: FgHidden frame=%ld",Rd(g_armPaletteFrameToken));
-            noteTmdRoute(0,-1,-1,0);return D3D_OK;
+            noteTmdRoute(0,-1,-1,0);
+            if(poseDue)g_dualPoseStages[poseSource.part]&=~1u;
+            return D3D_OK;
         }
         if(Rd(g_cinematicSceneProbe) && k<=kFgSanePass)
             InterlockedIncrement(&g_cineProbeFgKept);

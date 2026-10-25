@@ -7,15 +7,18 @@ using Update=void (__thiscall*)(void*,void*,void*,const armbind::Mat*,int);
 static Update original=nullptr;
 static uintptr_t attachmentReturn=0;
 static DWORD thread=0;
+// RvTMDPower_Age::CreateFX (0xFCFEB0): ESI is the RvTMD argument at [EBP+8].
+// The original stores the created beam at [ESI+530h] and attaches it to the
+// mesh loaded from [ESI+204h]. These are audited native offsets, unlike the
+// reflected property lookup which returned null for both in the PSVR2 census.
+static constexpr uintptr_t kAgingBeam=0x530,kOwnerMesh=0x204;
 static void Note(const char* gate) {
     static const char* previous=nullptr;static unsigned count=0;
     if(gate==previous||count>=12)return;previous=gate;++count;
     Log("TMD tracked beam: gate=%s [original component update forwarded]",gate);
 }
-static uintptr_t Member(uintptr_t tmd,const char* name,NativeOwnedInventory::MemberCache& cache) {
-    const int off=cache.Get(NativeOwnedInventory::P(tmd+OBJ_CLASS),name);
-    return off>=0?NativeOwnedInventory::P(tmd+off):0;
-}
+static uintptr_t Beam(uintptr_t tmd){return NativeOwnedInventory::P(tmd+kAgingBeam);}
+static uintptr_t OwnerMesh(uintptr_t tmd){return NativeOwnedInventory::P(tmd+kOwnerMesh);}
 static bool Prepare(void* component,uintptr_t caller,const armbind::Mat* parent,
                     armbind::Mat& corrected) {
     if(!g_tmdTrackedBeam||GetCurrentThreadId()!=thread||!attachmentReturn||caller!=attachmentReturn)return false;
@@ -25,11 +28,10 @@ static bool Prepare(void* component,uintptr_t caller,const armbind::Mat* parent,
            !Rd(g_tmdOnOffHand)||!Rd(g_offHandValid))return false;
         uintptr_t pawn=0;const auto tmd=NativeTmdAim::LocalTmd(pawn);
         if(!tmd)return false;
-        static NativeOwnedInventory::MemberCache aging,mesh;
-        const auto beam=Member(tmd,"mAgingBeam",aging);
+        const auto beam=Beam(tmd);
         if(!beam||beam!=(uintptr_t)component||!IsLive(beam)||
            !NativeTmdAim::ExactClass(NativeOwnedInventory::P(beam+OBJ_CLASS),"RvCurvedBeamComponent"))return false;
-        const auto owned=Member(tmd,"mOwnerMesh",mesh);
+        const auto owned=OwnerMesh(tmd);
         if(!owned||!IsLive(owned)||NativeOwnedInventory::P(NativeOwnedInventory::P(owned)+0x138)+0x161!=caller) {
             Note("attachment-owner");return false;
         }
@@ -84,8 +86,7 @@ static void Poll() {
     __try {
         uintptr_t pawn=0;const auto tmd=NativeTmdAim::LocalTmd(pawn);
         if(!tmd){Note("installer-no-owned-tmd");return;}
-        static NativeOwnedInventory::MemberCache aging,mesh;
-        const auto beam=Member(tmd,"mAgingBeam",aging),owned=Member(tmd,"mOwnerMesh",mesh);
+        const auto beam=Beam(tmd),owned=OwnerMesh(tmd);
         if(fast&&agePolls<=12)
             Log("TMD tracked beam: Square census sample=%u tmd=%p beam=%p owner=%p beamLive=%d ownerLive=%d",
                 agePolls,(void*)tmd,(void*)beam,(void*)owned,

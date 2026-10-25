@@ -11,6 +11,8 @@ static armbind::Mat Product(const armbind::Mat& a,const armbind::Mat& b){armbind
 static void Near(const armbind::Mat& a,const armbind::Mat& b){for(unsigned i=0;i<4;++i)for(unsigned j=0;j<4;++j)assert(std::fabs(a.m[i][j]-b.m[i][j])<.0002f);}
 static bool g_tmdTrackedMuzzle=true;
 static bool g_tmdTrackedBeam=false;
+static bool g_tmdBeamAgeProbe=false;
+static LONG g_rawAgePressed=0;
 static LONG g_gamePaused=0,g_inCinematic=0,g_panelOpen=0,g_vrMenuClass=0,g_vrUiMenu=0,
     g_twoHandActive=0,g_tmdOnOffHand=1,g_offHandValid=1;
 static bool VrModeOn(){return true;}
@@ -26,8 +28,8 @@ struct Name {int index,number;};
 static bool fail=false;
 static uintptr_t childReturn=0;
 static uintptr_t P(uintptr_t p){if(fail)RaiseException(EXCEPTION_ACCESS_VIOLATION,0,0,nullptr);
-    return p==200+OBJ_CLASS?400:p==200+16?300:p==300+OBJ_CLASS?500:
-        p==200+24?600:p==600+OBJ_CLASS?700:p==300?800:p==800+0x138?childReturn-0x161:0;}
+    return p==200+OBJ_CLASS?400:p==200+0x204?300:p==300+OBJ_CLASS?500:
+        p==200+0x530?600:p==600+OBJ_CLASS?700:p==300?800:p==800+0x138?childReturn-0x161:0;}
 struct MemberCache {int Get(uintptr_t,const char* n){return !strcmp(n,"mAgingBeam")?24:16;}};
 }
 namespace NativeTmdAim {

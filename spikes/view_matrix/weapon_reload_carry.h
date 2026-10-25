@@ -82,6 +82,32 @@ struct Wrist {
         return true;
     }
 };
+// The engine submits the same foreground draw to a depth prime and a colour
+// target in one XR frame. A new glove witness may arrive between those draws.
+// Keep the first validated physical wrist for the whole frame so the spare
+// magazine has one world pose in both passes (and both eyes).
+struct FrameWrist {
+    std::uint32_t frame=0,pawn=0,weapon=0;
+    std::uint64_t transaction=0;
+    Kind kind=Kind::None;
+    bool sampled=false,valid=false;
+    Mat tracking{};
+    bool Select(std::uint32_t nextFrame,Kind nextKind,std::uint32_t nextPawn,
+                std::uint32_t nextWeapon,std::uint64_t nextTransaction,
+                bool currentValid,const Mat& current,Mat& out,bool* reused=nullptr){
+        const bool same=sampled&&valid&&frame==nextFrame&&kind==nextKind&&pawn==nextPawn&&
+            weapon==nextWeapon&&transaction==nextTransaction;
+        if(reused)*reused=same;
+        if(!same){
+            frame=nextFrame;kind=nextKind;pawn=nextPawn;weapon=nextWeapon;
+            transaction=nextTransaction;sampled=true;
+            valid=currentValid&&armbind::Finite(current);
+            if(valid)tracking=current;
+        }
+        if(valid)out=tracking;
+        return valid;
+    }
+};
 inline bool WristTracking(const Mat& bind,const float skin[3][4],const Mat& chain,
                           const Mat& world,Mat& out){
     Mat joint,inv;

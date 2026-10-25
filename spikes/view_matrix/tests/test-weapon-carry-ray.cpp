@@ -8,6 +8,22 @@ static armbind::Mat Identity(){armbind::Mat m{};for(unsigned i=0;i<4;++i)m.m[i][
 int main(){
     using namespace weaponreload;
     using weaponcarry::WristSource;
+    // A glove can publish a newer wrist between the depth and colour draw of
+    // one engine frame. Both draws must use the first validated pose.
+    weaponcarry::FrameWrist frameWrist;
+    auto oldPose=Identity(),newPose=Identity(),selected=Identity();
+    oldPose.m[3][0]=.25f;newPose.m[3][0]=.5f;
+    bool reused=false;
+    assert(frameWrist.Select(18,Kind::Volk,3,4,70,true,oldPose,selected,&reused)&&!reused);
+    assert(selected.m[3][0]==.25f);
+    assert(frameWrist.Select(18,Kind::Volk,3,4,70,true,newPose,selected,&reused)&&reused);
+    assert(selected.m[3][0]==.25f);
+    assert(frameWrist.Select(19,Kind::Volk,3,4,70,true,newPose,selected,&reused)&&!reused);
+    assert(selected.m[3][0]==.5f);
+    assert(!frameWrist.Select(19,Kind::Volk,3,4,71,false,newPose,selected,&reused));
+    assert(frameWrist.Select(19,Kind::Volk,3,4,71,true,newPose,selected,&reused)&&!reused);
+    assert(frameWrist.Select(20,Kind::Volk,3,4,71,true,newPose,selected,&reused));
+    assert(frameWrist.Select(20,Kind::Volk,3,5,71,true,oldPose,selected,&reused)&&!reused);
     assert(weaponcarry::CarrySectionEligible(Kind::Valkyrie,false));
     assert(weaponcarry::CarrySectionEligible(Kind::Volk,false));
     assert(!weaponcarry::CarrySectionEligible(Kind::Kasimov,false));
