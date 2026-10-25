@@ -1,5 +1,14 @@
 # STATUS — session handoff
 
+## 2026-10-25 — MAIN: actual failed-session Seeker/depth/wheel corrections
+
+- Physical `B32E9A7E...` failed: black silhouette, Seeker support at floor, inaccurate launch, black wheel. Accepted `610F4C21...` DLL / `C5D24E16...` INI restored and independently verified.
+- **PROVEN** Seeker-only double Y reflection in asset audit: all 12444 original GPU positions match native convention exactly. Corrected root/muzzle data; original PSA grip unchanged. Recorded-frame regression removes 218.982 UU support / 225.775 UU muzzle displacement, preserving native spread/guidance.
+- **PROVEN** exact depth sibling refused solely for native viewport `0/.0001`. Accept that measured request alongside `0/0`; all identity/state/owner guards stay. D3D9/Ex black->world pixel reproduction PASS; native visual cause still requires physical confirmation.
+- Wheel now owns its full fixed-function state inside existing restoration scope. D3D9/Ex poisoned-state tests PASS with identical stereo pixels; native entry-state receipt bounded to 8 transitions. Atlas verified `3EF17826...`; specific physical leaked state remains unrecorded.
+- **L1/L2 PASS**: Seeker, UI, depth-prime, TMD/SVTG, HUD pixels, muzzle/aim/reload, WeaponLocker and OLED. New build/ABI provenance in candidate manifest. **L3/PSVR2 PENDING**; no new install, launch or accepted baseline.
+- Current instructions/evidence: `docs/handoffs/main-seeker-four-fixes-20261025.md`. Supersedes previous test plans; Seeker back slot stays OFF per user-selected native lifecycle.
+
 ## 2026-10-25 — MAIN: actual native aging-beam attachment correction
 
 - **PROVEN in original native code**: Age creates `RvCurvedBeamComponent` (`StaticMeshComponent`), attaches it to `TMD_Muzzle`, and skeletal child updates compose the parent from CPU SpaceBases. The tracked GPU wrist is absent from this producer. A world socket-query correction alone does not cover this path.

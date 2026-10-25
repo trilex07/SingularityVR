@@ -2,6 +2,7 @@
 #include "../tracked_depth_prime.h"
 #include <cassert>
 #include <cstdio>
+#include <cmath>
 
 // Real D3D9/Ex pixels through the production cache/dispatch predicate. Synthetic
 // scene reproduces early depth-only old pose -> world -> late new pose. It does
@@ -52,26 +53,28 @@ static void Run(bool ex) {
     auto learn=[&]{viewport(1);d->SetRenderState(D3DRS_COLORWRITEENABLE,15);
         assert(SUCCEEDED(d->BeginScene()));const HRESULT h=d->DrawIndexedPrimitive(D3DPT_TRIANGLELIST,0,0,4,0,2);
         assert(SUCCEEDED(d->EndScene()));return cache.Learn(d,owner,color,SUCCEEDED(h));};
-    auto primeState=[&]{D3DVIEWPORT9 vp{0,0,64,64,0,0};const auto h=d->SetViewport(&vp);assert(SUCCEEDED(h));cache.ObserveViewport(d,&vp,h);d->SetRenderState(D3DRS_COLORWRITEENABLE,0);};
+    auto primeState=[&](float max=.0001f){D3DVIEWPORT9 vp{0,0,64,64,0,max};const auto h=d->SetViewport(&vp);assert(SUCCEEDED(h));cache.ObserveViewport(d,&vp,h);d->SetRenderState(D3DRS_COLORWRITEENABLE,0);};
     primeState();assert(!cache.Skip(d,owner,prime));
     assert(learn());primeState();
     {D3DVIEWPORT9 v{};d->GetViewport(&v);
-        printf("Native requested viewport 0/0 -> driver actual %g/%g\n",v.MinZ,v.MaxZ);}
+        printf("Native requested viewport 0/.0001 -> driver actual %g/%g\n",v.MinZ,v.MaxZ);}
     assert(cache.Skip(d,owner,prime));
     trackedprime::Inspection evidence;
     assert(cache.Inspect(d,owner,prime,evidence)&&evidence.exact&&
         !strcmp(evidence.gate,"eligible")&&evidence.key.ib==ib&&evidence.key.vb==vb);
     viewport(1);cache.ObserveViewport(d,nullptr,E_FAIL);
     assert(cache.Inspect(d,owner,prime,evidence)&&evidence.exact&&
-        !strcmp(evidence.gate,"no-native-zero-viewport"));
+        !strcmp(evidence.gate,"no-native-prime-viewport"));
     primeState();d->SetRenderState(D3DRS_COLORWRITEENABLE,15);
     assert(cache.Inspect(d,owner,prime,evidence)&&!strcmp(evidence.gate,"color-write-on"));
     d->SetRenderState(D3DRS_COLORWRITEENABLE,0);
-    // A failed native SetViewport, or a nonzero *requested* depth range,
-    // cannot seed the prime witness even if this driver canonicalizes it.
+    // Only the two evidenced native requests may seed the witness. The driver's
+    // canonicalized .001 and even the adjacent float to .0001 are NOT requests.
     D3DVIEWPORT9 request{0,0,64,64,0,0};
     cache.ObserveViewport(d,&request,E_FAIL);assert(!cache.Skip(d,owner,prime));
     request.MaxZ=.001f;cache.ObserveViewport(d,&request,S_OK);assert(!cache.Skip(d,owner,prime));
+    request.MaxZ=std::nextafter(.0001f,1.f);cache.ObserveViewport(d,&request,S_OK);assert(!cache.Skip(d,owner,prime));
+    primeState(0.f);assert(cache.Skip(d,owner,prime));
     primeState();assert(cache.Skip(d,owner,prime));
     // Fail closed on all state/identity/lifetime/context differences.
     auto other=owner;other.active=false;assert(!cache.Skip(d,other,prime));
@@ -104,7 +107,9 @@ static void Run(bool ex) {
         assert(SUCCEEDED(d->BeginScene()));
         for(unsigned eye=0;eye<2;++eye){
             D3DMATRIX m{};m._11=m._22=m._33=m._44=1;d->SetTransform(D3DTS_WORLD,&m);
-            D3DVIEWPORT9 vp{eye*64,0,64,64,0,0};const auto vh=d->SetViewport(&vp);
+            // Both measured requests, one per eye. The screenshot regression
+            // used .0001, not the earlier synthetic 0/0 assumption.
+            D3DVIEWPORT9 vp{eye*64,0,64,64,0,eye?.0001f:0.f};const auto vh=d->SetViewport(&vp);
             assert(SUCCEEDED(vh));cache.ObserveViewport(d,&vp,vh);
             d->SetRenderState(D3DRS_COLORWRITEENABLE,0);
             auto enabled=owner;enabled.active=fixed!=0;

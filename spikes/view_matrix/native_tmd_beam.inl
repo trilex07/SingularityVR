@@ -70,12 +70,15 @@ static void Poll() {
     if(now<retry)return;retry=now+250;
     __try {
         uintptr_t pawn=0;const auto tmd=NativeTmdAim::LocalTmd(pawn);
-        if(!tmd)return;
+        if(!tmd){Note("installer-no-owned-tmd");return;}
         static NativeOwnedInventory::MemberCache aging,mesh;
         const auto beam=Member(tmd,"mAgingBeam",aging),owned=Member(tmd,"mOwnerMesh",mesh);
-        if(!beam||!owned||!IsLive(beam)||!IsLive(owned))return;
+        if(!beam||!IsLive(beam)){Note("installer-no-live-aging-beam");return;}
+        if(!owned||!IsLive(owned)){Note("installer-no-live-owner-mesh");return;}
         if(!NativeTmdAim::ExactClass(NativeOwnedInventory::P(beam+OBJ_CLASS),"RvCurvedBeamComponent")||
-           !NativeTmdAim::ExactClass(NativeOwnedInventory::P(owned+OBJ_CLASS),"SkeletalMeshComponent"))return;
+           !NativeTmdAim::ExactClass(NativeOwnedInventory::P(owned+OBJ_CLASS),"SkeletalMeshComponent")){
+            Note("installer-component-class");return;
+        }
         const auto vt=NativeOwnedInventory::P(beam);
         const auto update=NativeOwnedInventory::P(vt+0x154),copy=NativeOwnedInventory::P(vt+0x120);
         const auto children=NativeOwnedInventory::P(NativeOwnedInventory::P(owned)+0x138);

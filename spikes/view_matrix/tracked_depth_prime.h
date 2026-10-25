@@ -8,6 +8,12 @@
 // This removes only that redundant prime, never a color or shadow-map draw.
 // Geometry is learned AFTER successful late stereo submission/restoration.
 namespace trackedprime {
+// Actual 2026-10-25 native viewport request, proved by retained VB/IB/range
+// siblings with color=0, depth write=1, stencil=0. Do not accept arbitrary
+// near-zero ranges (nor the driver's canonicalized .001 as a native request).
+inline bool NativePrimeRange(float minZ,float maxZ) {
+    return minZ==0.f && (maxZ==0.f || maxZ==.0001f);
+}
 struct Owner {
     uintptr_t pawn=0, weapon=0;
     uint32_t frame=0;
@@ -67,7 +73,7 @@ public:
         // Some D3D9 drivers canonicalize requested 0/0 to actual 0/.001.
         // Measure that state after a successful native request; never guess an
         // epsilon that could classify a different depth range as a prime.
-        if(!requested||FAILED(result)||requested->MinZ!=0.f||requested->MaxZ!=0.f)return;
+        if(!requested||FAILED(result)||!NativePrimeRange(requested->MinZ,requested->MaxZ))return;
         if(FAILED(d->GetViewport(&primeViewport)))return;
         viewportValid=primeViewport.X==requested->X&&primeViewport.Y==requested->Y&&
             primeViewport.Width==requested->Width&&primeViewport.Height==requested->Height;
@@ -103,7 +109,7 @@ public:
         if(rt)rt->Release();if(vs)vs->Release();if(ps)ps->Release();
         r.gate=!o.active?"owner-context":!o.pawn||!o.weapon?"owner-identity":
             draw.key.layoutShadow?"shadow-layout":!draw.key.rtIsScene?"not-scene-RT":
-            !r.viewportWitness?"no-native-zero-viewport":!viewport?"viewport-read":
+            !r.viewportWitness?"no-native-prime-viewport":!viewport?"viewport-read":
             r.actual.X!=primeViewport.X||r.actual.Y!=primeViewport.Y||
             r.actual.Width!=primeViewport.Width||r.actual.Height!=primeViewport.Height||
             r.actual.MinZ!=primeViewport.MinZ||r.actual.MaxZ!=primeViewport.MaxZ?"viewport-different":

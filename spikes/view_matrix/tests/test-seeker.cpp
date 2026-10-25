@@ -53,6 +53,27 @@ int main(int argc,char** argv){
     assert(!seekergeometry::Body(0,12436,8,44970,6));
     assert(!seekergeometry::Body(0,0,11387,0,12834));
     seekergeometry::Witness w;
+    // Independent cooked-space oracle: original GPU positions reflect raw PSK
+    // Y, while read_psk bone matrices ALREADY do so. The old double reflection
+    // displaced the idle support down >200 UU with this recorded body local.
+    // Private audit also compares all 12444 original vertices and compiled data.
+    assert(std::fabs(seekergeometry::RootBind.m[3][1]+109.490999f)<.0001f);
+    assert(std::fabs(seekergeometry::Muzzle.y+112.887689f)<.0001f);
+    {
+        Mat recorded=Identity();
+        recorded.m[0][0]=.971231f;recorded.m[0][1]=.238141f;
+        recorded.m[1][1]=0;recorded.m[1][2]=-1;
+        recorded.m[2][0]=-.238141f;recorded.m[2][1]=.971231f;recorded.m[2][2]=0;
+        recorded.m[3][0]=1.41016f;recorded.m[3][1]=-5.74854f;recorded.m[3][2]=-148.25f;
+        seekergeometry::Witness idle;
+        assert(seekergeometry::Capture(Identity(),recorded,1,20,1000,idle));
+        const auto grip=seekergeometry::Product(seekergeometry::LeftGrip,idle.rootLocal);
+        assert(std::fabs(grip.m[3][2]-(-44.76530f))<.001f);
+        seekerprojectile::Launch shot;
+        assert(seekerprojectile::Build(idle,1,20,1000,Identity(),{0,0,0},shot));
+        assert(std::fabs(shot.origin.z-(-35.36231f))<.001f);
+        assert(std::fabs(shot.axis.z)<.001f);
+    }
     Mat skin=Identity(),local=Identity();local.m[3][1]=-100;
     assert(seekergeometry::Capture(skin,local,1,20,1000,w));
     assert(w.Current(1,20,1150));assert(!w.Current(1,20,1151));assert(!w.Current(1,21,1000));

@@ -1,5 +1,7 @@
 # MAIN: Seeker resolver and tracked foreground depth prime
 
+**Superseded for the next test:** see [the measured four-fix follow-up](main-seeker-four-fixes-20261025.md).
+
 Branch: `fix/main-seeker-graphics-rootcause`.
 Parent: `218dea7344bcb89cbe630e06141121e0f9007a59` from
 `integration/full-psvr2-20261025`. Accepted installation checkpoint:

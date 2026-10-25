@@ -50,6 +50,7 @@ static unsigned g_startupTimeoutMs=5000,g_startupMinVisibleMs=3000;
 #include "weapon_wheel_seek.h"
 #include "settings_panel.h"
 #include "ui_remaster_runtime.h"
+#include "wheel_draw_state.h"
 #include "weapon_wheel_atlas.h"
 #include "locker_loadout_icons.h"
 #include "weapon_wheel_layout.h"
@@ -20627,7 +20628,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
         if(skip){
             // No D3D state or tracked-pose mutation; only a proven depth-only sibling.
             if(skippedNotes<8){++skippedNotes;
-                Log("tracked-depth-prime: omitted exact late-color sibling frame=%ld verts=%u first=%u tris=%u depthOnly=1 nearZ=0 stencil=0",
+                Log("tracked-depth-prime: omitted exact late-color sibling frame=%ld verts=%u first=%u tris=%u depthOnly=1 nativePrimeRange=1 stencil=0",
                     Rd(g_armPaletteFrameToken),numVertices,startIndex,primCount);}
             return D3D_OK;
         }
@@ -30842,18 +30843,7 @@ static bool DrawUiRemasterWheelEye(IDirect3DDevice9* dev,int eye,int cx,int cy,
     const uiremaster::Rect chassis{cx-m.outerR,cy-m.outerR,cx+m.outerR,cy+m.outerR};
     if(!uiremaster::Valid(chassis,eye,half,backW,backH))return false;
     for(int i=0;i<slots;++i)if(!uiremaster::SpriteValid(uiremaster::WheelIcon(verts[i])))return false;
-    dev->SetRenderState(D3DRS_ZENABLE,FALSE);
-    dev->SetRenderState(D3DRS_SCISSORTESTENABLE,FALSE);
-    dev->SetRenderState(D3DRS_ALPHABLENDENABLE,TRUE);
-    dev->SetRenderState(D3DRS_SRCBLEND,D3DBLEND_SRCALPHA);
-    dev->SetRenderState(D3DRS_DESTBLEND,D3DBLEND_INVSRCALPHA);
-    dev->SetTextureStageState(0,D3DTSS_COLOROP,D3DTOP_SELECTARG1);
-    dev->SetTextureStageState(0,D3DTSS_COLORARG1,D3DTA_TEXTURE);
-    dev->SetTextureStageState(0,D3DTSS_ALPHAOP,D3DTOP_SELECTARG1);
-    dev->SetTextureStageState(0,D3DTSS_ALPHAARG1,D3DTA_TEXTURE);
-    dev->SetSamplerState(0,D3DSAMP_MINFILTER,D3DTEXF_LINEAR);
-    dev->SetSamplerState(0,D3DSAMP_MAGFILTER,D3DTEXF_LINEAR);
-    dev->SetPixelShader(nullptr);dev->SetVertexShader(nullptr);
+    if(!wheelstate::Prepare(dev,wheelstate::Pass::Atlas))return false;
     dev->SetFVF(D3DFVF_XYZRHW|D3DFVF_TEX1);
     bool good=DrawUiRemasterSprite(dev,g_uiRemasterNeutral,chassis,uiremaster::wheelChassis);
     for(int i=0;i<slots;++i){
@@ -30927,9 +30917,6 @@ static int DrawUiRemasterWheelPair(IDirect3DDevice9* dev,const wheel_layout::Met
            SUCCEEDED(dev->Clear(0,nullptr,D3DCLEAR_TARGET,0,1.0f,0))){
             // The scratch texture stores premultiplied colour and straight
             // alpha. Text glyphs are opaque, so the same composite applies.
-            dev->SetRenderState(D3DRS_SEPARATEALPHABLENDENABLE,TRUE);
-            dev->SetRenderState(D3DRS_SRCBLENDALPHA,D3DBLEND_ONE);
-            dev->SetRenderState(D3DRS_DESTBLENDALPHA,D3DBLEND_INVSRCALPHA);
             ready=DrawUiRemasterWheelEye(dev,0,(int)side/2,(int)side/2,m,slots,
                                          selected,verts,named,clip,reserve,(int)side*2,(int)side);
         }
@@ -30941,13 +30928,7 @@ static int DrawUiRemasterWheelPair(IDirect3DDevice9* dev,const wheel_layout::Met
     if(!ready)return 0;
     // One DrawPrimitiveUP submits both eyes. Until this call succeeds, the
     // accepted backbuffer has not received a single remastered wheel pixel.
-    dev->SetRenderState(D3DRS_SEPARATEALPHABLENDENABLE,FALSE);
-    dev->SetRenderState(D3DRS_SRCBLEND,D3DBLEND_ONE);
-    dev->SetRenderState(D3DRS_DESTBLEND,D3DBLEND_INVSRCALPHA);
-    dev->SetTextureStageState(0,D3DTSS_COLOROP,D3DTOP_SELECTARG1);
-    dev->SetTextureStageState(0,D3DTSS_COLORARG1,D3DTA_TEXTURE);
-    dev->SetTextureStageState(0,D3DTSS_ALPHAOP,D3DTOP_SELECTARG1);
-    dev->SetTextureStageState(0,D3DTSS_ALPHAARG1,D3DTA_TEXTURE);
+    if(!wheelstate::Prepare(dev,wheelstate::Pass::Composite))return 0;
     dev->SetTexture(0,g_uiRemasterWheelStage);
     dev->SetFVF(D3DFVF_XYZRHW|D3DFVF_TEX1);
     return SUCCEEDED(g_origDrawPrimUP(dev,D3DPT_TRIANGLELIST,4,vertices,
@@ -30976,6 +30957,22 @@ void DrawWeaponWheel(IDirect3DDevice9* dev) {
     }
     if (FAILED(g_wristState->Capture())) {
         if (old) old->Release(); if (depth) depth->Release(); back->Release(); return;
+    }
+    // Bounded, CPU state queries only: establish which native material state
+    // was live at wheel entry. A submitted draw is not evidence of its pixels.
+    { static LONG previous=-1;static unsigned reports=0;const LONG held=Rd(g_gunVerts);
+      if(reports<8&&previous!=held){previous=held;++reports;
+        DWORD fog=0,op=0,alphaOp=0,stage1=0,srgb=0,write=0,mask=0,alphaTest=0;
+        dev->GetRenderState(D3DRS_FOGENABLE,&fog);dev->GetRenderState(D3DRS_BLENDOP,&op);
+        dev->GetRenderState(D3DRS_BLENDOPALPHA,&alphaOp);dev->GetTextureStageState(1,D3DTSS_COLOROP,&stage1);
+        dev->GetSamplerState(0,D3DSAMP_SRGBTEXTURE,&srgb);dev->GetRenderState(D3DRS_SRGBWRITEENABLE,&write);
+        dev->GetRenderState(D3DRS_COLORWRITEENABLE,&mask);dev->GetRenderState(D3DRS_ALPHATESTENABLE,&alphaTest);
+        Log("wheel incoming state: verts=%ld fog=%lu blendOp=%lu alphaOp=%lu stage1=%lu sRGB=%lu/%lu mask=%lu alphaTest=%lu; explicit overlay state follows",
+            held,fog,op,alphaOp,stage1,srgb,write,mask,alphaTest);
+      }}
+    if(!wheelstate::Prepare(dev,wheelstate::Pass::Legacy)){
+        g_wristState->Apply();
+        if(old)old->Release();if(depth)depth->Release();back->Release();return;
     }
     dev->SetDepthStencilSurface(nullptr);
     g_origSetRenderTarget(dev, 0, back);
@@ -31130,7 +31127,9 @@ void DrawWeaponWheel(IDirect3DDevice9* dev) {
     }
     const int remasterResult=roundOn?DrawUiRemasterWheelPair(dev,safeMetrics,wheelCx,wheelCy,
         slots,selected,slotVerts,slotNamed,wheelClip,wheelReserve,(int)d.Width,(int)d.Height):0;
-    const bool remasterRendered=remasterResult!=0;
+    // A failed staged atlas may have left textured alpha state. Re-establish
+    // the legacy draw contract before fallback, or skip safely on device loss.
+    const bool remasterRendered=remasterResult!=0||!wheelstate::Prepare(dev,wheelstate::Pass::Legacy);
     {static unsigned receipts=0;static int previous=-99;
      if(receipts<12&&previous!=remasterResult){previous=remasterResult;++receipts;
          Log("M02 wheel binding: result=%d enabled=%ld slots=%d neutral=%p lang=%s; result=1 is committed both-eye draw",
