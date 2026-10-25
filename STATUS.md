@@ -2,20 +2,26 @@
 
 ## 2026-10-25 — PSVR2 Physical Acceptance: HD Textures Gate A → B → C (Volk & Gloves)
 
-- **Status: PHYSICAL PASS** (confirmed in PSVR2 by user: 'wyglada okej daj na main').
-- **Assets replaced (2048x2048)**:
+- **Status: PHYSICAL PASS** (confirmed in PSVR2 by user: 'jest okej' / 'wyglada okej').
+- **Accepted Texture Configuration**:
+  - priority_material_mode=2 in texture_override.ini, remasterdir=texture-override-priority, remaster_apply=0, bridge_owned=1, enabled=1, mode_apply=1.
+  - Strictly locked to the verified four first-person DDS targets; no expansion of texture replacements without independent validation.
+- **Assets Replaced (2048x2048 DDS)**:
   - AR_shotgun_d.dds (SHA256: D6A98EF03EC588A31FEFDB7393757738B19B86B9E9381029E47E5C26C0506237)
   - AR_shotgun_n.dds (SHA256: 83F64BFCE085107A4EC80F14D236EB1409A402B8D879BCF8691667C3F92CD798)
   - inview_glove_d.dds (SHA256: D76D05B122A6C81B24B3560E88CF181167FAB3EE64A967A7017D21770F3D4754)
   - inview_glove_n.dds (SHA256: 5F0A8E9E4C65763A58BC5E88CAFEEE238EF715935730065336CDFF2CA3D8E049)
+- **Preserved Steam Baseline & Checkpoint Hashes**:
+  - Live Steam DLL: A82184B2F82F019B7A59E3DBFB49EE60C1675BEC39FB7FE239E182B974F0FA73
+  - Steam SingularityVR.ini: 0805A7F9236ABF0947D04ADE32FEB272B59B4FFF96F45F7157FD6EB7C4E1C6D8
+  - Steam texture_override.ini: 2492C8D08A067C9097AD24ACA5D8AA77EB56B883914369087C7FB6471F2D1BF7
+  - Step A Log: deployment/deploy-backups/20261025-hd-textures-stepA/texture_override.log (SHA256: AB848E730B30086237D9FED26D606E39112A0272B02820B2F58442A03CDE3FA3)
+  - Step B Log: deployment/deploy-backups/20261025-hd-textures-stepB/texture_override.log (SHA256: B3942F5A734EADD76CA831E940B600C5A4C920524FED2B91115EEE331F32EAF3)
+  - Backup Checkpoint: deployment/deploy-backups/20261025-accepted-hd-textures (contains DLL, INI, logs, and manifest hashes.json)
 - **Runtime Verification**:
-  - priority_material_mode=2 in 	exture_override.ini, 
-emaster_apply=0, ridge_owned=1, mode_apply=1.
-  - Zero D3D errors, zero resource evictions (evictions=0, 	able=0/512), 532,877 native cache hits over 729,347 binds.
-  - Strict scope isolation: zero unintended overrides; UI and shadow passes fully protected.
-- **Archived Evidence Logs**:
-  - Step A: deployment/deploy-backups/20261025-hd-textures-stepA/texture_override.log (SHA256: AB848E730B30086237D9FED26D606E39112A0272B02820B2F58442A03CDE3FA3)
-  - Step B: deployment/deploy-backups/20261025-hd-textures-stepB/texture_override.log (SHA256: B3942F5A734EADD76CA831E940B600C5A4C920524FED2B91115EEE331F32EAF3)
+  - D3D9Ex cache: 532,877 native hits over 729,347 binds.
+  - Zero D3D errors, zero memory/eviction issues (evictions=0, table=0/512).
+  - Zero unintended overrides; UI and shadow passes fully protected.
 
 ## 2026-10-25 — SIDE Seeker back slot / measured support / launch candidate
 
