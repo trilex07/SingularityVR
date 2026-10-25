@@ -1,4 +1,5 @@
 #include "two_hand_grip.h"
+#include "support_grip_probe.h"
 #include "dual_weapon_tmd_policy.h"
 #include "tmd_support_gauntlet.h"
 #include "skeletal_palette.h"
@@ -7009,6 +7010,7 @@ bool     g_handPoseValid[2] = { false, false };
 bool g_handPositionValid[2] = { false, false };
 bool g_handActionActive[2] = { false, false };
 volatile LONG g_twoHandEnabled = 1, g_twoHandActive = 0;
+static bool g_supportGripProbe=false; // read-only XR acquisition receipts, default OFF
 static int g_valkyrieAuthoredGrip = 0; // isolated A/B: retain UE3's authored two-hand relation
 static int g_valkyrieSingleGrip = 0; // isolated A/B: right glove follows the same weapon delta as pistol
 static int g_volkAuthoredGrip = 0; // default OFF: retain native shotgun hand/weapon relationship
@@ -11520,6 +11522,38 @@ void SyncXRInput(XrTime displayTime) {
     else g_supportLatch.Update(supportGrip,supportAcquire?0.f:1e9f,supportTracked,
                                (uint32_t)Rd(g_weaponObj),GetTickCount64());
     const bool supportActive=supportGrip && supportWeaponValid && g_supportLatch.Latched();
+    if(g_supportGripProbe) {
+        supportprobe::Sample s;
+        s.frame=(uint32_t)Rd(g_armPaletteFrameToken);s.pawn=(uint32_t)g_playerPawn;
+        s.weapon=(uint32_t)Rd(g_weaponObj);s.vertices=(uint32_t)Rd(g_gunVerts);
+        s.raw=rawSupportGrip;s.effective=supportGrip;s.tracked=supportTracked;
+        s.weaponContext=supportWeaponValid;s.enabled=Rd(g_twoHandEnabled)!=0;s.gameplay=feedGame;
+        s.presented=WeaponPresentationInHands();s.holstered=Rd(g_weaponHolstered)!=0;
+        s.paused=Rd(g_gamePaused)!=0;s.menu=Rd(g_vrUiMenu)!=0;
+        s.knife=hipknife::Reserves(g_hipKnifeState,OffHand());
+        s.reload=OffHand()==0&&(g_nextOwnsGrip||g_centurionOwnsGrip);
+        s.cylinder=OffHand()==0&&g_centurionReload&&g_centurionConfig.cylinderGestures&&
+            centurionreload::Active(g_centurionState.phase);
+        s.pistol=pistolSupport;s.acquire=supportAcquire;s.active=supportActive;
+        s.hands=(int)Rd(g_handsStatus);s.aimHand=AimHand();s.offHand=OffHand();
+        memcpy(s.delta,supportDelta,sizeof(s.delta));memcpy(s.forward,supportForward,sizeof(s.forward));
+        s.primary[0]=primaryPos.x;s.primary[1]=primaryPos.y;s.primary[2]=primaryPos.z;
+        s.support[0]=supportPos.x;s.support[1]=supportPos.y;s.support[2]=supportPos.z;
+        static supportprobe::Budget budget;
+        const auto receipt=budget.Observe(true,s);
+        if(receipt.event!=supportprobe::Event::None) {
+            const auto& r=receipt.sample;
+            Log("support-acquire: attempt=%u event=%s gate=%s frame=%u pawn=%08X weapon=%08X gun=%u hands=%d aim/off=%d/%d"
+                " grip=%d/%d tracked=%d context=%d enabled=%d game=%d presented=%d hip=%d pause=%d menu=%d"
+                " owner[knife=%d reload=%d cylinder=%d] acquire=%d active=%d distance=%.4f alignment=%.4f"
+                " primary=(%.4f %.4f %.4f) support=(%.4f %.4f %.4f) forward=(%.4f %.4f %.4f)",
+                receipt.attempt,supportprobe::Name(receipt.event),supportprobe::Gate(r),r.frame,r.pawn,r.weapon,r.vertices,
+                r.hands,r.aimHand,r.offHand,r.raw,r.effective,r.tracked,r.weaponContext,r.enabled,r.gameplay,
+                r.presented,r.holstered,r.paused,r.menu,r.knife,r.reload,r.cylinder,r.acquire,r.active,r.Distance(),r.Alignment(),
+                r.primary[0],r.primary[1],r.primary[2],r.support[0],r.support[1],r.support[2],
+                r.forward[0],r.forward[1],r.forward[2]);
+        }
+    }
     const bool steadyBusy=g_nextBlockFire||g_nextOwnsGrip||g_centurionOwnsGrip||
         g_hipKnifeState.held>=0||Rd(g_weaponHolstered)||Rd(g_weaponWheelOpen);
     const bool steadyAimHeld=weaponsteady::Hold(g_weaponSteady!=0&&AimHand()==1,
@@ -36710,6 +36744,8 @@ void LoadIniSettings() {
         Rd(g_sceneFlatEnabled) ? "FLAT CINEMA" : "ALWAYS VR",
         Rd(g_sceneCinemaMask) ? "ON" : "OFF");
     g_twoHandEnabled = GetPrivateProfileIntA("Input", "TwoHandGrip", 1, path) ? 1 : 0;
+    g_supportGripProbe=GetPrivateProfileIntA("Diagnostic","SupportGripProbe",0,path)!=0;
+    Log("ini: SupportGripProbe=%d (read-only; 24 squeezes, press/acquired/last-held; default OFF)",g_supportGripProbe);
     g_valkyrieAuthoredGrip = GetPrivateProfileIntA("Input", "ValkyrieAuthoredGrip", 0, path) ? 1 : 0;
     Log("ini: ValkyrieAuthoredGrip=%d (default OFF; compare shipped paired left-hand pose against guessed fore-end offset)",
         g_valkyrieAuthoredGrip);
