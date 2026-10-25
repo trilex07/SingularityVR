@@ -9,6 +9,7 @@ New-Item -ItemType Directory -Force $out | Out-Null
 $tests = @(
     'spikes/view_matrix/tests/test-dual-weapon-tmd.cpp',
     'spikes/view_matrix/tests/test-dual-hand-pose-probe.cpp',
+    'spikes/view_matrix/tests/test-dual-hand-action-pose.cpp',
     'spikes/view_matrix/tests/test-tmd-support-gauntlet.cpp',
     'spikes/view_matrix/tests/test-tmd-aim.cpp',
     'spikes/view_matrix/tests/test-tmd-native-adapter.cpp',

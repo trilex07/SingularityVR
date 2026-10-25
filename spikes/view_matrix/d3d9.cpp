@@ -13,6 +13,7 @@ static texbridge::Bind g_textureBridgeBind=nullptr;
 #include "arm_ik.h"
 #include "arm_bind.h"
 #include "arm_natural.h"
+#include "dual_hand_action_pose.h"
 #include "support_grip.h"
 #include "weapon_holster.h"
 #include "seeker_slot_policy.h"
@@ -2285,6 +2286,9 @@ inline bool WeaponInHands()  { return Rd(g_handsStatus) == HANDS_WEAPON; }
 static LONG g_dualWeaponTmdReady=0,g_dualWeaponTmdProbe=0;
 static LONG g_dualWeaponTmdGunScale=0; // opt-in native gun_scale result, no cached pose
 static LONG g_dualWeaponTmdRightWrist=0; // opt-in original TMD right-wrist target
+static LONG g_dualHandActionPose=0; // source-wrist normalization; default OFF
+static dualaction::Frame g_dualActionFrame;
+static volatile LONG g_dualActionRenderThread=0;
 static dualtmd::Census g_dualTmdCensus; // render thread only
 static bool DualWeaponTmdContext();
 static bool NativeAnimatedHandsNow();
@@ -17404,6 +17408,55 @@ static int RideTargetFor(UINT verts,UINT first,UINT triangles) {
     return 1;
 }
 
+static dualaction::Key DualActionKey() {
+    return {(uint32_t)Rd(g_armPaletteFrameToken),(uint32_t)g_playerPawn,
+        (uint32_t)Rd(g_weaponObj),(uint32_t)Rd(g_gunVerts)};
+}
+static bool DualActionAllowed() {
+    if(!Rd(g_dualHandActionPose))return false;
+    return dualaction::Eligible({true,DualWeaponTmdContext(),
+        g_handPoseValid[0]&&g_handPositionValid[0]&&g_handPoseValid[1]&&g_handPositionValid[1],
+        g_sceneMode.Current()==vrscene::Mode::GameplayStereo&&!Rd(g_gamePaused)&&!Rd(g_vrUiMenu),
+        NativeAnimatedHandsNow(),Rd(g_weaponHolstered)!=0,Rd(g_twoHandActive)!=0,
+        g_nextOwnsGrip||g_centurionOwnsGrip||g_hipKnifeState.held>=0,AimHand()==1});
+}
+static bool ApplyDualActionC(float C[4][4],bool aim) {
+    // Input/native gameplay threads never consume this render-owned frame cache.
+    if(!Rd(g_dualHandActionPose)||GetCurrentThreadId()!=(DWORD)Rd(g_dualActionRenderThread)||
+       !DualActionAllowed())return false;
+    const auto key=DualActionKey();
+    const bool applied=g_dualActionFrame.Apply(key,aim,C);
+    // One receipt per profile/side/outcome: exposes draw-before-witness ordering
+    // without per-frame logging or GPU readback. Unknown profiles remain untouched.
+    const unsigned profile=key.vertices==5799?0:key.vertices==11387?1:key.vertices==8297?2:key.vertices==11389?3:4;
+    static unsigned receipts=0;
+    if(profile<4){
+        const unsigned bit=1u<<(profile*4+(aim?2:0)+(applied?1:0));
+        if(!(receipts&bit)){
+            receipts|=bit;
+            Log("dual-hand-action: consume frame=%u gun=%u side=%s applied=%d sourceFrame=%u valid=%d",
+                key.frame,key.vertices,aim?"right":"left",applied,g_dualActionFrame.key.frame,g_dualActionFrame.valid);
+        }
+    }
+    return applied;
+}
+static void CaptureDualActionPose(bool tmdGloves,bool shadow,const unsigned* map,int slots,
+                                 const float saved[135][4],const float local[4][4]) {
+    if(!Rd(g_dualHandActionPose)||!tmdGloves||shadow)return;
+    if(!DualActionAllowed()){g_dualActionFrame.Clear();return;}
+    const auto& bind=armnatural::TmdBind();
+    // This is the audited ORIGINAL material-0 upload, before independent hand,
+    // isolation, support, fingers or either eye. Never seed from final constants.
+    if(!bind.ready||slots!=36||map[1]!=9||map[19]!=51){g_dualActionFrame.Clear();return;}
+    armbind::Mat l;memcpy(l.m,local,sizeof(l));
+    const bool ready=g_dualActionFrame.Capture(DualActionKey(),l,bind.bind[9],
+        reinterpret_cast<const float(*)[4]>(saved+3),bind.bind[51],
+        reinterpret_cast<const float(*)[4]>(saved+57));
+    InterlockedExchange(&g_dualActionRenderThread,(LONG)GetCurrentThreadId());
+    static unsigned notes=0;
+    if(notes++<8)Log("dual-hand-action: source material0 frame=%ld hands=%ld gun=%ld ready=%d; original wrists 9/51, same-frame shared assembly correction",
+        Rd(g_armPaletteFrameToken),Rd(g_handsStatus),Rd(g_gunVerts),ready);
+}
 static void BuildGunC(float C[4][4]) {
     float G[3]; GunAnchorWorld(G);
 
@@ -17431,6 +17484,7 @@ static void BuildGunC(float C[4][4]) {
         GunViewFrame() ? g_wantYaw : 0,
         H[0] - G[0], H[1] - G[1], H[2] - G[2]);
     ApplyMeshScale(C, H);   // Fix-E/gunsize
+    ApplyDualActionC(C,true);
 }
 
 // Independent glove palettes always follow live controllers. BuildGunC freezes aim-hand
@@ -17475,6 +17529,7 @@ static void BuildLiveControllerC(float C[4][4], bool aimHand) {
         GunViewFrame() ? g_wantYaw : 0,
         H[0] - G[0], H[1] - G[1], H[2] - G[2]);
     ApplyMeshScale(C, H);
+    ApplyDualActionC(C,aimHand);
 }
 
 // Enable only the existing independent, right-handed dual presentation. Missing
@@ -17901,6 +17956,7 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
         InterlockedExchange(&g_independentRejectCode, (LONG)IndependentReject::PaletteRead);
         return 0;
     }
+    CaptureDualActionPose(tmdGloves,layout.shadow,sectionMap,slots,saved,local);
     BuildLiveControllerC(primary, true);
     BuildLiveControllerC(off, false);
     float weaponC[4][4]{};
@@ -17929,6 +17985,13 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
     float base[4][4]{};
     if(g_thisDrawMoved)memcpy(base,g_thisDrawMoved==2?off:primary,sizeof(base));
     else for(int i=0;i<4;++i)base[i][i]=1.0f;
+    // Independent palette must cancel exactly the ride later submitted in both
+    // eyes, including the new source-wrist correction (never apply it twice).
+    if(DualActionAllowed()&&g_dualActionFrame.Current(DualActionKey())) {
+        if(g_thisDrawMoved==1)BuildGunC(base);
+        else if(g_thisDrawMoved==2)BuildTmdC(base);
+        else if(g_thisDrawMoved==3)BuildTmdAssemblyC(base);
+    }
     const bool wristAnchor = freeWrist || (gloves && Rd(g_noTmdPaletteFix) && Rd(g_gloveIsolate)==2 && !supportGrip && handValid[0] && handValid[1] &&
         handanchor::GameplaySource(Rd(g_noTmdWristAnchorFix)!=0,Rd(g_inCinematic)!=0,
             Rd(g_vrUiMenu)!=0,Rd(g_gamePaused)!=0,g_sceneMode.Current()==vrscene::Mode::GameplayStereo));
@@ -18000,7 +18063,8 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
     }
     // A held weapon owns the authored right-hand grip. Its target is BuildGunC;
     // the free-wrist translation below is only consumed without that grip.
-    if(!weaponSingleHand && handanchor::TmdRightWristAnchor(Rd(g_dualWeaponTmdRightWrist)!=0,tmdGloves,
+    if(!(DualActionAllowed()&&g_dualActionFrame.Current(DualActionKey())) &&
+       !weaponSingleHand && handanchor::TmdRightWristAnchor(Rd(g_dualWeaponTmdRightWrist)!=0,tmdGloves,
         DualWeaponTmdContext(),Rd(g_handsStatus)==HANDS_TMD,AimHand()==1,
         handValid[1],Rd(g_twoHandActive)!=0,(int)Rd(g_gloveIsolate))){
         const auto& tmdBind=armnatural::TmdBind();
@@ -36503,6 +36567,8 @@ void LoadIniSettings() {
     InterlockedExchange(&g_dualWeaponTmdGunScale,GetPrivateProfileIntA("Input","DualWeaponTmdGunScale",0,path)!=0);
     Log("ini: DualWeaponTmdGunScale=%ld (default OFF; owned gun_scale result only)",Rd(g_dualWeaponTmdGunScale));
     InterlockedExchange(&g_dualWeaponTmdRightWrist,GetPrivateProfileIntA("Input","DualWeaponTmdRightWrist",0,path)!=0);
+    InterlockedExchange(&g_dualHandActionPose,GetPrivateProfileIntA("Input","DualHandActionPose",0,path)!=0);
+    Log("ini: DualHandActionPose=%ld (default OFF; original material0 wrist parent, render only)",Rd(g_dualHandActionPose));
     Log("ini: DualWeaponTmdRightWrist=%ld (default OFF; TMD material-0 original right wrist)",Rd(g_dualWeaponTmdRightWrist));
     InterlockedExchange(&g_dualWeaponTmdProbe,GetPrivateProfileIntA("Diagnostic","DualWeaponTmdProbe",0,path)!=0);
     Log("ini: DualWeaponTmdReady=%ld DualWeaponTmdProbe=%ld (default OFF; native draws only, no pawn state writes)",

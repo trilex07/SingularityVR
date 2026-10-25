@@ -1,5 +1,9 @@
 # Dual-hand action interference — bounded pose follow-up, 2026-10-25
 
+Historical diagnostic checkpoint: the subsequent implementation and recovered
+session evidence are in [the action-pose candidate](sol-dual-hand-action-pose.md).
+The statements below describe the earlier diagnostic-only commit.
+
 Scope: follow-up on `feature/sol-seeker-back-slot` / PR #60, retaining all Seeker
 work. **The new action-interference fix is NOT implemented or physically proven.**
 This commit adds the missing discriminator; it does not replace the accepted
