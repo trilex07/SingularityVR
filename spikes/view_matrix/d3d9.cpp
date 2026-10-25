@@ -2278,6 +2278,7 @@ static LONG g_dualHandActionPose=0; // source-wrist normalization; default OFF
 static bool g_trackedDepthPrimeFix=false; // exact late-color siblings only; default OFF
 static bool g_trackedDepthPrimeProbe=false; // bounded first-refusal only; OFF
 static bool g_tmdTrackedMuzzle=false; // original TMD_Muzzle socket -> final rendered wrist; OFF
+static bool g_tmdTrackedBeam=false; // exact owned aging-beam child attachment; OFF
 static trackedprime::Cache g_trackedPrimeCache;
 static dualaction::Frame g_dualActionFrame;
 static volatile LONG g_dualActionRenderThread=0;
@@ -6973,6 +6974,7 @@ namespace NativeTmdSocket {
 static void Poll();
 static void Publish(const tmdmuzzle::Witness&);
 }
+namespace NativeTmdBeam { static void Poll(); }
 #include "native_ui_input.h"
 uipointer::TriggerGate g_vrUiTrigger[2];
 griplatch::GripLatch g_supportLatch;
@@ -21205,7 +21207,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
         // Read the exact material-0 wrist palette actually consumed by this
         // eye, after independent tracking. Ride lives in the camera matrix,
         // not c230: include it once when reconstructing world space.
-        if(g_tmdTrackedMuzzle&&assemblyGlove&&eye<2&&independentRegs&&nSeg>0&&
+        if((g_tmdTrackedMuzzle||g_tmdTrackedBeam)&&assemblyGlove&&eye<2&&independentRegs&&nSeg>0&&
            g_boundShaderLayout.bones==5&&g_boundShaderLayout.local==230&&
            !g_boundShaderLayout.shadow&&Rd(g_camPosValid)&&TmdRaised()&&
            !Rd(g_twoHandActive)&&Rd(g_offHandValid)&&Rd(g_tmdOnOffHand)&&
@@ -21468,7 +21470,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
         InterlockedIncrement(&g_centurionPalmPublished);
     }
     const HRESULT nextRestore=nextRegs?g_origSetVSConstF(dev,nextReg,nextSaved,(UINT)nextRegs):D3D_OK;
-    if(g_tmdTrackedMuzzle&&tmdmuzzle::Completed(tmdSocketEye,tmdSocketDrawn,assemblyEye,
+    if((g_tmdTrackedMuzzle||g_tmdTrackedBeam)&&tmdmuzzle::Completed(tmdSocketEye,tmdSocketDrawn,assemblyEye,
        SUCCEEDED(dhr),SUCCEEDED(nativeRestore),SUCCEEDED(handRestore),SUCCEEDED(nextRestore))) {
         NativeTmdSocket::Publish(tmdSocketEye[0]);
         static unsigned notes=0;
@@ -29855,6 +29857,7 @@ struct CenturionRefillNative {
 #include "native_registry.inl"
 #include "native_rifle_fx.inl"
 #include "native_tmd_socket.inl"
+#include "native_tmd_beam.inl"
 #include "native_scope_pip.inl"
 #include "native_seeker_projectile.inl"
 static int __fastcall Hook_CenturionAttemptReload(void* self,void*){
@@ -36801,6 +36804,8 @@ void LoadIniSettings() {
     g_trackedDepthPrimeFix=GetPrivateProfileIntA("Render","TrackedDepthPrimeFix",0,path)!=0;
     g_trackedDepthPrimeProbe=GetPrivateProfileIntA("Diagnostic","TrackedDepthPrimeProbe",0,path)!=0;
     g_tmdTrackedMuzzle=GetPrivateProfileIntA("Render","TmdTrackedMuzzle",0,path)!=0;
+    g_tmdTrackedBeam=GetPrivateProfileIntA("Render","TmdTrackedBeam",0,path)!=0;
+    Log("ini: TmdTrackedBeam=%d (default OFF; owned native aging-beam attachment, native endpoint preserved)",g_tmdTrackedBeam?1:0);
     Log("ini: TmdTrackedMuzzle=%d (default OFF; original socket on final both-eye rendered wrist)",g_tmdTrackedMuzzle?1:0);
     Log("ini: TrackedDepthPrimeFix=%d (default OFF; exact restored-color depth-only siblings)",g_trackedDepthPrimeFix?1:0);
     Log("ini: DualWeaponTmdRightWrist=%ld (default OFF; TMD material-0 original right wrist)",Rd(g_dualWeaponTmdRightWrist));

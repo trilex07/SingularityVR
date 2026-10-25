@@ -1,5 +1,12 @@
 # STATUS — session handoff
 
+## 2026-10-25 — MAIN: actual native aging-beam attachment correction
+
+- **PROVEN in original native code**: Age creates `RvCurvedBeamComponent` (`StaticMeshComponent`), attaches it to `TMD_Muzzle`, and skeletal child updates compose the parent from CPU SpaceBases. The tracked GPU wrist is absent from this producer. A world socket-query correction alone does not cover this path.
+- New default-OFF `[Render] TmdTrackedBeam=1` replaces only the exact locally owned aging child's parent matrix at the audited skeletal attachment return site. It uses the final successful both-eye wrist witness and original socket transform, preserving native target/curve, materials, animation and power rules. Socket-query feature is independently switchable.
+- **L1_PASS**: actual production callback x100 across four rotations, aligned parent, stack/arguments, exact owner/caller and OFF/stale/context/error fallback; original once. **L2_PASS**: original and emitted x86 ABI audit, PE32 `/O2`, dual-TMD/muzzle regressions, WeaponLocker literal `[eax+20Ch]`, OLED CPU/D3D11. No new D3D9 pixel execution (previous HAL failure remains open).
+- **L3/PSVR2 NOT RUN**. Black silhouette producer and Seeker practical accuracy remain unresolved; existing bounded diagnostics are retained. Steam installation unchanged. See the new aging-attachment section in `docs/handoffs/main-seeker-graphics-rootcause-20261025.md` and final candidate manifest for source/artifact hashes.
+
 ## 2026-10-25 — MAIN follow-up: original TMD socket / black-mask refusal / native Seeker lifecycle
 
 - Physical candidate `F20194FD...` **FAILED**: misplaced TMD Square FX, black offset silhouette and Seeker retrieval/accuracy. Session `build/main-seeker-evidence/session-20261025-121754`; accepted DLL `610F4C21...` / INI `C5D24E16...` restored and hash-verified. No subsequent deployment or launch yet.

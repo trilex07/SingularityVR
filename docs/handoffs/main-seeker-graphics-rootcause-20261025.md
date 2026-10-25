@@ -15,6 +15,75 @@ and practical accuracy failed. The installed DLL/INI were restored to accepted
 `610F4C21...` / `C5D24E16...` and independently hashed after exit. No new Steam
 deployment or game launch was performed during this follow-up.
 
+### Actual Square/Age producer: owned curved-beam attachment
+
+This supersedes the socket-only consumption uncertainty below. Original package
+reflection identifies `RvTMD.mAgingBeam` as a component of
+`RvCurvedBeamComponent : RvSharedBeamComponent : StaticMeshComponent`.
+It is not an ordinary particle emitter. Native Age creates it, assigns its
+original mesh/material, then attaches it to the owned skeletal mesh using
+`mMuzzleSocket`. The subsequent skeletal child update composes its parent from
+the original **CPU SpaceBases**. Independently tracked glove rendering changes
+the **GPU palette**. This is a proven transform ownership mismatch in the code
+path, not proof that the new hook has run in a physical session.
+
+Read-only `tools/fx/audit_tmd_beam.py` reproduces the following from owned EXE,
+unpacked text and original package; full disassembly stays in ignored evidence:
+
+- Age constructor `1019410`, vtable `19B7C18`; virtual +144 `FCFEB0` (209 bytes,
+  FNV `E896EBDDC7AA69D1`) creates/stores the beam and calls `B0BE40` at `FCFF77`.
+  The caller reads owned mesh +204, socket FName +45C/+460 and aging beam +530.
+- `B0BE40` (123 bytes, `92248BACBFC2BF33`) resolves the original socket and its
+  relative bone transform, then attaches the child through `B0BCE0`.
+- Skeletal virtual +138 `B036F0` (396 bytes, `750AA01ABF6A6D77`) walks attached
+  children, reads CPU SpaceBases +218, and composes socket/bone/local matrices.
+  At `B0384F`, child virtual +154 receives scene, owner, parent FMatrix*, 0.
+  Return identity is exactly `children+161`.
+- Curved-beam virtual +154 is `897240` (124 bytes, `81209A2B80795CAE`), RET16.
+  Its virtual +120 `7C0E30` (68 bytes, `0DBA87D91A4465CC`) synchronously copies
+  all 64 parent bytes using MOVAPS: replacement storage must be 16-byte aligned.
+- Age TickFX `FE4570` (618 bytes, `A7CF9086B0FCC73F`) consumes that component's
+  world start. Native curve endpoint and gameplay target remain authoritative.
+
+`native_tmd_beam.inl`, enabled only by **`[Render] TmdTrackedBeam=1`** (default 0),
+hooks this existing native child update. Exact local TMD/aging component identity,
+original class/vtable fingerprints, caller return site, engine thread, active VR
+TMD, no support/menu/cinema, and a <=150ms pawn-matched both-eye wrist are required.
+It passes original socket * final rendered wrist as the aligned parent, then
+invokes the original update **once**, forwarding scene/owner/collision unchanged.
+Other components, powers, heal beam and callers retain their original parent.
+An unreadable context disables this feature and forwards the native call.
+There are no weapon-ray, energy, animation, mesh, material or endpoint writes.
+No GPU synchronization/readback is introduced; logs stop after twelve successful
+updates and twelve gate changes. Hook installation retries are also bounded.
+
+Actual `/O2` callback accounting (auditor checks emitted instructions, not source):
+entry S has return; S+4 scene; S+8 owner; S+12 parent; S+16 collision; ECX child.
+EBP=S-4, A=align_down(EBP,16), C=A-60h after local storage and ESI/EDI saves.
+Collision remains at C-4 across the four-argument cdecl Prepare call; its 16-byte
+cleanup returns ESP to C-4. The native call sees ESP=C-16 containing scene,
+owner, selected parent and collision, with ECX restored to child. Native RET16
+returns to C; EDI/ESI and entry EBP restore, callback RET16 ends at S+20.
+
+The CPU fixture executes the **production hook** 100 times across four wrist
+rotations. It checks ESP, every argument, 16-byte alignment, unchanged input
+parent, exact child/caller, stale/pawn/context/AV/OFF fallbacks and original once.
+Dual-TMD (20 programs plus wiring/WeaponLocker), muzzle/TMD/aim (15 programs plus
+Python), factory `[eax+20Ch]` and OLED CPU/D3D11 regressions pass. The production
+PE32 `/O2` and both native/compiled ABI fingerprints pass. Existing D3D9 HAL
+CreateDevice failure `8876086A` is still a separate unexecuted pixel/state gate.
+
+**L3/physical acceptance PENDING.** Suggested next single-variable TMD check:
+`TmdTrackedBeam=1`, `TmdTrackedMuzzle=0`, `TmdNativeAim=0`; other accepted settings
+remain as recorded in the candidate plan. Raise/move the left hand, use Square
+on a valid target and L2, then close normally. Expected bounded receipts:
+`TMD tracked beam: ... armed`, `... owned aging attachment ... nativeParent=...
+trackedParent=...`. If the actual owned attachment is rewritten and FX still
+originates elsewhere, this hypothesis is falsified for that visible effect;
+trace the remaining draw/FX producer instead of moving the glove arbitrarily.
+Black silhouette and Seeker practical accuracy are **still unresolved** and do
+not inherit a PASS from this attachment correction. No Steam files changed.
+
 ### TMD socket correction: implemented, physical FX consumption pending
 
 The original native `GetSocketWorldLocationAndRotation` reads the original CPU
@@ -44,7 +113,8 @@ MSVC callback preserves ESI/EDI, forwards those four dwords, balances its option
 cdecl rewrite and returns RET16. `tools/fx/audit_tmd_socket.py` records complete
 native/compiled stack accounting in ignored private evidence.
 
-Important limit: original script `BeginAgingFX` uses `mMuzzleSocket` for sound;
+Historical socket-only limit (the attachment producer is now audited above):
+original script `BeginAgingFX` uses `mMuzzleSocket` for sound;
 `AttachComponentsToOwnerMesh` attaches `mPalmLight` to it. That does **not** prove
 the Square beam consumes the world-query helper. Its runtime consumption remains
 UNPROVEN. Do not call Square FX fixed from this implementation or CPU tests.
