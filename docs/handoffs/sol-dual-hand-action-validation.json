@@ -1,0 +1,32 @@
+{
+  "builtAt": "2026-10-25T00:31:33.8796065+02:00",
+  "repository": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-sol-seeker",
+  "branch": "feature/sol-seeker-back-slot",
+  "commit": "c01985c49184a75be640a3eca7a1cdaea16c3dab",
+  "workingTreeStatus": [],
+  "optimization": "/O2",
+  "performanceInstrumentation": false,
+  "architecture": "x86 PE32",
+  "machine": "0x014C",
+  "optionalHeaderMagic": "0x010B",
+  "sha256": "B28BF27147A828D7D780CF62647025B0159A6FFA21262F901F7CF59528783A07",
+  "purpose": "Read-only dual-hand action pose discriminator; NOT a fixed rendering candidate",
+  "evidence": {
+    "pose_budget_x86": "PASS",
+    "dual_tmd_19_cpp_python_oled": "PASS",
+    "tmd_runtime_regressions_d3d9_ex": "PASS",
+    "oled_d3d11_gpu_cpu_max_1_lsb": "PASS",
+    "final_dll_locker_compiled_abi": "PASS",
+    "original_psk_psa_measurement": "PASS",
+    "steam": "NOT RUN",
+    "psvr2": "NOT RUN",
+    "requested_action_independence_fix": "NOT IMPLEMENTED; actual submitting action poses required"
+  },
+  "private_logs": [
+    "build/seeker-private/dual-hand-regressions.log",
+    "build/seeker-private/dual-hand-d3d-regressions.log",
+    "build/seeker-private/dual-hand-build.log",
+    "build/seeker-private/dual-hand-abi.log",
+    "build/seeker-private/dual-hand-animation.json"
+  ]
+}
