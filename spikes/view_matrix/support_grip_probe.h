@@ -36,7 +36,7 @@ inline const char* Gate(const Sample& s) {
     if(s.acquire)return "eligible-unlatched"; // Includes the latch's one-sample identity reset.
     const float d=s.Distance();
     if(!std::isfinite(d))return "invalid-distance";
-    if(d<(s.pistol?.045f:.12f))return "too-close";
+    if(d<((s.pistol||s.closeLongGun)?.045f:.12f))return "too-close";
     if(d>(s.pistol?.38f:.50f))return "too-far";
     // Gate thresholds are DIAGNOSTIC labels only. Production's acquire result
     // above stays authoritative and is also printed, preventing silent drift.

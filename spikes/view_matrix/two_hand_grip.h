@@ -11,7 +11,10 @@ inline bool TwoHandGripAllowed(const float delta[3], const float forward[3], boo
     // rifle/shotgun gate unchanged; pistol acquisition is still explicit (Grip held) and
     // bounded to the hands' near zone. Once latched, GripLatch deliberately ignores distance
     // until release, so moving the support hand away cannot silently detach it.
-    const float minDistance = pistol ? .045f : .12f;
+    // The physical Volk probe recorded valid Grip presses at 10.15 and 11.94 cm
+    // that were refused solely by the ordinary 12 cm minimum. Keep this smaller
+    // near-hand floor confined to the explicit ordinary-long-gun opt-in.
+    const float minDistance = (pistol || closeLongGun) ? .045f : .12f;
     const float maxDistance = pistol ? (wasActive ? .55f : .38f)
                                      : (wasActive ? .65f : .50f);
     if (!std::isfinite(distance) || distance < minDistance || distance > maxDistance) return false;

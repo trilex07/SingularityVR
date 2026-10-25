@@ -68,10 +68,31 @@ int main() {
     assert(skeletal::Inverse(inverseRoot.m,correctedRoot.m));
     assert(LargestDifference(Product(correctedChild,inverseRoot),childOffset)<.02f);
     for(const auto& row:left[1])for(float value:row)assert(value==0);
+    // Actual UE3 order in the failed session: one corrected gun body, then the
+    // TMD material-0 wrist, then two more submissions of the SAME gun body in
+    // frame 35921. The TMD wrist is not the normal HANDS_WEAPON gun anchor.
+    Mat animatedTmdWrist=normalWrist;
+    animatedTmdWrist.m[3][0]+=60.f;
+    assert(reference.ObserveWrist(key,animatedTmdWrist,raw,2461,10046,false));
+    Mat sameFrameGun;
+    assert(reference.Correct(key,original,4,local,ride,raw,2461,10062,right,&sameFrameGun));
+    assert(Distance(sameFrameGun,expected)<.03f);
+    assert(std::memcmp(left,right,sizeof(left))==0);
+    assert(reference.Correct(key,original,4,local,ride,raw,2462,10080,right,&sameFrameGun));
+    assert(Distance(sameFrameGun,expected)<.03f);
+    // Repeated stereo-confirmed TMD frames may last longer than five seconds.
+    // They refresh tracking evidence, not the normal gun/wrist anchor.
+    for(unsigned frame=2462;frame<=3008;++frame)
+        assert(reference.ObserveWrist(key,animatedTmdWrist,raw,frame,
+                                      10080+(frame-2462)*11,false));
+    const auto longNow=10080+(3008-2462)*11;
+    assert(reference.Correct(key,original,4,local,ride,raw,3008,longNow+1,right,&sameFrameGun));
+    assert(Distance(sameFrameGun,expected)<.03f);
+    assert(!reference.Correct(key,original,4,local,ride,raw,3011,longNow+2,right));
+    assert(!reference.Correct(key,original,4,local,ride,raw,3008,longNow+501,right));
     Key other=key;++other.weapon;
-    assert(!reference.Correct(other,original,4,local,ride,raw,2461,10012,right));
-    assert(!reference.Correct(key,original,2,local,ride,raw,2461,10012,right));
-    assert(!reference.Correct(key,original,4,local,ride,raw,2461,10080,right));
-    reference.Clear();assert(!reference.Correct(key,original,4,local,ride,raw,2461,10012,right));
-    std::puts("PASS dual TMD gun: captured final pose retained across L2, child/recoil relative pose, two eyes, no zero-palette corruption, freshness and identity gates");
+    assert(!reference.Correct(other,original,4,local,ride,raw,3008,longNow+1,right));
+    assert(!reference.Correct(key,original,2,local,ride,raw,3008,longNow+1,right));
+    reference.Clear();assert(!reference.Correct(key,original,4,local,ride,raw,3008,longNow+1,right));
+    std::puts("PASS dual TMD gun: normal gun anchor survives animated TMD wrist, repeated same-frame draws, long L2 hold, child/recoil pose, stereo, freshness and identity");
 }

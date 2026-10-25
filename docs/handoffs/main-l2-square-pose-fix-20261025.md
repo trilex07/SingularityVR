@@ -41,3 +41,42 @@ Release grip and use Square with the left TMD near a target. The gun must stay
 with the right hand and Square's effect must begin at the visible TMD glove.
 Check a magazine pickup only if convenient; the previous candidate already
 passed its physical flicker check.
+
+## Follow-up after physical E73087DC (same day)
+
+The user saw the black weapon-shaped region again and could only acquire the
+ordinary two-hand grip awkwardly. Square was not observed. The log confirms
+`TrackedDepthPrimeFix=0`, `TrackedDepthSourcePose=0`, and
+`SupportGripNearZone=0` in this candidate, whereas the prior measured candidate
+had all three at 1. This INI regression restores a previously documented
+foreground depth producer and the stricter ordinary grip cone; it is not
+evidence that the TMD Age beam failed.
+
+The E73087DC trace also proves a separate gun-pose contract violation. At frame
+35921 the Volk body is corrected once, then submitted twice with its original
+palette after the TMD wrist publishes in the *same* frame. The old reference
+overwrote the normal gun/wrist anchor with the differently animated TMD wrist,
+and `frame<=wristFrame` refused subsequent submissions. The 50 ms witness cap
+also refused draws at 62 ms in the same frame. The correction now preserves the
+paired HANDS_WEAPON wrist/controller anchor; a stereo TMD wrist refreshes only
+tracking freshness. Same-frame and next-frame gun draws use the same predicted
+pose, subject to exact pawn/weapon/mesh, tracking and two-frame/500 ms gates.
+No native gun palette, inventory, firing, TMD power or right-hand input is
+written outside the existing default-OFF render path.
+
+The older near-zone PSVR2 log records valid Volk Grip presses at 10.15 and
+11.94 cm refused solely by the 12 cm minimum. The opt-in ordinary-long-gun
+near-zone now accepts down to 4.5 cm, matching its existing near-hand maximum
+of 30 cm. Seeker, pistol, reload ownership and the ordinary OFF route retain
+their previous policies. The bounded support-acquire receipts remain available.
+
+Offline: dual-weapon/TMD suite and native TMD socket tests PASS; x86 PE32 `/O2`
+build PASS. The D3D9 and D3D9Ex depth-prime pixel test PASS with hardware GPU
+access; its first isolated run could not create a HAL device (8876086A).
+Physical acceptance of the combined follow-up remains PENDING. The next
+candidate must enable the three previously missing INI flags together with
+`DualWeaponTmdGunPose=1`, `TmdTrackedMuzzle=1`, and `TmdTrackedBeam=1`, while
+preserving every accepted INI entry. In PSVR2, first check the black region on
+Volk/Valkyrie over a floor; then L2 -> left Grip, R2 -> left Grip, and Square
+at a visible TMD target. Close the game normally; MAIN reads the bounded logs
+and verifies restoration hashes.

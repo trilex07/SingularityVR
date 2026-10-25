@@ -5,9 +5,11 @@
 #include <cstring>
 
 // The weapon body is submitted before the material-0 glove in each UE3 frame.
-// Keep the last completed, stereo-confirmed wrist and advance it by the RAW
-// controller delta. HANDS_TMD may animate the gun root, while BuildGunC applies
-// a separate controller ride: comparing the un-ridden roots was the 59-UU error.
+// Keep the last paired HANDS_WEAPON gun/wrist pose as the anchor and advance it
+// by the RAW controller delta. The HANDS_TMD wrist is a different native pose:
+// it confirms that stereo tracking is still live but must not replace the gun
+// anchor. Otherwise successive color submissions in one frame move the gun to
+// different positions (or stop retargeting after the 50 ms wrist timeout).
 namespace dualtmdgunpose {
 using armbind::Mat;
 constexpr unsigned kMaxBones=75;
@@ -44,7 +46,7 @@ inline bool Uniform(const Mat& a) {
 }
 struct Reference {
     Key key{};
-    Mat gunFromWrist{},lastWrist{},lastRawController{};
+    Mat gunFromWrist{},normalWrist{},normalRawController{};
     Mat pendingGun{};
     std::uint64_t tick=0,wristTick=0;
     unsigned pendingFrame=0,wristFrame=0;
@@ -56,6 +58,7 @@ struct Reference {
         if(!k.pawn||!k.weapon||k.rootSlot>=kMaxBones||!frame||!now||
            !armbind::FromGpu(rootGpu,root)||!armbind::Rigid(root)||
            !Affine(local)||!Uniform(ride))return false;
+        if(valid&&!(key==k))Clear();
         pendingGun=Product(Product(root,local),ride);
         if(!Uniform(pendingGun))return false;
         key=k;pendingFrame=frame;pending=true;return true;
@@ -64,15 +67,22 @@ struct Reference {
                       unsigned frame,std::uint64_t now,bool normalHands) {
         if(!k.pawn||!k.weapon||!frame||!now||!Uniform(wrist)||
            !Uniform(rawController))return false;
-        if(normalHands&&pending&&key==k&&pendingFrame==frame) {
+        if(valid&&!(key==k)){Clear();return false;}
+        if(normalHands) {
+            if(!pending||!(key==k)||pendingFrame!=frame){pending=false;return false;}
             Mat inverse;
             if(!skeletal::Inverse(inverse.m,wrist.m))return false;
             const Mat relative=Product(inverse,pendingGun);
             if(!Uniform(relative))return false;
             gunFromWrist=relative;tick=now;valid=true;
+            normalWrist=wrist;normalRawController=rawController;
+        } else if(!valid||!wristValid||frame<wristFrame||
+                  frame-wristFrame>2||now<wristTick||now-wristTick>500) {
+            pending=false;return false;
         }
-        if(valid&&!(key==k)){Clear();return false;}
-        lastWrist=wrist;lastRawController=rawController;
+        // In TMD mode the rendered wrist can use another animation and root.
+        // Its successful stereo draw is a freshness witness only. Retaining the
+        // normal wrist makes every gun pass in this frame use one rigid pose.
         wristFrame=frame;wristTick=now;wristValid=true;
         pending=false;return true;
     }
@@ -80,17 +90,18 @@ struct Reference {
                  const Mat& local,const Mat& ride,const Mat& rawController,
                  unsigned frame,std::uint64_t now,
                  float result[kMaxBones][3][4],Mat* finalGun=nullptr) const {
-        if(!valid||!wristValid||!(key==k)||!frame||frame<=wristFrame||
+        if(!valid||!wristValid||!(key==k)||!frame||frame<wristFrame||
+           frame-wristFrame>2||
            !bones||bones>kMaxBones||k.rootSlot>=bones||
-           now<tick||now-tick>5000||now<wristTick||now-wristTick>50||
+           now<tick||now<wristTick||now-wristTick>500||
            !Affine(local)||!Uniform(ride)||!Uniform(rawController))return false;
         Mat inverseController,inverseTail,inverseRoot,root;
         const Mat tail=Product(local,ride);
-        if(!skeletal::Inverse(inverseController.m,lastRawController.m)||
+        if(!skeletal::Inverse(inverseController.m,normalRawController.m)||
            !skeletal::Inverse(inverseTail.m,tail.m)||
            !armbind::FromGpu(original[k.rootSlot],root)||!armbind::Rigid(root)||
            !skeletal::Inverse(inverseRoot.m,root.m))return false;
-        const Mat predictedWrist=Product(Product(lastWrist,inverseController),rawController);
+        const Mat predictedWrist=Product(Product(normalWrist,inverseController),rawController);
         const Mat desiredFinal=Product(predictedWrist,gunFromWrist);
         const Mat targetSkin=Product(desiredFinal,inverseTail);
         const Mat delta=Product(inverseRoot,targetSkin);

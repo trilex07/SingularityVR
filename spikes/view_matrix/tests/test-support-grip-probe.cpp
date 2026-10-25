@@ -58,6 +58,14 @@ int main(){
     assert(!TwoHandGripAllowed(distant,s.forward,true,true,false,false,true));
     // Seeker keeps its separate back/support routing.
     assert(!TwoHandGripAllowed(s.delta,s.forward,true,true,false,false,false));
+    // Two valid Volk Grip presses in the archived PSVR2 log missed ONLY the
+    // old 12 cm floor: 10.15 cm and 11.94 cm, both with tracked controllers.
+    s=Valid();s.vertices=8297;s.closeLongGun=true;
+    s.delta[0]=-.0128f;s.delta[1]=.0984f;s.delta[2]=.0216f;
+    s.forward[0]=-.6506f;s.forward[1]=-.2291f;s.forward[2]=-.7241f;
+    s.acquire=TwoHandGripAllowed(s.delta,s.forward,true,true,false,false,true);
+    assert(s.acquire);Gate(s,"eligible-unlatched");
+    assert(!TwoHandGripAllowed(s.delta,s.forward,true,true,false,false,false));
     s=Valid();s.delta[0]=std::numeric_limits<float>::quiet_NaN();s.acquire=false;Gate(s,"invalid-distance");
     // Observe exactly the production latch order: identity reset, acquire,
     // distance-independent hold, release. Observation cannot change the latch.
