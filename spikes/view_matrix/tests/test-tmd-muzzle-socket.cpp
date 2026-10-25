@@ -115,6 +115,9 @@ int main(){
         assert(!Capture(bind.bind[9],gpu,gpu,local,armbind::Mat{},camera,100,1,12,w));
     }
     NativeTmdSocket::original=(NativeTmdSocket::Query)&NativeQuery;
+    NativeTmdSocket::originalBone=(NativeTmdSocket::Query)&NativeQuery;
+    static auto NativeGetMesh=[](void* a)->void*{return a==(void*)201?(void*)999:nullptr;};
+    NativeTmdSocket::originalMesh=(NativeTmdSocket::GetMesh)+NativeGetMesh;
     Witness eyes[2]{w,w};bool drawn[2]{true,true};
     assert(Completed(eyes,drawn,2,true,true,true,true));
     for(unsigned bit=0;bit<4;++bit)assert(!Completed(eyes,drawn,2,bit!=0,bit!=1,bit!=2,bit!=3));
@@ -142,6 +145,15 @@ int main(){
     w.tick=GetTickCount64();NativeTmdSocket::Publish(w);
     const auto converts=converterCalls;NativeTmdSocket::Hook((void*)300,nullptr,{7,0},p,nullptr);
     assert(converterCalls==converts&&p[0]==expected.m[3][0]);
+    for(unsigned i=0;i<100;++i){assert(NativeTmdSocket::HookBone((void*)300,nullptr,{7,0},p,r)==1);
+        assert(p[0]==expected.m[3][0]&&p[1]==expected.m[3][1]&&r[0]==101&&r[2]==303);}
+    NativeTmdSocket::HookBone((void*)300,nullptr,{7,0},p,nullptr);
+    assert(p[0]==expected.m[3][0]);
+    assert(NativeTmdSocket::HookMesh((void*)200)==(void*)300);
+    assert(NativeTmdSocket::HookMesh((void*)201)==(void*)999);
+    assert(NativeTmdSocket::HookMesh((void*)0)==nullptr);
+    g_tmdTrackedMuzzle=false;assert(NativeTmdSocket::HookMesh((void*)200)==nullptr);g_tmdTrackedMuzzle=true;
+    g_twoHandActive=1;assert(NativeTmdSocket::HookMesh((void*)200)==nullptr);g_twoHandActive=0;
     NativeOwnedInventory::fail=true;unchanged((void*)300,{7,0});assert(!g_tmdTrackedMuzzle);
     NativeOwnedInventory::fail=false;
     // Reproduce the ACTUAL attachment dispatch, not the socket query: native
