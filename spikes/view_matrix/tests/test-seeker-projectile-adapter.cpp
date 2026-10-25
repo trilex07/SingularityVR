@@ -12,13 +12,27 @@ static uintptr_t g_playerPawn=10;
 static float g_camPos[3]{100,200,300};
 static SRWLOCK g_nextVisualLock=SRWLOCK_INIT;
 static seekergeometry::Witness g_seekerPose;
+static unsigned char projectile[128]{};
+static bool diagnostic=false;
+static unsigned propertyReads=0;
 static LONG Rd(volatile LONG& p){return InterlockedCompareExchange(&p,0,0);}
 static bool VrModeOn(){return true;}
 static bool InGameplay(){return true;}
-static bool IsLive(uintptr_t p){return p==10||p==20;}
+static bool IsLive(uintptr_t p){return p==10||p==20||p==(uintptr_t)projectile;}
 static void Log(const char*,...){}
 static void BuildGunC(float m[4][4]){memset(m,0,64);for(unsigned i=0;i<4;++i)m[i][i]=1;}
-namespace NativeOwnedInventory {static uintptr_t P(uintptr_t){return 0;}}
+constexpr int OBJ_CLASS=32;
+namespace PauseRttProbe {
+static int Property(uintptr_t cls,const char* name,const char* type,unsigned budget){
+    assert(cls==99&&!strcmp(type,"StructProperty")&&budget==4096);++propertyReads;
+    if(!strcmp(name,"Location"))return 64;
+    if(!strcmp(name,"Velocity"))return 80;
+    assert(!strcmp(name,"Rotation"));return 96;}
+static bool SafeRange(uintptr_t p,size_t n){
+    return p>=(uintptr_t)projectile&&p+n<=(uintptr_t)projectile+sizeof(projectile);}
+}
+namespace NativeTmdAim {static bool ExactClass(uintptr_t c,const char* n){return c==99&&!strcmp(n,"Projectile");}}
+namespace NativeOwnedInventory {static uintptr_t P(uintptr_t p){return p==(uintptr_t)projectile+OBJ_CLASS?99:0;}}
 namespace NativeSeekerSlot {
 static const char* stage="test-ownership";
 static bool owner=true;
@@ -50,7 +64,7 @@ static V* __fastcall Start(void* self,void*,V* out,V offset){
 }
 static void* __fastcall Spawn(void* self,void*,void* archetype,const V* origin,const V* direction){
     assert(self==(void*)20&&archetype==(void*)55);++spawns;
-    seenOrigin=*origin;seenDirection=*direction;return (void*)77;
+    seenOrigin=*origin;seenDirection=*direction;return diagnostic?projectile:(void*)77;
 }
 static void* __fastcall Fire(void* self,void*){
     ++fires;corrected=NativeSeekerProjectile::active.valid;
@@ -94,6 +108,14 @@ int main(){
     NativeSeekerSlot::badRead=true;unchanged();NativeSeekerSlot::badRead=false;
     g_seekerPose.tick=GetTickCount64()-151;unchanged();
     g_seekerPose.tick=GetTickCount64();ThrowTest();
+    // The new receipt reads the actual result only AFTER native Spawn and
+    // leaves all native Location/Velocity/Rotation and padding bytes intact.
+    memset(projectile,0xa5,sizeof(projectile));
+    unsigned char before[sizeof(projectile)];memcpy(before,projectile,sizeof(before));
+    diagnostic=true;notes=0;
+    for(unsigned i=0;i<15;++i){g_seekerPose.tick=GetTickCount64();
+        assert(FireHook((void*)20,nullptr)==projectile);}
+    assert(propertyReads==12*3&&!memcmp(before,projectile,sizeof(projectile)));
     assert(fires==starts+1&&starts==spawns);
-    puts("PASS real Seeker projectile adapter: original fire/start/spawn once, native archetype/result preserved, launch correction scoped, stale/OFF/other weapon gates, SEH TLS cleanup");
+    puts("PASS real Seeker projectile adapter: original fire/start/spawn once, native archetype/result preserved, launch correction scoped, stale/OFF/other weapon gates, SEH TLS cleanup; post-Spawn typed receipt bounded to 12, native object unchanged");
 }

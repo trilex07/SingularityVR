@@ -9,17 +9,17 @@ using armbind::Mat;
 // Native cooked axes, NOT ActorX axes. These are attachment facts, not mesh data.
 inline constexpr unsigned IndexBytes=44988*2,IndexHash=3842523959u;
 inline constexpr Mat RootBind{{
-    {1.f,-3.6519772e-8f,-4.80625e-8f,0},
-    {3.6519773e-8f,1.f,1.6836574e-8f,0},
-    {4.80625e-8f,-1.6836576e-8f,1.f,0},
-    {4.187307e-6f,109.49099916f,44.33592962f,1}}};
+    {1.f,3.6519772e-8f,-4.80625e-8f,0},
+    {-3.6519773e-8f,1.f,-1.6836574e-8f,0},
+    {4.80625e-8f,1.6836576e-8f,1.f,0},
+    {4.187307e-6f,-109.49099916f,44.33592962f,1}}};
 inline constexpr Mat LeftGrip{{
     {.046796019f,-.964132087f,-.261265098f,0},
     {.734438542f,.210489137f,-.645208766f,0},
     {.677059939f,-.161689956f,.717945818f,0},
     {5.368237084f,6.006297823f,10.267012817f,1}}};
-inline constexpr armik::V Muzzle{.000006786479f,112.88768866f,95.83399562f};
-inline constexpr armik::V Forward{4.80625e-8f,-1.6836576e-8f,1.f};
+inline constexpr armik::V Muzzle{.000006786479f,-112.88768866f,95.83399562f};
+inline constexpr armik::V Forward{4.80625e-8f,1.6836576e-8f,1.f};
 inline bool Vertices(unsigned n){return n==12444||n==12436;}
 inline bool Body(int base,unsigned min,unsigned vertices,unsigned first,unsigned triangles){
     return base==0&&min==0&&Vertices(vertices)&&first==0&&triangles==14990;

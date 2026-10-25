@@ -1,5 +1,31 @@
 # STATUS — session handoff
 
+## 2026-10-25 — MAIN: actual failed-session Seeker/depth/wheel corrections
+
+- Physical `B32E9A7E...` failed: black silhouette, Seeker support at floor, inaccurate launch, black wheel. Accepted `610F4C21...` DLL / `C5D24E16...` INI restored and independently verified.
+- **PROVEN** Seeker-only double Y reflection in asset audit: all 12444 original GPU positions match native convention exactly. Corrected root/muzzle data; original PSA grip unchanged. Recorded-frame regression removes 218.982 UU support / 225.775 UU muzzle displacement, preserving native spread/guidance.
+- **PROVEN** exact depth sibling refused solely for native viewport `0/.0001`. Accept that measured request alongside `0/0`; all identity/state/owner guards stay. D3D9/Ex black->world pixel reproduction PASS; native visual cause still requires physical confirmation.
+- Wheel now owns its full fixed-function state inside existing restoration scope. D3D9/Ex poisoned-state tests PASS with identical stereo pixels; native entry-state receipt bounded to 8 transitions. Atlas verified `3EF17826...`; specific physical leaked state remains unrecorded.
+- **L1/L2 PASS**: Seeker, UI, depth-prime, TMD/SVTG, HUD pixels, muzzle/aim/reload, WeaponLocker and OLED. New build/ABI provenance in candidate manifest. **L3/PSVR2 PENDING**; no new install, launch or accepted baseline.
+- Current instructions/evidence: `docs/handoffs/main-seeker-four-fixes-20261025.md`. Supersedes previous test plans; Seeker back slot stays OFF per user-selected native lifecycle.
+
+## 2026-10-25 — MAIN: actual native aging-beam attachment correction
+
+- **PROVEN in original native code**: Age creates `RvCurvedBeamComponent` (`StaticMeshComponent`), attaches it to `TMD_Muzzle`, and skeletal child updates compose the parent from CPU SpaceBases. The tracked GPU wrist is absent from this producer. A world socket-query correction alone does not cover this path.
+- New default-OFF `[Render] TmdTrackedBeam=1` replaces only the exact locally owned aging child's parent matrix at the audited skeletal attachment return site. It uses the final successful both-eye wrist witness and original socket transform, preserving native target/curve, materials, animation and power rules. Socket-query feature is independently switchable.
+- **L1_PASS**: actual production callback x100 across four rotations, aligned parent, stack/arguments, exact owner/caller and OFF/stale/context/error fallback; original once. **L2_PASS**: original and emitted x86 ABI audit, PE32 `/O2`, dual-TMD/muzzle regressions, WeaponLocker literal `[eax+20Ch]`, OLED CPU/D3D11. No new D3D9 pixel execution (previous HAL failure remains open).
+- **L3/PSVR2 NOT RUN**. Black silhouette producer and Seeker practical accuracy remain unresolved; existing bounded diagnostics are retained. Steam installation unchanged. See the new aging-attachment section in `docs/handoffs/main-seeker-graphics-rootcause-20261025.md` and final candidate manifest for source/artifact hashes.
+
+## 2026-10-25 — MAIN follow-up: original TMD socket / black-mask refusal / native Seeker lifecycle
+
+- Physical candidate `F20194FD...` **FAILED**: misplaced TMD Square FX, black offset silhouette and Seeker retrieval/accuracy. Session `build/main-seeker-evidence/session-20261025-121754`; accepted DLL `610F4C21...` / INI `C5D24E16...` restored and hash-verified. No subsequent deployment or launch yet.
+- Default-OFF `[Render] TmdTrackedMuzzle` reconstructs original `TMD_Muzzle` from the final both-eye material-0 wrist, then corrects only the exact owned native socket query. Original native helper and actual x86 stack ABI verified. **L1_PASS**; actual Square beam consumption is **UNPROVEN**, physical FX acceptance PENDING.
+- Default-OFF `[Diagnostic] TrackedDepthPrimeProbe`: bounded first-refusal/state/resource receipts; original suppression predicate unchanged. Last session omitted zero primes; phase-0-only trace did not contain the affected draw. Black producer still **UNPROVEN**.
+- Per user authorization, next candidate `SeekerBackSlot=0` uses original native heavy-weapon drop/switch lifecycle. No back retrieval promised. New first-12 post-Spawn receipts observe native initialized vectors without writes or guidance/spread changes. Practical accuracy PENDING.
+- **PASS**: focused socket/Seeker CPU adapters, dual-TMD, reload/aim, HUD geometry, WeaponLocker policies, OLED CPU and D3D11 GPU. **BLOCKED**: new D3D9/Ex pixels/IB/state execution because HAL CreateDevice returns `8876086A`; do not inherit old binary's pixel PASS.
+- Build/audit/artifact provenance: final clean-source candidate manifest. L3/PSVR2 NOT RUN for the follow-up; no new accepted baseline.
+- Details, exact restrictions and one-session test: `docs/handoffs/main-seeker-graphics-rootcause-20261025.md` (latest follow-up section supersedes the older test).
+
 ## 2026-10-25 — MAIN Seeker resolver / tracked depth-prime candidate
 
 - Branch: `fix/main-seeker-graphics-rootcause`, based on full integration `218dea73`.

@@ -45,7 +45,22 @@ def audit(psk_path, psa_path, package_path):
     assert layout['chunks'][0]['palette'] == [64, 53, 54, 62, 57, 59, 60, 61, 55]
     assert layout['chunks'][1]['palette'] == [64]
     reflect = np.diag([1., -1., 1., 1.])
-    native = [reflect @ b @ reflect for b in exported]
+    # read_psk has ALREADY undone ActorX's Y reflection in its bone matrices.
+    # Its PNTS0000 positions, unlike those matrices, are still ActorX-space.
+    native = exported
+    # Independently prove the convention against every packed native GPU vertex,
+    # not a second computation that repeats the same reflection assumption.
+    expected = points[[w[0] for w in wedges]] * [1., -1., 1.]
+    first = struct.pack('<3f', *expected[0])
+    candidates = []
+    at = raw[2].find(first, mesh['property_end'], mesh['offset'] + mesh['size'])
+    while at >= 0:
+        if at + len(wedges)*32 <= mesh['offset'] + mesh['size']:
+            gpu = np.ndarray((len(wedges), 3), '<f4', raw[2], at, strides=(32, 4))
+            if np.array_equal(gpu, expected):
+                candidates.append(at)
+        at = raw[2].find(first, at + 1, mesh['offset'] + mesh['size'])
+    assert len(candidates) == 1, 'native GPU positions must prove the bone-space convention'
 
     def pose(sequence):
         seq, = [s for s in sequences if s['name'].lower() == sequence]
@@ -67,7 +82,10 @@ def audit(psk_path, psa_path, package_path):
                 vertices=len(wedges), triangles=len(faces), layout=layout,
                 root_bind=native[root].tolist(), left_idle_relative=idle.tolist(),
                 muzzle_origin=origin.tolist(), muzzle_forward=forward.tolist(),
-                idle_fire_max_difference=float(np.max(np.abs(idle-fire))),native_projectile_modes=projectile_modes)
+                idle_fire_max_difference=float(np.max(np.abs(idle-fire))),native_projectile_modes=projectile_modes,
+                native_vertex_witness=dict(offset=candidates[0], stride=32,
+                    vertices=len(wedges), max_position_error_uu=0,
+                    bone_space='read_psk matrices are already native; PNTS0000 alone reflects Y'))
 
 
 if __name__ == '__main__':

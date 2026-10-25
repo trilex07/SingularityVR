@@ -1,4 +1,5 @@
 #include "two_hand_grip.h"
+#include "support_grip_probe.h"
 #include "dual_weapon_tmd_policy.h"
 #include "tmd_support_gauntlet.h"
 #include "skeletal_palette.h"
@@ -12,6 +13,7 @@ static texbridge::Bind g_textureBridgeBind=nullptr;
 #include "camera_translation_evidence.h"
 #include "arm_ik.h"
 #include "arm_bind.h"
+#include "tmd_muzzle_socket.h"
 #include "arm_natural.h"
 #include "dual_hand_action_pose.h"
 #include "support_grip.h"
@@ -49,6 +51,7 @@ static unsigned g_startupTimeoutMs=5000,g_startupMinVisibleMs=3000;
 #include "weapon_wheel_seek.h"
 #include "settings_panel.h"
 #include "ui_remaster_runtime.h"
+#include "wheel_draw_state.h"
 #include "weapon_wheel_atlas.h"
 #include "locker_loadout_icons.h"
 #include "weapon_wheel_layout.h"
@@ -60,6 +63,7 @@ static unsigned g_startupTimeoutMs=5000,g_startupMinVisibleMs=3000;
 #include "support_grip_palette.h"
 #include "fp_shadow.h"
 #include "tracked_depth_prime.h"
+#include "tracked_depth_source.h"
 #include "camera_stabilization.h"
 #include "weapon_steady.h"
 #include "shadow_policy.h"
@@ -2275,6 +2279,10 @@ static LONG g_dualWeaponTmdGunScale=0; // opt-in native gun_scale result, no cac
 static LONG g_dualWeaponTmdRightWrist=0; // opt-in original TMD right-wrist target
 static LONG g_dualHandActionPose=0; // source-wrist normalization; default OFF
 static bool g_trackedDepthPrimeFix=false; // exact late-color siblings only; default OFF
+static bool g_trackedDepthPrimeProbe=false; // bounded first-refusal only; OFF
+static bool g_trackedDepthSourcePose=false; // keep original wrist producer when omitting depth; OFF
+static bool g_tmdTrackedMuzzle=false; // original TMD_Muzzle socket -> final rendered wrist; OFF
+static bool g_tmdTrackedBeam=false; // exact owned aging-beam child attachment; OFF
 static trackedprime::Cache g_trackedPrimeCache;
 static dualaction::Frame g_dualActionFrame;
 static volatile LONG g_dualActionRenderThread=0;
@@ -6966,6 +6974,11 @@ static void FinishCinemaExitHotPath() {
     g_cinemaExitProfileStart=0;
 }
 #include "pause_vr_settings.h"
+namespace NativeTmdSocket {
+static void Poll();
+static void Publish(const tmdmuzzle::Witness&);
+}
+namespace NativeTmdBeam { static void Poll(); }
 #include "native_ui_input.h"
 uipointer::TriggerGate g_vrUiTrigger[2];
 griplatch::GripLatch g_supportLatch;
@@ -6999,6 +7012,7 @@ bool     g_handPoseValid[2] = { false, false };
 bool g_handPositionValid[2] = { false, false };
 bool g_handActionActive[2] = { false, false };
 volatile LONG g_twoHandEnabled = 1, g_twoHandActive = 0;
+static bool g_supportGripProbe=false; // read-only XR acquisition receipts, default OFF
 static int g_valkyrieAuthoredGrip = 0; // isolated A/B: retain UE3's authored two-hand relation
 static int g_valkyrieSingleGrip = 0; // isolated A/B: right glove follows the same weapon delta as pistol
 static int g_volkAuthoredGrip = 0; // default OFF: retain native shotgun hand/weapon relationship
@@ -11510,6 +11524,38 @@ void SyncXRInput(XrTime displayTime) {
     else g_supportLatch.Update(supportGrip,supportAcquire?0.f:1e9f,supportTracked,
                                (uint32_t)Rd(g_weaponObj),GetTickCount64());
     const bool supportActive=supportGrip && supportWeaponValid && g_supportLatch.Latched();
+    if(g_supportGripProbe) {
+        supportprobe::Sample s;
+        s.frame=(uint32_t)Rd(g_armPaletteFrameToken);s.pawn=(uint32_t)g_playerPawn;
+        s.weapon=(uint32_t)Rd(g_weaponObj);s.vertices=(uint32_t)Rd(g_gunVerts);
+        s.raw=rawSupportGrip;s.effective=supportGrip;s.tracked=supportTracked;
+        s.weaponContext=supportWeaponValid;s.enabled=Rd(g_twoHandEnabled)!=0;s.gameplay=feedGame;
+        s.presented=WeaponPresentationInHands();s.holstered=Rd(g_weaponHolstered)!=0;
+        s.paused=Rd(g_gamePaused)!=0;s.menu=Rd(g_vrUiMenu)!=0;
+        s.knife=hipknife::Reserves(g_hipKnifeState,OffHand());
+        s.reload=OffHand()==0&&(g_nextOwnsGrip||g_centurionOwnsGrip);
+        s.cylinder=OffHand()==0&&g_centurionReload&&g_centurionConfig.cylinderGestures&&
+            centurionreload::Active(g_centurionState.phase);
+        s.pistol=pistolSupport;s.acquire=supportAcquire;s.active=supportActive;
+        s.hands=(int)Rd(g_handsStatus);s.aimHand=AimHand();s.offHand=OffHand();
+        memcpy(s.delta,supportDelta,sizeof(s.delta));memcpy(s.forward,supportForward,sizeof(s.forward));
+        s.primary[0]=primaryPos.x;s.primary[1]=primaryPos.y;s.primary[2]=primaryPos.z;
+        s.support[0]=supportPos.x;s.support[1]=supportPos.y;s.support[2]=supportPos.z;
+        static supportprobe::Budget budget;
+        const auto receipt=budget.Observe(true,s);
+        if(receipt.event!=supportprobe::Event::None) {
+            const auto& r=receipt.sample;
+            Log("support-acquire: attempt=%u event=%s gate=%s frame=%u pawn=%08X weapon=%08X gun=%u hands=%d aim/off=%d/%d"
+                " grip=%d/%d tracked=%d context=%d enabled=%d game=%d presented=%d hip=%d pause=%d menu=%d"
+                " owner[knife=%d reload=%d cylinder=%d] acquire=%d active=%d distance=%.4f alignment=%.4f"
+                " primary=(%.4f %.4f %.4f) support=(%.4f %.4f %.4f) forward=(%.4f %.4f %.4f)",
+                receipt.attempt,supportprobe::Name(receipt.event),supportprobe::Gate(r),r.frame,r.pawn,r.weapon,r.vertices,
+                r.hands,r.aimHand,r.offHand,r.raw,r.effective,r.tracked,r.weaponContext,r.enabled,r.gameplay,
+                r.presented,r.holstered,r.paused,r.menu,r.knife,r.reload,r.cylinder,r.acquire,r.active,r.Distance(),r.Alignment(),
+                r.primary[0],r.primary[1],r.primary[2],r.support[0],r.support[1],r.support[2],
+                r.forward[0],r.forward[1],r.forward[2]);
+        }
+    }
     const bool steadyBusy=g_nextBlockFire||g_nextOwnsGrip||g_centurionOwnsGrip||
         g_hipKnifeState.held>=0||Rd(g_weaponHolstered)||Rd(g_weaponWheelOpen);
     const bool steadyAimHeld=weaponsteady::Hold(g_weaponSteady!=0&&AimHand()==1,
@@ -17492,6 +17538,32 @@ static bool ApplyDualActionC(float C[4][4],bool aim) {
     }
     return applied;
 }
+static bool PublishDualActionSource(const trackedsource::Source& source,bool omittedPrime) {
+    const auto key=DualActionKey();
+    const auto& bind=armnatural::TmdBind();
+    if(!bind.ready){g_dualActionFrame.Clear();return false;}
+    armbind::Mat local;memcpy(local.m,source.local,sizeof(local));
+    const bool ready=g_dualActionFrame.Capture(key,local,bind.bind[9],source.left,bind.bind[51],source.right);
+    InterlockedExchange(&g_dualActionRenderThread,(LONG)GetCurrentThreadId());
+    // Compare ORIGINAL uploads, not final independent palettes. A mismatch is
+    // evidence of a different producer/space, not permission to freeze a pose.
+    static dualaction::Key primeKey{};
+    static trackedsource::Source primeSource{};
+    static bool havePrime=false;
+    static unsigned equalNotes=0,differentNotes=0;
+    if(omittedPrime){primeKey=key;primeSource=source;havePrime=ready;}
+    else if(g_trackedDepthSourcePose&&havePrime&&primeKey==key){
+        const float localDiff=trackedsource::Difference(&primeSource.local[0][0],&source.local[0][0],16);
+        const float leftDiff=trackedsource::Difference(&primeSource.left[0][0],&source.left[0][0],12);
+        const float rightDiff=trackedsource::Difference(&primeSource.right[0][0],&source.right[0][0],12);
+        const bool equal=ready&&localDiff<=.0001f&&leftDiff<=.0001f&&rightDiff<=.0001f;
+        unsigned& notes=equal?equalNotes:differentNotes;
+        if(notes++<8)Log("tracked-depth-source: compare frame=%u draw=%ld gun=%u ready=%d equal=%d maxOriginal[local=%.7g left=%.7g right=%.7g] (no frozen or guessed palette)",
+            key.frame,Rd(g_frameDrawIdx),key.vertices,ready,equal,localDiff,leftDiff,rightDiff);
+        havePrime=false;
+    }
+    return ready;
+}
 static void CaptureDualActionPose(bool tmdGloves,bool shadow,const unsigned* map,int slots,
                                  const float saved[135][4],const float local[4][4]) {
     if(!Rd(g_dualHandActionPose)||!tmdGloves||shadow)return;
@@ -17500,14 +17572,31 @@ static void CaptureDualActionPose(bool tmdGloves,bool shadow,const unsigned* map
     // This is the audited ORIGINAL material-0 upload, before independent hand,
     // isolation, support, fingers or either eye. Never seed from final constants.
     if(!bind.ready||slots!=36||map[1]!=9||map[19]!=51){g_dualActionFrame.Clear();return;}
-    armbind::Mat l;memcpy(l.m,local,sizeof(l));
-    const bool ready=g_dualActionFrame.Capture(DualActionKey(),l,bind.bind[9],
-        reinterpret_cast<const float(*)[4]>(saved+3),bind.bind[51],
-        reinterpret_cast<const float(*)[4]>(saved+57));
-    InterlockedExchange(&g_dualActionRenderThread,(LONG)GetCurrentThreadId());
+    trackedsource::Source source;
+    memcpy(source.local,local,sizeof(source.local));
+    memcpy(source.left,saved+3,sizeof(source.left));
+    memcpy(source.right,saved+57,sizeof(source.right));
+    const bool ready=PublishDualActionSource(source,false);
     static unsigned notes=0;
     if(notes++<8)Log("dual-hand-action: source material0 frame=%ld hands=%ld gun=%ld ready=%d; original wrists 9/51, same-frame shared assembly correction",
         Rd(g_armPaletteFrameToken),Rd(g_handsStatus),Rd(g_gunVerts),ready);
+}
+
+static void CaptureOmittedDepthSource(IDirect3DDevice9* dev,UINT vertices,UINT first,UINT triangles) {
+    if(!g_trackedDepthSourcePose || (vertices!=7444&&vertices!=2626)||first!=0||triangles!=4402)return;
+    const auto layout=g_boundShaderLayout;
+    const LONG motionMode=Rd(g_hideMeshIdx);
+    const bool eligible=g_independentHands&&(motionMode==0||motionMode==1||motionMode==3)&&DualActionAllowed();
+    trackedsource::Input input{true,true,eligible,layout.shadow,vertices,first,triangles,
+        layout.bones,layout.boneRegs,layout.local};
+    trackedsource::Source source;
+    const char* refusal=trackedsource::Read(dev,input,source);
+    const bool ready=!refusal&&PublishDualActionSource(source,true);
+    static unsigned successful=0,failed=0;
+    unsigned& notes=ready?successful:failed;
+    if(notes++<8)Log("tracked-depth-source: %s frame=%ld draw=%ld gun=%ld verts=%u first=%u tris=%u CTAB=%d/%d/%d gate=%s (original material0, read-only before omitted rasterization)",
+        ready?"CAPTURE":"REFUSED",Rd(g_armPaletteFrameToken),Rd(g_frameDrawIdx),Rd(g_gunVerts),vertices,first,triangles,
+        layout.bones,layout.boneRegs,layout.local,refusal?refusal:ready?"ready":"bind-or-palette");
 }
 
 static void BuildGunC(float C[4][4]) {
@@ -20577,6 +20666,37 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
         trackedprime::Receipt receipt;
         const bool skip=g_trackedPrimeCache.Skip(dev,TrackedPrimeOwner(),
             TrackedPrimeDraw(t,baseVertex,minIndex,numVertices,startIndex,primCount),&receipt);
+        if(g_trackedDepthPrimeProbe&&!skip) {
+            struct Seen {const char* gate;UINT vertices,start,tris;LONG hands,support;};
+            struct Window {LONG weapon,hands,support;unsigned attempts;};
+            static Seen seen[64]{};static unsigned count=0,windowCount=0;
+            static Window windows[8]{};
+            const LONG hands=Rd(g_handsStatus),support=Rd(g_twoHandActive),weapon=Rd(g_gunVerts);
+            unsigned window=0;
+            for(;window<windowCount;++window)if(windows[window].weapon==weapon&&
+                windows[window].hands==hands&&windows[window].support==support)break;
+            if(window==windowCount&&windowCount<8)windows[windowCount++]={weapon,hands,support,0};
+            // Idle weapon draws must not exhaust the diagnostic before the
+            // user raises TMD. At most eight contexts x 32 actual inspections.
+            if(count<64&&window<windowCount&&windows[window].attempts<32) {
+                trackedprime::Inspection r;
+                if(g_trackedPrimeCache.Inspect(dev,TrackedPrimeOwner(),
+                   TrackedPrimeDraw(t,baseVertex,minIndex,numVertices,startIndex,primCount),r)) {
+                    ++windows[window].attempts;
+                    bool duplicate=false;
+                    for(unsigned i=0;i<count;++i)if(seen[i].gate==r.gate&&seen[i].vertices==numVertices&&
+                       seen[i].start==startIndex&&seen[i].tris==primCount&&
+                       seen[i].hands==hands&&seen[i].support==support){duplicate=true;break;}
+                    if(!duplicate){seen[count++]={r.gate,numVertices,startIndex,primCount,hands,support};
+                        Log("tracked-prime refusal: gate=%s frame=%ld hands=%ld support=%ld verts=%u base=%d min=%u first=%u tris=%u scene=%d shadow=%d exact=%d VB=%p IB=%p stream=%u/%u RT=%p VS=%p PS=%p requested=%d:%.6g/%.6g actual=%.6g/%.6g z=%lu write=%lu color=%lX stencil=%lu",
+                            r.gate,Rd(g_armPaletteFrameToken),hands,support,numVertices,
+                            baseVertex,minIndex,startIndex,primCount,r.key.rtIsScene,r.key.layoutShadow,r.exact,
+                            r.key.vb,r.key.ib,r.key.vbOffset,r.key.stride,r.rt,r.vs,r.ps,r.requestedValid,
+                            r.requested.MinZ,r.requested.MaxZ,r.actual.MinZ,r.actual.MaxZ,r.z,r.write,r.color,r.stencil);
+                    }
+                }
+            }
+        }
         // Never broaden the predicate to force a fix to engage. Refusals from
         // an exact native near-plane sibling distinguish color/stencil routes.
         static unsigned keptNotes=0,skippedNotes=0;
@@ -20585,9 +20705,13 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
                 Rd(g_armPaletteFrameToken),numVertices,startIndex,primCount,
                 receipt.z,receipt.write,receipt.color,receipt.stencil);}
         if(skip){
-            // No D3D state or tracked-pose mutation; only a proven depth-only sibling.
+            // Keep the ORIGINAL pose producer even though its depth pixels are
+            // redundant. Otherwise BuildGunC has no same-frame witness until
+            // the later glove color draw, changing the pose after gun depth.
+            CaptureOmittedDepthSource(dev,numVertices,startIndex,primCount);
+            // No GPU state or controller-sample writes; omit only the exact depth sibling.
             if(skippedNotes<8){++skippedNotes;
-                Log("tracked-depth-prime: omitted exact late-color sibling frame=%ld verts=%u first=%u tris=%u depthOnly=1 nearZ=0 stencil=0",
+                Log("tracked-depth-prime: omitted exact late-color sibling frame=%ld verts=%u first=%u tris=%u depthOnly=1 nativePrimeRange=1 stencil=0",
                     Rd(g_armPaletteFrameToken),numVertices,startIndex,primCount);}
             return D3D_OK;
         }
@@ -21121,6 +21245,8 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
     unsigned shortEyeDraws=0;
     unsigned seekerEyeDraws=0;
     unsigned assemblyEye=0;
+    tmdmuzzle::Witness tmdSocketEye[2];
+    bool tmdSocketDrawn[2]{};
     const HRESULT dhr = FAILED(sleevePaletteHr)?sleevePaletteHr:StereoPair(dev, [&] {
         const unsigned eye=assemblyEye++;
         unsigned poseIndex=6;
@@ -21162,6 +21288,28 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
         // No surface readback or GPU synchronization.
         const bool assemblyGlove=(numVertices==7444||numVertices==2626)&&startIndex==0&&primCount==4402;
         const bool assemblyDevice=shortTmdBuffer&&nativeIndices.valid;
+        // Read the exact material-0 wrist palette actually consumed by this
+        // eye, after independent tracking. Ride lives in the camera matrix,
+        // not c230: include it once when reconstructing world space.
+        if((g_tmdTrackedMuzzle||g_tmdTrackedBeam)&&assemblyGlove&&eye<2&&independentRegs&&nSeg>0&&
+           g_boundShaderLayout.bones==5&&g_boundShaderLayout.local==230&&
+           !g_boundShaderLayout.shadow&&Rd(g_camPosValid)&&TmdRaised()&&
+           !Rd(g_twoHandActive)&&Rd(g_offHandValid)&&Rd(g_tmdOnOffHand)&&
+           armnatural::TmdBind().ready&&
+           g_sceneMode.Current()==vrscene::Mode::GameplayStereo&&
+           !Rd(g_gamePaused)&&!Rd(g_inCinematic)&&!Rd(g_vrUiMenu)) {
+            float skin[3][4];armbind::Mat local,ride;
+            if(SUCCEEDED(dev->GetVertexShaderConstantF(8,skin[0],3))&&
+               SUCCEEDED(dev->GetVertexShaderConstantF(230,local.m[0],4))) {
+                if(g_thisDrawMoved==1)BuildGunC(ride.m);
+                else if(g_thisDrawMoved==2)BuildTmdC(ride.m);
+                else if(g_thisDrawMoved==3)BuildTmdAssemblyC(ride.m);
+                else for(unsigned axis=0;axis<4;++axis)ride.m[axis][axis]=1.f;
+                tmdmuzzle::Capture(armnatural::TmdBind().bind[9],skin,local,ride,
+                    g_camPos,g_playerPawn,GetTickCount64(),
+                    (unsigned)Rd(g_armPaletteFrameToken),tmdSocketEye[eye]);
+            }
+        }
         if(seekerProbe&&eye<2){
             // Final bound shader/IB inside each eye; no GPU readback or flush.
             IDirect3DIndexBuffer9* ib=nullptr;IDirect3DVertexBuffer9* vb=nullptr;
@@ -21343,6 +21491,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
         return hr;
         };
         const HRESULT eyeHr=drawEye();
+        if(eye<2)tmdSocketDrawn[eye]=SUCCEEDED(eyeHr)&&tmdSocketEye[eye].valid;
         if(poseIndex<6){g_dualPoseRecords[poseIndex].drawHr=eyeHr;g_dualPoseRecords[poseIndex].submitted=1;}
         return eyeHr;
     });
@@ -21405,6 +21554,13 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
         InterlockedIncrement(&g_centurionPalmPublished);
     }
     const HRESULT nextRestore=nextRegs?g_origSetVSConstF(dev,nextReg,nextSaved,(UINT)nextRegs):D3D_OK;
+    if((g_tmdTrackedMuzzle||g_tmdTrackedBeam)&&tmdmuzzle::Completed(tmdSocketEye,tmdSocketDrawn,assemblyEye,
+       SUCCEEDED(dhr),SUCCEEDED(nativeRestore),SUCCEEDED(handRestore),SUCCEEDED(nextRestore))) {
+        NativeTmdSocket::Publish(tmdSocketEye[0]);
+        static unsigned notes=0;
+        if(notes++<4)Log("TMD tracked muzzle: published final material-0 wrist frame=%u eyes=2 indexRestore=OK paletteRestore=OK",
+            tmdSocketEye[0].frame);
+    }
     if(poseDue)for(unsigned eye=0;eye<2;++eye){
         auto& r=g_dualPoseRecords[poseSource.part*2+eye];
         if(r.frame==poseSource.frame&&r.call==poseSource.call){
@@ -29784,6 +29940,8 @@ struct CenturionRefillNative {
 #include "native_refill_engine.inl"
 #include "native_registry.inl"
 #include "native_rifle_fx.inl"
+#include "native_tmd_socket.inl"
+#include "native_tmd_beam.inl"
 #include "native_scope_pip.inl"
 #include "native_seeker_projectile.inl"
 static int __fastcall Hook_CenturionAttemptReload(void* self,void*){
@@ -30768,18 +30926,7 @@ static bool DrawUiRemasterWheelEye(IDirect3DDevice9* dev,int eye,int cx,int cy,
     const uiremaster::Rect chassis{cx-m.outerR,cy-m.outerR,cx+m.outerR,cy+m.outerR};
     if(!uiremaster::Valid(chassis,eye,half,backW,backH))return false;
     for(int i=0;i<slots;++i)if(!uiremaster::SpriteValid(uiremaster::WheelIcon(verts[i])))return false;
-    dev->SetRenderState(D3DRS_ZENABLE,FALSE);
-    dev->SetRenderState(D3DRS_SCISSORTESTENABLE,FALSE);
-    dev->SetRenderState(D3DRS_ALPHABLENDENABLE,TRUE);
-    dev->SetRenderState(D3DRS_SRCBLEND,D3DBLEND_SRCALPHA);
-    dev->SetRenderState(D3DRS_DESTBLEND,D3DBLEND_INVSRCALPHA);
-    dev->SetTextureStageState(0,D3DTSS_COLOROP,D3DTOP_SELECTARG1);
-    dev->SetTextureStageState(0,D3DTSS_COLORARG1,D3DTA_TEXTURE);
-    dev->SetTextureStageState(0,D3DTSS_ALPHAOP,D3DTOP_SELECTARG1);
-    dev->SetTextureStageState(0,D3DTSS_ALPHAARG1,D3DTA_TEXTURE);
-    dev->SetSamplerState(0,D3DSAMP_MINFILTER,D3DTEXF_LINEAR);
-    dev->SetSamplerState(0,D3DSAMP_MAGFILTER,D3DTEXF_LINEAR);
-    dev->SetPixelShader(nullptr);dev->SetVertexShader(nullptr);
+    if(!wheelstate::Prepare(dev,wheelstate::Pass::Atlas))return false;
     dev->SetFVF(D3DFVF_XYZRHW|D3DFVF_TEX1);
     bool good=DrawUiRemasterSprite(dev,g_uiRemasterNeutral,chassis,uiremaster::wheelChassis);
     for(int i=0;i<slots;++i){
@@ -30853,9 +31000,6 @@ static int DrawUiRemasterWheelPair(IDirect3DDevice9* dev,const wheel_layout::Met
            SUCCEEDED(dev->Clear(0,nullptr,D3DCLEAR_TARGET,0,1.0f,0))){
             // The scratch texture stores premultiplied colour and straight
             // alpha. Text glyphs are opaque, so the same composite applies.
-            dev->SetRenderState(D3DRS_SEPARATEALPHABLENDENABLE,TRUE);
-            dev->SetRenderState(D3DRS_SRCBLENDALPHA,D3DBLEND_ONE);
-            dev->SetRenderState(D3DRS_DESTBLENDALPHA,D3DBLEND_INVSRCALPHA);
             ready=DrawUiRemasterWheelEye(dev,0,(int)side/2,(int)side/2,m,slots,
                                          selected,verts,named,clip,reserve,(int)side*2,(int)side);
         }
@@ -30867,13 +31011,7 @@ static int DrawUiRemasterWheelPair(IDirect3DDevice9* dev,const wheel_layout::Met
     if(!ready)return 0;
     // One DrawPrimitiveUP submits both eyes. Until this call succeeds, the
     // accepted backbuffer has not received a single remastered wheel pixel.
-    dev->SetRenderState(D3DRS_SEPARATEALPHABLENDENABLE,FALSE);
-    dev->SetRenderState(D3DRS_SRCBLEND,D3DBLEND_ONE);
-    dev->SetRenderState(D3DRS_DESTBLEND,D3DBLEND_INVSRCALPHA);
-    dev->SetTextureStageState(0,D3DTSS_COLOROP,D3DTOP_SELECTARG1);
-    dev->SetTextureStageState(0,D3DTSS_COLORARG1,D3DTA_TEXTURE);
-    dev->SetTextureStageState(0,D3DTSS_ALPHAOP,D3DTOP_SELECTARG1);
-    dev->SetTextureStageState(0,D3DTSS_ALPHAARG1,D3DTA_TEXTURE);
+    if(!wheelstate::Prepare(dev,wheelstate::Pass::Composite))return 0;
     dev->SetTexture(0,g_uiRemasterWheelStage);
     dev->SetFVF(D3DFVF_XYZRHW|D3DFVF_TEX1);
     return SUCCEEDED(g_origDrawPrimUP(dev,D3DPT_TRIANGLELIST,4,vertices,
@@ -30902,6 +31040,22 @@ void DrawWeaponWheel(IDirect3DDevice9* dev) {
     }
     if (FAILED(g_wristState->Capture())) {
         if (old) old->Release(); if (depth) depth->Release(); back->Release(); return;
+    }
+    // Bounded, CPU state queries only: establish which native material state
+    // was live at wheel entry. A submitted draw is not evidence of its pixels.
+    { static LONG previous=-1;static unsigned reports=0;const LONG held=Rd(g_gunVerts);
+      if(reports<8&&previous!=held){previous=held;++reports;
+        DWORD fog=0,op=0,alphaOp=0,stage1=0,srgb=0,write=0,mask=0,alphaTest=0;
+        dev->GetRenderState(D3DRS_FOGENABLE,&fog);dev->GetRenderState(D3DRS_BLENDOP,&op);
+        dev->GetRenderState(D3DRS_BLENDOPALPHA,&alphaOp);dev->GetTextureStageState(1,D3DTSS_COLOROP,&stage1);
+        dev->GetSamplerState(0,D3DSAMP_SRGBTEXTURE,&srgb);dev->GetRenderState(D3DRS_SRGBWRITEENABLE,&write);
+        dev->GetRenderState(D3DRS_COLORWRITEENABLE,&mask);dev->GetRenderState(D3DRS_ALPHATESTENABLE,&alphaTest);
+        Log("wheel incoming state: verts=%ld fog=%lu blendOp=%lu alphaOp=%lu stage1=%lu sRGB=%lu/%lu mask=%lu alphaTest=%lu; explicit overlay state follows",
+            held,fog,op,alphaOp,stage1,srgb,write,mask,alphaTest);
+      }}
+    if(!wheelstate::Prepare(dev,wheelstate::Pass::Legacy)){
+        g_wristState->Apply();
+        if(old)old->Release();if(depth)depth->Release();back->Release();return;
     }
     dev->SetDepthStencilSurface(nullptr);
     g_origSetRenderTarget(dev, 0, back);
@@ -31056,7 +31210,9 @@ void DrawWeaponWheel(IDirect3DDevice9* dev) {
     }
     const int remasterResult=roundOn?DrawUiRemasterWheelPair(dev,safeMetrics,wheelCx,wheelCy,
         slots,selected,slotVerts,slotNamed,wheelClip,wheelReserve,(int)d.Width,(int)d.Height):0;
-    const bool remasterRendered=remasterResult!=0;
+    // A failed staged atlas may have left textured alpha state. Re-establish
+    // the legacy draw contract before fallback, or skip safely on device loss.
+    const bool remasterRendered=remasterResult!=0||!wheelstate::Prepare(dev,wheelstate::Pass::Legacy);
     {static unsigned receipts=0;static int previous=-99;
      if(receipts<12&&previous!=remasterResult){previous=remasterResult;++receipts;
          Log("M02 wheel binding: result=%d enabled=%ld slots=%d neutral=%p lang=%s; result=1 is committed both-eye draw",
@@ -36637,6 +36793,8 @@ void LoadIniSettings() {
         Rd(g_sceneFlatEnabled) ? "FLAT CINEMA" : "ALWAYS VR",
         Rd(g_sceneCinemaMask) ? "ON" : "OFF");
     g_twoHandEnabled = GetPrivateProfileIntA("Input", "TwoHandGrip", 1, path) ? 1 : 0;
+    g_supportGripProbe=GetPrivateProfileIntA("Diagnostic","SupportGripProbe",0,path)!=0;
+    Log("ini: SupportGripProbe=%d (read-only; 24 squeezes, press/acquired/last-held; default OFF)",g_supportGripProbe);
     g_valkyrieAuthoredGrip = GetPrivateProfileIntA("Input", "ValkyrieAuthoredGrip", 0, path) ? 1 : 0;
     Log("ini: ValkyrieAuthoredGrip=%d (default OFF; compare shipped paired left-hand pose against guessed fore-end offset)",
         g_valkyrieAuthoredGrip);
@@ -36728,7 +36886,14 @@ void LoadIniSettings() {
     InterlockedExchange(&g_dualHandActionPose,GetPrivateProfileIntA("Input","DualHandActionPose",0,path)!=0);
     Log("ini: DualHandActionPose=%ld (default OFF; original material0 wrist parent, render only)",Rd(g_dualHandActionPose));
     g_trackedDepthPrimeFix=GetPrivateProfileIntA("Render","TrackedDepthPrimeFix",0,path)!=0;
+    g_trackedDepthPrimeProbe=GetPrivateProfileIntA("Diagnostic","TrackedDepthPrimeProbe",0,path)!=0;
+    g_trackedDepthSourcePose=GetPrivateProfileIntA("Render","TrackedDepthSourcePose",0,path)!=0;
+    g_tmdTrackedMuzzle=GetPrivateProfileIntA("Render","TmdTrackedMuzzle",0,path)!=0;
+    g_tmdTrackedBeam=GetPrivateProfileIntA("Render","TmdTrackedBeam",0,path)!=0;
+    Log("ini: TmdTrackedBeam=%d (default OFF; owned native aging-beam attachment, native endpoint preserved)",g_tmdTrackedBeam?1:0);
+    Log("ini: TmdTrackedMuzzle=%d (default OFF; original socket on final both-eye rendered wrist)",g_tmdTrackedMuzzle?1:0);
     Log("ini: TrackedDepthPrimeFix=%d (default OFF; exact restored-color depth-only siblings)",g_trackedDepthPrimeFix?1:0);
+    Log("ini: TrackedDepthSourcePose=%d (default OFF; preserve original wrist capture before exact depth omission)",g_trackedDepthSourcePose?1:0);
     Log("ini: DualWeaponTmdRightWrist=%ld (default OFF; TMD material-0 original right wrist)",Rd(g_dualWeaponTmdRightWrist));
     InterlockedExchange(&g_dualWeaponTmdProbe,GetPrivateProfileIntA("Diagnostic","DualWeaponTmdProbe",0,path)!=0);
     Log("ini: DualWeaponTmdReady=%ld DualWeaponTmdProbe=%ld (default OFF; native draws only, no pawn state writes)",

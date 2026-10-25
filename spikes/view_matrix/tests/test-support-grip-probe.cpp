@@ -1,0 +1,69 @@
+#include "../support_grip_probe.h"
+#include "../grip_latch.h"
+#include <cassert>
+#include <cstring>
+#include <limits>
+#include <initializer_list>
+#include <cstdio>
+
+using supportprobe::Sample;
+using supportprobe::Event;
+static Sample Valid() {
+    Sample s;s.weapon=123;s.pawn=456;s.vertices=11387;s.hands=2;
+    s.raw=s.effective=s.tracked=s.weaponContext=s.enabled=s.gameplay=s.presented=true;
+    s.delta[2]=-.3f;s.forward[2]=-1.f;
+    s.acquire=TwoHandGripAllowed(s.delta,s.forward,s.effective,s.tracked,false);
+    return s;
+}
+static void Gate(const Sample& s,const char* expected){assert(!std::strcmp(supportprobe::Gate(s),expected));}
+int main(){
+    Sample s=Valid();Gate(s,"eligible-unlatched");
+    s.active=true;Gate(s,"latched");s=Valid();
+    s.raw=false;Gate(s,"released");s=Valid();s.effective=false;
+    s.reload=true;Gate(s,"reload-owned");s.reload=false;s.cylinder=true;Gate(s,"cylinder-active");
+    s.knife=true;Gate(s,"knife-owned");s=Valid();s.tracked=false;Gate(s,"tracking");
+    s=Valid();s.weaponContext=false;s.presented=false;Gate(s,"weapon-not-presented");
+    s=Valid();s.weaponContext=false;s.gameplay=false;Gate(s,"not-gameplay");
+    s=Valid();s.weaponContext=false;s.holstered=true;Gate(s,"holstered");
+    s=Valid();s.weaponContext=false;s.paused=true;Gate(s,"paused");
+    s=Valid();s.weaponContext=false;s.menu=true;Gate(s,"vr-menu");
+    s=Valid();s.weaponContext=false;s.enabled=false;Gate(s,"disabled");
+
+    // Diagnostic labels agree with the REAL, unchanged production geometric
+    // predicate for pistol, ordinary long guns and Seeker, including rotations.
+    for(unsigned gun:{5799u,8297u,11387u,11389u,12444u})
+    for(int x=-65;x<=65;x+=5)for(int y=-65;y<=65;y+=5)for(int z=-65;z<=65;z+=5){
+        s=Valid();s.vertices=gun;s.pistol=gun==5799;
+        s.delta[0]=x*.01f;s.delta[1]=y*.01f;s.delta[2]=z*.01f;
+        s.acquire=TwoHandGripAllowed(s.delta,s.forward,true,true,false,s.pistol);
+        const bool diagnosticAccept=!std::strcmp(supportprobe::Gate(s),"eligible-unlatched");
+        assert(s.acquire==diagnosticAccept);
+        if(!s.acquire)assert(std::strcmp(supportprobe::Gate(s),"geometry-unclassified"));
+    }
+    s=Valid();s.delta[0]=std::numeric_limits<float>::quiet_NaN();s.acquire=false;Gate(s,"invalid-distance");
+    // Observe exactly the production latch order: identity reset, acquire,
+    // distance-independent hold, release. Observation cannot change the latch.
+    supportprobe::Budget budget;griplatch::GripLatch latch,control;
+    unsigned counts[4]{};
+    for(unsigned gesture=0;gesture<30;++gesture){
+        for(unsigned frame=0;frame<100;++frame){
+            s=Valid();s.frame=gesture*100+frame;s.raw=s.effective=frame!=99;
+            if(frame>=50)s.delta[2]=-2.f;
+            s.acquire=TwoHandGripAllowed(s.delta,s.forward,s.effective,s.tracked,false);
+            latch.Update(s.effective,s.acquire?0.f:1e9f,s.tracked,s.weapon,s.frame*11);
+            control.Update(s.effective,s.acquire?0.f:1e9f,s.tracked,s.weapon,s.frame*11);
+            s.active=s.effective&&latch.Latched();
+            const auto r=budget.Observe(true,s);++counts[(unsigned)r.event];
+            assert(latch.Latched()==control.Latched());
+            if(r.event==Event::Release){assert(r.sample.raw);assert(r.sample.active);assert(r.sample.Distance()>1.f);}
+        }
+    }
+    assert(counts[(unsigned)Event::Press]==24);
+    assert(counts[(unsigned)Event::Acquired]==1); // Subsequent presses immediately latch.
+    assert(counts[(unsigned)Event::Release]==24);
+    supportprobe::Budget disabled;
+    s=Valid();assert(disabled.Observe(false,s).event==Event::None);
+    assert(disabled.Observe(true,s).event==Event::None); // No invented rising edge on opt-in.
+    s.raw=false;assert(disabled.Observe(true,s).event==Event::None);
+    puts("support grip probe: PASS (98,415 production gate cases; bounded receipts; latch behavior unchanged)");
+}

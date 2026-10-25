@@ -13,10 +13,11 @@ static bool VrModeOn(){return true;}
 static bool TmdRaised(){return true;}
 static bool IsLive(uintptr_t p){return p!=0;}
 static void Log(const char*,...){}
+struct LocalPlayer {uintptr_t pawn;};
+static LocalPlayer ReadNativeLocalPlayer(){return {10};}
 namespace PauseRttProbe {static bool SafeRange(uintptr_t p,size_t){return p!=0;}}
 namespace NativeOwnedInventory {
 static bool badContext=false;
-static uintptr_t CameraOwnedPawn(){return 10;}
 static uintptr_t P(uintptr_t a){
     if(badContext)RaiseException(EXCEPTION_ACCESS_VIOLATION,0,0,nullptr);
     if(a==10+OBJ_CLASS)return 20;

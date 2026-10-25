@@ -8,6 +8,12 @@
 // This removes only that redundant prime, never a color or shadow-map draw.
 // Geometry is learned AFTER successful late stereo submission/restoration.
 namespace trackedprime {
+// Actual 2026-10-25 native viewport request, proved by retained VB/IB/range
+// siblings with color=0, depth write=1, stencil=0. Do not accept arbitrary
+// near-zero ranges (nor the driver's canonicalized .001 as a native request).
+inline bool NativePrimeRange(float minZ,float maxZ) {
+    return minZ==0.f && (maxZ==0.f || maxZ==.0001f);
+}
 struct Owner {
     uintptr_t pawn=0, weapon=0;
     uint32_t frame=0;
@@ -21,6 +27,14 @@ struct Receipt {
     bool sibling=false;
     DWORD z=0,write=0,color=~0u,stencil=1;
 };
+struct Inspection {
+    const char* gate="unexamined";
+    fpshadow::DrawKey key{};
+    D3DVIEWPORT9 actual{},requested{};
+    DWORD z=0,write=0,color=~0u,stencil=1;
+    const void *rt=nullptr,*vs=nullptr,*ps=nullptr;
+    bool exact=false,viewportWitness=false,requestedValid=false;
+};
 class Cache {
     struct Entry {fpshadow::DrawKey key{};uint32_t frame=0;};
     Entry entries[32]{};
@@ -29,6 +43,7 @@ class Cache {
     IDirect3DDevice9* viewportDevice=nullptr; // borrowed, cleared before Reset
     D3DVIEWPORT9 primeViewport{};
     bool viewportValid=false;
+    D3DVIEWPORT9 lastRequested{};bool requestedValid=false;
     static void Release(fpshadow::DrawKey& k) {
         if(k.vb)static_cast<IDirect3DVertexBuffer9*>(const_cast<void*>(k.vb))->Release();
         if(k.ib)static_cast<IDirect3DIndexBuffer9*>(const_cast<void*>(k.ib))->Release();
@@ -50,17 +65,60 @@ public:
     Cache()=default;
     Cache(const Cache&)=delete;Cache& operator=(const Cache&)=delete;
     void Reset() {for(unsigned i=0;i<count;++i)Release(entries[i].key);count=0;pawn=weapon=0;
-        viewportDevice=nullptr;viewportValid=false;}
+        viewportDevice=nullptr;viewportValid=false;requestedValid=false;}
     void ObserveViewport(IDirect3DDevice9* d,const D3DVIEWPORT9* requested,HRESULT result) {
         viewportValid=false;viewportDevice=nullptr;
+        requestedValid=requested&&SUCCEEDED(result);
+        if(requestedValid)lastRequested=*requested;
         // Some D3D9 drivers canonicalize requested 0/0 to actual 0/.001.
         // Measure that state after a successful native request; never guess an
         // epsilon that could classify a different depth range as a prime.
-        if(!requested||FAILED(result)||requested->MinZ!=0.f||requested->MaxZ!=0.f)return;
+        if(!requested||FAILED(result)||!NativePrimeRange(requested->MinZ,requested->MaxZ))return;
         if(FAILED(d->GetViewport(&primeViewport)))return;
         viewportValid=primeViewport.X==requested->X&&primeViewport.Y==requested->Y&&
             primeViewport.Width==requested->Width&&primeViewport.Height==requested->Height;
         viewportDevice=d;
+    }
+    // Opt-in, read-only first-refusal inspection, ONLY for a learned range.
+    // A shape match merely permits observation; skipping still requires the
+    // original retained VB/IB identity and all original Skip gates.
+    bool Inspect(IDirect3DDevice9* d,const Owner& o,Draw draw,Inspection& r) {
+        bool range=false;
+        for(unsigned i=0;i<count;++i) {
+            const auto& k=entries[i].key;
+            if(k.verts==draw.key.verts&&k.prims==draw.key.prims&&
+               k.baseVertex==draw.key.baseVertex&&k.minIndex==draw.key.minIndex&&
+               k.startIndex==draw.key.startIndex){range=true;break;}
+        }
+        if(!range||draw.foreground||!draw.triangles)return false;
+        r={};r.key=draw.key;r.viewportWitness=viewportValid&&viewportDevice==d;
+        r.requestedValid=requestedValid;r.requested=lastRequested;
+        const bool buffers=Read(d,r.key);
+        bool fresh=false;
+        if(buffers)for(unsigned i=0;i<count;++i)if(fpshadow::SameGeometry(r.key,entries[i].key)) {
+            r.exact=true;fresh=uint32_t(o.frame-entries[i].frame)<=2;break;
+        }
+        const bool viewport=SUCCEEDED(d->GetViewport(&r.actual));
+        const bool states=SUCCEEDED(d->GetRenderState(D3DRS_ZENABLE,&r.z))&&
+            SUCCEEDED(d->GetRenderState(D3DRS_ZWRITEENABLE,&r.write))&&
+            SUCCEEDED(d->GetRenderState(D3DRS_COLORWRITEENABLE,&r.color))&&
+            SUCCEEDED(d->GetRenderState(D3DRS_STENCILENABLE,&r.stencil));
+        IDirect3DSurface9* rt=nullptr;IDirect3DVertexShader9* vs=nullptr;IDirect3DPixelShader9* ps=nullptr;
+        d->GetRenderTarget(0,&rt);d->GetVertexShader(&vs);d->GetPixelShader(&ps);
+        r.rt=rt;r.vs=vs;r.ps=ps;
+        if(rt)rt->Release();if(vs)vs->Release();if(ps)ps->Release();
+        r.gate=!o.active?"owner-context":!o.pawn||!o.weapon?"owner-identity":
+            draw.key.layoutShadow?"shadow-layout":!draw.key.rtIsScene?"not-scene-RT":
+            !r.viewportWitness?"no-native-prime-viewport":!viewport?"viewport-read":
+            r.actual.X!=primeViewport.X||r.actual.Y!=primeViewport.Y||
+            r.actual.Width!=primeViewport.Width||r.actual.Height!=primeViewport.Height||
+            r.actual.MinZ!=primeViewport.MinZ||r.actual.MaxZ!=primeViewport.MaxZ?"viewport-different":
+            !buffers?"buffer-read":!r.exact?"different-VB-IB":!fresh?"stale-color":
+            !states?"state-read":r.z!=D3DZB_TRUE?"depth-disabled":!r.write?"depth-write-off":
+            r.color?"color-write-on":r.stencil?"stencil-enabled":"eligible";
+        // Receipts retain identity values only, no COM references after return.
+        if(buffers){auto k=r.key;Release(k);}
+        return true;
     }
     // No mutations to D3D state, shader constants, stencil, COM bindings or poses.
     bool Skip(IDirect3DDevice9* d,const Owner& o,Draw draw,Receipt* receipt=nullptr) {
