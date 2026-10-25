@@ -52,6 +52,16 @@ inline bool SupportTarget(const Witness& w,uint32_t pawn,uint32_t weapon,uint64_
     if(!handanchor::Affine(result.m))return false;
     out=result;return true;
 }
+// Independent Seeker-only budget: earlier ordinary/TMD draws cannot exhaust it.
+struct SupportProbeBudget {
+    uint32_t last[4]{}; unsigned frames[4]{};
+    bool Frame(uint32_t frame,unsigned hands,bool support){
+        if(!frame || hands<1 || hands>2)return false;
+        const unsigned key=(hands-1)*2+(support?1:0);
+        if(last[key]!=frame){last[key]=frame;++frames[key];}
+        return frames[key]<=3;
+    }
+};
 struct SupportFrame {
     bool valid=false;uint32_t pawn=0,weapon=0,frame=0;Mat local{},target{};
     bool Read(uint32_t p,uint32_t w,uint32_t f,const Mat& sourceLocal,Mat& out)const{

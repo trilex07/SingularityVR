@@ -56,6 +56,11 @@ int main(int argc,char** argv){
     Mat skin=Identity(),local=Identity();local.m[3][1]=-100;
     assert(seekergeometry::Capture(skin,local,1,20,1000,w));
     assert(w.Current(1,20,1150));assert(!w.Current(1,20,1151));assert(!w.Current(1,21,1000));
+    seekergeometry::SupportProbeBudget budget;
+    assert(!budget.Frame(1,0,false));
+    for(unsigned state=1;state<=2;++state)for(bool grip:{false,true})
+        for(unsigned f=1;f<=5;++f)for(unsigned eye=0;eye<2;++eye)
+            assert(budget.Frame(f,state,grip)==(f<=3));
     unsigned cases=0;
     for(float angle:{0.f,.7f,1.57f,-1.57f,3.14f})for(float scale:{.8f,1.f,1.2f}){
         Mat gun=Identity();gun.m[0][0]=gun.m[1][1]=std::cos(angle)*scale;
