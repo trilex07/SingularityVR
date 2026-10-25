@@ -97,10 +97,13 @@ struct Reference {
             if(!Uniform(relative))return false;
             gunFromWrist=relative;tick=now;valid=true;
             normalWrist=wrist;normalRawController=rawController;
-        } else if(!valid||!wristValid||frame<wristFrame||
-                  frame-wristFrame>2||now<wristTick||now-wristTick>500) {
+        } else if(!valid||!wristValid||frame<wristFrame||now<wristTick) {
             pending=false;return false;
         }
+        // A fresh stereo-confirmed TMD wrist is the new freshness witness even
+        // after a draw gap. Requiring it to be close to the *previous* witness
+        // permanently latched this reference stale after three missed frames;
+        // Correct() still refuses a gun draw until the new witness arrives.
         // In TMD mode the rendered wrist can use another animation and root.
         // Its successful stereo draw is a freshness witness only. Retaining the
         // normal wrist makes every gun pass in this frame use one rigid pose.

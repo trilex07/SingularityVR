@@ -94,12 +94,22 @@ int main() {
     assert(gate==CorrectGate::Frame);
     assert(!reference.Correct(key,original,4,local,ride,raw,3008,longNow+501,right,nullptr,&gate));
     assert(gate==CorrectGate::Frame);
+    // PSVR2 frame 1293 had a valid right-wrist witness from frame 1290:
+    // the gun was forwarded with the head pose. The next fully drawn TMD
+    // glove must rearm tracking instead of keeping the old three-frame gap.
+    assert(reference.ObserveWrist(key,animatedTmdWrist,raw,3011,longNow+501,false));
+    assert(reference.wristFrame==3011&&reference.wristTick==longNow+501);
+    assert(reference.Correct(key,original,4,local,ride,raw,3012,longNow+502,right,&sameFrameGun,&gate));
+    assert(gate==CorrectGate::Pass&&Distance(sameFrameGun,expected)<.03f);
+    assert(!reference.ObserveWrist(key,animatedTmdWrist,raw,3010,longNow+503,false));
+    assert(!reference.ObserveWrist(key,animatedTmdWrist,raw,3012,longNow+500,false));
+    assert(reference.wristFrame==3011&&reference.wristTick==longNow+501);
     Key other=key;++other.weapon;
-    assert(!reference.Correct(other,original,4,local,ride,raw,3008,longNow+1,right,nullptr,&gate));
+    assert(!reference.Correct(other,original,4,local,ride,raw,3012,longNow+502,right,nullptr,&gate));
     assert(gate==CorrectGate::Reference);
-    assert(!reference.Correct(key,original,2,local,ride,raw,3008,longNow+1,right,nullptr,&gate));
+    assert(!reference.Correct(key,original,2,local,ride,raw,3012,longNow+502,right,nullptr,&gate));
     assert(gate==CorrectGate::Matrix);
-    reference.Clear();assert(!reference.Correct(key,original,4,local,ride,raw,3008,longNow+1,right,nullptr,&gate));
+    reference.Clear();assert(!reference.Correct(key,original,4,local,ride,raw,3012,longNow+502,right,nullptr,&gate));
     assert(gate==CorrectGate::Reference);
     std::puts("PASS dual TMD gun: normal gun anchor survives animated TMD wrist, repeated same-frame draws, long L2 hold, child/recoil pose, stereo, freshness and identity");
 }
