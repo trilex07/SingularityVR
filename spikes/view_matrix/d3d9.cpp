@@ -16,6 +16,7 @@ static texbridge::Bind g_textureBridgeBind=nullptr;
 #include "tmd_muzzle_socket.h"
 #include "arm_natural.h"
 #include "dual_hand_action_pose.h"
+#include "dual_tmd_weapon_pose.h"
 #include "support_grip.h"
 #include "weapon_holster.h"
 #include "seeker_slot_policy.h"
@@ -2276,6 +2277,8 @@ inline bool TmdRaised()      { return Rd(g_handsStatus) == HANDS_TMD; }
 inline bool WeaponInHands()  { return Rd(g_handsStatus) == HANDS_WEAPON; }
 static LONG g_dualWeaponTmdReady=0,g_dualWeaponTmdProbe=0;
 static LONG g_dualWeaponTmdGunScale=0; // opt-in native gun_scale result, no cached pose
+static LONG g_dualWeaponTmdGunPose=0; // opt-in exact-weapon normal-root retarget during HANDS_TMD
+static dualtmdgunpose::Reference g_dualTmdGunPose;
 static LONG g_dualWeaponTmdRightWrist=0; // opt-in original TMD right-wrist target
 static LONG g_dualHandActionPose=0; // source-wrist normalization; default OFF
 static bool g_trackedDepthPrimeFix=false; // exact late-color siblings only; default OFF
@@ -21154,6 +21157,70 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
     const int nextRegs=t==D3DPT_TRIANGLELIST&&(!g_nextNativeMagazine||
         (!boneRegN&&!independentRegs&&nSeg==1&&segStart[0]==startIndex&&segPrims[0]==primCount))?
         PrepareNextReload(dev,baseVertex,minIndex,numVertices,startIndex,primCount,nextSaved,nextReg,nextReplay):0;
+    // HANDS_TMD changes the native gun root even though StereoPair correctly
+    // rides the RIGHT controller. Capture the accepted HANDS_WEAPON body root
+    // from this same weapon, and retarget the entire live palette by one rigid
+    // delta in TMD mode. Internal reload/fire bone animation stays relative.
+    // Exact body identity, original shader palette, and scoped restoration are
+    // required; this never touches a shadow, pickup, attachment or carry draw.
+    float dualGunSaved[dualtmdgunpose::kMaxBones][3][4]{};
+    float dualGunAdjusted[dualtmdgunpose::kMaxBones][3][4]{};
+    unsigned dualGunBones=0;
+    bool dualGunCommitted=false,dualGunNormalSample=false;
+    dualtmdgunpose::Key dualGunKey{};
+    if(Rd(g_dualWeaponTmdGunPose)&&t==D3DPT_TRIANGLELIST&&g_thisDrawMoved==1&&
+       !g_boundShaderLayout.shadow&&Rd(g_rtIsScene)&&FgMatchWindow()&&
+       g_sceneMode.Current()==vrscene::Mode::GameplayStereo&&
+       !Rd(g_gamePaused)&&!Rd(g_inCinematic)&&!Rd(g_vrUiMenu)&&
+       !Rd(g_weaponHolstered)&&DualWeaponTmdContext()&&
+       g_handPoseValid[AimHand()]&&g_handPositionValid[AimHand()]&&
+       !boneRegN&&!independentRegs&&!nextRegs&&nSeg==1&&
+       g_boundShaderLayout.bones>=0&&g_boundShaderLayout.boneRegs>0&&
+       g_boundShaderLayout.boneRegs%3==0&&
+       g_boundShaderLayout.boneRegs<=int(dualtmdgunpose::kMaxBones*3)) {
+        const auto* body=diegetichud::MountForBodyDraw(baseVertex,minIndex,numVertices,startIndex,primCount);
+        if(body&&(numVertices==8297||numVertices==11387||numVertices==11378)&&
+           g_boundShaderLayout.boneRegs>=(body->rootSlot+1)*3) {
+            dualGunBones=(unsigned)g_boundShaderLayout.boneRegs/3;
+            dualGunKey={g_playerPawn,(uintptr_t)(unsigned)Rd(g_weaponObj),
+                (unsigned)numVertices,(unsigned)body->rootSlot};
+            if(SUCCEEDED(dev->GetVertexShaderConstantF(g_boundShaderLayout.bones,
+                    &dualGunSaved[0][0][0],dualGunBones*3))) {
+                dualGunNormalSample=Rd(g_handsStatus)==HANDS_WEAPON&&
+                    !Rd(g_rawImpulsePressed)&&Rd(g_rawTrigger)<128;
+                if(Rd(g_handsStatus)==HANDS_TMD) {
+                    const auto now=GetTickCount64();
+                    if(g_dualTmdGunPose.Correct(dualGunKey,dualGunSaved,dualGunBones,
+                           now,dualGunAdjusted)) {
+                        const HRESULT setHr=g_origSetVSConstF(dev,g_boundShaderLayout.bones,
+                            &dualGunAdjusted[0][0][0],dualGunBones*3);
+                        if(SUCCEEDED(setHr)) {
+                            dualGunCommitted=true;
+                            static unsigned corrected=0;
+                            if(corrected++<6)Log("dual-tmd gun-pose: corrected native HANDS_TMD body gun=%u bones=%u root=%u frame=%ld support=%ld; original animation retained",
+                                numVertices,dualGunBones,dualGunKey.rootSlot,Rd(g_armPaletteFrameToken),Rd(g_twoHandActive));
+                        } else {
+                            // D3D9 may reject a write after device loss. Restore
+                            // even if it applied only part of the constant range.
+                            const HRESULT undo=g_origSetVSConstF(dev,g_boundShaderLayout.bones,
+                                &dualGunSaved[0][0][0],dualGunBones*3);
+                            InterlockedExchange(&g_dualWeaponTmdGunPose,0);
+                            Log("dual-tmd gun-pose: palette write failed %08lX restore=%08lX; gate disabled",
+                                setHr,undo);
+                            if(FAILED(undo)){g_thisDrawMoved=0;return undo;}
+                        }
+                    } else {
+                        static unsigned refused=0;
+                        if(refused++<4)Log("dual-tmd gun-pose: body not retargeted gun=%u root=%u refValid=%d refSame=%d refAge=%llums frame=%ld [native palette forwarded]",
+                            numVertices,dualGunKey.rootSlot,g_dualTmdGunPose.valid?1:0,
+                            g_dualTmdGunPose.key==dualGunKey?1:0,
+                            (unsigned long long)(now>=g_dualTmdGunPose.tick?now-g_dualTmdGunPose.tick:0),
+                            Rd(g_armPaletteFrameToken));
+                    }
+                }
+            }
+        }
+    }
     if(g_reloadCarryContinuityProbe && t==D3DPT_TRIANGLELIST &&
        (numVertices==8297 || numVertices==11387) && startIndex==0 &&
        TryAcquireSRWLockShared(&g_nextVisualLock)){
@@ -21632,6 +21699,15 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
         InterlockedIncrement(&g_centurionPalmPublished);
     }
     const HRESULT nextRestore=nextRegs?g_origSetVSConstF(dev,nextReg,nextSaved,(UINT)nextRegs):D3D_OK;
+    const HRESULT dualGunRestore=dualGunCommitted?g_origSetVSConstF(dev,
+        g_boundShaderLayout.bones,&dualGunSaved[0][0][0],dualGunBones*3):S_OK;
+    if(FAILED(dualGunRestore)) {
+        InterlockedExchange(&g_dualWeaponTmdGunPose,0);
+        Log("dual-tmd gun-pose: palette restoration failed; gate disabled");
+    }
+    if(dualGunNormalSample&&dualGunBones&&SUCCEEDED(dhr)&&SUCCEEDED(nativeRestore)&&
+       SUCCEEDED(handRestore)&&SUCCEEDED(nextRestore)&&SUCCEEDED(dualGunRestore))
+        g_dualTmdGunPose.Observe(dualGunKey,dualGunSaved[dualGunKey.rootSlot],GetTickCount64());
     if((g_tmdTrackedMuzzle||g_tmdTrackedBeam)&&tmdmuzzle::Completed(tmdSocketEye,tmdSocketDrawn,assemblyEye,
        SUCCEEDED(dhr),SUCCEEDED(nativeRestore),SUCCEEDED(handRestore),SUCCEEDED(nextRestore))) {
         NativeTmdSocket::Publish(tmdSocketEye[0]);
@@ -21651,7 +21727,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
         static bool saidSeeker=false;if(!saidSeeker){saidSeeker=true;
             Log("Seeker pose: source IB matched, body=14990 eyes=2 rootSlot=1; restored, witness published");}
     }
-    if((g_weaponTraceRigidOrigin||g_weaponMeasuredAim||g_scopeMeasuredPose)&&SUCCEEDED(dhr)&&SUCCEEDED(nextRestore)&&g_nextMuzzleStaged.valid&&
+    if((g_weaponTraceRigidOrigin||g_weaponMeasuredAim||g_scopeMeasuredPose)&&SUCCEEDED(dhr)&&SUCCEEDED(nextRestore)&&SUCCEEDED(dualGunRestore)&&g_nextMuzzleStaged.valid&&
        TryAcquireSRWLockExclusive(&g_nextVisualLock)){
         g_nextMuzzle=g_nextMuzzleStaged;
         if(g_scopeMeasuredStaged.active)g_scopeMeasuredFrame=g_scopeMeasuredStaged;
@@ -21669,6 +21745,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
     }
     if(FAILED(nativeRestore)){g_gloveExperiment=false;return nativeRestore;}
     if(FAILED(nextRestore)){g_thisDrawMoved=0;return nextRestore;}
+    if(FAILED(dualGunRestore)){g_thisDrawMoved=0;return dualGunRestore;}
 
     // ⭐ run 241: how many bones this mesh REALLY has, so the sweep range stops being a guess.
     // Reads the whole possible block once a second and reports the last register that is not all
@@ -36971,6 +37048,8 @@ void LoadIniSettings() {
     InterlockedExchange(&g_dualWeaponTmdReady,GetPrivateProfileIntA("Input","DualWeaponTmdReady",0,path)!=0);
     InterlockedExchange(&g_dualWeaponTmdGunScale,GetPrivateProfileIntA("Input","DualWeaponTmdGunScale",0,path)!=0);
     Log("ini: DualWeaponTmdGunScale=%ld (default OFF; owned gun_scale result only)",Rd(g_dualWeaponTmdGunScale));
+    InterlockedExchange(&g_dualWeaponTmdGunPose,GetPrivateProfileIntA("Input","DualWeaponTmdGunPose",0,path)!=0);
+    Log("ini: DualWeaponTmdGunPose=%ld (default OFF; exact body root from this weapon's accepted HANDS_WEAPON draw)",Rd(g_dualWeaponTmdGunPose));
     InterlockedExchange(&g_dualWeaponTmdRightWrist,GetPrivateProfileIntA("Input","DualWeaponTmdRightWrist",0,path)!=0);
     InterlockedExchange(&g_dualHandActionPose,GetPrivateProfileIntA("Input","DualHandActionPose",0,path)!=0);
     Log("ini: DualHandActionPose=%ld (default OFF; original material0 wrist parent, render only)",Rd(g_dualHandActionPose));

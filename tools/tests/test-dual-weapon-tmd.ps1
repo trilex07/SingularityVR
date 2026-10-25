@@ -11,6 +11,7 @@ $tests = @(
     'spikes/view_matrix/tests/test-support-grip-probe.cpp',
     'spikes/view_matrix/tests/test-dual-hand-pose-probe.cpp',
     'spikes/view_matrix/tests/test-dual-hand-action-pose.cpp',
+    'spikes/view_matrix/tests/test-dual-tmd-weapon-pose.cpp',
     'spikes/view_matrix/tests/test-tmd-support-gauntlet.cpp',
     'spikes/view_matrix/tests/test-tmd-aim.cpp',
     'spikes/view_matrix/tests/test-tmd-native-adapter.cpp',

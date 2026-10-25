@@ -19,7 +19,9 @@ static bool VrModeOn(){return true;}
 static bool TmdRaised(){return true;}
 static LONG Rd(LONG& x){return x;}
 static void Log(const char*,...){}
-static bool IsLive(uintptr_t x){return x==300||x==600;}
+// The real age beam is a transient component referenced by the live RvTMD;
+// its Outer does not reach PersistentLevel and the generic IsLive rejects it.
+static bool IsLive(uintptr_t x){return x==300;}
 constexpr unsigned OBJ_CLASS=32;
 namespace PauseRttProbe {static bool SafeRange(uintptr_t p,size_t){return p!=0;}}
 static bool NameFromIndex(int i,char* out,size_t){strcpy_s(out,96,i==7?"TMD_Muzzle":"shellEject");return true;}

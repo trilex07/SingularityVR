@@ -19,6 +19,15 @@ static void Note(const char* gate) {
 }
 static uintptr_t Beam(uintptr_t tmd){return NativeOwnedInventory::P(tmd+kAgingBeam);}
 static uintptr_t OwnerMesh(uintptr_t tmd){return NativeOwnedInventory::P(tmd+kOwnerMesh);}
+static bool OwnedBeam(uintptr_t tmd,uintptr_t beam) {
+    // RvTMDPower_Age::CreateFX writes this exact transient component to the
+    // live TMD's +530h. Unlike the owner mesh, a transient child need not have
+    // an Outer chain ending at PersistentLevel; IsLive rejects the real beam.
+    // The class and vtable method fingerprints are checked by Poll below.
+    return tmd&&beam&&beam!=tmd&&Beam(tmd)==beam&&
+        PauseRttProbe::SafeRange(beam,OBJ_CLASS+sizeof(uintptr_t))&&
+        NativeTmdAim::ExactClass(NativeOwnedInventory::P(beam+OBJ_CLASS),"RvCurvedBeamComponent");
+}
 static bool Prepare(void* component,uintptr_t caller,const armbind::Mat* parent,
                     armbind::Mat& corrected) {
     if(!g_tmdTrackedBeam||GetCurrentThreadId()!=thread||!attachmentReturn||caller!=attachmentReturn)return false;
@@ -29,8 +38,7 @@ static bool Prepare(void* component,uintptr_t caller,const armbind::Mat* parent,
         uintptr_t pawn=0;const auto tmd=NativeTmdAim::LocalTmd(pawn);
         if(!tmd)return false;
         const auto beam=Beam(tmd);
-        if(!beam||beam!=(uintptr_t)component||!IsLive(beam)||
-           !NativeTmdAim::ExactClass(NativeOwnedInventory::P(beam+OBJ_CLASS),"RvCurvedBeamComponent"))return false;
+        if(beam!=(uintptr_t)component||!OwnedBeam(tmd,beam))return false;
         const auto owned=OwnerMesh(tmd);
         if(!owned||!IsLive(owned)||NativeOwnedInventory::P(NativeOwnedInventory::P(owned)+0x138)+0x161!=caller) {
             Note("attachment-owner");return false;
@@ -91,10 +99,9 @@ static void Poll() {
             Log("TMD tracked beam: Square census sample=%u tmd=%p beam=%p owner=%p beamLive=%d ownerLive=%d",
                 agePolls,(void*)tmd,(void*)beam,(void*)owned,
                 beam&&IsLive(beam)?1:0,owned&&IsLive(owned)?1:0);
-        if(!beam||!IsLive(beam)){Note("installer-no-live-aging-beam");return;}
+        if(!OwnedBeam(tmd,beam)){Note("installer-no-owned-aging-beam");return;}
         if(!owned||!IsLive(owned)){Note("installer-no-live-owner-mesh");return;}
-        if(!NativeTmdAim::ExactClass(NativeOwnedInventory::P(beam+OBJ_CLASS),"RvCurvedBeamComponent")||
-           !NativeTmdAim::ExactClass(NativeOwnedInventory::P(owned+OBJ_CLASS),"SkeletalMeshComponent")){
+        if(!NativeTmdAim::ExactClass(NativeOwnedInventory::P(owned+OBJ_CLASS),"SkeletalMeshComponent")){
             Note("installer-component-class");return;
         }
         const auto vt=NativeOwnedInventory::P(beam);
