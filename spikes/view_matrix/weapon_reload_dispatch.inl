@@ -234,9 +234,13 @@ static void UpdateNextReload(bool context,bool grip,bool supportLatched,bool cir
         if(result.event==Event::Cancelled||result.event==Event::Rejected||
            (!weaponreload::Active(t.phase)&&(!next.nativeEnd||now>=next.nativeEnd)))next.rootValid=false;
         if(result.event==Event::Discarded&&index<3){
+            armbind::Mat currentWrist;
+            const bool physicalWrist=g_nextWrist.Resolve(kind,in.pawn,in.weapon,g_nextVisual.since,now,
+                next.hand,(std::uint64_t)InterlockedCompareExchange64(&g_handPoseSampleMs[0],0,0),
+                g_handTracked[0]&&g_handPositionValid[0]&&g_handPoseValid[0],
+                g_reloadCarryTrackedContinuity,currentWrist);
             const bool placed=g_reloadPalmGrip&&g_nextNativeMagazine ?
-                g_nextWrist.Current(kind,in.pawn,in.weapon,g_nextVisual.since,now)&&
-                    weaponcarry::Matrix(kind,g_nextWrist.tracking,next.drop) :
+                physicalWrist&&weaponcarry::Matrix(kind,currentWrist,next.drop) :
                 weaponreload::HandMatrix(witness.clipTracking,in.gun,next.hand,g_nextClipRenderer[index].SourceCentre(),next.drop);
             if(placed)next.dropMs=now;
         }
@@ -440,10 +444,21 @@ static int PrepareNextReload(IDirect3DDevice9* dev,INT base,UINT min,UINT vertic
             const bool palm=g_reloadPalmGrip&&visual.phase==weaponreload::Phase::Carrying;
             // Wait for a successfully drawn glove witness. Never substitute an
             // AIM-space magazine inside the hand when its wrist is unavailable.
-            const bool currentWrist=palm&&wrist.Current(kind,visual.pawn,visual.weapon,visual.since,now);
-            const bool placed=palm ? currentWrist&&weaponcarry::Matrix(kind,wrist.tracking,carried) :
+            const auto& lp=g_handLastPos[0];const auto& lq=g_handAimOrientation[0];
+            const hipknife::Pose liveLeft{{lp.x,lp.y,lp.z},{lq.x,lq.y,lq.z,lq.w}};
+            armbind::Mat currentTracking;bool continued=false;
+            const bool currentWrist=palm&&wrist.Resolve(kind,visual.pawn,visual.weapon,visual.since,now,
+                liveLeft,(std::uint64_t)InterlockedCompareExchange64(&g_handPoseSampleMs[0],0,0),
+                g_handTracked[0]&&g_handPositionValid[0]&&g_handPoseValid[0],
+                g_reloadCarryTrackedContinuity,currentTracking,&continued);
+            const bool placed=palm ? currentWrist&&weaponcarry::Matrix(kind,currentTracking,carried) :
                 weaponreload::HandMatrix(clipTracking,visual.aim,pose,g_nextClipRenderer[index].SourceCentre(),carried,
                     visual.phase==weaponreload::Phase::Carrying?hipknife::V{0,0,-.06f}:hipknife::V{});
+            if(continued){
+                static unsigned notes[3]{};
+                if(notes[index]++<8)Log("reload carry continuity: kind=%d measured wrist continued age=%llu ms with tracked left pose",
+                    int(kind),(unsigned long long)(now-wrist.tick));
+            }
             if(palm&&(kind==weaponreload::Kind::Volk||kind==weaponreload::Kind::Valkyrie))
                 note(!currentWrist?10:!placed?11:12);
             if(g_volkCarryPoseProbe&&palm&&kind==weaponreload::Kind::Volk&&currentWrist&&placed){

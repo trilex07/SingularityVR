@@ -36,9 +36,50 @@ struct Wrist {
     bool valid=false;Kind kind=Kind::None;std::uint32_t pawn=0,weapon=0;
     std::uint64_t transaction=0,tick=0;Mat tracking{};
     WristSource source=WristSource::None;
+    // Pose from the same tracked-controller sample as the final bound wrist.
+    // Used only if that glove draw temporarily stops publishing while carried.
+    hipknife::Pose sensor{};std::uint64_t sensorSampleMs=0;
     bool Current(Kind k,std::uint32_t p,std::uint32_t w,std::uint64_t id,std::uint64_t now)const{
         return valid&&k==kind&&p&&w&&id&&p==pawn&&w==weapon&&id==transaction&&
             now>=tick&&now-tick<=150&&armbind::Finite(tracking);
+    }
+    bool Projected(Kind k,std::uint32_t p,std::uint32_t w,std::uint64_t id,
+                   std::uint64_t now,const hipknife::Pose& live,
+                   std::uint64_t liveSampleMs,bool tracked,Mat& out)const{
+        if(!tracked||!valid||k!=kind||!p||!w||!id||p!=pawn||w!=weapon||id!=transaction||
+           now<tick||now-tick<=150||now-tick>350||!sensorSampleMs||
+           tick<sensorSampleMs||tick-sensorSampleMs>40||
+           now<liveSampleMs||now-liveSampleMs>40||
+           !hipknife::Finite(sensor.p)||!hipknife::Valid(sensor.q)||
+           !hipknife::Finite(live.p)||!hipknife::Valid(live.q)||
+           hipknife::Length(live.p-sensor.p)>.75f||!armbind::Finite(tracking))return false;
+        const auto poseMatrix=[](const hipknife::Pose& pose){
+            Mat m{};m.m[3][3]=1.f;
+            for(unsigned row=0;row<3;++row){
+                hipknife::V v{};if(row==0)v.x=1.f;else if(row==1)v.y=1.f;else v.z=1.f;
+                v=hipknife::Rotate(pose.q,v);
+                m.m[row][0]=v.x;m.m[row][1]=v.y;m.m[row][2]=v.z;
+            }
+            m.m[3][0]=pose.p.x;m.m[3][1]=pose.p.y;m.m[3][2]=pose.p.z;
+            return m;
+        };
+        const Mat initial=poseMatrix(sensor),current=poseMatrix(live);
+        Mat inverse,relative,result;
+        if(!skeletal::Inverse(inverse.m,initial.m))return false;
+        skeletal::Multiply(relative.m,tracking.m,inverse.m);
+        skeletal::Multiply(result.m,relative.m,current.m);
+        if(!armbind::Finite(result))return false;
+        out=result;return true;
+    }
+    bool Resolve(Kind k,std::uint32_t p,std::uint32_t w,std::uint64_t id,
+                 std::uint64_t now,const hipknife::Pose& live,
+                 std::uint64_t liveSampleMs,bool tracked,bool continuity,
+                 Mat& out,bool* continued=nullptr)const{
+        if(continued)*continued=false;
+        if(Current(k,p,w,id,now)){out=tracking;return true;}
+        if(!continuity||!Projected(k,p,w,id,now,live,liveSampleMs,tracked,out))return false;
+        if(continued)*continued=true;
+        return true;
     }
 };
 inline bool WristTracking(const Mat& bind,const float skin[3][4],const Mat& chain,

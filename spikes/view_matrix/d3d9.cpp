@@ -2413,6 +2413,7 @@ struct NextReloadVisual {
 static NextReloadVisual g_nextVisual;
 static weaponreload::Witness g_nextWitness;
 static int g_reloadPalmGrip=0; // default-OFF; measured native wrist, not AIM-space mount
+static bool g_reloadCarryTrackedContinuity=false; // default OFF; bounded measured-wrist continuation
 static bool g_reloadCarryContinuityProbe=false; // bounded read-only carry draw receipts
 static int g_volkCarryPoseProbe=0; // default-OFF; bounded same-frame wrist/magazine witness
 static int g_shoulderPickupProbe=0; // default-OFF; bounded local-frame pickup receipts
@@ -7148,6 +7149,7 @@ bool g_handTracked[2] = { false, false };
 float g_handSpeed[2] = { 0.0f, 0.0f };      // smoothed metres/frame
 bool  g_handHeld[2] = { false, false };
 XrVector3f g_handLastPos[2]{};
+static volatile LONG64 g_handPoseSampleMs[2]{};
 bool  g_handHavePos[2] = { false, false };
 extern volatile LONG g_panelOpen;
 
@@ -11238,6 +11240,7 @@ void SyncXRInput(XrTime displayTime) {
         g_handHavePos[i] = true;
 
         g_handPoseValid[i] = true;
+        InterlockedExchange64(&g_handPoseSampleMs[i],(LONG64)GetTickCount64());
         // A successfully located tracked action space is stronger evidence than
         // the optional action-state probe. Keep diagnostics truthful even when
         // a runtime reports pose activity lazily or omits that query binding.
@@ -18537,8 +18540,11 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
              g_baseYaw*(6.2831853f/65536.f),MetresToUU(),tracking)&&
            weaponcarry::WristTracking(*wristBind,
              reinterpret_cast<const float(*)[4]>(changed+wristSlot[0]*3),chain,tracking,desired)){
+            const auto& p=g_handLastPos[0];const auto& q=g_handAimOrientation[0];
+            const hipknife::Pose sensor{{p.x,p.y,p.z},{q.x,q.y,q.z,q.w}};
+            const auto sampleMs=(std::uint64_t)InterlockedCompareExchange64(&g_handPoseSampleMs[0],0,0);
             g_nextWristStaged={true,nextCarryVisual.kind,nextCarryVisual.pawn,nextCarryVisual.weapon,
-                nextCarryVisual.since,GetTickCount64(),desired,carrySource};
+                nextCarryVisual.since,GetTickCount64(),desired,carrySource,sensor,sampleMs};
             g_nextWristStagedFromTmd=carrySource==weaponcarry::WristSource::Tmd;
         }
     }
@@ -36887,6 +36893,9 @@ void LoadIniSettings() {
     Log("ini: VolkAuthoredGrip=%d WeaponWheelObservedSelection=%d (default OFF)",g_volkAuthoredGrip,g_weaponWheelObserved);
     Log("ini: ValkyrieSingleGrip=%d (default OFF; one-hand right glove follows weapon delta)",g_valkyrieSingleGrip);
     g_reloadPalmGrip=GetPrivateProfileIntA("Input","ReloadPalmGrip",0,path)!=0;
+    g_reloadCarryTrackedContinuity=GetPrivateProfileIntA("Render","ReloadCarryTrackedContinuity",0,path)!=0;
+    Log("ini: ReloadCarryTrackedContinuity=%d (measured wrist + live tracked pose, <=350ms; default OFF)",
+        g_reloadCarryTrackedContinuity?1:0);
     g_reloadCarryContinuityProbe=GetPrivateProfileIntA("Diagnostic","ReloadCarryContinuityProbe",0,path)!=0;
     Log("ini: ReloadCarryContinuityProbe=%d (bounded read-only carried-magazine transitions; default OFF)",
         g_reloadCarryContinuityProbe?1:0);

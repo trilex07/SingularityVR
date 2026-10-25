@@ -60,6 +60,28 @@ int main(){
         assert(!witness.Current(spec.kind,3,4,71,150));
         assert(!witness.Current(spec.kind,3,4,70,251));
         assert(!witness.Current(spec.kind,3,5,70,150));
+        // A real, final-bound wrist may stop publishing while the left glove
+        // is outside the frustum. Continue only its measured controller-relative
+        // pose, for the same reload transaction and a fresh tracked XR sample.
+        witness.tick=1000;witness.sensorSampleMs=995;
+        witness.sensor={{0,0,0},{0,0,0,1}};
+        const float half=std::sqrt(.5f);
+        const hipknife::Pose moved{{.2f,.1f,-.1f},{0,half,0,half}};
+        armbind::Mat continued{};bool extrapolated=false;
+        assert(witness.Resolve(spec.kind,3,4,70,1200,moved,1190,true,true,continued,&extrapolated));
+        assert(extrapolated);
+        const auto rotated=hipknife::Rotate(moved.q,{wrist.m[3][0],wrist.m[3][1],wrist.m[3][2]});
+        assert(hipknife::Length(hipknife::V{continued.m[3][0],continued.m[3][1],continued.m[3][2]}-
+            (moved.p+rotated))<.00001f);
+        assert(weaponcarry::Matrix(spec.kind,continued,model));
+        assert(!witness.Resolve(spec.kind,3,4,70,1200,moved,1190,true,false,continued));
+        assert(!witness.Resolve(spec.kind,3,4,71,1200,moved,1190,true,true,continued));
+        assert(!witness.Resolve(spec.kind,3,4,70,1200,moved,1190,false,true,continued));
+        assert(!witness.Resolve(spec.kind,3,4,70,1200,moved,1150,true,true,continued));
+        assert(!witness.Resolve(spec.kind,3,4,70,1351,moved,1340,true,true,continued));
+        witness.sensorSampleMs=900;
+        assert(!witness.Resolve(spec.kind,3,4,70,1200,moved,1190,true,true,continued));
+        witness.tick=100;witness.sensorSampleMs=0;
         auto data=weaponreloadanim::Data{};data.ready=true;data.nativeSpace=true;
         data.kind=spec.kind;data.rootBind=Identity();data.rootBind.m[3][1]=7;
         auto skin=Identity(),local=Identity(),controller=Identity();

@@ -42,6 +42,24 @@ can be fixed without substituting a guessed controller transform. If replay
 stays continuous, the wrist hypothesis is falsified and the next investigation
 must inspect per-eye draw content/depth or material state.
 
+## Follow-up: bounded carried-wrist continuity
+
+`[Render] ReloadCarryTrackedContinuity=1` (default OFF) addresses the known
+rendering gap when the original left-glove draw does not publish a new wrist
+within 150 ms while the fresh magazine is being carried. It first uses the
+same final-bound wrist as before. For a gap of 151–350 ms, it continues that
+**measured** wrist through the change between the recorded and current tracked
+left-controller poses. It refuses a foreign kind/pawn/weapon/transaction,
+untracked or stale controller, stale initial sample, displacement over 0.75 m,
+and a gap beyond 350 ms. The source is never an AIM-space guessed wrist.
+
+The prior physical log proves magazine creation, TMD material-0 wrist
+publication and repeated native replays; it does not prove that wrist expiry
+caused every observed blink. The continuity receipt plus bounded transition
+probe distinguish remaining CPU gate loss from native D3D material/depth
+flicker during the next physical test. The measured Volk acquisition miss is
+accepted by `SupportGripNearZone`; that near-zone is still physically pending.
+
 ## PSVR2 protocol
 
 From the same save, hold Valkyrie or Volk normally and press left Grip at its
