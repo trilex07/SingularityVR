@@ -90,6 +90,12 @@ def audit(exe, text, dll):
     for line in mapping.splitlines():
         m=re.search(r'\s(\S+)\s+([0-9a-fA-F]{8}) f\s',line)
         if m: symbols.append((int(m[2],16),m[1]))
+    walk, = [a for a,s in symbols if s.startswith('?PropOffsetUnder@')]
+    walk_end=min(v for v,_ in symbols if v>walk)
+    walk_ops=list(md.disasm(proxy.read(walk,walk_end-walk),walk))
+    assert any(x.mnemonic=='cmp' and x.op_str.endswith(', 0x1000') for x in walk_ops)
+    assert not any(x.mnemonic=='cmp' and x.op_str.endswith(', 0x190') for x in walk_ops)
+    assert any(x.mnemonic=='cmp' and '[esi + 0x2c]' in x.op_str for x in walk_ops)
     a, = [a for a,s in symbols if s.startswith('?Read@NativeSeekerSlot')]
     end=min(v for v,_ in symbols if v>a)
     ownership=list(md.disasm(proxy.read(a,end-a),a))
@@ -107,7 +113,8 @@ def audit(exe, text, dll):
         compiled[name]={'va':hex(a),'ret_cleanup':cleanup or '0','ret_count':len(rets)}
     return dict(instigator_offset="0xCC (Actor named serialization and native fire)",native_text_base=hex(text_base),switch_return_offsets=sites,
         native_contracts=[dict(name=name,va=hex(a),bytes=n,fnv64=f'{h:016X}') for name,a,n,h in contracts],
-        compiled=compiled,input_sha256={p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in (exe,text,dll)},
+        compiled=compiled,property_walk=dict(va=hex(walk),budget=4096,name_offset='0x2C'),
+        input_sha256={p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in (exe,text,dll)},
         limitation='Offline native and emitted x86 contracts, not live selection or headset proof')
 
 

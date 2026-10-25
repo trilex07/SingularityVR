@@ -1,5 +1,15 @@
 # STATUS — session handoff
 
+## 2026-10-25 — MAIN Seeker resolver / tracked depth-prime candidate
+
+- Branch: `fix/main-seeker-graphics-rootcause`, based on full integration `218dea73`.
+- Seeker first refusal **PROVEN**: production property walk stopped at 400; original Actor.Instigator is 417/458. Corrected bounded walk preserves audited +CC ownership and existing native selection/fire ABIs. Resolver-only Steam smoke reached a valid two-weapon chain; that save had no Seeker.
+- Black foreground silhouette: current-frame independent correction changes between submissions; original prime/color mask mechanism reproduced with real D3D9/Ex pixels. New default-OFF `[Render] TrackedDepthPrimeFix=1` omits only exact retained depth-only near-plane color siblings, never world shadows or color/stencil writers. Actual latest-session black-pixel producer remains a physical/instrumented acceptance hypothesis.
+- **L1_PASS**: production walker, native Seeker adapters, retention/selector/ammo conservation, two-hand/action pose, reload/accuracy, HUD, TMD and WeaponLocker regressions.
+- **L2_PASS**: x86 PE32 `/O2`; D3D9/Ex depth-prime pixels/OFF/refusals/Reset, source IB, HUD atlas pixels, texture bridge, OLED GPU, emitted native ABI and factory `[eax+20Ch]`. Exact artifact/source hashes in candidate manifest.
+- **Physical PENDING**: combined Seeker retention/retrieval/projectile, complete support glove and black-artifact correction. Preserve accepted DLL `610F4C21...`; no new physical PASS claim.
+- Evidence and one-session test: `docs/handoffs/main-seeker-graphics-rootcause-20261025.md`.
+
 ## 2026-10-25 — Singularity VR Full Integration Candidate (Branch: integration/full-psvr2-20261025)
 
 - **Candidate DLL SHA-256**: `610F4C21C4E610C40CDF5381B8D8E98675482E409669329C3EDEF23CCD8AEFF1`

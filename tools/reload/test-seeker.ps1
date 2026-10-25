@@ -17,7 +17,7 @@ $literal=($names | ForEach-Object { '"'+$_.Groups[1].Value+'"' }) -join ','
 ('static const char* productionNames[]={' + $literal + '};') | Set-Content (Join-Path $out 'seeker_registered_names.h') -Encoding ascii
 Push-Location $out
 try {
-    foreach($name in @('test-seeker','test-seeker-native-adapter','test-seeker-projectile-adapter')){
+    foreach($name in @('test-native-property-list','test-seeker','test-seeker-native-adapter','test-seeker-projectile-adapter')){
         $src=Join-Path $root "spikes/view_matrix/tests/$name.cpp"
         cmd /c "`"$vc`" x86 >nul && cl /nologo /O2 /EHsc /std:c++17 /I. `"$src`" /Fe:$name.exe && $name.exe"
         if($LASTEXITCODE -ne 0){throw "Failed $name"}
