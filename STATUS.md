@@ -1,22 +1,30 @@
 # STATUS — session handoff
 
-## 2026-10-25 — Seeker PR #60 Follow-Up Deployment (Candidate 8112FB08; PSVR2 Retest PENDING)
+## 2026-10-25 — Seeker PR #60 Follow-Up Retest: Candidate 8112FB08 (PHYSICAL FAIL)
 
-- **Deployed Candidate Details**:
-  - Source Commit: 5e908879 / 19bd45da (branch ix/seeker-back-holster-evidence)
-  - Installed Steam DLL: 8112FB08142B380C6B8A6421D1522203CE0864017A95A8765A2A7379F303C60F (x86 PE32 /O2)
-  - Backup Checkpoint: deployment/deploy-backups/20261025-pre-seeker-followup
-- **Minimal Core Fixes Applied**:
-  1. **Reciprocal Pawn Resolver**: Replaced CameraOwnedPawn() with ReadNativeLocalPlayer().pawn (fixing cameraPawn=00000000 while 
-ativePawn=141F5000).
-  2. **Registered Reflection Names**: Registered Instigator and mWeaponName in g_wantNames in d3d9.cpp, unblocking reflection property offset lookups.
-  3. **Bounded Receipts**: Added bounded logging for Seeker back gate (64 receipts), XR Grip edge (48 receipts), launch gates (32 receipts), and two-phase selection confirmation (selection-requested -> selection-equipped vs selection-timeout).
-- **Preserved Accepted Baseline**:
-  - Valkyrie accuracy: VrValkyrieSpreadPercent=70, VrValkyrieTwoHandPercent=50 (PHYSICAL PASS)
-  - Reload comfort: ValkyrieInsertRadiusCm=20, VolkInsertRadiusCm=20 (PHYSICAL PASS)
-  - HD textures: priority_material_mode=2 with 4 verified 2K DDS files (PHYSICAL PASS)
-  - HUD 3D, TMD haptics, Polish dubbing, neutral UI atlas intact.
-- **Physical Retest Status**: PENDING short PSVR2 acceptance test.
+- **Physical Acceptance Results (PSVR2 test by user)**:
+  - **Seeker Back Holster (PHYSICAL FAIL)**: Still cannot retrieve Seeker from back holster. All 39 shoulder grip attempts rejected with `gate=unavailable` (`availablePawn=00000000`). Root cause: `NativeSeekerSlot::Read(s)` consistently failed on `stage=weapon-owner-or-name-field` due to invalid reflection query `nameField.Get(cls,"mWeaponName")!=0x2e8` (`mWeaponName` is a raw struct at `+0x2E8`, not an exported `UProperty`), keeping `g_seekerBackAvailable = 0` despite Seeker being present in the inventory chain (`owned inventory: unmapped weapon item name=ARSteerable mWeaponName=ARSteerable` logged repeatedly).
+  - **Seeker Left Support Grip (PHYSICAL FAIL)**: Engaging two-hand grip caused the left hand glove mesh to completely disappear. Root cause: `seekergeometry::SupportTarget` produces `inv(wrist*local)*desired` which was fed directly into `LocalDeltaPair` expecting a World ride matrix `C`, double-inverting coordinate frames and collapsing the left wrist/arm transform.
+  - **Weapon Accuracy (PHYSICAL FAIL / UNSATISFACTORY)**: User reports aim still unsatisfactory; Seeker VR muzzle launch was blocked by `stage=weapon-owner-or-name-field` in `native_seeker_projectile.inl`. Sights/trace alignment across weapons requires Astra investigation.
+  - **Valkyrie Accuracy (PHYSICAL PASS preserved)**: 70% native spread with 50% two-hand multiplier remains accepted.
+  - **Valkyrie & Volk 20 cm Reload Comfort (PHYSICAL PASS preserved)**: 20 cm insertion radius remains accepted.
+  - **HD Textures (PHYSICAL PASS preserved)**: `priority_material_mode=2` with 4 verified 2K DDS files intact.
+  - **HUD 3D, TMD haptics, and Polish localization preserved**.
+- **Preserved PSVR2 Session Evidence Checkpoint**:
+  - Checkpoint Directory: `deployment/deploy-backups/20261025-seeker-8112fb08-session/`
+  - Steam DLL SHA256: `8112FB08142B380C6B8A6421D1522203CE0864017A95A8765A2A7379F303C60F` (commit `5e908879`, branch `fix/seeker-back-holster-evidence`)
+  - Steam SingularityVR.ini SHA256: `D8977B92BB7A21D87379AFECF1B5C87D179BC9EF9F69F58AF43E685A44DA363B`
+  - Steam texture_override.ini SHA256: `2492C8D08A067C9097AD24ACA5D8AA77EB56B883914369087C7FB6471F2D1BF7`
+  - Archived Session Log: `deployment/deploy-backups/20261025-seeker-8112fb08-session/view_matrix.log` (SHA256: `1EB237B8ED442C55A9E8CE41564C4B4FDCBA2163DB117290D21B3818C6D8B465`, 2,125,865 bytes, session 08:51:35 - 08:55:06)
+  - Startup Log: `deployment/deploy-backups/20261025-seeker-8112fb08-session/view_matrix_startup.log` (SHA256: `2D25D4D9408A54FA53AE3F81CC004FDFB7FFC528155982DE9AE4A730F40762D9`, 833 bytes)
+  - Texture Bridge Log: `deployment/deploy-backups/20261025-seeker-8112fb08-session/texture_override.log` (SHA256: `E3B60AB048E6655259114CE313058F7BEA4C72E47CAB04389741C57ED1CF81C1`)
+  - Session Manifest: `deployment/deploy-backups/20261025-seeker-8112fb08-session/manifest.json`
+- **Safe Steam Profile Applied (MAIN)**:
+  - Set `SeekerBackSlot=0`, `SeekerSupportGrip=0`, `SeekerProjectileAim=0` in Steam `SingularityVR.ini` under `[Input]`.
+  - Preserved `VrValkyrieSpreadPercent=70`, `VrValkyrieTwoHandPercent=50`, `ValkyrieInsertRadiusCm=20`, `VolkInsertRadiusCm=20`.
+- **Handoff to Astra**:
+  - Technical analysis document: `docs/handoffs/ASTRA_SEEKER_8112FB08_FAILURE_ANALYSIS.md`.
+  - Escalation rule active: Astra must fix the proven root causes (ownership read aligning with `NativeOwnedInventory`, support grip coordinate math in `seeker_geometry.h`, projectile aim arming, and accuracy investigation) without adding speculative diagnostics. PR #61 is barred from deployment.
 
 ## 2026-10-25 — PSVR2 Physical Verification: Seeker PR #60 & Weapon Tuning (PARTIAL)
 
