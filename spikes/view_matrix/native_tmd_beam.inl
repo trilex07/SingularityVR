@@ -49,7 +49,7 @@ static bool Prepare(void* component,uintptr_t caller,const armbind::Mat* parent,
         tmdmuzzle::Witness w;
         if(!TryAcquireSRWLockShared(&NativeTmdSocket::lock))return false;
         w=NativeTmdSocket::published;ReleaseSRWLockShared(&NativeTmdSocket::lock);
-        if(!tmdmuzzle::Socket(w,pawn,GetTickCount64(),corrected)) {
+        if(!tmdmuzzle::BeamParent(w,pawn,GetTickCount64(),*parent,corrected)) {
             Note("no-fresh-rendered-wrist");return false;
         }
         static unsigned count=0;
@@ -120,7 +120,7 @@ static void Poll() {
         if(MH_EnableHook((void*)update)!=MH_OK) {
             g_tmdTrackedBeam=false;Note("enable-failed-disabled");return;
         }
-        Log("TMD tracked beam: audited owned aging child update armed; CPU socket parent -> final both-eye rendered wrist; native target unchanged");
+        Log("TMD tracked beam: audited owned aging child update armed; complete CPU attachment parent follows original-to-tracked wrist delta; native target unchanged");
     } __except(GetExceptionCode()==EXCEPTION_ACCESS_VIOLATION?EXCEPTION_EXECUTE_HANDLER:EXCEPTION_CONTINUE_SEARCH) {
         g_tmdTrackedBeam=false;Note("installer-unreadable-disabled");
     }

@@ -12,6 +12,7 @@ inline bool Affine(const armbind::Mat& m) {
 }
 struct Witness {
     armbind::Mat wrist;
+    armbind::Mat nativeWrist;
     std::uintptr_t pawn=0;
     std::uint64_t tick=0;
     std::uint32_t frame=0;
@@ -33,21 +34,28 @@ inline armbind::Mat SocketLocal() {
     return m;
 }
 inline bool Capture(const armbind::Mat& bind,const float skin[3][4],
+        const float nativeSkin[3][4],
         const armbind::Mat& local,const armbind::Mat& ride,const float camera[3],
         std::uintptr_t pawn,std::uint64_t tick,std::uint32_t frame,Witness& out) {
     if(!pawn||!tick||!camera||!Affine(local)||!Affine(ride))return false;
-    armbind::Mat joint,world;
-    if(!armbind::CurrentJoint(bind,skin,joint))return false;
+    armbind::Mat joint,nativeJoint,world;
+    if(!armbind::CurrentJoint(bind,skin,joint)||
+       !armbind::CurrentJoint(bind,nativeSkin,nativeJoint))return false;
     skeletal::Multiply(world.m,joint.m,local.m);
     Witness next;skeletal::Multiply(next.wrist.m,world.m,ride.m);
-    for(unsigned i=0;i<3;++i){if(!std::isfinite(camera[i]))return false;next.wrist.m[3][i]+=camera[i];}
-    if(!Affine(next.wrist))return false;
+    skeletal::Multiply(next.nativeWrist.m,nativeJoint.m,local.m);
+    for(unsigned i=0;i<3;++i){
+        if(!std::isfinite(camera[i]))return false;
+        next.wrist.m[3][i]+=camera[i];next.nativeWrist.m[3][i]+=camera[i];
+    }
+    if(!Affine(next.wrist)||!Affine(next.nativeWrist))return false;
     next.pawn=pawn;next.tick=tick;next.frame=frame;next.valid=true;out=next;return true;
 }
 inline bool SameEyes(const Witness& a,const Witness& b) {
     if(!a.valid||!b.valid||a.pawn!=b.pawn||a.frame!=b.frame)return false;
     for(unsigned i=0;i<4;++i)for(unsigned j=0;j<4;++j)
-        if(std::fabs(a.wrist.m[i][j]-b.wrist.m[i][j])>.002f)return false;
+        if(std::fabs(a.wrist.m[i][j]-b.wrist.m[i][j])>.002f||
+           std::fabs(a.nativeWrist.m[i][j]-b.nativeWrist.m[i][j])>.002f)return false;
     return true;
 }
 inline bool Socket(const Witness& w,std::uintptr_t pawn,std::uint64_t now,armbind::Mat& result) {
@@ -55,6 +63,20 @@ inline bool Socket(const Witness& w,std::uintptr_t pawn,std::uint64_t now,armbin
     const auto socket=SocketLocal();armbind::Mat m;
     skeletal::Multiply(m.m,socket.m,w.wrist.m);
     if(!armbind::Finite(m))return false;result=m;return true;
+}
+// The engine already composed socket, animated bone and the child component's
+// relative transform into parent. Retarget that COMPLETE parent from the
+// original wrist to the stereo-confirmed tracked wrist; never rebuild it from
+// SocketLocal alone (that loses the child attachment transform).
+inline bool BeamParent(const Witness& w,std::uintptr_t pawn,std::uint64_t now,
+                       const armbind::Mat& nativeParent,armbind::Mat& result) {
+    if(!w.Current(pawn,now)||!Affine(nativeParent))return false;
+    armbind::Mat inverse,delta,corrected;
+    if(!skeletal::Inverse(inverse.m,w.nativeWrist.m))return false;
+    skeletal::Multiply(delta.m,inverse.m,w.wrist.m);
+    skeletal::Multiply(corrected.m,nativeParent.m,delta.m);
+    if(!Affine(corrected))return false;
+    result=corrected;return true;
 }
 inline bool Completed(const Witness (&eyes)[2],const bool (&drawn)[2],unsigned eyeCount,
         bool drawOk,bool indexRestored,bool handRestored,bool nextRestored) {

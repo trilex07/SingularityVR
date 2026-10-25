@@ -93,19 +93,26 @@ int main(){
         joint.m[3][0]=31; joint.m[3][1]=-22; joint.m[3][2]=17;
         armbind::Mat inverse;assert(skeletal::Inverse(inverse.m,bind.bind[9].m));
         const auto skin=Product(inverse,joint);float gpu[3][4];armbind::ToGpu(skin,gpu);
+        auto nativeJoint=joint;nativeJoint.m[3][0]-=11.f;
+        const auto nativeSkin=Product(inverse,nativeJoint);float nativeGpu[3][4];
+        armbind::ToGpu(nativeSkin,nativeGpu);
         auto local=Identity(),ride=Identity();local.m[3][2]=-73;ride.m[3][1]=19;
         const float camera[]{100,200,300};
-        assert(Capture(bind.bind[9],gpu,local,ride,camera,100,GetTickCount64(),12,w));
+        assert(Capture(bind.bind[9],gpu,nativeGpu,local,ride,camera,100,GetTickCount64(),12,w));
         wristRotations[turn]=w;
         auto expected=Product(Product(Product(socket,joint),local),ride);
         for(unsigned i=0;i<3;++i)expected.m[3][i]+=camera[i];
         armbind::Mat actual;assert(Socket(w,100,GetTickCount64(),actual));Near(actual,expected);
+        auto child=Identity();child.m[3][0]=3;child.m[3][1]=-4;
+        const auto fullNative=Product(Product(child,socket),w.nativeWrist);
+        const auto fullTracked=Product(Product(child,socket),w.wrist);
+        assert(BeamParent(w,100,GetTickCount64(),fullNative,actual));Near(actual,fullTracked);
         auto other=w;assert(SameEyes(w,other));other.wrist.m[3][0]+=.01f;assert(!SameEyes(w,other));
         other=w;other.frame++;assert(!SameEyes(w,other));other=w;other.pawn++;assert(!SameEyes(w,other));
         assert(!Socket(w,99,GetTickCount64(),actual));assert(!Socket(w,100,w.tick+151,actual));
         auto invalid=local;invalid.m[0][0]=std::numeric_limits<float>::quiet_NaN();
-        const auto before=w;assert(!Capture(bind.bind[9],gpu,invalid,ride,camera,100,1,12,w));Near(w.wrist,before.wrist);
-        assert(!Capture(bind.bind[9],gpu,local,armbind::Mat{},camera,100,1,12,w));
+        const auto before=w;assert(!Capture(bind.bind[9],gpu,gpu,invalid,ride,camera,100,1,12,w));Near(w.wrist,before.wrist);
+        assert(!Capture(bind.bind[9],gpu,gpu,local,armbind::Mat{},camera,100,1,12,w));
     }
     NativeTmdSocket::original=(NativeTmdSocket::Query)&NativeQuery;
     Witness eyes[2]{w,w};bool drawn[2]{true,true};
@@ -145,11 +152,14 @@ int main(){
     const auto savedParent=cpuParent;
     InvokeComponent(&MeasureReturn,(void*)600,&cpuParent);
     w.tick=GetTickCount64();NativeTmdSocket::Publish(w);
-    assert(Socket(w,100,GetTickCount64(),expected));
+    assert(BeamParent(w,100,GetTickCount64(),cpuParent,expected));
     const auto componentStack=Esp();
     for(const auto& rotated:wristRotations){
         w=rotated;w.tick=GetTickCount64();NativeTmdSocket::Publish(w);
-        assert(Socket(w,100,GetTickCount64(),expected));
+        assert(BeamParent(w,100,GetTickCount64(),cpuParent,expected));
+        armbind::Mat lostChild;
+        assert(Socket(w,100,GetTickCount64(),lostChild));
+        assert(std::fabs(expected.m[3][0]-lostChild.m[3][0])>100.f);
         for(unsigned i=0;i<25;++i)InvokeComponent(&NativeTmdBeam::Hook,(void*)600,&cpuParent);
         Near(nativeParent,expected);Near(cpuParent,savedParent);
     }
