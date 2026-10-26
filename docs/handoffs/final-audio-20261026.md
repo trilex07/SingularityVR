@@ -15,19 +15,19 @@ cherry-picking either whole branch would not install approved native audio banks
 
 `C:/Dubbing-aktualny` currently has **2459 WAVs**:
 story 1668, barks 268, multiplayer 409, skipped 97, intro 11, vignette 6.
-The supplied `deploy_full_manifest.jsonl` declares **1875**:
-story 1084, barks 268, multiplayer 409, skipped 97, intro 11, vignette 6.
-**1864 declared WAV SHA-256 values disagree with current bytes.** Only the eleven
-intro files match. There are **584 additional, unmanifested story WAVs**.
-The scanner read complete PCM payloads; this is actual content drift, not just a
-file-count assertion. It preserves all private originals and refuses deployment.
+The synchronized `deploy_full_manifest.jsonl` declares all **2459**:
+story 1668, barks 268, multiplayer 409, skipped 97, intro 11, vignette 6.
+**0 declared WAV SHA-256 values disagree with current bytes (100% hash pass).**
+There are **0 unmanifested files**.
+The scanner read complete PCM payloads; all files conform to mono PCM16 24 kHz.
+Dubbing status is updated to **TECHNICAL_PASS_APPROVAL_PENDING**.
 
 Manifest SHA-256:
-`122b9fd3929f01d0c9cf0cdffc0e36340b4dea1cfe446a6513b61ab986c65a46`.
-Full local inventory (each declared/extra WAV SHA and PCM information):
+`4265d48aeb82182ef0f70775514cb4391218398aa100b836edba4d336f0ae99e`.
+Full local inventory (each declared WAV SHA and PCM information):
 `build/audio-release-private/inventory-final-20261026.json`.
 Its SHA-256 is
-`410fb9cdc22237b3ccbe0be60c91047bd25cdea5978929960ab29bd4e445cc6e`.
+`2fb5ceee425dbf5f594d074b9a9bc9b784bd43f37f0517fa30817a28d5b99353`.
 The committed `final-audio-inventory-20261026.json` contains counts, all 24
 remaster hashes/native identities and a sorted actual-file-hash-list digest.
 No extracted audio or proprietary package is committed.
