@@ -1,78 +1,77 @@
-# Plan Rozwiązania 542 Kwestii Czasowych Dubbingu i Status Kandydata VR (2026-10-26)
+# MAIN correction of SIDE's timing plan — 2026-10-26
 
-**Raport nadrzędny MAIN:** `docs/handoffs/final-dubbing-main-integration-20261026.md`  
-**Lista odrzuconych ujęć z MAIN:** `docs/handoffs/final-dubbing-main-build-20261026.json`  
-**Uszczegółowiony plan czasowy SIDE:** `docs/handoffs/final-dubbing-timing-plan-20261026.json`  
-**Prywatny pakiet zintegrowany (kandydat VR):** `build/next-weapon-reload/final-complete-v2-20261026/manifest.json` (130 plików)
+This supersedes the timing classification/formula in SIDE d38b2407 and MAIN
+364c32b4. It does not change audio, approved identities or candidate V2 hashes.
 
----
+## Actual status
 
-## 1. Aktualny Stan Integracji — Co Osiągnęliśmy
+702 replacements are packed in 111 PRIVATE candidate banks. They are not
+installed in Steam and have not been heard in-game. 556 selected takes retain
+the installed source audio. No MAIN listening or physical acceptance is claimed.
+The combined V2 payload has 130 hash-verified files; controlled runtime
+deployment/rollback preparation is separate from asset staging.
 
-Integracja przeprowadzona przez MAIN w natywnych pakietach Unreal Engine 3 przyniosła kluczowy przełom:
+## Correct work partition
 
-- **111 natywnych banków dźwiękowych (`.xxx`) zostało pomyślnie zmodyfikowanych i zweryfikowanych pod kątem dekompresji.**
-- **702 nowe polskie kwestie dialogowe zostały trwale zintegrowane do banków gry.**
-- **556 kwestii zachowało oryginalne audio z gry (`disposition: accepted audio retained`):**
-  - **14 kwestii:** błąd parytetu ramek kodeka Vorbis (kwestia enkodera po stronie MAIN, głosy i nagrania pozostają bez zmian).
-  - **542 kwestie:** zbyt długie nagranie względem natywnego budżetu czasowego (wymagające tempa $> 1.35\text{x}$, z czego 333 $> 1.85\text{x}$).
-- Wszystkie **702 działające kwestie są zamrożone i chronione przed regresją**.
+- 551 takes require shorter/faster source delivery: 333 above 1.85x and 218
+  above 1.35x but at most 1.85x.
+- 14 takes had a codec frame-parity refusal; NINE also exceed 1.35x. They
+  belong in the SIDE timing list too, while codec validation remains MAIN-owned.
+- Only FIVE are codec-only. Thus 551 timing + 5 codec-only = 556 retained.
+- Correct excess-duration groups: 317 at most 1s, 151 from 1–2s, 83 above 2s.
+  These are scheduling groups, not proof that any recording can be rescued by
+  trimming silence or that it is a particular type of monologue.
 
----
+`final-dubbing-timing-plan-20261026.json` schema v2 contains all 551 exact
+package/asset identities, current text, budgets, overlap flags and five
+codec-only identities. Text comes from the preserved installed lookup, whose
+hash is recorded; speaker guesses remain guesses, not verified casting.
 
-## 2. Analiza 542 Kwestii Wymagających Dopasowania Czasowego
+## Exact fitter budget
 
-Każda z 542 kwestii została powiązana z jej oryginalnym tekstem EN, roboczym tłumaczeniem PL, profilem mówcy oraz dokładnym budżetem silnika:
-$$\text{maksymalny czas nagrania} = 1.35 \times \text{native\_duration} - 0.08\text{ s (dla 40 ms marginesów)}$$
+The MAIN receipt's `source_duration` is ALREADY the duration returned by
+`trim_guarded`: first-to-last audible sample with up to 40ms on each side,
+clamped to the original file edges. Outer silence was already removed.
 
-### Rozkład według Mówców
-| Profil / Postać | Liczba kwestii | Charakterystyka |
-| :--- | :---: | :--- |
-| **`unclassified` (Lektor / Taśmy / Notatki)** | **196** | Dzienniki audio na magnetofonach, notatki naukowców, komunikaty techniczne. |
-| **`kathryn` (Kathryn)** | **167** | Dialogi fabularne z Katieriną w sekcjach Kismet. |
-| **`soldier` (Żołnierze / Barks)** | **161** | Rozkazy i kwestie taktyczne żołnierzy radzieckich. |
-| **`barisov` (Barisow)** | **13** | Pojedyncze dłuższe kwestie fabularne Barisowa. |
-| **`intro` / `renko` / `demichev`** | **5** | Pojedyncze linie z początku i końca gry. |
+The real fitter computes:
 
-### Rozkład Nadmiaru Czasowego (Overshoot)
-Analiza wykazała, że problem nie wymaga tworzenia dubbingu od zera, lecz precyzyjnego skrócenia:
-- **Grupa A (nadmiar $\le 1.0\text{ s}$): 291 kwestii (53.7%)**  
-  Ponad połowa kwestii jest za długa o mniej niż 1 sekundę! Wynika to z pozostawionej ciszy na początku/końcu pliku XTTS oraz naturalnych przerw między słowami. Usunięcie paddingu ciszy i mikro-skrócenie zdań bez problemu zmieści je w limicie $\text{tempo} \le 1.35\text{x}$.
-- **Grupa B (nadmiar $1.0\text{ s}$ do $2.0\text{ s}$): 166 kwestii (30.6%)**  
-  Wymaga zwięźlejszego polskiego sformułowania (usunięcie zbędnych zaimków, pleonazmów generowanych przez maszynowe NLLB) oraz przyspieszenia tempa syntezy mowy.
-- **Grupa C (nadmiar $> 2.0\text{ s}$): 85 kwestii (15.7%)**  
-  Długie monologi narracyjne (zwłaszcza na magnetofonach), gdzie polskie tłumaczenie dosłowne jest o 30-40% dłuższe od zwartego angielskiego pierwowzoru. Wymagają redakcji translatorskiej zachowującej sens, ale skracającej liczbę sylab.
+    tempo = max(1, guarded_duration / (native_duration - 0.020))
+    max_guarded_duration = 1.35 * (native_duration - 0.020)
 
----
+Do not subtract the 80ms guards again. If planning an unguarded speech span with
+both full guards present, its conservative limit is max_guarded_duration - 0.080;
+the final WAV must always pass the actual guarded-duration measurement. Internal
+pauses and translation quality require a line-specific review, not an assumption
+from the duration alone. Never crop speech or automatically compress all pauses.
 
-## 3. Plan Działania SIDE dla 542 Kwestii
+## SIDE delivery instruction
 
-Zgodnie z dyrektywą MAIN, nie wykonujemy ślepej regeneracji całego katalogu:
-1. Pracujemy **wyłącznie na wyselekcjonowanej liście 542 wpisów** z `final-dubbing-timing-plan-20261026.json`.
-2. Dla każdej kwestii obliczono twardy limit długości źródłowej.
-3. Kwestie będą iteracyjnie poprawiane od Grupy A (najszybsze do odzyskania 291 linii), poprzez Grupę B, do Grupy C.
-4. Każde nowe ujęcie dostarczy:
-   - zweryfikowany skrót SHA-256,
-   - potwierdzenie $\text{tempo} \le 1.35\text{x}$ z uwzględnieniem 40 ms marginesów,
-   - dowód odsłuchu (audition evidence) wykluczający ucięcie słów lub nienaturalną artykulację.
+Work ONLY on `timing_cases` in schema v2, on your own branch/worktree. Preserve
+the current 702 packed replacements byte-for-byte; do not commit to MAIN's branch.
+For each revised take, preserve identity/approved actor, use concise correct PL
+without losing meaning, measure the guarded limit, and supply SHA256 plus honest
+audition provenance. ASR/format checks are not listening approval. Return exact
+replacements and a manifest; MAIN alone rebuilds and verifies the native banks.
+Do not regenerate the five codec-only takes just to accommodate the encoder.
+The nine overlapping failures still require a new safe-duration take.
 
----
+MAIN's codec-only list:
 
-## 4. Wytyczne dla Testu Fizycznego VR na PSVR2 (Zintegrowana Paczka V2)
+- VI4_4205_GST
+- SD_SPT1_FIRE_GRENADE1
+- SD_SPT1_SEE_TARGET1
+- SD_SPT3_MOVE_IN2
+- SD_SPT3_SEE_TARGET4
 
-Niezależnie od dalszej pracy nad 542 liniami dialogowymi, **kandydat zintegrowany V2 (`manifest.json` z 130 plikami)** jest w pełni gotowy do sesji testowej w goglach.
+## Reproduction and evidence
 
-### Co należy sprawdzić podczas sesji PSVR2:
-1. **Menu Główne i Menu Pauzy:**
-   - Działanie wskaźnika laserowego (pointer beam).
-   - Czytelność i renderowanie natywnych polskich tekstów na przyciskach.
-2. **Aktualny Dubbing w Grze (702 zintegrowane kwestie):**
-   - Odsłuch dialogów fabularnych w początkowych etapach kampanii.
-   - Weryfikacja czystości dźwięku (brak przesterów, brak trzasków, zachowanie przestrzenności UE3).
-   - W kwestiach z 542 jeszcze niezintegrowanych usłyszysz bezpieczne oryginalne audio z gry (brak ciszy, brak crasha).
-3. **Efekty Dźwiękowe (Remaster Audio):**
-   - Strzały z rewolweru Centurion, snajperki Kasimov, strzelby Spikeshot, karabinu Walkiria.
-   - Wystrzał impulsu TMD i odgłosy eksploracji.
-4. **Wizualia Broni i TMD:**
-   - Tekstury HD broni i celowników.
-   - Prawidłowe zakotwiczenie emitera cząstek TMD AgeSquare i brak artefaktów wizualnych w lewej dłoni.
+Run `tools/audio/reconcile_dubbing_timing.py` with `--build` pointing to
+`docs/handoffs/final-dubbing-main-build-20261026.json`, `--lookup` pointing to the
+PRIVATE preserved installed lookup, and `--out` pointing to the timing plan.
+The script rejects duplicate identities and any disagreement with the production
+fitter's tempo calculation. Both input hashes are recorded.
+
+20 focused audio regressions PASS, including overlap, exact budget, contradictory
+receipt rejection, and real FFmpeg mono/stereo frame/channel preservation. No
+runtime C++ change or new DLL build; renderer/bridge/payload hashes remain those
+of candidate V2. Steam untouched, no game launch, PSVR2 acceptance PENDING.

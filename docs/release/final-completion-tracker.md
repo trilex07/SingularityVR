@@ -66,6 +66,9 @@ STATUS.md entries and agent handoffs do not override the scoped human result.
   that claim and performed no listening. Technical PASS is not listening PASS.
 - Remaining: SIDE must supply shorter approved takes for timing refusals;
   investigate codec frame parity separately. In-game listening is PENDING.
+- Reconciled SIDE plan: 551 timing takes, including nine with codec refusals;
+  five additional codec-only takes. The receipt's guarded duration already
+  excludes outer silence. No new recordings arrived with SIDE d38b2407.
 
 ### P2-B — Sound remaster
 

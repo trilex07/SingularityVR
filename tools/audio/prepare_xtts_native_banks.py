@@ -12,7 +12,7 @@ import subprocess
 from pathlib import Path
 
 from native_story_package import build
-from native_voice_fit import fit
+from native_voice_fit import MAX_DEPLOYMENT_TEMPO, fit
 from patch_opening_dialogue import require
 from prepare_xlingual_banks import unpack_physical
 from ue3_sound_package import inspect
@@ -111,7 +111,7 @@ def main():
                     and props['RawPCMDataSize'] > 0 and props['RawPCMDataSize'] % (2 * channels) == 0, 'native format')
             target, receipt = fit(run, wav, folder, asset, props['SampleRate'],
                                   props['RawPCMDataSize'] // (2 * channels), channels=channels)
-            if target is None or receipt['tempo'] > 1.35:
+            if target is None or receipt['tempo'] > MAX_DEPLOYMENT_TEMPO:
                 retained.append(dict(receipt, asset=asset, disposition='accepted audio retained'))
                 continue
             replacements[asset] = target.read_bytes()

@@ -11,9 +11,10 @@ runtime filenames were preserved. No Steam files were written or game launched.
 - 111 candidate banks independently decompressed and structurally verified.
 - 702 new takes integrated; 556 selected takes retain installed audio.
 - Five additional uncovered identities remain untouched; MP and Bink excluded.
-- 542 retained takes need faster/shorter source delivery within native duration
-  (333 require tempo >1.85; 209 exceed the deployment limit of 1.35).
-- 14 retain installed audio because measured decoded-frame parity still fails.
+- 551 retained takes need faster/shorter source delivery within native duration
+  (333 require tempo >1.85; 218 exceed 1.35 but are at most 1.85).
+- 14 have decoded-frame parity refusals; nine ALSO need shorter source delivery.
+  Only five are codec-only: 551 timing + five codec-only = 556 retained.
 - SIDE's claimed listening approval is provenance from its artifact, not a
   MAIN audition or physical acceptance. MAIN performed no listening.
 
@@ -39,8 +40,15 @@ derive the native budget from native_duration or native_frames/rate. Deliver
 revised Polish speech fitting that budget with at most1.35x tempo and40ms guards;
 preserve package/asset identity and provide source hash and audition evidence.
 Do not mark all takes listened-to based on ASR, format or hash checks alone.
-The14 codec refusals remain a separate MAIN encoding issue, not a request to
-change dialogue or voices. Preserve the currently working702takes.
+Codec validation remains MAIN-owned. The nine overlapping timing/codec failures
+also need safe-duration SIDE takes; the five codec-only takes do not. Preserve
+the currently packed702takes (offline, not in-game verified).
+
+The corrected schema-v2 timing plan uses the actual guarded limit
+`1.35 * (native_duration - 0.020)`. `source_duration` already contains the
+edge-clamped40ms guards; outer silence was already removed. The prior SIDE
+formula and silence-causation claim are superseded by the corrected timing
+handoff and executable reconciliation tests.
 
 ## Combined candidate
 
