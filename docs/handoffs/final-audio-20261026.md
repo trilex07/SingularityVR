@@ -136,9 +136,9 @@ codecvt deprecation warnings remain; build and format-string guard passed.
 
 ## Required closure gates for MAIN
 
-1. Resolve changed/unmanifested corpus intentionally. SIDE must supply current
-   text/donor-to-native-package/asset mappings and a current manifest; never
-   assume an extra filename belongs to a specific NPC. Obtain hash-bound final
+1. Refreshed manifest integrity is independently PASS (see follow-up below).
+   Resolve the five uncovered native lines and the 103 competing-take choices;
+   never assume a folder name proves native campaign ownership. Obtain hash-bound final
    listening selections; keep any public redistribution decision separate.
 2. Stage only approved exact takes. Build native banks against the accepted
    pins with existing tools and independent container/decoded-PCM checks.
@@ -153,6 +153,73 @@ codecvt deprecation warnings remain; build and format-string guard passed.
 
 **Completed:** inventory, exact-byte release gates, native subset integration,
 offline selected-remaster packaging, regression/build verification.
-**Blocked:** stale corpus provenance and final take selection/approval; storm
+**Blocked:** final take selection/approval, five missing native takes; storm
 native graph proof; native remaster package validation.
 **Physical acceptance:** PENDING. No Steam access or game launch occurred.
+
+## Independently verified refreshed delivery — follow-up to `6d5d9125`
+
+Inspected the external manifest refresh `6d5d9125` and dubbing SIDE
+`9c260562`. Re-ran full PCM/SHA inventory rather than trusting their updated
+summary. The audit reproduces SHA
+`2fb5ceee425dbf5f594d074b9a9bc9b784bd43f37f0517fa30817a28d5b99353`
+exactly: **2459 files, zero mismatches, zero unmanifested files**. This resolves
+the previous integrity blocker, not final content approval or native delivery.
+
+Implemented `tools/audio/plan_campaign_audio.py` and seven identity regressions.
+Current checked lookup SHA is
+`4feec18c3c8e5d9462c56a6335bec645ff39d5d2ff8aca6138fe50c59a69e020`.
+This is the repository lookup, not a claim that installed Steam matches it.
+Curated skipped/vignette source pins and every exact bank/asset are recorded in
+`final-audio-campaign-plan-20261026.json` beside this handoff.
+
+**Exact native mapping results:**
+
+- 1667 story basenames uniquely match the lookup; 409 of those map to **MP**
+  native banks and are excluded from campaign delivery, regardless of folder.
+- 1258 story campaign takes + 97 curated skipped + 6 curated vignette map to
+  **1361 takes for 1258 unique native SoundNodeWaves in 116 campaign banks**.
+- All 103 skipped/vignette aliases collide with an existing story take for the
+  same exact native identity; every pair has different bytes. The plan exposes
+  both hashes. MAIN/SIDE must select exactly one approved take per identity;
+  no precedence or creative approval is invented by this tooling.
+- `story/ae99b20311bcf364.wav.tmp.wav` is the one unmapped file. Its SHA is
+  `4092d0ea4d73ffa8f20289f064f9e81ee435690d10abcb6af904fc6923dfd75a`.
+  It is a temporary artifact, not a new native dialogue target. Leave it private.
+- Five existing campaign lookup rows have **no current WAV**, all with empty
+  runtime filename: `SP_VI2_zone02a_2010_LOC_INT/VI1_1505_ANN`,
+  `SP_VI2_zone02a_LOC_INT/VI1_1505_ANN`,
+  `SP_VI2_kismet02_LOC_INT/VI2_5012_DEMY`,
+  `SP_VI2_kismet03_LOC_INT/FR8_4406_GRD2`,
+  `SP_VI2_kismet04_LOC_INT/VI2_5012_DEMY`.
+  Retain accepted native audio until SIDE provides reviewed exact takes.
+
+Full plan: `build/audio-release-private/campaign-native-plan-final-20261026.json`,
+SHA `ae860d9f5f1acac11793c36ae836d624b2d831ebbcd45dadcb5c3191230ca059`.
+Exact 1361-row mapping CSV beside it:
+`campaign-native-plan-final-20261026.mapping.csv`, SHA
+`f559ecf41dfecafccafb19f49f3be0cdcfb8688b05aa8b8ae57b7057cdd565e5`.
+This is identity mapping, not final text/voice approval or native export decoding.
+
+The committed plan lists **all 116 required native banks and their exact waves**.
+Next build inputs are an approved selected-take manifest, MAIN's current accepted
+profile containing each chosen bank's physical SHA, a private offline copy of
+those accepted banks, an independently checked decoder and ffmpeg. Current
+checked-in UI/HUD accepted profiles contain no native-bank pins. Do not borrow
+an unverified original bank just to satisfy the builder. Derive decoded logical
+SHA and original PCM budgets from those pinned offline copies; unknown layouts
+must refuse. A fallback to accepted audio is a retained line, not a successful
+new replacement. No bank, lookup or file from Steam was accessed for this task.
+
+Repeat the identity plan with the independent audit, repository lookup and
+SIDE's explicitly pinned `skipped_pl_curated.json`/`vignette_pl_curated.json`:
+
+```powershell
+python tools/audio/plan_campaign_audio.py --audit build/audio-release-private/inventory-independent-20261026.json --lookup localization/pl/polish_story_voice.jsonl --skipped C:/Users/Trilex/vr-mods/SingularityVR-dubbing-corrections/dubbing-corrections/skipped_pl_curated.json --vignette C:/Users/Trilex/vr-mods/SingularityVR-dubbing-corrections/dubbing-corrections/vignette_pl_curated.json --out build/audio-release-private/new-campaign-plan.json
+```
+
+**PASS: 39 focused tests** (previous 32 plus seven campaign identity tests).
+No C++ source or audio bytes changed in this follow-up; last offline x86 `/O2`
+build/hash above remains the runtime-source checkpoint. MAIN rebuilds the final
+integrated candidate. Creative approval, new native banks and headset audio
+acceptance remain explicitly pending; no generation or deployment occurred.
