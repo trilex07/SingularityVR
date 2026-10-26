@@ -29,7 +29,7 @@
     "combined_final_session": "PASS: reviewed AB348E06 profile, production read-only preflight, 134 sources, fake Steam full rollback/drift tests"
   },
   "asset_state": {
-    "dubbing": "116 banks checked; 111 changed; 707 replacements; 551 retained timing cases, including 9 codec refusals; incomplete coverage; physical listening PENDING",
+    "dubbing": "V3 live startup FAIL with 707 replacements. V4 offline: 1248 replacements (707 preserved + 541 new), ten content refusals retained; no listening/creative approval or deployment; runtime startup still blocked.",
     "sound_remaster": "8 conservative native variants built; exact graph and container PASS; listening PENDING",
     "hd": "10 DDS complete staged set; clean bridge build and pixel tests PASS; physical PENDING",
     "native_menu_buttons": "native GFx Button/ButtonLeft remastered; real bounds, bitmap and action preservation PASS; physical PENDING"
@@ -78,5 +78,22 @@
       "baseline_restore": "PASS_HASH_VERIFIED"
     }
   ],
-  "failure_report": "docs/handoffs/final-v3-startup-failure-20261026.md"
+  "failure_report": "docs/handoffs/final-v3-startup-failure-20261026.md",
+  "next_offline_audio_candidate": {
+    "candidate_private_path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-final-completion\\build\\next-weapon-reload\\final-complete-v4-audio-verified-20261026",
+    "candidate_manifest_sha256": "17ade647497964008c216ba2684090df326e01c3c37a99533f3398e0c3f185b7",
+    "side_source": "c5b56ad1e21d1cccc8df4a0e38e6c6c8d68f5b59",
+    "side_manifest_sha256": "9a461523d460d72bc1e06f40f2a7d5a8ea7338c2af79a58f87b6002b1689d11b",
+    "new_native_takes": 541,
+    "previous_pc_payloads_preserved": 707,
+    "total_native_replacements": 1248,
+    "content_refusals": 10,
+    "codec_refusals": [],
+    "recommendation": "NO_GO_DEPLOYMENT",
+    "receipt": "docs/handoffs/final-dubbing-v4-main-integration-20261026.json",
+    "steam_written": false,
+    "game_launched": false,
+    "physical_acceptance": "NOT_RUN",
+    "startup_fix": false
+  }
 }

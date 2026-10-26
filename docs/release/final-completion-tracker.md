@@ -160,3 +160,25 @@ No real deployment, launch, physical acceptance or baseline promotion occurred.
 - Next: isolate the exact runtime pair from all replaced asset groups
   before any repeat headset request; no speculative rendering patch.
 - Evidence: docs/handoffs/final-v3-startup-failure-20261026.md.
+
+
+## V4 audio delivery (2026-10-26): offline integration only
+
+- SIDE c5b56ad1: MAIN verified all 551 real WAV hashes, mono PCM16/24 kHz,
+  complete PCM payload, peak, guarded duration and tempo <=1.35.
+- Packed 541 new takes; preserved all 707 earlier PC payloads. Total 1248
+  replacements in the existing 1258-identity scope; ten content refusals retained
+  original/base audio. No new codec refusals. Five old codec recoveries are
+  INCLUDED in 707, not additional to it.
+- 57 independent container roundtrips PASS. All 116 campaign banks now changed;
+  combined private payload 135 assets, with 19 non-dialogue assets unchanged.
+  Renderer/bridge/INI/texture INI remain exact V3 bytes. No new C++ build.
+- 19 focused audio regressions PASS; all 551 files rechecked with final verifier.
+  Exact receipt: docs/handoffs/final-dubbing-v4-main-integration-20261026.json.
+- SIDE task: docs/handoffs/side-timing-551-content-corrections-20261026.md.
+  Engine in SIDE code is Pocket-TTS Polish 6L, not XTTS. Per-file generation
+  provenance, performance/listening approval and physical results not established.
+- No Steam writes or game launch. All 159 current installed AB348E06 profile
+  pins verified. V3 startup corruption remains UNPROVEN and blocks deployment.
+- V4 needs a fresh combined preflight/rollback receipt including the five newly
+  changed banks; do not reuse V3 guard metadata. Not a headset-ready release.
