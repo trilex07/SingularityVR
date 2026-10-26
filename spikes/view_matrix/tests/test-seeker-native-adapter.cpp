@@ -90,6 +90,35 @@ static void Setup(){
     *(NativeOwnedInventory::Name*)(seeker+0x2e8)={10,0};
     *(NativeOwnedInventory::Name*)(rifle+0x2e8)={20,0};
 }
+static void RetentionCallsiteTest(){
+    // Exercise the ACTUAL compiled /O2 Heavy callback and _ReturnAddress,
+    // rather than proving only RetainQuery's arithmetic. This is our own
+    // executable CPU fixture, not a game hook or game-memory modification.
+    static_assert(sizeof(void*)==4,"Seeker native ABI fixture must be x86");
+    auto* code=(unsigned char*)VirtualAlloc(nullptr,4096,MEM_COMMIT|MEM_RESERVE,PAGE_READWRITE);
+    assert(code);memset(code,0xcc,4096);
+    auto emit=[&](unsigned ret,void* self){
+        auto* p=code+ret-12;
+        *p++=0xb9;auto ptr=(uint32_t)(uintptr_t)self;memcpy(p,&ptr,4);p+=4; // mov ecx,self
+        *p++=0xb8;ptr=(uint32_t)(uintptr_t)&NativeSeekerSlot::Heavy;memcpy(p,&ptr,4);p+=4;
+        *p++=0xff;*p++=0xd0;*p=0xc3; // call eax ; ret (actual return address)
+    };
+    emit(0xd2,seeker);emit(0xe9,seeker);emit(0x102,seeker);emit(0x122,rifle);
+    DWORD old=0;assert(VirtualProtect(code,4096,PAGE_EXECUTE_READ,&old));
+    assert(FlushInstructionCache(GetCurrentProcess(),code,4096));
+    const auto saved=NativeSeekerSlot::switchMethod;NativeSeekerSlot::switchMethod=(uintptr_t)code;
+    using Stub=int(__cdecl*)();
+    auto call=[&](unsigned ret){return ((Stub)(code+ret-12))();};
+    assert(call(0xd2)==0&&call(0xe9)==0); // both audited native switch decisions
+    assert(call(0x102)==1&&call(0x122)==1); // unrelated call / ordinary weapon
+    g_seekerBackSlot=0;assert(call(0xd2)==1);g_seekerBackSlot=1;
+    g_gamePaused=1;assert(call(0xd2)==1);g_gamePaused=0;
+    wrongOwner=true;assert(call(0xd2)==1);wrongOwner=false;
+    const auto ownerThread=NativeSeekerSlot::engineThread;
+    NativeSeekerSlot::engineThread=0;assert(call(0xd2)==1);NativeSeekerSlot::engineThread=ownerThread;
+    NativeSeekerSlot::switchMethod=saved;assert(VirtualFree(code,0,MEM_RELEASE));
+    puts("PASS emitted x86 retention callback: exact +D2/+E9 return sites, ordinary/unrelated/OFF/pause/owner/thread forward original");
+}
 int main(){
     Setup();seekerslot::Snapshot s;assert(NativeSeekerSlot::Read(s)&&s.count==2);
     reflectedInstigator=0x98;assert(!NativeSeekerSlot::Read(s));
@@ -116,6 +145,7 @@ int main(){
     assert(selected==100&&NativeOwnedInventory::refreshes==100&&created==1);
     assert(!memcmp(beforeSeeker,seeker,1024)&&!memcmp(beforeRifle,rifle,1024));
     assert(NativeSeekerSlot::Heavy(seeker,nullptr)==1); // non-switch caller forwarded
+    RetentionCallsiteTest();
     auto refusal=[&](){const auto count=selected;Request();assert(count==selected);};
     g_gamePaused=1;refusal();g_gamePaused=0;g_inCinematic=1;refusal();g_inCinematic=0;
     g_seekerBackSlot=0;refusal();assert(!g_seekerBackAvailable);g_seekerBackSlot=1;
