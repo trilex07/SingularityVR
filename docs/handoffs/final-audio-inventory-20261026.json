@@ -1,0 +1,311 @@
+{
+  "schema": "singularityvr-audio-inventory-summary-v1",
+  "baseline": "71728b5d7e2712d1640fa18fa58e48bd6dc708ee",
+  "audit_local_path": "build\\audio-release-private\\inventory-final-20261026.json",
+  "audit_sha256": "410fb9cdc22237b3ccbe0be60c91047bd25cdea5978929960ab29bd4e445cc6e",
+  "dubbing_manifest_sha256": "122b9fd3929f01d0c9cf0cdffc0e36340b4dea1cfe446a6513b61ab986c65a46",
+  "declared_counts": {
+    "story": 1084,
+    "barks": 268,
+    "mp": 409,
+    "skipped": 97,
+    "intro": 11,
+    "vignette": 6
+  },
+  "actual_counts": {
+    "barks": 268,
+    "intro": 11,
+    "mp": 409,
+    "skipped": 97,
+    "story": 1668,
+    "vignette": 6
+  },
+  "manifest_mismatches": 1864,
+  "unmanifested_count": 584,
+  "all_actual_file_sha256_list_digest": "304b05329528cb92407fca2be0218357baa57c6f0824dce4b37162c6ce3fc500",
+  "dubbing_status": "BLOCKED_MANIFEST_DRIFT_AND_APPROVAL",
+  "remaster": [
+    {
+      "id": "01_weapon_centurion_revolver",
+      "package": "wp_SP_ARPistol_SF.xxx",
+      "asset": "arPistolFire03",
+      "cue": "arPistolFireNEW",
+      "confidence": "VERIFIED_REFERENCE",
+      "metadata_sha256": "722f154eda7a181dec1dc645da9ba54922cf6d353d3b1c27da41b2c7a244bcf3",
+      "variants": [
+        {
+          "file": "original.wav",
+          "sha256": "b1454ef1a25b25a6c7d2fe14e8410d664968e685057e2868be8c2eb59397638a",
+          "frames": 60000,
+          "channels": 2,
+          "sample_width": 2,
+          "sample_rate": 48000
+        },
+        {
+          "file": "restored_conservative.wav",
+          "sha256": "8629847f03d9d4fa67054397b30f71c7df0f1cee458dd91704f65faeed67912b",
+          "frames": 60000,
+          "channels": 2,
+          "sample_width": 2,
+          "sample_rate": 48000
+        },
+        {
+          "file": "remaster_enhanced.wav",
+          "sha256": "1ce1322131f4911efb938c207ea4d49ed262403d35949b76ddc41d4eb28f3f8b",
+          "frames": 60000,
+          "channels": 2,
+          "sample_width": 2,
+          "sample_rate": 48000
+        }
+      ],
+      "status": "TECHNICAL_PASS_APPROVAL_PENDING"
+    },
+    {
+      "id": "02_weapon_kasimov_sniper",
+      "package": "wp_SP_ARSniperRifle_SF.xxx",
+      "asset": "sniperFire08",
+      "cue": "arSniperFire",
+      "confidence": "VERIFIED_REFERENCE",
+      "metadata_sha256": "9f6e9931ad7f7b7163d2050405d415f27f04985cfcfd02f9c381641a1e6ee1fd",
+      "variants": [
+        {
+          "file": "original.wav",
+          "sha256": "24ae2ad48f1588e903488bc275cabc80577d45f38eacd4ebce353782aedd070d",
+          "frames": 108000,
+          "channels": 2,
+          "sample_width": 2,
+          "sample_rate": 48000
+        },
+        {
+          "file": "restored_conservative.wav",
+          "sha256": "9fbc5ffba74a3eb0ec868882b9ecea5e3eaebf1b0d958e055fdc8aee106972ec",
+          "frames": 108000,
+          "channels": 2,
+          "sample_width": 2,
+          "sample_rate": 48000
+        },
+        {
+          "file": "remaster_enhanced.wav",
+          "sha256": "dacd095d6fdc26792738a4814ac9be58047fdbb8709ad72beb1fc1ef4f93cab9",
+          "frames": 108000,
+          "channels": 2,
+          "sample_width": 2,
+          "sample_rate": 48000
+        }
+      ],
+      "status": "TECHNICAL_PASS_APPROVAL_PENDING"
+    },
+    {
+      "id": "03_e99_tmd_impulse",
+      "package": "RvGame.xxx",
+      "asset": "tmdFireImpulse16",
+      "cue": "tmdFireImpulse",
+      "confidence": "VERIFIED_REFERENCE",
+      "metadata_sha256": "a2c953c29bdbd6c5516821073151d2942e9c4dc528fb74b4abac8c2f20b26c7c",
+      "variants": [
+        {
+          "file": "original.wav",
+          "sha256": "5975b982e15c68826e7d66ad4d85176a6f1289e56277d025f19c815b418e9869",
+          "frames": 96000,
+          "channels": 2,
+          "sample_width": 2,
+          "sample_rate": 48000
+        },
+        {
+          "file": "restored_conservative.wav",
+          "sha256": "218bad46ed2451fe9751b7e118b081da8cf7aa825e629ec60e92486853de9cb4",
+          "frames": 96000,
+          "channels": 2,
+          "sample_width": 2,
+          "sample_rate": 48000
+        },
+        {
+          "file": "remaster_enhanced.wav",
+          "sha256": "08bf5147bb7780182c98170893e8bf27525bfce99b7981315b6f9ca3f253cc07",
+          "frames": 96000,
+          "channels": 2,
+          "sample_width": 2,
+          "sample_rate": 48000
+        }
+      ],
+      "status": "TECHNICAL_PASS_APPROVAL_PENDING"
+    },
+    {
+      "id": "04_weapon_walkiria_ar9",
+      "package": "wp_SP_ARMachineGun_SF.xxx",
+      "asset": "machinegunFire57",
+      "cue": "arMachinegunFire",
+      "confidence": "VERIFIED_REFERENCE",
+      "metadata_sha256": "d4f0f8a369102e49d908b1e7f5b32fd7486b216a428482773aa322503dd9a4a7",
+      "variants": [
+        {
+          "file": "original.wav",
+          "sha256": "fcd30c12f3e23cbc31ee96818834c5675ec7651a19732ba23ac335bc353c51b4",
+          "frames": 66603,
+          "channels": 2,
+          "sample_width": 2,
+          "sample_rate": 48000
+        },
+        {
+          "file": "restored_conservative.wav",
+          "sha256": "4261e52899878fa5f36090d90f9f69e7dd2928545ade63dc52aa69bb77f48b32",
+          "frames": 66603,
+          "channels": 2,
+          "sample_width": 2,
+          "sample_rate": 48000
+        },
+        {
+          "file": "remaster_enhanced.wav",
+          "sha256": "5ddbfb6fb2096be502f46ae4e21cabc4af6fc9212da29bbb84573d957028070d",
+          "frames": 66603,
+          "channels": 2,
+          "sample_width": 2,
+          "sample_rate": 48000
+        }
+      ],
+      "status": "TECHNICAL_PASS_APPROVAL_PENDING"
+    },
+    {
+      "id": "05_weapon_spikeshot_shotgun",
+      "package": "wp_SP_ARShotgun_SF.xxx",
+      "asset": "shotgunFire35",
+      "cue": "arShotgunFire",
+      "confidence": "VERIFIED_REFERENCE",
+      "metadata_sha256": "03c6421631916105c58b2019c9dc4d8569fecaeb9c30754d0eab8bab5dbb182b",
+      "variants": [
+        {
+          "file": "original.wav",
+          "sha256": "d014f5f50638b8eea3584a00618d89beed87e103d2453385efc9b8136f4a6a20",
+          "frames": 72745,
+          "channels": 2,
+          "sample_width": 2,
+          "sample_rate": 48000
+        },
+        {
+          "file": "restored_conservative.wav",
+          "sha256": "8d5e830b7ea2285750c2515c4c964bb779dbe278345235bcc5b235a56f3950e7",
+          "frames": 72745,
+          "channels": 2,
+          "sample_width": 2,
+          "sample_rate": 48000
+        },
+        {
+          "file": "remaster_enhanced.wav",
+          "sha256": "dfaf4e67791fd78c3a8d421665000109ddcc9f2696b821f80c55cd4ef099a252",
+          "frames": 72745,
+          "channels": 2,
+          "sample_width": 2,
+          "sample_rate": 48000
+        }
+      ],
+      "status": "TECHNICAL_PASS_APPROVAL_PENDING"
+    },
+    {
+      "id": "06_music_explore_drone",
+      "package": "MUSIC_exploreDrone01_XSA.xxx",
+      "asset": "CONCEPTexploreDrone01",
+      "cue": "CONCEPTexploreDrone01",
+      "confidence": "VERIFIED_REFERENCE",
+      "metadata_sha256": "ea48e9d149d869345edaa04de4e5c655fb171ab137d718ac7dee6a86c46f2510",
+      "variants": [
+        {
+          "file": "original.wav",
+          "sha256": "dac0195853e8b65a35f22c0b3a44d1b46a708c5389c4141362327546355a9024",
+          "frames": 4224000,
+          "channels": 2,
+          "sample_width": 2,
+          "sample_rate": 32000
+        },
+        {
+          "file": "restored_conservative.wav",
+          "sha256": "f6ab16fd8ecdc33b5343b7306d40131a0afe7dd3fc8fb97499c99bd65d3a33ee",
+          "frames": 4224000,
+          "channels": 2,
+          "sample_width": 2,
+          "sample_rate": 32000
+        },
+        {
+          "file": "remaster_enhanced.wav",
+          "sha256": "80b0dc4e989071fa678717c4c50a18d7531f71153dd4c06ab6e39f62d42c49bd",
+          "frames": 4224000,
+          "channels": 2,
+          "sample_width": 2,
+          "sample_rate": 32000
+        }
+      ],
+      "status": "TECHNICAL_PASS_APPROVAL_PENDING"
+    },
+    {
+      "id": "07_music_combat_boss_grom",
+      "package": "MUSIC_combatBossGrom01_XSA.xxx",
+      "asset": "combatBossGrom01",
+      "cue": "combatBossGrom01",
+      "confidence": "VERIFIED_REFERENCE",
+      "metadata_sha256": "7d5f05a7269f05fdbadd270c6eef690e9d8c9b236c97371e5787e1c7a76aaa92",
+      "variants": [
+        {
+          "file": "original.wav",
+          "sha256": "fda4e28acd17cb76cde32cc36045ef840075e9e16b43af1274696ecdba338c24",
+          "frames": 3432648,
+          "channels": 6,
+          "sample_width": 2,
+          "sample_rate": 44100
+        },
+        {
+          "file": "restored_conservative.wav",
+          "sha256": "8eba9434d997916e197f0450343815c195bd5f566d71d39fba033299f366e04b",
+          "frames": 3432648,
+          "channels": 6,
+          "sample_width": 2,
+          "sample_rate": 44100
+        },
+        {
+          "file": "remaster_enhanced.wav",
+          "sha256": "333d74ec1cb22d41220c05773c63cbab4b9ff7b75d782aecdaa5899c847ac8d1",
+          "frames": 3432648,
+          "channels": 6,
+          "sample_width": 2,
+          "sample_rate": 44100
+        }
+      ],
+      "status": "TECHNICAL_PASS_APPROVAL_PENDING"
+    },
+    {
+      "id": "08_ambience_ocean_storm",
+      "package": "SP_Freight_Audio_2010_XSA.xxx",
+      "asset": "windStormHigh01_R",
+      "cue": "windStormHigh01",
+      "confidence": "HEURISTIC_MATCH",
+      "metadata_sha256": "e22de593fe03fb90fbf5dd39927d7cb2573a4e80d9b9c232cc7bc7aca5336f7d",
+      "variants": [
+        {
+          "file": "original.wav",
+          "sha256": "3421125f164268898d45d7de76591f3285ab800984cdea085740d048141fa8bd",
+          "frames": 1323000,
+          "channels": 1,
+          "sample_width": 2,
+          "sample_rate": 22050
+        },
+        {
+          "file": "restored_conservative.wav",
+          "sha256": "045847995de02ff029a74d25026812302c67eb6517805cf2ac6af85cd4f67cef",
+          "frames": 1323000,
+          "channels": 1,
+          "sample_width": 2,
+          "sample_rate": 22050
+        },
+        {
+          "file": "remaster_enhanced.wav",
+          "sha256": "be152cfafe22c45ae7597bf8d3dcded12f22ece428f5586934e6c270ae725302",
+          "frames": 1323000,
+          "channels": 1,
+          "sample_width": 2,
+          "sample_rate": 22050
+        }
+      ],
+      "status": "BLOCKED_NATIVE_GRAPH_UNPROVEN"
+    }
+  ],
+  "physical_acceptance": "NOT_RUN",
+  "steam_accessed": false
+}

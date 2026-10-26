@@ -124,6 +124,7 @@ offline-deliverables/
 /build/followup-prep-tests-*/
 
 /build/action-pose-private/
+/build/audio-release-private/
 
 # Private MAIN logs, accepted-install snapshots and compiled evidence.
 /build/main-seeker-evidence/

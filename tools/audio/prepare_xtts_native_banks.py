@@ -36,6 +36,28 @@ def select_rows(rows, package):
     return selected
 
 
+def restrict_native_scope(rows, manifest):
+    """New approved deliveries may replace a subset of a bank.
+
+    Legacy manifests retain their original whole-package behavior. The scope
+    is an explicit exact package/asset set, never inferred from a WAV filename.
+    """
+    if 'nativeScope' not in manifest:
+        return rows
+    wanted = []
+    for row in manifest['nativeScope']:
+        key = (row['package'].casefold(), row['asset'])
+        require(key not in wanted, 'duplicate approved native scope')
+        wanted.append(key)
+    require(bool(wanted), 'empty approved native scope')
+    found = []
+    for key in wanted:
+        matches = [r for r in rows if (r.get('package', '').casefold(), r.get('asset')) == key]
+        require(len(matches) == 1, 'approved native identity absent/ambiguous')
+        found.extend(matches)
+    return found
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
     for key in ('candidate', 'profile', 'cooked', 'decoder', 'ffmpeg', 'out'):
@@ -53,6 +75,7 @@ def main():
     lookup_path = a.candidate / 'payload/Binaries/vr-assets/localization/pl/polish_story_voice.jsonl'
     require(sha(lookup_path.read_bytes()) == manifest['lookupAfterSha256'].lower(), 'lookup changed')
     lookup = [json.loads(s) for s in lookup_path.read_text(encoding='utf-8').splitlines() if s.strip()]
+    lookup = restrict_native_scope(lookup, manifest)
     wav_pins = {r['name']: r['candidateSha256'] for r in manifest['files']}
     packages = list(dict.fromkeys(a.package))
     require(len({p.casefold() for p in packages}) == len(packages), 'duplicate package')
