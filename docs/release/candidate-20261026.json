@@ -1,0 +1,32 @@
+{
+  "schema": "singularityvr-reviewed-source-candidate-v1",
+  "branch": "integration/final-completion-20261026",
+  "source_commit": "b5b813d9f8ea459205eef107e8eebba2485021a5",
+  "dll_sha256": "DF498BE21DB99AD8CFC78F1E3603410D57E38B6C0E2E877CDB880DF3CBF2FE45",
+  "architecture": "x86 PE32",
+  "optimization": "/O2",
+  "tracked_worktree_at_build": "clean",
+  "physical_baseline_dll": "AB348E06080E479988E810375CC50D92EEA1936D94313A02360517269DC4F964",
+  "intended_gameplay_test_delta": {"Render.TmdTrackedAgeParticles": 1},
+  "seeker_test_when_legitimately_available": {"Input.SeekerBackSlot": 1},
+  "offline": {
+    "original_x86_particle_attachment_contract": "PASS",
+    "production_x86_socket_beam_particle_callbacks": "PASS",
+    "dual_tmd_regressions": "PASS",
+    "tmd_runtime_regressions": "PASS",
+    "d3d9_and_d3d9ex_gauntlet_pixels_and_restoration": "PASS",
+    "weapon_locker_preview_and_policy": "PASS",
+    "oled_d3d11_pixels_and_lifetime": "PASS",
+    "audio_focused_tests": "PASS (39, SIDE receipt)"
+  },
+  "asset_state": {
+    "dubbing": "2459 WAV identities audited; new native bank replacement NOT BUILT; 103 take choices unresolved; one temporary file excluded; 409 MP targets excluded from campaign",
+    "sound_remaster": "24 variants inventoried; exact selected takes pending",
+    "valkyrie_4k": "verified private pair and default-OFF gate integrated; bridge rebuild and physical acceptance pending",
+    "native_menu_buttons": "exact GFx producer replacement remains open"
+  },
+  "steam_modified": false,
+  "game_launched": false,
+  "physical_acceptance": "PENDING",
+  "release_complete": false
+}
