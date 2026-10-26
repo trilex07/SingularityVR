@@ -28,7 +28,7 @@
     "combined_assets": "PASS: 130 file hashes; no install"
   },
   "asset_state": {
-    "dubbing": "116 banks checked; 111 changed; 680 replacements; 578 retained, incomplete coverage; physical listening PENDING",
+    "dubbing": "116 banks checked; 111 changed; 702 replacements; 556 retained, incomplete coverage; physical listening PENDING",
     "sound_remaster": "8 conservative native variants built; exact graph and container PASS; listening PENDING",
     "hd": "10 DDS complete staged set; clean bridge build and pixel tests PASS; physical PENDING",
     "native_menu_buttons": "native GFx Button/ButtonLeft remastered; real bounds, bitmap and action preservation PASS; physical PENDING"
@@ -38,5 +38,5 @@
   "physical_acceptance": "PENDING",
   "release_complete": false,
   "texture_bridge_sha256": "F58CB3A805E46C3D3F7E88137BD605AF21A8A8106C289385132F677A968E95FD",
-  "private_asset_manifest_sha256": "6cbc36b456d9ff7227c1d021339c7ee80231bab287d2784d9442ddac5b6ade03"
+  "private_asset_manifest_sha256": "1d69a34b4e4d07f69ad3bb3fc815579b0ac3832f295b88d2e7cc12bf017e429e"
 }

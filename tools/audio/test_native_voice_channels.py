@@ -31,19 +31,15 @@ class NativeVoiceChannels(unittest.TestCase):
                 folder.mkdir()
                 result, receipt = fit(run, source, folder, 'wave', 48000, 48000,
                                       channels=channels)
-                with wave.open(str(folder / 'wave.decoded.wav')) as decoded:
+                self.assertIsNotNone(result, receipt)
+                decoded_path = folder / ('wave.timing-retry.wav' if receipt['measured_tail_padding_frames'] else 'wave.decoded.wav')
+                with wave.open(str(decoded_path)) as decoded:
                     self.assertEqual(decoded.getnchannels(), channels)
                     self.assertEqual(decoded.getframerate(), 48000)
                     frames = decoded.getnframes()
-                if frames == 48000:
-                    self.assertIsNotNone(result, receipt)
-                    self.assertEqual(receipt['channels'], channels)
-                else:
-                    # Some Vorbis streams decode with priming removed. Never
-                    # accept mismatched PCM duration or edit UE3 metadata to fit.
-                    self.assertIsNone(result)
-                    self.assertEqual(receipt['decoded_frames'], frames)
-                    self.assertIn('budget mismatch', receipt['reason'])
+                self.assertEqual(frames, 48000)
+                self.assertEqual(receipt['channels'], channels)
+                self.assertLessEqual(receipt['measured_tail_padding_frames'], 256)
             with self.assertRaises(ValueError):
                 fit(run, source, root, 'invalid', 48000, 48000, channels=0)
 

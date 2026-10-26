@@ -2,12 +2,12 @@
   "summary": {
     "banks_checked": 116,
     "banks_changed": 111,
-    "takes_replaced": 680,
-    "takes_retained": 578,
+    "takes_replaced": 702,
+    "takes_retained": 556,
     "reasons": {
       "guarded duration requires unsafe tempo": 333,
-      "tempo exceeds 1.35": 179,
-      "encoded native PCM budget mismatch; no metadata/delay guess": 66
+      "tempo exceeds 1.35": 209,
+      "encoded native PCM budget mismatch; bounded silence retry refused": 14
     },
     "physical_acceptance": "PENDING",
     "main_listening_performed": false
@@ -143,17 +143,9 @@
       "source_duration": 4.585208333333333,
       "native_frames": 132083,
       "rate": 48000,
+      "channels": 1,
+      "measured_tail_padding_frames": 0,
       "asset": "RL1_0405_KAT",
-      "disposition": "accepted audio retained"
-    },
-    {
-      "package": "SP_RL1_kismet01_LOC_INT",
-      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
-      "tempo": 1.2297352713354903,
-      "native_duration": 0.9344583333333333,
-      "source_duration": 1.1245416666666668,
-      "decoded_frames": 44726,
-      "asset": "RL1_0407_KAT",
       "disposition": "accepted audio retained"
     },
     {
@@ -163,37 +155,21 @@
       "source_duration": 3.810625,
       "native_frames": 125017,
       "rate": 48000,
+      "channels": 1,
+      "measured_tail_padding_frames": 0,
       "asset": "RL3_1506_SC1",
       "disposition": "accepted audio retained"
     },
     {
       "package": "SP_RL2_kismet02_1950_LOC_INT",
-      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
-      "tempo": 1.2228875134553285,
-      "native_duration": 0.6393333333333333,
-      "source_duration": 0.757375,
-      "decoded_frames": 30560,
-      "asset": "SD_GRD1_SEE_TARGET2",
-      "disposition": "accepted audio retained"
-    },
-    {
-      "package": "SP_RL2_kismet02_1950_LOC_INT",
-      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
       "tempo": 1.4382663431906104,
-      "native_duration": 0.6554583333333334,
+      "guard_ms": 40,
       "source_duration": 0.9139583333333333,
-      "decoded_frames": 31334,
+      "native_frames": 31462,
+      "rate": 48000,
+      "channels": 1,
+      "measured_tail_padding_frames": 128,
       "asset": "SD_GRD1_SEE_TARGET3",
-      "disposition": "accepted audio retained"
-    },
-    {
-      "package": "SP_RL2_kismet02_1950_LOC_INT",
-      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
-      "tempo": 1.0,
-      "native_duration": 0.8007916666666667,
-      "source_duration": 0.75725,
-      "decoded_frames": 38310,
-      "asset": "SD_GRD1_SEE_TARGET4",
       "disposition": "accepted audio retained"
     },
     {
@@ -222,6 +198,8 @@
       "source_duration": 3.118125,
       "native_frames": 108424,
       "rate": 48000,
+      "channels": 1,
+      "measured_tail_padding_frames": 0,
       "asset": "RL3_2006_BARY",
       "disposition": "accepted audio retained"
     },
@@ -232,26 +210,6 @@
       "native_duration": 0.64325,
       "source_duration": 2.999875,
       "asset": "RL3_3717_BARY",
-      "disposition": "accepted audio retained"
-    },
-    {
-      "package": "SP_RL2_kismet05_1950_LOC_INT",
-      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
-      "tempo": 1.0,
-      "native_duration": 0.5760625,
-      "source_duration": 0.42716666666666664,
-      "decoded_frames": 27523,
-      "asset": "RL3_3725_BARY",
-      "disposition": "accepted audio retained"
-    },
-    {
-      "package": "SP_RL2_kismet05_1950_LOC_INT",
-      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
-      "tempo": 1.0,
-      "native_duration": 0.5771458333333334,
-      "source_duration": 0.44204166666666667,
-      "decoded_frames": 27575,
-      "asset": "RL3_3726_BARY",
       "disposition": "accepted audio retained"
     },
     {
@@ -279,26 +237,20 @@
       "source_duration": 1.7002916666666668,
       "native_frames": 57398,
       "rate": 48000,
+      "channels": 1,
+      "measured_tail_padding_frames": 0,
       "asset": "RL3_3706_BARY",
       "disposition": "accepted audio retained"
     },
     {
       "package": "SP_RL3_kismet01_1950_LOC_INT",
-      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
-      "tempo": 1.0,
-      "native_duration": 0.64325,
-      "source_duration": 0.4307916666666667,
-      "decoded_frames": 30748,
-      "asset": "RL3_3717_BARY",
-      "disposition": "accepted audio retained"
-    },
-    {
-      "package": "SP_RL3_kismet01_1950_LOC_INT",
-      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
       "tempo": 1.3856356075081486,
-      "native_duration": 0.5760625,
+      "guard_ms": 40,
       "source_duration": 0.7705,
-      "decoded_frames": 27523,
+      "native_frames": 27651,
+      "rate": 48000,
+      "channels": 1,
+      "measured_tail_padding_frames": 128,
       "asset": "RL3_3725_BARY",
       "disposition": "accepted audio retained"
     },
@@ -312,22 +264,14 @@
       "disposition": "accepted audio retained"
     },
     {
-      "package": "SP_RL3_kismet01_1950_LOC_INT",
-      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
-      "tempo": 1.0,
-      "native_duration": 0.8191458333333334,
-      "source_duration": 0.7389583333333334,
-      "decoded_frames": 39191,
-      "asset": "RL3_3727_BARY",
-      "disposition": "accepted audio retained"
-    },
-    {
       "package": "SP_RL5_audio01_LOC_INT",
-      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
       "tempo": 1.7964916151809356,
-      "native_duration": 0.5595238095238095,
+      "guard_ms": 40,
       "source_duration": 0.96925,
-      "decoded_frames": 24547,
+      "native_frames": 24675,
+      "rate": 44100,
+      "channels": 1,
+      "measured_tail_padding_frames": 128,
       "asset": "SD_SPT3_RPT_AFFIRM1",
       "disposition": "accepted audio retained"
     },
@@ -371,11 +315,13 @@
     },
     {
       "package": "SP_RL6_katya_LOC_INT",
-      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
       "tempo": 1.6890601891274144,
-      "native_duration": 0.9497083333333334,
+      "guard_ms": 40,
       "source_duration": 1.5703333333333334,
-      "decoded_frames": 45458,
+      "native_frames": 45586,
+      "rate": 48000,
+      "channels": 1,
+      "measured_tail_padding_frames": 128,
       "asset": "RL6_2211_KAT",
       "disposition": "accepted audio retained"
     },
@@ -440,6 +386,8 @@
       "source_duration": 4.166166666666666,
       "native_frames": 110360,
       "rate": 48000,
+      "channels": 1,
+      "measured_tail_padding_frames": 0,
       "asset": "RL6_5005_KAT",
       "disposition": "accepted audio retained"
     },
@@ -450,6 +398,8 @@
       "source_duration": 3.37925,
       "native_frames": 104043,
       "rate": 48000,
+      "channels": 1,
+      "measured_tail_padding_frames": 0,
       "asset": "RL6_5007_KAT",
       "disposition": "accepted audio retained"
     },
@@ -478,6 +428,8 @@
       "source_duration": 5.28,
       "native_frames": 165494,
       "rate": 48000,
+      "channels": 1,
+      "measured_tail_padding_frames": 0,
       "asset": "RL6_6007_KAT",
       "disposition": "accepted audio retained"
     },
@@ -488,6 +440,8 @@
       "source_duration": 3.9555,
       "native_frames": 136842,
       "rate": 48000,
+      "channels": 1,
+      "measured_tail_padding_frames": 0,
       "asset": "RL6_7007_KAT",
       "disposition": "accepted audio retained"
     },
@@ -498,6 +452,8 @@
       "source_duration": 1.7099583333333332,
       "native_frames": 49597,
       "rate": 48000,
+      "channels": 1,
+      "measured_tail_padding_frames": 0,
       "asset": "RL6_7010_KAT",
       "disposition": "accepted audio retained"
     },
@@ -1642,6 +1598,7 @@
       "native_frames": 143746,
       "rate": 48000,
       "channels": 1,
+      "measured_tail_padding_frames": 0,
       "asset": "RT4_1001_KAT",
       "disposition": "accepted audio retained"
     },
@@ -1653,6 +1610,7 @@
       "native_frames": 86536,
       "rate": 48000,
       "channels": 1,
+      "measured_tail_padding_frames": 0,
       "asset": "RT4_1002_KAT",
       "disposition": "accepted audio retained"
     },
@@ -1754,6 +1712,7 @@
       "native_frames": 103566,
       "rate": 48000,
       "channels": 1,
+      "measured_tail_padding_frames": 0,
       "asset": "RT4_5005_KAT",
       "disposition": "accepted audio retained"
     },
@@ -1783,16 +1742,19 @@
       "native_frames": 87909,
       "rate": 48000,
       "channels": 1,
+      "measured_tail_padding_frames": 0,
       "asset": "RT4_5011_KAT",
       "disposition": "accepted audio retained"
     },
     {
       "package": "SP_RT5_kismet01_LOC_INT",
-      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
       "tempo": 1.5528848892179756,
-      "native_duration": 0.7515416666666667,
+      "guard_ms": 40,
       "source_duration": 1.136,
-      "decoded_frames": 35946,
+      "native_frames": 36074,
+      "rate": 48000,
+      "channels": 1,
+      "measured_tail_padding_frames": 128,
       "asset": "RT5_1507_DEM",
       "disposition": "accepted audio retained"
     },
@@ -1877,6 +1839,7 @@
       "native_frames": 259579,
       "rate": 48000,
       "channels": 1,
+      "measured_tail_padding_frames": 0,
       "asset": "VI1_0105_CP2",
       "disposition": "accepted audio retained"
     },
@@ -1888,12 +1851,13 @@
       "native_frames": 71607,
       "rate": 48000,
       "channels": 1,
+      "measured_tail_padding_frames": 0,
       "asset": "VI1_0106_NIM",
       "disposition": "accepted audio retained"
     },
     {
       "package": "SP_VI2_kismet01_LOC_INT",
-      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
+      "reason": "encoded native PCM budget mismatch; bounded silence retry refused",
       "tempo": 1.596393233322694,
       "native_duration": 0.80325,
       "source_duration": 1.250375,
@@ -1909,6 +1873,7 @@
       "native_frames": 88505,
       "rate": 48000,
       "channels": 1,
+      "measured_tail_padding_frames": 0,
       "asset": "VI1_0110_CP2",
       "disposition": "accepted audio retained"
     },
@@ -1920,6 +1885,7 @@
       "native_frames": 117799,
       "rate": 48000,
       "channels": 1,
+      "measured_tail_padding_frames": 0,
       "asset": "VI1_0112_NIM",
       "disposition": "accepted audio retained"
     },
@@ -1931,6 +1897,7 @@
       "native_frames": 59052,
       "rate": 48000,
       "channels": 1,
+      "measured_tail_padding_frames": 0,
       "asset": "VI1_0113_CP2",
       "disposition": "accepted audio retained"
     },
@@ -1969,6 +1936,7 @@
       "native_frames": 118091,
       "rate": 48000,
       "channels": 1,
+      "measured_tail_padding_frames": 0,
       "asset": "VI1_0513_NIM",
       "disposition": "accepted audio retained"
     },
@@ -2159,6 +2127,7 @@
       "native_frames": 117595,
       "rate": 48000,
       "channels": 1,
+      "measured_tail_padding_frames": 0,
       "asset": "VI4_2010_GST",
       "disposition": "accepted audio retained"
     },
@@ -2179,6 +2148,7 @@
       "native_frames": 86869,
       "rate": 48000,
       "channels": 1,
+      "measured_tail_padding_frames": 0,
       "asset": "VI4_2012_GST",
       "disposition": "accepted audio retained"
     },
@@ -2226,6 +2196,7 @@
       "native_frames": 73714,
       "rate": 48000,
       "channels": 1,
+      "measured_tail_padding_frames": 0,
       "asset": "VI4_3305_GST",
       "disposition": "accepted audio retained"
     },
@@ -2255,6 +2226,7 @@
       "native_frames": 96664,
       "rate": 48000,
       "channels": 1,
+      "measured_tail_padding_frames": 0,
       "asset": "VI4_3705_GST",
       "disposition": "accepted audio retained"
     },
@@ -2269,11 +2241,13 @@
     },
     {
       "package": "SP_VI4_kismet01_a_LOC_INT",
-      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
       "tempo": 1.6419192605681663,
-      "native_duration": 0.7863541666666667,
+      "guard_ms": 40,
       "source_duration": 1.2582916666666666,
-      "decoded_frames": 37617,
+      "native_frames": 37745,
+      "rate": 48000,
+      "channels": 1,
+      "measured_tail_padding_frames": 128,
       "asset": "VI4_4205_GST",
       "disposition": "accepted audio retained"
     },
@@ -2330,6 +2304,7 @@
       "native_frames": 109168,
       "rate": 48000,
       "channels": 1,
+      "measured_tail_padding_frames": 0,
       "asset": "VI4_4411_GST",
       "disposition": "accepted audio retained"
     },
@@ -2341,6 +2316,7 @@
       "native_frames": 75522,
       "rate": 48000,
       "channels": 1,
+      "measured_tail_padding_frames": 0,
       "asset": "VI4_2005_GST",
       "disposition": "accepted audio retained"
     },
@@ -2352,6 +2328,7 @@
       "native_frames": 117595,
       "rate": 48000,
       "channels": 1,
+      "measured_tail_padding_frames": 0,
       "asset": "VI4_2010_GST",
       "disposition": "accepted audio retained"
     },
@@ -2372,6 +2349,7 @@
       "native_frames": 86869,
       "rate": 48000,
       "channels": 1,
+      "measured_tail_padding_frames": 0,
       "asset": "VI4_2012_GST",
       "disposition": "accepted audio retained"
     },
@@ -2401,6 +2379,7 @@
       "native_frames": 117878,
       "rate": 48000,
       "channels": 1,
+      "measured_tail_padding_frames": 0,
       "asset": "VI4_3015_GST",
       "disposition": "accepted audio retained"
     },
@@ -2412,6 +2391,7 @@
       "native_frames": 73714,
       "rate": 48000,
       "channels": 1,
+      "measured_tail_padding_frames": 0,
       "asset": "VI4_3305_GST",
       "disposition": "accepted audio retained"
     },
@@ -2426,11 +2406,11 @@
     },
     {
       "package": "SP_VI4_kismet01_b_LOC_INT",
-      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
+      "reason": "encoded native PCM budget mismatch; bounded silence retry refused",
       "tempo": 1.6179236584916097,
       "native_duration": 0.697875,
       "source_duration": 1.09675,
-      "decoded_frames": 33370,
+      "decoded_frames": 34624,
       "asset": "VI4_3510_GST",
       "disposition": "accepted audio retained"
     },
@@ -2442,6 +2422,7 @@
       "native_frames": 96664,
       "rate": 48000,
       "channels": 1,
+      "measured_tail_padding_frames": 0,
       "asset": "VI4_3705_GST",
       "disposition": "accepted audio retained"
     },
@@ -2480,6 +2461,7 @@
       "native_frames": 65794,
       "rate": 48000,
       "channels": 1,
+      "measured_tail_padding_frames": 0,
       "asset": "VI4_4207_GST",
       "disposition": "accepted audio retained"
     },
@@ -2494,11 +2476,13 @@
     },
     {
       "package": "SP_VI4_kismet01_b_LOC_INT",
-      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
       "tempo": 1.482927508646503,
-      "native_duration": 0.9175208333333333,
+      "guard_ms": 40,
       "source_duration": 1.3309583333333332,
-      "decoded_frames": 43913,
+      "native_frames": 44041,
+      "rate": 48000,
+      "channels": 1,
+      "measured_tail_padding_frames": 128,
       "asset": "VI4_4210_GST",
       "disposition": "accepted audio retained"
     },
@@ -2528,6 +2512,7 @@
       "native_frames": 137747,
       "rate": 48000,
       "channels": 1,
+      "measured_tail_padding_frames": 0,
       "asset": "VI3_6112_GST",
       "disposition": "accepted audio retained"
     },
@@ -2539,6 +2524,7 @@
       "native_frames": 128471,
       "rate": 48000,
       "channels": 1,
+      "measured_tail_padding_frames": 0,
       "asset": "VI3_6910_GST",
       "disposition": "accepted audio retained"
     },
@@ -2550,6 +2536,7 @@
       "native_frames": 195278,
       "rate": 48000,
       "channels": 1,
+      "measured_tail_padding_frames": 0,
       "asset": "VI3_7005_GST",
       "disposition": "accepted audio retained"
     },
@@ -2570,6 +2557,7 @@
       "native_frames": 117595,
       "rate": 48000,
       "channels": 1,
+      "measured_tail_padding_frames": 0,
       "asset": "VI4_2010_GST",
       "disposition": "accepted audio retained"
     },
@@ -2590,6 +2578,7 @@
       "native_frames": 86869,
       "rate": 48000,
       "channels": 1,
+      "measured_tail_padding_frames": 0,
       "asset": "VI4_2012_GST",
       "disposition": "accepted audio retained"
     },
@@ -2667,11 +2656,13 @@
     },
     {
       "package": "SP_VI4_kismet01_LOC_INT",
-      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
       "tempo": 1.7082506456436048,
-      "native_duration": 0.7863541666666667,
+      "guard_ms": 40,
       "source_duration": 1.309125,
-      "decoded_frames": 37617,
+      "native_frames": 37745,
+      "rate": 48000,
+      "channels": 1,
+      "measured_tail_padding_frames": 128,
       "asset": "VI4_4205_GST",
       "disposition": "accepted audio retained"
     },
@@ -2692,6 +2683,7 @@
       "native_frames": 65794,
       "rate": 48000,
       "channels": 1,
+      "measured_tail_padding_frames": 0,
       "asset": "VI4_4207_GST",
       "disposition": "accepted audio retained"
     },
@@ -2703,16 +2695,17 @@
       "native_frames": 67684,
       "rate": 48000,
       "channels": 1,
+      "measured_tail_padding_frames": 0,
       "asset": "VI4_4208_GST",
       "disposition": "accepted audio retained"
     },
     {
       "package": "SP_VI4_kismet01_LOC_INT",
-      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
+      "reason": "encoded native PCM budget mismatch; bounded silence retry refused",
       "tempo": 1.835101320767856,
       "native_duration": 0.9175208333333333,
       "source_duration": 1.6470416666666667,
-      "decoded_frames": 43913,
+      "decoded_frames": 45120,
       "asset": "VI4_4210_GST",
       "disposition": "accepted audio retained"
     },
@@ -2742,6 +2735,7 @@
       "native_frames": 161129,
       "rate": 48000,
       "channels": 1,
+      "measured_tail_padding_frames": 0,
       "asset": "VI1_5005_BER",
       "disposition": "accepted audio retained"
     },
@@ -2753,6 +2747,7 @@
       "native_frames": 114597,
       "rate": 48000,
       "channels": 1,
+      "measured_tail_padding_frames": 0,
       "asset": "VI1_5007_BER",
       "disposition": "accepted audio retained"
     },
@@ -2782,6 +2777,7 @@
       "native_frames": 86869,
       "rate": 48000,
       "channels": 1,
+      "measured_tail_padding_frames": 0,
       "asset": "VI4_2012_GST",
       "disposition": "accepted audio retained"
     },
@@ -2832,11 +2828,13 @@
     },
     {
       "package": "SP_VI5_kismet01_LOC_INT",
-      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
       "tempo": 1.6179236584916097,
-      "native_duration": 0.697875,
+      "guard_ms": 40,
       "source_duration": 1.09675,
-      "decoded_frames": 33370,
+      "native_frames": 33498,
+      "rate": 48000,
+      "channels": 1,
+      "measured_tail_padding_frames": 128,
       "asset": "VI4_3510_GST",
       "disposition": "accepted audio retained"
     },
@@ -2848,6 +2846,7 @@
       "native_frames": 96664,
       "rate": 48000,
       "channels": 1,
+      "measured_tail_padding_frames": 0,
       "asset": "VI4_3705_GST",
       "disposition": "accepted audio retained"
     },
@@ -2862,7 +2861,7 @@
     },
     {
       "package": "SP_VI5_kismet01_LOC_INT",
-      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
+      "reason": "encoded native PCM budget mismatch; bounded silence retry refused",
       "tempo": 1.1323637352181595,
       "native_duration": 0.7863541666666667,
       "source_duration": 0.8677916666666666,
@@ -2923,6 +2922,7 @@
       "native_frames": 183284,
       "rate": 48000,
       "channels": 1,
+      "measured_tail_padding_frames": 0,
       "asset": "VI4_5005_GST",
       "disposition": "accepted audio retained"
     },
@@ -2934,6 +2934,7 @@
       "native_frames": 55349,
       "rate": 48000,
       "channels": 1,
+      "measured_tail_padding_frames": 0,
       "asset": "VI5_1208_GST",
       "disposition": "accepted audio retained"
     },
@@ -2945,6 +2946,7 @@
       "native_frames": 215010,
       "rate": 48000,
       "channels": 1,
+      "measured_tail_padding_frames": 0,
       "asset": "VI5_1505_GST",
       "disposition": "accepted audio retained"
     },
@@ -2965,6 +2967,7 @@
       "native_frames": 137938,
       "rate": 48000,
       "channels": 1,
+      "measured_tail_padding_frames": 0,
       "asset": "VI5_2010_GST",
       "disposition": "accepted audio retained"
     },
@@ -2976,6 +2979,7 @@
       "native_frames": 159131,
       "rate": 48000,
       "channels": 1,
+      "measured_tail_padding_frames": 0,
       "asset": "VI5_2011_GST",
       "disposition": "accepted audio retained"
     },
@@ -2987,6 +2991,7 @@
       "native_frames": 113664,
       "rate": 48000,
       "channels": 1,
+      "measured_tail_padding_frames": 0,
       "asset": "VI5_2012_GST",
       "disposition": "accepted audio retained"
     },
@@ -3016,6 +3021,7 @@
       "native_frames": 140166,
       "rate": 48000,
       "channels": 1,
+      "measured_tail_padding_frames": 0,
       "asset": "VI5_4009_GST",
       "disposition": "accepted audio retained"
     },
@@ -3036,6 +3042,7 @@
       "native_frames": 103246,
       "rate": 48000,
       "channels": 1,
+      "measured_tail_padding_frames": 0,
       "asset": "VI5_4013_GST",
       "disposition": "accepted audio retained"
     },
@@ -3047,6 +3054,7 @@
       "native_frames": 116840,
       "rate": 48000,
       "channels": 1,
+      "measured_tail_padding_frames": 0,
       "asset": "VI5_4015_GST",
       "disposition": "accepted audio retained"
     },
@@ -3212,11 +3220,13 @@
     },
     {
       "package": "SP_VI5_kismet03_LOC_INT",
-      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
       "tempo": 1.7341967012828345,
-      "native_duration": 0.8726041666666666,
+      "guard_ms": 40,
       "source_duration": 1.4785833333333334,
-      "decoded_frames": 41757,
+      "native_frames": 41885,
+      "rate": 48000,
+      "channels": 1,
+      "measured_tail_padding_frames": 128,
       "asset": "SD_ESP1_FIRE1",
       "disposition": "accepted audio retained"
     },
@@ -3240,21 +3250,13 @@
     },
     {
       "package": "SP_VI5_kismet03_LOC_INT",
-      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
-      "tempo": 1.0169756374742525,
-      "native_duration": 0.8999375,
-      "source_duration": 0.894875,
-      "decoded_frames": 43069,
-      "asset": "SD_ESP1_MOVE_COVER2",
-      "disposition": "accepted audio retained"
-    },
-    {
-      "package": "SP_VI5_kismet03_LOC_INT",
-      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
       "tempo": 1.3786206300256505,
-      "native_duration": 0.7428541666666667,
+      "guard_ms": 40,
       "source_duration": 0.9965416666666667,
-      "decoded_frames": 35529,
+      "native_frames": 35657,
+      "rate": 48000,
+      "channels": 1,
+      "measured_tail_padding_frames": 128,
       "asset": "SD_ESP1_MOVE_IN1",
       "disposition": "accepted audio retained"
     },
@@ -3275,26 +3277,19 @@
       "native_frames": 58820,
       "rate": 48000,
       "channels": 1,
+      "measured_tail_padding_frames": 0,
       "asset": "SD_ESP1_SEE_TARGET1",
       "disposition": "accepted audio retained"
     },
     {
       "package": "SP_VI5_kismet03_LOC_INT",
-      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
-      "tempo": 1.2743272686115277,
-      "native_duration": 0.7562708333333333,
-      "source_duration": 0.93825,
-      "decoded_frames": 36173,
-      "asset": "SD_ESP1_SEE_TARGET2",
-      "disposition": "accepted audio retained"
-    },
-    {
-      "package": "SP_VI5_kismet03_LOC_INT",
-      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
       "tempo": 1.811211314608081,
-      "native_duration": 0.5443958333333333,
+      "guard_ms": 40,
       "source_duration": 0.9497916666666667,
-      "decoded_frames": 26003,
+      "native_frames": 26131,
+      "rate": 48000,
+      "channels": 1,
+      "measured_tail_padding_frames": 128,
       "asset": "SD_ESP1_SEE_TARGET4",
       "disposition": "accepted audio retained"
     },
@@ -3318,11 +3313,13 @@
     },
     {
       "package": "SP_VI5_kismet03_LOC_INT",
-      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
       "tempo": 1.4316675285600111,
-      "native_duration": 0.9062916666666667,
+      "guard_ms": 40,
       "source_duration": 1.268875,
-      "decoded_frames": 43374,
+      "native_frames": 43502,
+      "rate": 48000,
+      "channels": 1,
+      "measured_tail_padding_frames": 128,
       "asset": "SD_ESP1_SRCH_KILL2",
       "disposition": "accepted audio retained"
     },
@@ -3334,6 +3331,7 @@
       "native_frames": 53520,
       "rate": 48000,
       "channels": 1,
+      "measured_tail_padding_frames": 0,
       "asset": "SD_ESP2_FIRE1",
       "disposition": "accepted audio retained"
     },
@@ -3348,11 +3346,13 @@
     },
     {
       "package": "SP_VI5_kismet03_LOC_INT",
-      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
       "tempo": 1.3512838232948807,
-      "native_duration": 0.8037916666666667,
+      "guard_ms": 40,
       "source_duration": 1.059125,
-      "decoded_frames": 38454,
+      "native_frames": 38582,
+      "rate": 48000,
+      "channels": 1,
+      "measured_tail_padding_frames": 128,
       "asset": "SD_ESP2_FIRE_GRENADE3",
       "disposition": "accepted audio retained"
     },
@@ -3403,16 +3403,6 @@
     },
     {
       "package": "SP_VI5_kismet03_LOC_INT",
-      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
-      "tempo": 1.2794492437030418,
-      "native_duration": 0.6494375,
-      "source_duration": 0.8053333333333333,
-      "decoded_frames": 31045,
-      "asset": "SD_ESP2_SEE_TARGET4",
-      "disposition": "accepted audio retained"
-    },
-    {
-      "package": "SP_VI5_kismet03_LOC_INT",
       "reason": "guarded duration requires unsafe tempo",
       "tempo": 2.0539828480791464,
       "native_duration": 0.7949375,
@@ -3422,11 +3412,11 @@
     },
     {
       "package": "SP_VI5_kismet03_LOC_INT",
-      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
+      "reason": "encoded native PCM budget mismatch; bounded silence retry refused",
       "tempo": 1.523005526923346,
       "native_duration": 0.9133541666666667,
       "source_duration": 1.3605833333333333,
-      "decoded_frames": 43713,
+      "decoded_frames": 44992,
       "asset": "SD_ESP2_SRCH_KILL2",
       "disposition": "accepted audio retained"
     },
@@ -3438,22 +3428,25 @@
       "native_frames": 64240,
       "rate": 48000,
       "channels": 1,
+      "measured_tail_padding_frames": 0,
       "asset": "SD_GRD1_FIRE2",
       "disposition": "accepted audio retained"
     },
     {
       "package": "SP_VI5_kismet03_LOC_INT",
-      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
       "tempo": 1.4423463589474605,
-      "native_duration": 0.97325,
+      "guard_ms": 40,
       "source_duration": 1.3749166666666666,
-      "decoded_frames": 46588,
+      "native_frames": 46716,
+      "rate": 48000,
+      "channels": 1,
+      "measured_tail_padding_frames": 128,
       "asset": "SD_GRD1_FIRE3",
       "disposition": "accepted audio retained"
     },
     {
       "package": "SP_VI5_kismet03_LOC_INT",
-      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
+      "reason": "encoded native PCM budget mismatch; bounded silence retry refused",
       "tempo": 1.5372097423836941,
       "native_duration": 0.7906875,
       "source_duration": 1.1847083333333333,
@@ -3469,17 +3462,8 @@
       "native_frames": 50149,
       "rate": 48000,
       "channels": 1,
+      "measured_tail_padding_frames": 0,
       "asset": "SD_GRD1_MOVE_IN2",
-      "disposition": "accepted audio retained"
-    },
-    {
-      "package": "SP_VI5_kismet03_LOC_INT",
-      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
-      "tempo": 1.0,
-      "native_duration": 0.9768125,
-      "source_duration": 0.8580833333333333,
-      "decoded_frames": 46759,
-      "asset": "SD_GRD1_MOVE_IN3",
       "disposition": "accepted audio retained"
     },
     {
@@ -3490,6 +3474,7 @@
       "native_frames": 49602,
       "rate": 48000,
       "channels": 1,
+      "measured_tail_padding_frames": 0,
       "asset": "SD_GRD1_MOVE_IN4",
       "disposition": "accepted audio retained"
     },
@@ -3501,36 +3486,31 @@
       "native_frames": 53312,
       "rate": 48000,
       "channels": 1,
+      "measured_tail_padding_frames": 0,
       "asset": "SD_GRD1_MOVE_IN5",
       "disposition": "accepted audio retained"
     },
     {
       "package": "SP_VI5_kismet03_LOC_INT",
-      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
       "tempo": 1.6594780664332578,
-      "native_duration": 0.7281041666666667,
+      "guard_ms": 40,
       "source_duration": 1.1750833333333333,
-      "decoded_frames": 34821,
+      "native_frames": 34949,
+      "rate": 48000,
+      "channels": 1,
+      "measured_tail_padding_frames": 128,
       "asset": "SD_GRD1_SRCH_FIND1",
       "disposition": "accepted audio retained"
     },
     {
       "package": "SP_VI5_kismet03_LOC_INT",
-      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
-      "tempo": 1.3025070378826502,
-      "native_duration": 0.9598541666666667,
-      "source_duration": 1.2241666666666666,
-      "decoded_frames": 45945,
-      "asset": "SD_GRD1_SRCH_KILL1",
-      "disposition": "accepted audio retained"
-    },
-    {
-      "package": "SP_VI5_kismet03_LOC_INT",
-      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
       "tempo": 1.4318525815054177,
-      "native_duration": 0.8871458333333333,
+      "guard_ms": 40,
       "source_duration": 1.241625,
-      "decoded_frames": 42455,
+      "native_frames": 42583,
+      "rate": 48000,
+      "channels": 1,
+      "measured_tail_padding_frames": 128,
       "asset": "SD_GST_ADVANCING1",
       "disposition": "accepted audio retained"
     },
@@ -3563,11 +3543,13 @@
     },
     {
       "package": "SP_VI5_kismet03_LOC_INT",
-      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
       "tempo": 1.8095940279249805,
-      "native_duration": 0.9242083333333333,
+      "guard_ms": 40,
       "source_duration": 1.63625,
-      "decoded_frames": 44234,
+      "native_frames": 44362,
+      "rate": 48000,
+      "channels": 1,
+      "measured_tail_padding_frames": 128,
       "asset": "SD_GST_FIRE1",
       "disposition": "accepted audio retained"
     },
@@ -3645,7 +3627,7 @@
     },
     {
       "package": "SP_VI5_kismet03_LOC_INT",
-      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
+      "reason": "encoded native PCM budget mismatch; bounded silence retry refused",
       "tempo": 1.8313528902091842,
       "native_duration": 0.69325,
       "source_duration": 1.2329583333333334,
@@ -3661,6 +3643,7 @@
       "native_frames": 61565,
       "rate": 48000,
       "channels": 1,
+      "measured_tail_padding_frames": 0,
       "asset": "SD_GST_LOCS1",
       "disposition": "accepted audio retained"
     },
@@ -3873,11 +3856,13 @@
     },
     {
       "package": "SP_VI5_kismet03_LOC_INT",
-      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
       "tempo": 1.6332721792687719,
-      "native_duration": 0.6559166666666667,
+      "guard_ms": 40,
       "source_duration": 1.038625,
-      "decoded_frames": 31356,
+      "native_frames": 31484,
+      "rate": 48000,
+      "channels": 1,
+      "measured_tail_padding_frames": 128,
       "asset": "SD_GST_MOVE_LEFT3",
       "disposition": "accepted audio retained"
     },
@@ -4036,11 +4021,13 @@
     },
     {
       "package": "SP_VI5_kismet03_LOC_INT",
-      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
       "tempo": 1.7400371439439708,
-      "native_duration": 0.9510625,
+      "guard_ms": 40,
       "source_duration": 1.6200833333333333,
-      "decoded_frames": 45523,
+      "native_frames": 45651,
+      "rate": 48000,
+      "channels": 1,
+      "measured_tail_padding_frames": 128,
       "asset": "SD_GST_REPORT_RELOAD2",
       "disposition": "accepted audio retained"
     },
@@ -4118,11 +4105,11 @@
     },
     {
       "package": "SP_VI5_kismet03_LOC_INT",
-      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
+      "reason": "encoded native PCM budget mismatch; bounded silence retry refused",
       "tempo": 1.2398442656009385,
       "native_duration": 0.6384580498866214,
       "source_duration": 0.7667916666666666,
-      "decoded_frames": 28028,
+      "decoded_frames": 29248,
       "asset": "SD_SPT1_FIRE_GRENADE1",
       "disposition": "accepted audio retained"
     },
@@ -4134,16 +4121,19 @@
       "native_frames": 55736,
       "rate": 44100,
       "channels": 1,
+      "measured_tail_padding_frames": 0,
       "asset": "SD_SPT1_MOVE_RETREAT1",
       "disposition": "accepted audio retained"
     },
     {
       "package": "SP_VI5_kismet03_LOC_INT",
-      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
       "tempo": 1.7118490938127615,
-      "native_duration": 0.9571201814058957,
+      "guard_ms": 40,
       "source_duration": 1.6042083333333332,
-      "decoded_frames": 42081,
+      "native_frames": 42209,
+      "rate": 44100,
+      "channels": 1,
+      "measured_tail_padding_frames": 128,
       "asset": "SD_SPT1_MOVE_RETREAT3",
       "disposition": "accepted audio retained"
     },
@@ -4158,7 +4148,7 @@
     },
     {
       "package": "SP_VI5_kismet03_LOC_INT",
-      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
+      "reason": "encoded native PCM budget mismatch; bounded silence retry refused",
       "tempo": 1.0313988407011663,
       "native_duration": 0.9940816326530613,
       "source_duration": 1.0046666666666666,
@@ -4168,21 +4158,23 @@
     },
     {
       "package": "SP_VI5_kismet03_LOC_INT",
-      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
+      "reason": "encoded native PCM budget mismatch; bounded silence retry refused",
       "tempo": 1.6104003612281759,
       "native_duration": 0.5473015873015873,
       "source_duration": 0.8491666666666666,
-      "decoded_frames": 24008,
+      "decoded_frames": 25280,
       "asset": "SD_SPT1_SEE_TARGET4",
       "disposition": "accepted audio retained"
     },
     {
       "package": "SP_VI5_kismet03_LOC_INT",
-      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
       "tempo": 1.5623585252673875,
-      "native_duration": 0.8214058956916099,
+      "guard_ms": 40,
       "source_duration": 1.2520833333333334,
-      "decoded_frames": 36096,
+      "native_frames": 36224,
+      "rate": 44100,
+      "channels": 1,
+      "measured_tail_padding_frames": 128,
       "asset": "SD_SPT1_SEE_TARGET5",
       "disposition": "accepted audio retained"
     },
@@ -4194,6 +4186,7 @@
       "native_frames": 53448,
       "rate": 44100,
       "channels": 1,
+      "measured_tail_padding_frames": 0,
       "asset": "SD_SPT1_SRCH_KILL1",
       "disposition": "accepted audio retained"
     },
@@ -4208,7 +4201,7 @@
     },
     {
       "package": "SP_VI5_kismet03_LOC_INT",
-      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
+      "reason": "encoded native PCM budget mismatch; bounded silence retry refused",
       "tempo": 1.4898254461353184,
       "native_duration": 0.8484807256235828,
       "source_duration": 1.2342916666666666,
@@ -4218,22 +4211,14 @@
     },
     {
       "package": "SP_VI5_kismet03_LOC_INT",
-      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
       "tempo": 1.5452530386340617,
-      "native_duration": 0.9602721088435374,
+      "guard_ms": 40,
       "source_duration": 1.4529583333333334,
-      "decoded_frames": 42220,
+      "native_frames": 42348,
+      "rate": 44100,
+      "channels": 1,
+      "measured_tail_padding_frames": 128,
       "asset": "SD_SPT2_FIRE_GRENADE1",
-      "disposition": "accepted audio retained"
-    },
-    {
-      "package": "SP_VI5_kismet03_LOC_INT",
-      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
-      "tempo": 1.0657996498387052,
-      "native_duration": 0.8424263038548753,
-      "source_duration": 0.8765416666666667,
-      "decoded_frames": 37023,
-      "asset": "SD_SPT2_MOVE_IN1",
       "disposition": "accepted audio retained"
     },
     {
@@ -4244,6 +4229,7 @@
       "native_frames": 51106,
       "rate": 44100,
       "channels": 1,
+      "measured_tail_padding_frames": 0,
       "asset": "SD_SPT2_MOVE_IN2",
       "disposition": "accepted audio retained"
     },
@@ -4258,43 +4244,14 @@
     },
     {
       "package": "SP_VI5_kismet03_LOC_INT",
-      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
-      "tempo": 1.2233037252186836,
-      "native_duration": 0.6914058956916099,
-      "source_duration": 0.8213333333333334,
-      "decoded_frames": 30363,
-      "asset": "SD_SPT2_MOVE_RETREAT1",
-      "disposition": "accepted audio retained"
-    },
-    {
-      "package": "SP_VI5_kismet03_LOC_INT",
-      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
-      "tempo": 1.2248035442225964,
-      "native_duration": 0.8683673469387755,
-      "source_duration": 1.0390833333333334,
-      "decoded_frames": 38167,
-      "asset": "SD_SPT2_MOVE_RETREAT2",
-      "disposition": "accepted audio retained"
-    },
-    {
-      "package": "SP_VI5_kismet03_LOC_INT",
       "tempo": 1.3783568701033642,
       "guard_ms": 40,
       "source_duration": 1.4242083333333333,
       "native_frames": 46449,
       "rate": 44100,
       "channels": 1,
+      "measured_tail_padding_frames": 0,
       "asset": "SD_SPT2_RPT_PINNED1",
-      "disposition": "accepted audio retained"
-    },
-    {
-      "package": "SP_VI5_kismet03_LOC_INT",
-      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
-      "tempo": 1.044392793952067,
-      "native_duration": 0.724875283446712,
-      "source_duration": 0.7361666666666666,
-      "decoded_frames": 31839,
-      "asset": "SD_SPT2_SEE_TARGET1",
       "disposition": "accepted audio retained"
     },
     {
@@ -4314,17 +4271,8 @@
       "native_frames": 62981,
       "rate": 44100,
       "channels": 1,
+      "measured_tail_padding_frames": 0,
       "asset": "SD_SPT2_SRCH_KILL1",
-      "disposition": "accepted audio retained"
-    },
-    {
-      "package": "SP_VI5_kismet03_LOC_INT",
-      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
-      "tempo": 1.3250523244361274,
-      "native_duration": 0.9409070294784581,
-      "source_duration": 1.22025,
-      "decoded_frames": 41366,
-      "asset": "SD_SPT2_SRCH_KILL2",
       "disposition": "accepted audio retained"
     },
     {
@@ -4338,31 +4286,21 @@
     },
     {
       "package": "SP_VI5_kismet03_LOC_INT",
-      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
+      "reason": "encoded native PCM budget mismatch; bounded silence retry refused",
       "tempo": 1.5247010292808727,
       "native_duration": 1.0135827664399093,
       "source_duration": 1.5149166666666667,
-      "decoded_frames": 44571,
+      "decoded_frames": 44827,
       "asset": "SD_SPT3_FIRE3",
       "disposition": "accepted audio retained"
     },
     {
       "package": "SP_VI5_kismet03_LOC_INT",
-      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
-      "tempo": 1.0712324835721638,
-      "native_duration": 0.8792517006802721,
-      "source_duration": 0.9204583333333334,
-      "decoded_frames": 38647,
-      "asset": "SD_SPT3_FIRE_GRENADE3",
-      "disposition": "accepted audio retained"
-    },
-    {
-      "package": "SP_VI5_kismet03_LOC_INT",
-      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
+      "reason": "encoded native PCM budget mismatch; bounded silence retry refused",
       "tempo": 1.0,
       "native_duration": 1.019591836734694,
       "source_duration": 0.95425,
-      "decoded_frames": 44836,
+      "decoded_frames": 45092,
       "asset": "SD_SPT3_MOVE_IN2",
       "disposition": "accepted audio retained"
     },
@@ -4377,16 +4315,6 @@
     },
     {
       "package": "SP_VI5_kismet03_LOC_INT",
-      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
-      "tempo": 1.3178955736453828,
-      "native_duration": 0.9113832199546485,
-      "source_duration": 1.17475,
-      "decoded_frames": 40064,
-      "asset": "SD_SPT3_MOVE_RETREAT2",
-      "disposition": "accepted audio retained"
-    },
-    {
-      "package": "SP_VI5_kismet03_LOC_INT",
       "reason": "guarded duration requires unsafe tempo",
       "tempo": 1.9646047374429225,
       "native_duration": 0.8542857142857143,
@@ -4396,11 +4324,11 @@
     },
     {
       "package": "SP_VI5_kismet03_LOC_INT",
-      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
+      "reason": "encoded native PCM budget mismatch; bounded silence retry refused",
       "tempo": 1.0,
       "native_duration": 0.956530612244898,
       "source_duration": 0.9008333333333334,
-      "decoded_frames": 42055,
+      "decoded_frames": 43328,
       "asset": "SD_SPT3_SEE_TARGET4",
       "disposition": "accepted audio retained"
     },
@@ -4412,6 +4340,7 @@
       "native_frames": 75522,
       "rate": 48000,
       "channels": 1,
+      "measured_tail_padding_frames": 0,
       "asset": "VI4_2005_GST",
       "disposition": "accepted audio retained"
     },
@@ -4423,6 +4352,7 @@
       "native_frames": 117595,
       "rate": 48000,
       "channels": 1,
+      "measured_tail_padding_frames": 0,
       "asset": "VI4_2010_GST",
       "disposition": "accepted audio retained"
     },
@@ -4434,6 +4364,7 @@
       "native_frames": 64139,
       "rate": 48000,
       "channels": 1,
+      "measured_tail_padding_frames": 0,
       "asset": "VI4_2011_GST",
       "disposition": "accepted audio retained"
     },
@@ -4445,6 +4376,7 @@
       "native_frames": 86869,
       "rate": 48000,
       "channels": 1,
+      "measured_tail_padding_frames": 0,
       "asset": "VI4_2012_GST",
       "disposition": "accepted audio retained"
     },
@@ -4501,6 +4433,7 @@
       "native_frames": 96664,
       "rate": 48000,
       "channels": 1,
+      "measured_tail_padding_frames": 0,
       "asset": "VI4_3705_GST",
       "disposition": "accepted audio retained"
     },
@@ -4551,21 +4484,13 @@
     },
     {
       "package": "SP_VI5_kismet03_LOC_INT",
-      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
-      "tempo": 1.0,
-      "native_duration": 0.9175208333333333,
-      "source_duration": 0.667625,
-      "decoded_frames": 43913,
-      "asset": "VI4_4210_GST",
-      "disposition": "accepted audio retained"
-    },
-    {
-      "package": "SP_VI5_kismet03_LOC_INT",
-      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
       "tempo": 1.5014869109947644,
-      "native_duration": 0.5173958333333334,
+      "guard_ms": 40,
       "source_duration": 0.7468333333333333,
-      "decoded_frames": 24707,
+      "native_frames": 24835,
+      "rate": 48000,
+      "channels": 1,
+      "measured_tail_padding_frames": 128,
       "asset": "VI4_4220_GST",
       "disposition": "accepted audio retained"
     },
@@ -4577,6 +4502,7 @@
       "native_frames": 173637,
       "rate": 48000,
       "channels": 1,
+      "measured_tail_padding_frames": 0,
       "asset": "VI4_4405_GST",
       "disposition": "accepted audio retained"
     },
@@ -4588,6 +4514,7 @@
       "native_frames": 149382,
       "rate": 48000,
       "channels": 1,
+      "measured_tail_padding_frames": 0,
       "asset": "VI4_4410_GST",
       "disposition": "accepted audio retained"
     },
@@ -4599,6 +4526,7 @@
       "native_frames": 109168,
       "rate": 48000,
       "channels": 1,
+      "measured_tail_padding_frames": 0,
       "asset": "VI4_4411_GST",
       "disposition": "accepted audio retained"
     },
@@ -4610,6 +4538,7 @@
       "native_frames": 121238,
       "rate": 48000,
       "channels": 1,
+      "measured_tail_padding_frames": 0,
       "asset": "VI4_4412_GST",
       "disposition": "accepted audio retained"
     },
@@ -4621,6 +4550,7 @@
       "native_frames": 183284,
       "rate": 48000,
       "channels": 1,
+      "measured_tail_padding_frames": 0,
       "asset": "VI4_5005_GST",
       "disposition": "accepted audio retained"
     },
@@ -4632,6 +4562,7 @@
       "native_frames": 55349,
       "rate": 48000,
       "channels": 1,
+      "measured_tail_padding_frames": 0,
       "asset": "VI5_1208_GST",
       "disposition": "accepted audio retained"
     },
@@ -4643,6 +4574,7 @@
       "native_frames": 215010,
       "rate": 48000,
       "channels": 1,
+      "measured_tail_padding_frames": 0,
       "asset": "VI5_1505_GST",
       "disposition": "accepted audio retained"
     },
@@ -4663,6 +4595,7 @@
       "native_frames": 169321,
       "rate": 48000,
       "channels": 1,
+      "measured_tail_padding_frames": 0,
       "asset": "VI5_2005_GST",
       "disposition": "accepted audio retained"
     },
@@ -4674,6 +4607,7 @@
       "native_frames": 137938,
       "rate": 48000,
       "channels": 1,
+      "measured_tail_padding_frames": 0,
       "asset": "VI5_2010_GST",
       "disposition": "accepted audio retained"
     },
@@ -4685,6 +4619,7 @@
       "native_frames": 159131,
       "rate": 48000,
       "channels": 1,
+      "measured_tail_padding_frames": 0,
       "asset": "VI5_2011_GST",
       "disposition": "accepted audio retained"
     },
@@ -4714,6 +4649,7 @@
       "native_frames": 108940,
       "rate": 48000,
       "channels": 1,
+      "measured_tail_padding_frames": 0,
       "asset": "VI5_3005_GST",
       "disposition": "accepted audio retained"
     },
@@ -4725,6 +4661,7 @@
       "native_frames": 87797,
       "rate": 48000,
       "channels": 1,
+      "measured_tail_padding_frames": 0,
       "asset": "VI5_3505_GST",
       "disposition": "accepted audio retained"
     },
@@ -4745,6 +4682,7 @@
       "native_frames": 140166,
       "rate": 48000,
       "channels": 1,
+      "measured_tail_padding_frames": 0,
       "asset": "VI5_4009_GST",
       "disposition": "accepted audio retained"
     },
@@ -4756,6 +4694,7 @@
       "native_frames": 58923,
       "rate": 48000,
       "channels": 1,
+      "measured_tail_padding_frames": 0,
       "asset": "VI5_4011_SPT1",
       "disposition": "accepted audio retained"
     },
@@ -4776,6 +4715,7 @@
       "native_frames": 103246,
       "rate": 48000,
       "channels": 1,
+      "measured_tail_padding_frames": 0,
       "asset": "VI5_4013_GST",
       "disposition": "accepted audio retained"
     },
@@ -4787,6 +4727,7 @@
       "native_frames": 116840,
       "rate": 48000,
       "channels": 1,
+      "measured_tail_padding_frames": 0,
       "asset": "VI5_4015_GST",
       "disposition": "accepted audio retained"
     },
@@ -4867,6 +4808,7 @@
       "native_frames": 123898,
       "rate": 48000,
       "channels": 1,
+      "measured_tail_padding_frames": 0,
       "asset": "VI6_1010_KAT",
       "disposition": "accepted audio retained"
     },
@@ -4890,21 +4832,25 @@
     },
     {
       "package": "SP_VI6_kismet02_LOC_INT",
-      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
       "tempo": 1.3683035183997339,
-      "native_duration": 0.8969375,
+      "guard_ms": 40,
       "source_duration": 1.1999166666666667,
-      "decoded_frames": 42925,
+      "native_frames": 43053,
+      "rate": 48000,
+      "channels": 1,
+      "measured_tail_padding_frames": 128,
       "asset": "VI6_1062_KAT",
       "disposition": "accepted audio retained"
     },
     {
       "package": "SP_VI6_kismet03_LOC_INT",
-      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
       "tempo": 1.6654992107340174,
-      "native_duration": 0.8646666666666667,
+      "guard_ms": 40,
       "source_duration": 1.4067916666666667,
-      "decoded_frames": 41376,
+      "native_frames": 41504,
+      "rate": 48000,
+      "channels": 1,
+      "measured_tail_padding_frames": 128,
       "asset": "VI6_1063_KAT",
       "disposition": "accepted audio retained"
     },
@@ -5009,21 +4955,25 @@
     },
     {
       "package": "SP_VI6_kismet05_LOC_INT",
-      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
       "tempo": 1.8325425620988,
-      "native_duration": 0.91575,
+      "guard_ms": 40,
       "source_duration": 1.6415,
-      "decoded_frames": 43828,
+      "native_frames": 43956,
+      "rate": 48000,
+      "channels": 1,
+      "measured_tail_padding_frames": 128,
       "asset": "SD_KAT_LOC_ABV2",
       "disposition": "accepted audio retained"
     },
     {
       "package": "SP_VI6_kismet05_LOC_INT",
-      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
       "tempo": 1.7966436781609194,
-      "native_duration": 0.92625,
+      "guard_ms": 40,
       "source_duration": 1.6282083333333333,
-      "decoded_frames": 44332,
+      "native_frames": 44460,
+      "rate": 48000,
+      "channels": 1,
+      "measured_tail_padding_frames": 128,
       "asset": "SD_KAT_LOC_AHD1",
       "disposition": "accepted audio retained"
     },
@@ -5071,6 +5021,7 @@
       "native_frames": 60015,
       "rate": 48000,
       "channels": 1,
+      "measured_tail_padding_frames": 0,
       "asset": "SD_KAT_LOC_RT1",
       "disposition": "accepted audio retained"
     },
@@ -5118,6 +5069,7 @@
       "native_frames": 58442,
       "rate": 48000,
       "channels": 1,
+      "measured_tail_padding_frames": 0,
       "asset": "SD_KAT_MOVE_COVER3",
       "disposition": "accepted audio retained"
     },
@@ -5327,6 +5279,7 @@
       "native_frames": 70343,
       "rate": 48000,
       "channels": 1,
+      "measured_tail_padding_frames": 0,
       "asset": "SD_KAT_REPORT_HIT1",
       "disposition": "accepted audio retained"
     },
@@ -5338,6 +5291,7 @@
       "native_frames": 70086,
       "rate": 48000,
       "channels": 1,
+      "measured_tail_padding_frames": 0,
       "asset": "SD_KAT_REPORT_PINNED1",
       "disposition": "accepted audio retained"
     },
@@ -5349,6 +5303,7 @@
       "native_frames": 68846,
       "rate": 48000,
       "channels": 1,
+      "measured_tail_padding_frames": 0,
       "asset": "SD_KAT_REPORT_PINNED2",
       "disposition": "accepted audio retained"
     },
@@ -5390,11 +5345,13 @@
     },
     {
       "package": "SP_VI6_kismet05_LOC_INT",
-      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
       "tempo": 1.8452287464381072,
-      "native_duration": 0.9485208333333334,
+      "guard_ms": 40,
       "source_duration": 1.7133333333333334,
-      "decoded_frames": 45401,
+      "native_frames": 45529,
+      "rate": 48000,
+      "channels": 1,
+      "measured_tail_padding_frames": 128,
       "asset": "SD_KAT_SEE_TARGET2",
       "disposition": "accepted audio retained"
     },
@@ -5415,6 +5372,7 @@
       "native_frames": 189046,
       "rate": 48000,
       "channels": 1,
+      "measured_tail_padding_frames": 0,
       "asset": "VI6_8008_KAT",
       "disposition": "accepted audio retained"
     },
@@ -5426,17 +5384,8 @@
       "native_frames": 117210,
       "rate": 48000,
       "channels": 1,
+      "measured_tail_padding_frames": 0,
       "asset": "VI6_8009_KAT",
-      "disposition": "accepted audio retained"
-    },
-    {
-      "package": "SP_WL1_kismet01_LOC_INT",
-      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
-      "tempo": 1.34768847610647,
-      "native_duration": 0.8230416666666667,
-      "source_duration": 1.08225,
-      "decoded_frames": 39378,
-      "asset": "WL1_0510_BAR",
       "disposition": "accepted audio retained"
     },
     {
@@ -5447,6 +5396,7 @@
       "native_frames": 56391,
       "rate": 48000,
       "channels": 1,
+      "measured_tail_padding_frames": 0,
       "asset": "WL1_0511_BAR",
       "disposition": "accepted audio retained"
     },
@@ -5470,11 +5420,13 @@
     },
     {
       "package": "SP_WL2_kismet01_LOC_INT",
-      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
       "tempo": 1.5374876770611736,
-      "native_duration": 0.8230416666666667,
+      "guard_ms": 40,
       "source_duration": 1.2346666666666666,
-      "decoded_frames": 39378,
+      "native_frames": 39506,
+      "rate": 48000,
+      "channels": 1,
+      "measured_tail_padding_frames": 128,
       "asset": "WL1_0510_BAR",
       "disposition": "accepted audio retained"
     },
@@ -5511,22 +5463,13 @@
     },
     {
       "package": "SP_WL4_kismet10_LOC_INT",
-      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
-      "tempo": 1.0,
-      "native_duration": 0.7513151927437641,
-      "source_duration": 0.7147916666666667,
-      "decoded_frames": 33005,
-      "asset": "SD_SPT2_MOVE_HOLD1",
-      "disposition": "accepted audio retained"
-    },
-    {
-      "package": "SP_WL4_kismet10_LOC_INT",
       "tempo": 1.7004252793986747,
       "guard_ms": 40,
       "source_duration": 2.149125,
       "native_frames": 61626,
       "rate": 48000,
       "channels": 1,
+      "measured_tail_padding_frames": 0,
       "asset": "WL4_7005_SPT2",
       "disposition": "accepted audio retained"
     },

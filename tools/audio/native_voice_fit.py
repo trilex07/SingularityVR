@@ -40,5 +40,25 @@ def fit(run,source,folder,asset,rate,frames,channels=1):
     run(['-v','error','-n','-i',str(target),'-c:a','pcm_s16le',str(decoded)])
     with wave.open(str(decoded)) as w:
         require(w.getframerate()==rate and w.getnchannels()==channels,'decoded format mismatch')
-        if w.getnframes()!=frames:return None,dict(reason='encoded native PCM budget mismatch; no metadata/delay guess',tempo=tempo,native_duration=budget,source_duration=duration,decoded_frames=w.getnframes())
-    return target,dict(tempo=tempo,guard_ms=40,source_duration=duration,native_frames=frames,rate=rate,channels=channels)
+        decoded_frames=w.getnframes()
+    padding_correction=0
+    if 0 < frames-decoded_frames <= 256:
+        # Measured decoder priming loss, not an assumed codec delay. Re-encode
+        # the same verified speech with extra TAIL SILENCE only. A single
+        # bounded retry must independently decode to the exact native budget.
+        padding_correction=frames-decoded_frames
+        retry=folder/(asset+'.timing-retry.ogg')
+        retry_decoded=folder/(asset+'.timing-retry.wav')
+        padded_frames=frames+padding_correction
+        run(['-v','error','-n','-i',str(spoken),'-af',
+             f'apad=whole_len={padded_frames},atrim=end_sample={padded_frames}',
+             '-c:a','libvorbis','-q:a','3',str(retry)])
+        run(['-v','error','-n','-i',str(retry),'-c:a','pcm_s16le',str(retry_decoded)])
+        with wave.open(str(retry_decoded)) as w:
+            require(w.getframerate()==rate and w.getnchannels()==channels,'retry format mismatch')
+            decoded_frames=w.getnframes()
+        if decoded_frames==frames:
+            target=retry
+    if decoded_frames!=frames:
+        return None,dict(reason='encoded native PCM budget mismatch; bounded silence retry refused',tempo=tempo,native_duration=budget,source_duration=duration,decoded_frames=decoded_frames)
+    return target,dict(tempo=tempo,guard_ms=40,source_duration=duration,native_frames=frames,rate=rate,channels=channels,measured_tail_padding_frames=padding_correction)
