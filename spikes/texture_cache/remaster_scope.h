@@ -10,12 +10,26 @@ inline bool PriorityMaterial(const char* name){
         !std::strcmp(name,"inview_glove_n"));
 }
 enum class PriorityMode { Off=0, LogOnly=1, Apply=2 };
+// The verified 4K Valkyrie pair is a separate review gate. Do not widen the
+// accepted Volk/glove experiment or admit lower-mip Centurion/Kasimov assets.
+inline bool ValkyrieMaterial(const char* name){
+    return name && (!std::strcmp(name,"AR_E99Rifle_alt_d") ||
+        !std::strcmp(name,"AR_E99Rifle_n"));
+}
 inline PriorityMode ParsePriorityMode(int value){
     return value==1?PriorityMode::LogOnly:value==2?PriorityMode::Apply:PriorityMode::Off;
 }
 inline bool UseRemaster(bool priority,bool inRemasterScope,bool oldApply,PriorityMode mode){
     if(priority && mode==PriorityMode::LogOnly)return false;
     return (priority && mode==PriorityMode::Apply) || (inRemasterScope && oldApply);
+}
+inline PriorityMode MaterialMode(const char* name,PriorityMode priority,PriorityMode valkyrie){
+    return PriorityMaterial(name)?priority:ValkyrieMaterial(name)?valkyrie:PriorityMode::Off;
+}
+inline bool UseMaterialRemaster(const char* name,bool inRemasterScope,bool oldApply,
+                               PriorityMode priority,PriorityMode valkyrie){
+    return UseRemaster(PriorityMaterial(name)||ValkyrieMaterial(name),inRemasterScope,
+                       oldApply,MaterialMode(name,priority,valkyrie));
 }
 inline bool IsAddedBlood(const char* name){
     return name && (!std::strcmp(name,"bsplat_decal_d") || !std::strcmp(name,"t_blood_splat02_d"));

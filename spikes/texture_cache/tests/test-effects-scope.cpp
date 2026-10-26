@@ -13,6 +13,22 @@ int main(){
        remasterscope::ParsePriorityMode(2)!=remasterscope::PriorityMode::Apply||
        remasterscope::ParsePriorityMode(3)!=remasterscope::PriorityMode::Off)return 7;
     using remasterscope::PriorityMode;
+    const char* scopeNames[]={"AR_E99Rifle_alt_d","AR_E99Rifle_n","AR_shotgun_d",
+        "inview_glove_n","handgun_d","ar_sniper_rifle_d","360_A","AR_E99Rifle_n_extra",nullptr};
+    for(const auto* name:scopeNames)for(int p=0;p<3;++p)for(int v=0;v<3;++v)for(int old=0;old<2;++old){
+        const auto pm=remasterscope::ParsePriorityMode(p),vm=remasterscope::ParsePriorityMode(v);
+        const bool scope=remasterscope::Contains(name);
+        const bool actual=remasterscope::UseMaterialRemaster(name,scope,old!=0,pm,vm);
+        const bool expected=remasterscope::ValkyrieMaterial(name)?
+            (v==1?false:v==2?true:scope&&old):
+            remasterscope::UseRemaster(remasterscope::PriorityMaterial(name),scope,old!=0,pm);
+        if(actual!=expected)return 10;
+        if(v==0 && actual!=remasterscope::UseRemaster(remasterscope::PriorityMaterial(name),scope,old!=0,pm))return 11;
+    }
+    if(!remasterscope::ValkyrieMaterial("AR_E99Rifle_alt_d")||
+       !remasterscope::ValkyrieMaterial("AR_E99Rifle_n")||
+       remasterscope::ValkyrieMaterial("AR_E99Rifle_n_extra")||
+       remasterscope::ValkyrieMaterial("handgun_d")||remasterscope::ValkyrieMaterial(nullptr))return 12;
     if(remasterscope::UseRemaster(true,true,false,PriorityMode::Off)||
        remasterscope::UseRemaster(true,true,true,PriorityMode::LogOnly)||
        !remasterscope::UseRemaster(true,true,false,PriorityMode::Apply)||
@@ -29,6 +45,6 @@ int main(){
     if(!remasterscope::Contains("AR_shotgun_d")||!remasterscope::Contains("AR_shotgun_d",true))return 3;
     if(!remasterscope::IsAddedBlood("bsplat_decal_d")||!remasterscope::IsAddedBlood("t_blood_splat02_d")||
        remasterscope::IsAddedBlood("bsplat3_d")||remasterscope::IsAddedBlood(nullptr))return 4;
-    puts("PASS effects scope: 11 opt-ins; default baseline, exact names, glyphs and legacy identities preserved");
+    puts("PASS effects/material scope: 162 mode combinations; default baseline, exact pairs and legacy identities preserved");
     return 0;
 }
