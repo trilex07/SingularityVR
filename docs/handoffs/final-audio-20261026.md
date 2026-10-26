@@ -223,3 +223,129 @@ No C++ source or audio bytes changed in this follow-up; last offline x86 `/O2`
 build/hash above remains the runtime-source checkpoint. MAIN rebuilds the final
 integrated candidate. Creative approval, new native banks and headset audio
 acceptance remain explicitly pending; no generation or deployment occurred.
+
+
+## SFX/music execution update — user delegated selection, 2026-10-26
+
+**SUPERSEDES the earlier SFX creative-selection blocker only. Dubbing approval
+and generation remain with the separate SIDE. No dubbing file was changed.**
+
+MAIN relayed the user's explicit authorization to choose the best of the existing
+24 variants and finish native integration. I selected `restored_conservative.wav`
+for all eight sets, favoring the least altered existing game audio, unchanged
+channel/frame counts, no added clipping, and minimal additional mastering. This
+is engineering selection under delegated authority, **not human listening** and
+not a claim that enhanced versions sound worse. All audio derives from the user's
+existing private game-source lab; no third-party music, new voices or new content
+was introduced. Extracted/generated audio and complete banks remain ignored.
+
+### Actual usable native output
+
+Eight `.xxx` candidate banks now exist in this worktree:
+`build/audio-release-private/remaster/native_candidate/`.
+The complete receipt is `candidate-manifest.json`, SHA `2f4302a34014c5863d1c8dad379fbce01768acb3a6fb204d4fdbe2646f5f588e`.
+A metadata-only copy is committed as
+`docs/handoffs/final-native-remaster-candidate-20261026.json`.
+The status must equal `COMPLETE_OFFLINE_ONLY`, and `INCOMPLETE` must be absent.
+
+- `wp_SP_ARPistol_SF.xxx` / `arPistolFire03`: SHA `a5fa0d72bb6b32d845e6d0fc89990f18d3a87a9fac444d698689d74233756d39`, Vorbis q2.5, codec gain -1 dB, 2 channels / 48000 Hz / 60000 frames.
+- `wp_SP_ARSniperRifle_SF.xxx` / `sniperFire08`: SHA `e2d5dcae9fa7815d8ee944c4ce62c0fa2bbde60a1303f45c61221c9cab60362b`, Vorbis q2.5, codec gain -1 dB, 2 channels / 48000 Hz / 108000 frames.
+- `RvGame.xxx` / `tmdFireImpulse16`: SHA `5c0cce4713cf76f857b2b771b83353ece3a0028d46317db6e4b7f499c80bbf10`, Vorbis q1.5, codec gain 0 dB, 2 channels / 48000 Hz / 96000 frames.
+- `wp_SP_ARMachineGun_SF.xxx` / `machinegunFire57`: SHA `59e33f9950081e91916e07f3a86473b35826572e2dbdfa26d7749a4387d2618a`, Vorbis q2.5, codec gain -2 dB, 2 channels / 48000 Hz / 66603 frames.
+- `wp_SP_ARShotgun_SF.xxx` / `shotgunFire35`: SHA `57e8e5a37b667a4cb0a4ec4c2095ddda3782063e92a7aa559cf314d4b84f33a4`, Vorbis q2.5, codec gain -2 dB, 2 channels / 48000 Hz / 72745 frames.
+- `MUSIC_exploreDrone01_XSA.xxx` / `CONCEPTexploreDrone01`: SHA `20f4d520538691383a7e6fc9ccfe7b4dff6682f978db4cee2ef5b8217806da14`, Vorbis q2.5, codec gain 0 dB, 2 channels / 32000 Hz / 4224000 frames.
+- `MUSIC_combatBossGrom01_XSA.xxx` / `combatBossGrom01`: SHA `eef7866eb2541ead378fc0de4a39bea5e7517c7488952404e5b1925c80fd9133`, Vorbis q4, codec gain 0 dB, 6 channels / 44100 Hz / 3432648 frames.
+- `SP_Freight_Audio_2010_XSA.xxx` / `windStormHigh01_R`: SHA `5a8c5cf19c38e97e4a5c4c7fef476385739978b6a1b0347767e42b194d3a2818`, Vorbis q1.5, codec gain 0 dB, 1 channels / 22050 Hz / 1323000 frames.
+
+Native integration replaces the exact existing SoundNodeWave **PC Vorbis bulk
+payload**. No new playback hook or parallel WAV player is introduced. Every
+non-target logical byte (including every SoundCue node, randomization, event,
+attenuation, loop/pitch/volume property, other wave, native code/export table and
+offset) remains byte-identical. Native events still own scheduling, power gates,
+energy, spatial behavior and playback. The existing English and Polish voices
+are outside the replacement ranges and remain byte-identical to the chosen
+source package. Each audition `original.wav` was also re-decoded from the actual
+native input and compared PCM-byte-for-byte: all eight matched.
+
+Vorbis encoding must fit the existing allocation to avoid speculative UE3
+relocation. Valid vendor-comment padding fills that allocation exactly; no junk
+is appended after EOS. Ogg CRCs, audio packets and granules are checked, as are
+exact decoded frame count, channels and sample rate. The highest enumerated
+Vorbis quality fitting that budget is used. Lossy encode overshoots were found
+in actual tests, so only affected takes receive the minimum enumerated 1 dB
+codec headroom step (maximum 3 dB); the exact gain is recorded above. Final
+PCM16 decodes have **zero saturated samples** in all eight outputs. This is
+another lossy encode, not lossless restoration or perceptual quality proof.
+
+### Proven native producers and honest scope
+
+- All five weapon/TMD waves were independently traversed again from native
+  SoundCue `FirstNode`, `ChildNodes` and Raven `LinkedCue` references. Full paths
+  are in each receipt's `native_consumer`. TMD's `tmdFireImpulse16` is also shared
+  by native `tmdDeadLockFire`; this shared use is deliberately preserved.
+- Drone: actual `MUSIC_exploreDrone01.xxx`, SoundCue export 16,
+  `FirstNode` -> imported SoundNodeWave -23 `CONCEPTexploreDrone01`.
+- Boss music: actual `MUSIC_combatBossGrom01.xxx`, **DynamicMusic export 1**,
+  `MusicTracks` count 1 -> imported SoundNodeWave -58 `combatBossGrom01`.
+  Earlier wording calling this a SoundCue was imprecise; its existing dynamic
+  six-channel music consumer is preserved without modifying the companion.
+- Storm: actual `SP_Freight_Audio_2010.xxx`, SoundCue export 268 `FirstNode`
+  -> SoundNodeAmbient export 281 `Wave` -> imported SoundNodeWave -98
+  `windStormHigh01_R`. Companion physical/logical hashes are pinned in the
+  receipt. This proves a **Freighter high-wind layer**, not all island weather.
+  Low wind, sea wind and thunder are untouched. Previous HEURISTIC_MATCH is
+  resolved for this exact producer only.
+- Shotgun has other randomized takes such as `shotgunFire36`; those were not in
+  the prepared 24 variants and remain native. This finite eight-wave candidate
+  is not an all-weapons/all-environments remaster. No new missing assets were
+  invented or synthesized to pretend otherwise.
+
+### MAIN composition / preservation gate
+
+Sources are private lab originals at
+`C:/Users/Trilex/vr-mods/test-games/assets/Singularity/RvGame/CookedPC`.
+They are **not assumed to be the current accepted installed banks**. Before
+MAIN stages any bank, compare the accepted bank SHA to `source_package_sha256`.
+A mismatch is a STOP for direct staging: copy the accepted bank to an offline
+private source folder and rerun the builder there. It verifies that the exact
+audition original still matches the target native PCM, preserves all other
+accepted logical bytes, and independently roundtrips the output. Never replace
+an accepted modified `RvGame.xxx` with a stock lab bank merely to enable SFX.
+Use the existing MAIN backup/active-game guard and hash-verified asset lease.
+This SIDE did not read/write Steam, deploy assets, launch gameplay or alter INI.
+
+Literal-only LZO repacking increases physical bytes, especially `RvGame.xxx`
+(13,369,344 -> 28,137,730 bytes), while logical size is unchanged. Native audio
+allocation and decoding workload are unchanged; startup I/O may differ. No
+performance claim or 90 Hz acceptance is made. MAIN can profile startup in the
+grouped acceptance session; do not add a new compressor dependency speculatively.
+
+### Reproduce and verify
+
+```powershell
+python tools/audio/build_native_remaster_candidate.py --sources C:/Users/Trilex/vr-mods/test-games/assets/Singularity/RvGame/CookedPC --audition C:/Users/Trilex/vr-mods/SingularityVR-audio-music-sfx-remaster/audio-remaster-private/audition --decoder C:/Users/Trilex/vr-mods/SingularityVR-audio-music-sfx-remaster/tools/uedecompress --ffmpeg C:/Users/Trilex/AppData/Local/Microsoft/WinGet/Packages/Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe/ffmpeg-9.0.2-full_build/bin/ffmpeg.exe --output build/audio-release-private/remaster/native_candidate
+```
+
+**Offline PASS:** all eight real banks independently unpacked by the existing
+UE3 LZO decoder to byte-identical expected logical output; all eight native
+Vorbis payloads decoded by FFmpeg with exact duration/channel/rate and zero
+saturation; all eight source audition PCM identities checked against native.
+
+**Regression PASS: 49 tests**, including 10 new tests using a real Vorbis
+encoder/decoder, CRC corruption/truncation refusal, packet/granule preservation,
+non-target logical byte preservation, allocation-growth refusal, Steam-path
+refusal and independent whole-package LZO decode. The prior 39 dubbing/staging
+regressions still pass. Set `SINGULARITYVR_FFMPEG` and
+`SINGULARITYVR_LZO_DECODER` for the real codec/container tests.
+
+No C++/runtime DLL changes: previous offline x86 PE32 `/O2` hash remains
+`6575C4891928057EDD6305129589419BA45346FF38C5B21167133F37A8E5BB40`.
+MAIN builds its combined runtime independently. **GO for MAIN review and guarded
+composition only; Steam/audio/physical acceptance PENDING.**
+
+One grouped PSVR2 audio check: fire available remastered weapons and use TMD,
+confirm original scheduling, direction and layer balance with no missing tails
+or distortion; allow native exploration/combat music and the Freighter wind when
+encountered, marking unavailable scenes NOT TESTED. Listen for voice audibility
+against effects, then quit normally. No claim that an eight-wave pack finishes
+all campaign audio or replaces the separate new Polish dubbing delivery.
