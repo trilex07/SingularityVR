@@ -1,0 +1,5598 @@
+{
+  "summary": {
+    "banks_checked": 116,
+    "banks_changed": 111,
+    "takes_replaced": 680,
+    "takes_retained": 578,
+    "reasons": {
+      "guarded duration requires unsafe tempo": 333,
+      "tempo exceeds 1.35": 179,
+      "encoded native PCM budget mismatch; no metadata/delay guess": 66
+    },
+    "physical_acceptance": "PENDING",
+    "main_listening_performed": false
+  },
+  "retained": [
+    {
+      "package": "SP_Freight_S_StreamDock_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.0868739820297924,
+      "native_duration": 1.9514375,
+      "source_duration": 4.030666666666667,
+      "asset": "FR2_3005_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_Freight_Script_1950Dock_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.168980393831959,
+      "native_duration": 0.5077291666666667,
+      "source_duration": 1.057875,
+      "asset": "FR3_2805_SPT4",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_Freight_Script_1950Dock_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 1.8914576678579333,
+      "native_duration": 0.6787291666666667,
+      "source_duration": 1.2459583333333333,
+      "asset": "FR3_2807_SPT4",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_Freight_Script_Cargo1B_LOC_INT",
+      "tempo": 1.6115252111333092,
+      "guard_ms": 40,
+      "source_duration": 1.609625,
+      "native_frames": 44930,
+      "rate": 44100,
+      "asset": "SD_SPT1_FIRE_SUPPRESS3",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_Freight_Script_Cargo1B_LOC_INT",
+      "tempo": 1.4824384401693251,
+      "guard_ms": 40,
+      "source_duration": 1.7787916666666668,
+      "native_frames": 53798,
+      "rate": 44100,
+      "asset": "SD_SPT1_SEE_ZEK1",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "sp_freight_script_end_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.315949833486856,
+      "native_duration": 0.6080416666666667,
+      "source_duration": 1.361875,
+      "asset": "FR3_9503_BAR",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_Freight_Script_StreamCargo2_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 6.339690461477501,
+      "native_duration": 4.436520833333334,
+      "source_duration": 27.999375,
+      "asset": "RL1_2005_WRK1",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "sp_freight_script_train_intro_LOC_INT",
+      "tempo": 1.4831830276083031,
+      "guard_ms": 40,
+      "source_duration": 6.143375,
+      "native_frames": 199777,
+      "rate": 48000,
+      "asset": "FR1_1005_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "sp_freight_script_train_intro_LOC_INT",
+      "tempo": 1.5188234617926832,
+      "guard_ms": 40,
+      "source_duration": 4.404208333333333,
+      "native_frames": 140148,
+      "rate": 48000,
+      "asset": "FR1_1006_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "sp_freight_script_train_intro_LOC_INT",
+      "tempo": 1.3635459658276843,
+      "guard_ms": 40,
+      "source_duration": 5.313625,
+      "native_frames": 188012,
+      "rate": 48000,
+      "asset": "FR1_1008_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "sp_freight_script_train_intro_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.064738564275506,
+      "native_duration": 2.22546485260771,
+      "source_duration": 4.553708333333334,
+      "asset": "FR1_1205_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "sp_freight_script_train_intro_LOC_INT",
+      "tempo": 1.3935056435841764,
+      "guard_ms": 40,
+      "source_duration": 6.156166666666667,
+      "native_frames": 195705,
+      "rate": 44100,
+      "asset": "FR1_1207_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "sp_freight_script_train_intro_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 1.9620335849519777,
+      "native_duration": 2.236938775510204,
+      "source_duration": 4.349708333333333,
+      "asset": "FR1_1208_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RL1_kismet01_LOC_INT",
+      "tempo": 1.6785003393760056,
+      "guard_ms": 40,
+      "source_duration": 4.585208333333333,
+      "native_frames": 132083,
+      "rate": 48000,
+      "asset": "RL1_0405_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RL1_kismet01_LOC_INT",
+      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
+      "tempo": 1.2297352713354903,
+      "native_duration": 0.9344583333333333,
+      "source_duration": 1.1245416666666668,
+      "decoded_frames": 44726,
+      "asset": "RL1_0407_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RL2_kismet02_1950_LOC_INT",
+      "tempo": 1.4744028954432236,
+      "guard_ms": 40,
+      "source_duration": 3.810625,
+      "native_frames": 125017,
+      "rate": 48000,
+      "asset": "RL3_1506_SC1",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RL2_kismet02_1950_LOC_INT",
+      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
+      "tempo": 1.2228875134553285,
+      "native_duration": 0.6393333333333333,
+      "source_duration": 0.757375,
+      "decoded_frames": 30560,
+      "asset": "SD_GRD1_SEE_TARGET2",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RL2_kismet02_1950_LOC_INT",
+      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
+      "tempo": 1.4382663431906104,
+      "native_duration": 0.6554583333333334,
+      "source_duration": 0.9139583333333333,
+      "decoded_frames": 31334,
+      "asset": "SD_GRD1_SEE_TARGET3",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RL2_kismet02_1950_LOC_INT",
+      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
+      "tempo": 1.0,
+      "native_duration": 0.8007916666666667,
+      "source_duration": 0.75725,
+      "decoded_frames": 38310,
+      "asset": "SD_GRD1_SEE_TARGET4",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RL2_kismet02_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 1.964358886215194,
+      "native_duration": 1.5351041666666667,
+      "source_duration": 2.976208333333333,
+      "asset": "RL99_0105_SPT1",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RL2_kismet02_LOC_INT",
+      "tempo": 1.5806712535325191,
+      "guard_ms": 40,
+      "source_duration": 3.2977083333333335,
+      "native_frames": 101101,
+      "rate": 48000,
+      "asset": "RL99_0107_SPT1",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RL2_kismet05_1950_LOC_INT",
+      "tempo": 1.3927454775552743,
+      "guard_ms": 40,
+      "source_duration": 3.118125,
+      "native_frames": 108424,
+      "rate": 48000,
+      "asset": "RL3_2006_BARY",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RL2_kismet05_1950_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 4.81327717609306,
+      "native_duration": 0.64325,
+      "source_duration": 2.999875,
+      "asset": "RL3_3717_BARY",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RL2_kismet05_1950_LOC_INT",
+      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
+      "tempo": 1.0,
+      "native_duration": 0.5760625,
+      "source_duration": 0.42716666666666664,
+      "decoded_frames": 27523,
+      "asset": "RL3_3725_BARY",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RL2_kismet05_1950_LOC_INT",
+      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
+      "tempo": 1.0,
+      "native_duration": 0.5771458333333334,
+      "source_duration": 0.44204166666666667,
+      "decoded_frames": 27575,
+      "asset": "RL3_3726_BARY",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RL2_kismet05_1950_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 1.9120415026460544,
+      "native_duration": 0.8191458333333334,
+      "source_duration": 1.528,
+      "asset": "RL3_3727_BARY",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RL3_kismet01_1950_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 1.981295515523189,
+      "native_duration": 1.650625,
+      "source_duration": 3.23075,
+      "asset": "RL3_3705_BARY",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RL3_kismet01_1950_LOC_INT",
+      "tempo": 1.446082426733761,
+      "guard_ms": 40,
+      "source_duration": 1.7002916666666668,
+      "native_frames": 57398,
+      "rate": 48000,
+      "asset": "RL3_3706_BARY",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RL3_kismet01_1950_LOC_INT",
+      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
+      "tempo": 1.0,
+      "native_duration": 0.64325,
+      "source_duration": 0.4307916666666667,
+      "decoded_frames": 30748,
+      "asset": "RL3_3717_BARY",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RL3_kismet01_1950_LOC_INT",
+      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
+      "tempo": 1.3856356075081486,
+      "native_duration": 0.5760625,
+      "source_duration": 0.7705,
+      "decoded_frames": 27523,
+      "asset": "RL3_3725_BARY",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RL3_kismet01_1950_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.5798900646898253,
+      "native_duration": 0.5771458333333334,
+      "source_duration": 1.437375,
+      "asset": "RL3_3726_BARY",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RL3_kismet01_1950_LOC_INT",
+      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
+      "tempo": 1.0,
+      "native_duration": 0.8191458333333334,
+      "source_duration": 0.7389583333333334,
+      "decoded_frames": 39191,
+      "asset": "RL3_3727_BARY",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RL5_audio01_LOC_INT",
+      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
+      "tempo": 1.7964916151809356,
+      "native_duration": 0.5595238095238095,
+      "source_duration": 0.96925,
+      "decoded_frames": 24547,
+      "asset": "SD_SPT3_RPT_AFFIRM1",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RL5_kismet02_LOC_INT",
+      "tempo": 1.4791722415484791,
+      "guard_ms": 40,
+      "source_duration": 2.7638333333333334,
+      "native_frames": 90648,
+      "rate": 48000,
+      "asset": "RL99_2207_IVN",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RL5_kismet03_LOC_INT",
+      "tempo": 1.479643488943489,
+      "guard_ms": 40,
+      "source_duration": 1.7069583333333334,
+      "native_frames": 51757,
+      "rate": 44100,
+      "asset": "SD_SPT3_FIRE_SUPPRESS2",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RL5_kismet03_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.0035109885221107,
+      "native_duration": 1.2942630385487528,
+      "source_duration": 2.553,
+      "asset": "SD_SPT3_RPT_CLEAR1",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RL6_katya_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 4.931114832884293,
+      "native_duration": 0.5922083333333333,
+      "source_duration": 2.821625,
+      "asset": "RL6_2210_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RL6_katya_LOC_INT",
+      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
+      "tempo": 1.6890601891274144,
+      "native_duration": 0.9497083333333334,
+      "source_duration": 1.5703333333333334,
+      "decoded_frames": 45458,
+      "asset": "RL6_2211_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RL6_katya_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 5.564431154777162,
+      "native_duration": 0.60525,
+      "source_duration": 3.2565833333333334,
+      "asset": "RL6_2231_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RL6_katya_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 6.812629330485282,
+      "native_duration": 0.6442083333333334,
+      "source_duration": 4.2525,
+      "asset": "RL6_2232_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RL6_katya_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.4268684957426676,
+      "native_duration": 0.9008333333333334,
+      "source_duration": 2.1376666666666666,
+      "asset": "RL6_2233_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RL6_katya_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 3.11034462073723,
+      "native_duration": 0.7146041666666667,
+      "source_duration": 2.160458333333333,
+      "asset": "RL6_2405_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RL6_katya_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 7.0483515738826945,
+      "native_duration": 0.6348541666666667,
+      "source_duration": 4.333708333333333,
+      "asset": "RL6_2605_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RL6_katya_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.0916459693101523,
+      "native_duration": 1.1020625,
+      "source_duration": 2.2632916666666665,
+      "asset": "RL6_4005_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RL6_katya_LOC_INT",
+      "tempo": 1.8279341864716634,
+      "guard_ms": 40,
+      "source_duration": 4.166166666666666,
+      "native_frames": 110360,
+      "rate": 48000,
+      "asset": "RL6_5005_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RL6_katya_LOC_INT",
+      "tempo": 1.57352812781933,
+      "guard_ms": 40,
+      "source_duration": 3.37925,
+      "native_frames": 104043,
+      "rate": 48000,
+      "asset": "RL6_5007_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RL6_katya_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 10.60333800484138,
+      "native_duration": 0.8376041666666667,
+      "source_duration": 8.669333333333332,
+      "asset": "RL6_5008_BAR",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RL6_katya_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.0731803797468356,
+      "native_duration": 2.021333333333333,
+      "source_duration": 4.149125,
+      "asset": "RL6_6005_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RL6_katya_LOC_INT",
+      "tempo": 1.5403503227296487,
+      "guard_ms": 40,
+      "source_duration": 5.28,
+      "native_frames": 165494,
+      "rate": 48000,
+      "asset": "RL6_6007_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RL6_katya_LOC_INT",
+      "tempo": 1.3972711617432774,
+      "guard_ms": 40,
+      "source_duration": 3.9555,
+      "native_frames": 136842,
+      "rate": 48000,
+      "asset": "RL6_7007_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RL6_katya_LOC_INT",
+      "tempo": 1.6875629664658591,
+      "guard_ms": 40,
+      "source_duration": 1.7099583333333332,
+      "native_frames": 49597,
+      "rate": 48000,
+      "asset": "RL6_7010_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RL6_katya_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.902370990237099,
+      "native_duration": 0.647375,
+      "source_duration": 1.820875,
+      "asset": "RL6_7011_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RL6_katya_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.1184952060308864,
+      "native_duration": 1.1585833333333333,
+      "source_duration": 2.4120833333333334,
+      "asset": "RL6_7012_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RL6_kismet01_LOC_INT",
+      "tempo": 1.4950452103700242,
+      "guard_ms": 40,
+      "source_duration": 2.8005,
+      "native_frames": 90873,
+      "rate": 48000,
+      "asset": "RL6_1005_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RL6_kismet01_LOC_INT",
+      "tempo": 1.350317406286018,
+      "guard_ms": 40,
+      "source_duration": 4.710666666666667,
+      "native_frames": 168411,
+      "rate": 48000,
+      "asset": "RL6_2005_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RL6_kismet01_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.146581227699701,
+      "native_duration": 0.5922083333333333,
+      "source_duration": 1.2282916666666666,
+      "asset": "RL6_2210_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RL6_kismet01_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 5.133823331690046,
+      "native_duration": 0.9497083333333334,
+      "source_duration": 4.772958333333333,
+      "asset": "RL6_2211_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RL6_kismet01_LOC_INT",
+      "tempo": 1.4483770891016448,
+      "guard_ms": 40,
+      "source_duration": 1.8090833333333334,
+      "native_frames": 60914,
+      "rate": 48000,
+      "asset": "RL6_2230_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RL6_kismet01_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 4.124021073615265,
+      "native_duration": 0.60525,
+      "source_duration": 2.4135833333333334,
+      "asset": "RL6_2231_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RL6_kismet01_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 8.819037447433415,
+      "native_duration": 0.6442083333333334,
+      "source_duration": 5.5049166666666665,
+      "asset": "RL6_2232_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RL6_kismet01_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 3.4421475875118257,
+      "native_duration": 0.9008333333333334,
+      "source_duration": 3.0319583333333333,
+      "asset": "RL6_2233_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RL6_kismet01_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 4.4359197384601545,
+      "native_duration": 0.7146041666666667,
+      "source_duration": 3.0812083333333335,
+      "asset": "RL6_2405_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RL6_kismet01_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.1713143360552976,
+      "native_duration": 0.6348541666666667,
+      "source_duration": 1.3350416666666667,
+      "asset": "RL6_2605_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RL6_kismet01_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.3560330387570034,
+      "native_duration": 1.1020625,
+      "source_duration": 2.549375,
+      "asset": "RL6_4005_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RL6_kismet01_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 1.9053930530164533,
+      "native_duration": 2.299166666666667,
+      "source_duration": 4.342708333333333,
+      "asset": "RL6_5005_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RL6_kismet01_LOC_INT",
+      "tempo": 1.6054247548092315,
+      "guard_ms": 40,
+      "source_duration": 3.44775,
+      "native_frames": 104043,
+      "rate": 48000,
+      "asset": "RL6_5007_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RL6_kismet01_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.181899566955363,
+      "native_duration": 2.021333333333333,
+      "source_duration": 4.366708333333333,
+      "asset": "RL6_6005_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RL6_kismet01_LOC_INT",
+      "tempo": 1.5075138723304045,
+      "guard_ms": 40,
+      "source_duration": 4.2675833333333335,
+      "native_frames": 136842,
+      "rate": 48000,
+      "asset": "RL6_7007_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RL6_kismet01_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.00069905627403,
+      "native_duration": 1.0332708333333334,
+      "source_duration": 2.02725,
+      "asset": "RL6_7010_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RL6_kismet01_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 3.0545925483163976,
+      "native_duration": 0.647375,
+      "source_duration": 1.916375,
+      "asset": "RL6_7011_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RL6_kismet01_LOC_INT",
+      "tempo": 1.8228793090829247,
+      "guard_ms": 40,
+      "source_duration": 2.0755,
+      "native_frames": 55612,
+      "rate": 48000,
+      "asset": "RL6_7012_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RL6_kismet01_LOC_INT",
+      "tempo": 1.3716883135803728,
+      "guard_ms": 40,
+      "source_duration": 3.923,
+      "native_frames": 138239,
+      "rate": 48000,
+      "asset": "RL6_7505_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RT1_fx01_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.986263575383305,
+      "native_duration": 0.6589115646258503,
+      "source_duration": 1.9079583333333334,
+      "asset": "RT2_1004_REN",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RT1_kismet0_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.197867803837953,
+      "native_duration": 3.5375,
+      "source_duration": 7.731,
+      "asset": "RT1_2005_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RT1_kismet0_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 1.936944335344735,
+      "native_duration": 1.7704375,
+      "source_duration": 3.3905,
+      "asset": "RT1_2007_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RT1_kismet0_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.2876469747132,
+      "native_duration": 1.9141041666666667,
+      "source_duration": 4.3330416666666665,
+      "asset": "RT1_2008_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RT1_zone0_BT_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.789203903377058,
+      "native_duration": 3.3568541666666665,
+      "source_duration": 9.307166666666667,
+      "asset": "VI1_5005_BER",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RT1_zone0_BT_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 3.0380951859896377,
+      "native_duration": 3.8278958333333333,
+      "source_duration": 11.56875,
+      "asset": "VI1_5006_BER",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RT2_kismet01_LOC_INT",
+      "tempo": 1.3771496494040414,
+      "guard_ms": 40,
+      "source_duration": 2.6309583333333335,
+      "native_frames": 92661,
+      "rate": 48000,
+      "asset": "RT2_7012_BAR",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RT2_kismet01_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.118398874345933,
+      "native_duration": 1.4413958333333334,
+      "source_duration": 3.011083333333333,
+      "asset": "RT2_9005_BAR",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "sp_rt3_cistern_LOC_INT",
+      "tempo": 1.837192074050391,
+      "guard_ms": 40,
+      "source_duration": 4.90825,
+      "native_frames": 129197,
+      "rate": 48000,
+      "asset": "RT1_1509_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "sp_rt3_cistern_LOC_INT",
+      "tempo": 1.6572521329802885,
+      "guard_ms": 40,
+      "source_duration": 4.22475,
+      "native_frames": 123324,
+      "rate": 48000,
+      "asset": "RT1_1515_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "sp_rt3_katya_LOC_INT",
+      "tempo": 1.4989393039409404,
+      "guard_ms": 40,
+      "source_duration": 2.5760833333333335,
+      "native_frames": 83453,
+      "rate": 48000,
+      "asset": "RT3_5005_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "sp_rt3_katya_LOC_INT",
+      "tempo": 1.7230494732561037,
+      "guard_ms": 40,
+      "source_duration": 2.7361666666666666,
+      "native_frames": 77183,
+      "rate": 48000,
+      "asset": "RT3_5006_ESP1",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "sp_rt3_katya_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.168264016467828,
+      "native_duration": 0.9612291666666667,
+      "source_duration": 2.0408333333333335,
+      "asset": "RT3_5010_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "sp_rt3_katya_LOC_INT",
+      "tempo": 1.4609448095581021,
+      "guard_ms": 40,
+      "source_duration": 5.367541666666667,
+      "native_frames": 177313,
+      "rate": 48000,
+      "asset": "RT3_5014_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "sp_rt3_katya_LOC_INT",
+      "tempo": 1.6789560961473442,
+      "guard_ms": 40,
+      "source_duration": 4.345208333333333,
+      "native_frames": 125186,
+      "rate": 48000,
+      "asset": "RT3_6005_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "sp_rt3_katya_LOC_INT",
+      "tempo": 1.5327481679186274,
+      "guard_ms": 40,
+      "source_duration": 3.4815416666666668,
+      "native_frames": 109989,
+      "rate": 48000,
+      "asset": "RT3_6006_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "sp_rt3_katya_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.5112533760128044,
+      "native_duration": 1.6861666666666666,
+      "source_duration": 4.184166666666667,
+      "asset": "RT3_7006_1_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "sp_rt3_katya_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.5843299429976527,
+      "native_duration": 1.6975625,
+      "source_duration": 4.335375,
+      "asset": "RT3_7006_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "sp_rt3_katya_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 3.1428627822516977,
+      "native_duration": 1.0755,
+      "source_duration": 3.3172916666666667,
+      "asset": "RT3_7007_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "sp_rt3_katya_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 3.1229392488026217,
+      "native_duration": 1.6729166666666666,
+      "source_duration": 5.161958333333334,
+      "asset": "RT3_7010_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "sp_rt3_katya_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 1.9876364878927668,
+      "native_duration": 1.3613125,
+      "source_duration": 2.6660416666666666,
+      "asset": "RT3_7011_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "sp_rt3_katya_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.2512576858580213,
+      "native_duration": 1.2126666666666666,
+      "source_duration": 2.685,
+      "asset": "RT3_7012_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "sp_rt3_katya_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 1.8690469465001978,
+      "native_duration": 1.1263125,
+      "source_duration": 2.06775,
+      "asset": "RT3_7020_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "sp_rt3_katya_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.2891671860392644,
+      "native_duration": 2.1593333333333335,
+      "source_duration": 4.897291666666667,
+      "asset": "RT3_7021_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "sp_rt3_katya_LOC_INT",
+      "tempo": 1.5299624940075012,
+      "guard_ms": 40,
+      "source_duration": 3.390875,
+      "native_frames": 107343,
+      "rate": 48000,
+      "asset": "RT3_7805_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "sp_rt3_katya_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 3.2513782417223944,
+      "native_duration": 1.2972916666666667,
+      "source_duration": 4.152958333333333,
+      "asset": "RT3_7806_1_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "sp_rt3_katya_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 3.0110083233664477,
+      "native_duration": 1.7270416666666666,
+      "source_duration": 5.139916666666666,
+      "asset": "RT3_7806_2_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "sp_rt3_katya_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.4591334708776382,
+      "native_duration": 1.59525,
+      "source_duration": 3.87375,
+      "asset": "RT3_7806_3_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "sp_rt3_katya_LOC_INT",
+      "tempo": 1.7777535536757652,
+      "guard_ms": 40,
+      "source_duration": 5.096375,
+      "native_frames": 138564,
+      "rate": 48000,
+      "asset": "RT3_7806_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "sp_rt3_katya_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.5671809466746556,
+      "native_duration": 0.5763333333333334,
+      "source_duration": 1.4282083333333333,
+      "asset": "RT3_7807_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "sp_rt3_katya_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.14866176674525,
+      "native_duration": 0.921375,
+      "source_duration": 1.93675,
+      "asset": "RT3_8005_2_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "sp_rt3_katya_LOC_INT",
+      "tempo": 1.7827762031049341,
+      "guard_ms": 40,
+      "source_duration": 4.887666666666667,
+      "native_frames": 132557,
+      "rate": 48000,
+      "asset": "RT3_8006_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "sp_rt3_katya_LOC_INT",
+      "tempo": 1.7473679702500338,
+      "guard_ms": 40,
+      "source_duration": 5.1001666666666665,
+      "native_frames": 141061,
+      "rate": 48000,
+      "asset": "RT4B_1510_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "sp_rt3_katya_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.4944174062410536,
+      "native_duration": 0.7477083333333333,
+      "source_duration": 1.8152083333333333,
+      "asset": "RT4B_1512_5_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "sp_rt3_katya_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.1525470971126888,
+      "native_duration": 1.2906458333333333,
+      "source_duration": 2.735125,
+      "asset": "RT4B_1512_6_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "sp_rt3_katya_LOC_INT",
+      "tempo": 1.5266405232215954,
+      "guard_ms": 40,
+      "source_duration": 4.809458333333334,
+      "native_frames": 152177,
+      "rate": 48000,
+      "asset": "RT4B_3005_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "sp_rt3_katya_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.0518360189937415,
+      "native_duration": 1.6477291666666667,
+      "source_duration": 3.3398333333333334,
+      "asset": "RT4B_3007_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "sp_rt3_katya_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 3.585109897090586,
+      "native_duration": 0.8398958333333333,
+      "source_duration": 2.939416666666667,
+      "asset": "RT4B_3009_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "sp_rt3_katya_LOC_INT",
+      "tempo": 1.6331672526703438,
+      "guard_ms": 40,
+      "source_duration": 2.0418333333333334,
+      "native_frames": 60971,
+      "rate": 48000,
+      "asset": "RT4B_5005_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "sp_rt3_katya_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 1.952703743645047,
+      "native_duration": 1.9132083333333334,
+      "source_duration": 3.696875,
+      "asset": "RT4B_5006_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "sp_rt3_katya_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.3746424287164345,
+      "native_duration": 1.374625,
+      "source_duration": 3.21675,
+      "asset": "RT4B_5007_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "sp_rt3_katya_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.138780785102727,
+      "native_duration": 1.4386041666666667,
+      "source_duration": 3.0340833333333332,
+      "asset": "RT4B_5008_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "sp_rt3_katya_LOC_INT",
+      "tempo": 1.8011502954835648,
+      "guard_ms": 40,
+      "source_duration": 3.3208333333333333,
+      "native_frames": 89459,
+      "rate": 48000,
+      "asset": "RT4B_5009_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "sp_rt3_katya_LOC_INT",
+      "tempo": 1.417892082211474,
+      "guard_ms": 40,
+      "source_duration": 2.424625,
+      "native_frames": 83041,
+      "rate": 48000,
+      "asset": "RT4B_5011_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "sp_rt3_katya_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.2079449888588063,
+      "native_duration": 1.7590416666666666,
+      "source_duration": 3.8397083333333333,
+      "asset": "RT4B_5013_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "sp_rt3_katya_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.5056270863137815,
+      "native_duration": 1.7675,
+      "source_duration": 4.378583333333333,
+      "asset": "RT4B_5016_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "sp_rt3_katya_LOC_INT",
+      "tempo": 1.3987947325347816,
+      "guard_ms": 40,
+      "source_duration": 3.916916666666667,
+      "native_frames": 135370,
+      "rate": 48000,
+      "asset": "RT4B_7006_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RT3_kismet01_LOC_INT",
+      "tempo": 1.3524533168135326,
+      "guard_ms": 40,
+      "source_duration": 4.457291666666666,
+      "native_frames": 159154,
+      "rate": 48000,
+      "asset": "RT1_1507_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RT3_kismet01_LOC_INT",
+      "tempo": 1.683683186353662,
+      "guard_ms": 40,
+      "source_duration": 5.08325,
+      "native_frames": 145878,
+      "rate": 48000,
+      "asset": "RT1_1508_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RT3_kismet01_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 1.8583496986524006,
+      "native_duration": 2.4811666666666667,
+      "source_duration": 4.573708333333333,
+      "asset": "RT1_1517_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RT3_kismet01_LOC_INT",
+      "tempo": 1.3511825693929305,
+      "guard_ms": 40,
+      "source_duration": 4.89525,
+      "native_frames": 174861,
+      "rate": 48000,
+      "asset": "RT99_1306_SC2",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RT3_zone02_LOC_INT",
+      "tempo": 1.4868882880016965,
+      "guard_ms": 40,
+      "source_duration": 11.685083333333333,
+      "native_frames": 378180,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "RT99_1205_SC2",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RT4_kismet01_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 1.8812065694495896,
+      "native_duration": 1.8758125,
+      "source_duration": 3.4911666666666665,
+      "asset": "RT4_1000_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RT4_kismet01_LOC_INT",
+      "tempo": 1.4520426287744228,
+      "guard_ms": 40,
+      "source_duration": 2.58875,
+      "native_frames": 86536,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "RT4_1002_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RT4_kismet01_LOC_INT",
+      "tempo": 1.795946261292796,
+      "guard_ms": 40,
+      "source_duration": 2.2447083333333335,
+      "native_frames": 60954,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "RT4_1010_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RT4_kismet01_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 3.9509153087909876,
+      "native_duration": 0.641375,
+      "source_duration": 2.455,
+      "asset": "RT4_1011_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RT4_kismet01_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 5.788023040973807,
+      "native_duration": 0.9784375,
+      "source_duration": 5.547458333333333,
+      "asset": "RT4_1012_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RT4_kismet01_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 3.9103940428172512,
+      "native_duration": 0.6914583333333333,
+      "source_duration": 2.6256666666666666,
+      "asset": "RT4_1014_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RT4_kismet01_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.2029916818392774,
+      "native_duration": 1.187125,
+      "source_duration": 2.5711666666666666,
+      "asset": "RT4_1020_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RT4_kismet01_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 4.380257962621743,
+      "native_duration": 0.8114583333333333,
+      "source_duration": 3.4667916666666665,
+      "asset": "RT4_1021_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RT4_kismet01_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 4.109051983675654,
+      "native_duration": 0.6427916666666667,
+      "source_duration": 2.559083333333333,
+      "asset": "RT4_1022_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RT4_kismet01_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.2838763228885663,
+      "native_duration": 0.622375,
+      "source_duration": 1.37575,
+      "asset": "RT4_1023_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RT4_kismet01_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 4.911258631025067,
+      "native_duration": 0.9583541666666666,
+      "source_duration": 4.6085,
+      "asset": "RT4_1024_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RT4_kismet01_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.3213924722893218,
+      "native_duration": 1.2360625,
+      "source_duration": 2.8229583333333332,
+      "asset": "RT4_1027_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RT4_kismet01_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 1.8534393700173482,
+      "native_duration": 2.157625,
+      "source_duration": 3.9619583333333335,
+      "asset": "RT4_5005_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RT4_kismet01_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.07234807913829,
+      "native_duration": 1.0508958333333334,
+      "source_duration": 2.136375,
+      "asset": "RT4_5006_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RT4_kismet01_LOC_INT",
+      "tempo": 1.6900941931477074,
+      "guard_ms": 40,
+      "source_duration": 3.0615,
+      "native_frames": 87909,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "RT4_5011_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RT4_kismet02_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.3724334579418267,
+      "native_duration": 1.8758125,
+      "source_duration": 4.402791666666666,
+      "asset": "RT4_1000_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RT4_kismet02_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.0923759042570924,
+      "native_duration": 1.269875,
+      "source_duration": 2.6152083333333334,
+      "asset": "RT4_1010_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RT4_kismet02_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.6724334473278346,
+      "native_duration": 0.641375,
+      "source_duration": 1.6605833333333333,
+      "asset": "RT4_1011_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RT4_kismet02_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.3867840452124773,
+      "native_duration": 0.9784375,
+      "source_duration": 2.2875833333333335,
+      "asset": "RT4_1012_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RT4_kismet02_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.941172820353708,
+      "native_duration": 0.6914583333333333,
+      "source_duration": 1.974875,
+      "asset": "RT4_1014_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RT4_kismet02_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.608296740566206,
+      "native_duration": 1.187125,
+      "source_duration": 3.044208333333333,
+      "asset": "RT4_1020_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RT4_kismet02_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.1503027112398003,
+      "native_duration": 0.8114583333333333,
+      "source_duration": 1.701875,
+      "asset": "RT4_1021_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RT4_kismet02_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 4.192212484110525,
+      "native_duration": 0.6427916666666667,
+      "source_duration": 2.610875,
+      "asset": "RT4_1022_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RT4_kismet02_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.82714256069724,
+      "native_duration": 0.622375,
+      "source_duration": 1.703,
+      "asset": "RT4_1023_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RT4_kismet02_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 4.649141892941987,
+      "native_duration": 0.9583541666666666,
+      "source_duration": 4.362541666666667,
+      "asset": "RT4_1024_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RT4_kismet02_LOC_INT",
+      "tempo": 1.3638579917720555,
+      "guard_ms": 40,
+      "source_duration": 1.8647916666666666,
+      "native_frames": 66590,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "RT4_1025_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RT4_kismet02_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.9295711911736992,
+      "native_duration": 1.2360625,
+      "source_duration": 3.5625416666666667,
+      "asset": "RT4_1027_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RT4_kismet02_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 1.8770637194705961,
+      "native_duration": 2.157625,
+      "source_duration": 4.012458333333333,
+      "asset": "RT4_5005_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RT4_kismet02_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.430167936463028,
+      "native_duration": 1.0508958333333334,
+      "source_duration": 2.50525,
+      "asset": "RT4_5006_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RT4_kismet02_LOC_INT",
+      "tempo": 1.5540834282165408,
+      "guard_ms": 40,
+      "source_duration": 2.815125,
+      "native_frames": 87909,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "RT4_5011_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RT4_kismet03_LOC_INT",
+      "tempo": 1.490967230783506,
+      "guard_ms": 40,
+      "source_duration": 4.351791666666666,
+      "native_frames": 141061,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "RT4B_1510_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RT4_kismet03_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.549670770111652,
+      "native_duration": 0.7477083333333333,
+      "source_duration": 1.8554166666666667,
+      "asset": "RT4B_1512_5_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RT4_kismet03_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.958141365119444,
+      "native_duration": 1.2906458333333333,
+      "source_duration": 3.75875,
+      "asset": "RT4B_1512_6_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RT4_kismet03_LOC_INT",
+      "tempo": 1.6730526329711606,
+      "guard_ms": 40,
+      "source_duration": 5.270708333333333,
+      "native_frames": 152177,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "RT4B_3005_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RT4_kismet03_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 1.8738986307951,
+      "native_duration": 2.1882291666666664,
+      "source_duration": 4.063041666666667,
+      "asset": "RT4B_3006_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RT4_kismet03_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.3631337113309696,
+      "native_duration": 1.6477291666666667,
+      "source_duration": 3.8465416666666665,
+      "asset": "RT4B_3007_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RT4_kismet03_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 3.2541227290052097,
+      "native_duration": 0.8398958333333333,
+      "source_duration": 2.668041666666667,
+      "asset": "RT4B_3009_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RT4_kismet03_LOC_INT",
+      "tempo": 1.5180216960223958,
+      "guard_ms": 40,
+      "source_duration": 1.897875,
+      "native_frames": 60971,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "RT4B_5005_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RT4_kismet03_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 1.9093249994497876,
+      "native_duration": 1.9132083333333334,
+      "source_duration": 3.61475,
+      "asset": "RT4B_5006_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RT4_kismet03_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.088739195964443,
+      "native_duration": 1.374625,
+      "source_duration": 2.829458333333333,
+      "asset": "RT4B_5007_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RT4_kismet03_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.0669084927966166,
+      "native_duration": 1.4386041666666667,
+      "source_duration": 2.932125,
+      "asset": "RT4B_5008_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RT4_kismet03_LOC_INT",
+      "tempo": 1.4778246081876631,
+      "guard_ms": 40,
+      "source_duration": 2.7247083333333335,
+      "native_frames": 89459,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "RT4B_5009_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RT4_kismet03_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.3539784843184703,
+      "native_duration": 1.7590416666666666,
+      "source_duration": 4.093666666666667,
+      "asset": "RT4B_5013_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RT4_kismet03_LOC_INT",
+      "tempo": 1.356270863137816,
+      "guard_ms": 40,
+      "source_duration": 2.3700833333333335,
+      "native_frames": 84840,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "RT4B_5016_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RT4_kismet03_LOC_INT",
+      "tempo": 1.3937802246856632,
+      "guard_ms": 40,
+      "source_duration": 3.902875,
+      "native_frames": 135370,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "RT4B_7006_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RT4_kismet03_LOC_INT",
+      "tempo": 1.3555946564960533,
+      "guard_ms": 40,
+      "source_duration": 2.8730416666666665,
+      "native_frames": 102691,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "RT4B_7106_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RT5_kismet01_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.1243615217952603,
+      "native_duration": 1.8758125,
+      "source_duration": 3.9424166666666665,
+      "asset": "RT4_1000_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RT5_kismet01_LOC_INT",
+      "tempo": 1.5343381003739862,
+      "guard_ms": 40,
+      "source_duration": 4.564208333333333,
+      "native_frames": 143746,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "RT4_1001_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RT5_kismet01_LOC_INT",
+      "tempo": 1.3714359166121342,
+      "guard_ms": 40,
+      "source_duration": 2.4450416666666666,
+      "native_frames": 86536,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "RT4_1002_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RT5_kismet01_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 3.6251625162516246,
+      "native_duration": 1.269875,
+      "source_duration": 4.531,
+      "asset": "RT4_1010_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RT5_kismet01_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 3.285992087440488,
+      "native_duration": 0.641375,
+      "source_duration": 2.0418333333333334,
+      "asset": "RT4_1011_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RT5_kismet01_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.417954570155418,
+      "native_duration": 0.9784375,
+      "source_duration": 2.317458333333333,
+      "asset": "RT4_1012_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RT5_kismet01_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 3.2695004654049025,
+      "native_duration": 0.6914583333333333,
+      "source_duration": 2.195333333333333,
+      "asset": "RT4_1014_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RT5_kismet01_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 1.9886473171254153,
+      "native_duration": 1.187125,
+      "source_duration": 2.321,
+      "asset": "RT4_1020_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RT5_kismet01_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.397841537246644,
+      "native_duration": 0.8114583333333333,
+      "source_duration": 1.8977916666666668,
+      "asset": "RT4_1021_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RT5_kismet01_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 4.225463303672978,
+      "native_duration": 0.6427916666666667,
+      "source_duration": 2.6315833333333334,
+      "asset": "RT4_1022_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RT5_kismet01_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.205298471328768,
+      "native_duration": 0.622375,
+      "source_duration": 1.3284166666666666,
+      "asset": "RT4_1023_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RT5_kismet01_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 4.6011411824781865,
+      "native_duration": 0.9583541666666666,
+      "source_duration": 4.3175,
+      "asset": "RT4_1024_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RT5_kismet01_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.2489935070497338,
+      "native_duration": 1.2360625,
+      "source_duration": 2.734916666666667,
+      "asset": "RT4_1027_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RT5_kismet01_LOC_INT",
+      "tempo": 1.7728397949437655,
+      "guard_ms": 40,
+      "source_duration": 3.7896666666666667,
+      "native_frames": 103566,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "RT4_5005_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RT5_kismet01_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 1.918557888567791,
+      "native_duration": 1.0508958333333334,
+      "source_duration": 1.9778333333333333,
+      "asset": "RT4_5006_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RT5_kismet01_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.0388230713610325,
+      "native_duration": 1.51825,
+      "source_duration": 3.054666666666667,
+      "asset": "RT4_5010_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RT5_kismet01_LOC_INT",
+      "tempo": 1.542053387618029,
+      "guard_ms": 40,
+      "source_duration": 2.7933333333333334,
+      "native_frames": 87909,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "RT4_5011_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RT5_kismet01_LOC_INT",
+      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
+      "tempo": 1.5528848892179756,
+      "native_duration": 0.7515416666666667,
+      "source_duration": 1.136,
+      "decoded_frames": 35946,
+      "asset": "RT5_1507_DEM",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RT5_kismet01_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 1.9365045881236156,
+      "native_duration": 2.1927291666666666,
+      "source_duration": 4.2075,
+      "asset": "RT5_1521_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RT5_kismet01_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.5765415149525457,
+      "native_duration": 1.7651041666666667,
+      "source_duration": 4.496333333333333,
+      "asset": "RT5_1522_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RT6_kismet01_LOC_INT",
+      "tempo": 1.5949228692963424,
+      "guard_ms": 40,
+      "source_duration": 1.9450416666666666,
+      "native_frames": 59497,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "RT4B_8007_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_RT6_kismet01_LOC_INT",
+      "tempo": 1.6605336460929483,
+      "guard_ms": 40,
+      "source_duration": 2.831625,
+      "native_frames": 82812,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "RT4B_8305_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI_intro_Kismet_LOC_INT",
+      "tempo": 1.7161344373044802,
+      "guard_ms": 40,
+      "source_duration": 4.0115,
+      "native_frames": 113161,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "INTRO_1009_NIM",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI_intro_Kismet_LOC_INT",
+      "tempo": 1.6609295664627,
+      "guard_ms": 40,
+      "source_duration": 6.644583333333333,
+      "native_frames": 192985,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "INTRO_1012_NIM",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI_intro_Kismet_LOC_INT",
+      "tempo": 1.4122254558683098,
+      "guard_ms": 40,
+      "source_duration": 5.176041666666666,
+      "native_frames": 176888,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "INTRO_1014_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI2_kismet01_LOC_INT",
+      "tempo": 1.564138752373182,
+      "guard_ms": 40,
+      "source_duration": 8.427416666666666,
+      "native_frames": 259579,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "VI1_0105_CP2",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI2_kismet01_LOC_INT",
+      "tempo": 1.7211771200475603,
+      "guard_ms": 40,
+      "source_duration": 2.53325,
+      "native_frames": 71607,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "VI1_0106_NIM",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI2_kismet01_LOC_INT",
+      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
+      "tempo": 1.596393233322694,
+      "native_duration": 0.80325,
+      "source_duration": 1.250375,
+      "decoded_frames": 39488,
+      "asset": "VI1_0107_CP2",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI2_kismet01_LOC_INT",
+      "tempo": 1.5475698212347935,
+      "guard_ms": 40,
+      "source_duration": 2.8225416666666665,
+      "native_frames": 88505,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "VI1_0110_CP2",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI2_kismet01_LOC_INT",
+      "tempo": 1.4863701332602983,
+      "guard_ms": 40,
+      "source_duration": 3.6180416666666666,
+      "native_frames": 117799,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "VI1_0112_NIM",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI2_kismet01_LOC_INT",
+      "tempo": 1.824691868071335,
+      "guard_ms": 40,
+      "source_duration": 2.2083333333333335,
+      "native_frames": 59052,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "VI1_0113_CP2",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI2_kismet01_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 3.5476294707350173,
+      "native_duration": 1.9235833333333334,
+      "source_duration": 6.753208333333333,
+      "asset": "VI1_0114_CP",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI2_kismet01_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.022159266676436,
+      "native_duration": 2.579125,
+      "source_duration": 5.1749583333333335,
+      "asset": "VI1_0115_NIM",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI2_kismet01_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 1.917862940736552,
+      "native_duration": 2.304291666666667,
+      "source_duration": 4.380958333333333,
+      "asset": "VI1_0507_NIM",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI2_kismet01_LOC_INT",
+      "tempo": 1.815710614610991,
+      "guard_ms": 40,
+      "source_duration": 4.43075,
+      "native_frames": 118091,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "VI1_0513_NIM",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI2_kismet02_LOC_INT",
+      "tempo": 1.5729994951407293,
+      "guard_ms": 40,
+      "source_duration": 4.1542916666666665,
+      "native_frames": 127728,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "VI2_4008_SPT2",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI2_kismet02_LOC_INT",
+      "tempo": 1.7289240155296728,
+      "guard_ms": 40,
+      "source_duration": 2.5977083333333333,
+      "native_frames": 73080,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "VI2_4010_SPT2",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI2_kismet03_LOC_INT",
+      "tempo": 1.3751958419337993,
+      "guard_ms": 40,
+      "source_duration": 2.3040833333333333,
+      "native_frames": 81382,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "VI2_4009_SPT1",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI2_kismet03_LOC_INT",
+      "tempo": 1.6085055812571625,
+      "guard_ms": 40,
+      "source_duration": 3.9477083333333334,
+      "native_frames": 118765,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "VI2_6005_OKN",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI3_Ghost_Courtyard_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 1.904213508820035,
+      "native_duration": 1.6155625,
+      "source_duration": 3.038291666666667,
+      "asset": "VI3_6110_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI3_Ghost_Courtyard_LOC_INT",
+      "tempo": 1.3501312097424654,
+      "guard_ms": 40,
+      "source_duration": 4.952,
+      "native_frames": 177014,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "VI3_6806_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI3_Ghost_Courtyard_LOC_INT",
+      "tempo": 1.6196249735316954,
+      "guard_ms": 40,
+      "source_duration": 4.3025,
+      "native_frames": 128471,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "VI3_6910_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI3_Ghost_Courtyard_LOC_INT",
+      "tempo": 1.6035879331816916,
+      "guard_ms": 40,
+      "source_duration": 6.491791666666667,
+      "native_frames": 195278,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "VI3_7005_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI3_kismet03_LOC_INT",
+      "tempo": 1.578962487106167,
+      "guard_ms": 40,
+      "source_duration": 2.5193333333333334,
+      "native_frames": 77547,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "VI3_6110_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI3_kismet03_LOC_INT",
+      "tempo": 1.3719432402201965,
+      "guard_ms": 40,
+      "source_duration": 3.909666666666667,
+      "native_frames": 137747,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "VI3_6112_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI3_kismet03_LOC_INT",
+      "tempo": 1.6566884425657395,
+      "guard_ms": 40,
+      "source_duration": 4.4009583333333335,
+      "native_frames": 128471,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "VI3_6910_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI3_kismet03_LOC_INT",
+      "tempo": 1.5216603711442065,
+      "guard_ms": 40,
+      "source_duration": 6.160125,
+      "native_frames": 195278,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "VI3_7005_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI3_zone01b_d1_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.005068771614879,
+      "native_duration": 2.3874375,
+      "source_duration": 4.746875,
+      "asset": "VI1_5007_BER",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI3_zone01b_d1_LOC_INT",
+      "tempo": 1.3628555815607957,
+      "guard_ms": 40,
+      "source_duration": 5.507583333333334,
+      "native_frames": 194938,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "VI1_5505_GD",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI3_zone01b_d1_LOC_INT",
+      "tempo": 1.3938262019180325,
+      "guard_ms": 40,
+      "source_duration": 4.15125,
+      "native_frames": 143919,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "VI1_5506_GD",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI3_zone05_d2_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.3640715611992573,
+      "native_duration": 2.3874375,
+      "source_duration": 5.596791666666666,
+      "asset": "VI1_5007_BER",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI4_kismet01_a_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 1.8901048791609667,
+      "native_duration": 1.573375,
+      "source_duration": 2.9360416666666667,
+      "asset": "VI4_2005_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI4_kismet01_a_LOC_INT",
+      "tempo": 1.3906117374715996,
+      "guard_ms": 40,
+      "source_duration": 3.3790416666666667,
+      "native_frames": 117595,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "VI4_2010_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI4_kismet01_a_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.055841339685655,
+      "native_duration": 1.3362291666666666,
+      "source_duration": 2.7059583333333332,
+      "asset": "VI4_2011_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI4_kismet01_a_LOC_INT",
+      "tempo": 1.699961587260939,
+      "guard_ms": 40,
+      "source_duration": 3.0425416666666667,
+      "native_frames": 86869,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "VI4_2012_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI4_kismet01_a_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 5.926757361560048,
+      "native_duration": 0.6065208333333333,
+      "source_duration": 3.476166666666667,
+      "asset": "VI4_3005_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI4_kismet01_a_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 10.855072463768115,
+      "native_duration": 0.609375,
+      "source_duration": 6.397708333333333,
+      "asset": "VI4_3006_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI4_kismet01_a_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 1.9287858037821617,
+      "native_duration": 0.7349791666666666,
+      "source_duration": 1.3790416666666667,
+      "asset": "VI4_3010_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI4_kismet01_a_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.4902338376891335,
+      "native_duration": 0.474375,
+      "source_duration": 1.1315,
+      "asset": "VI4_3012_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI4_kismet01_a_LOC_INT",
+      "tempo": 1.8319542568106222,
+      "guard_ms": 40,
+      "source_duration": 2.776708333333333,
+      "native_frames": 73714,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "VI4_3305_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI4_kismet01_a_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 3.0220863064899763,
+      "native_duration": 1.3075625,
+      "source_duration": 3.891125,
+      "asset": "VI4_3505_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI4_kismet01_a_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 5.651054152068351,
+      "native_duration": 0.697875,
+      "source_duration": 3.8307083333333334,
+      "asset": "VI4_3510_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI4_kismet01_a_LOC_INT",
+      "tempo": 1.5278567249017805,
+      "guard_ms": 40,
+      "source_duration": 3.046291666666667,
+      "native_frames": 96664,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "VI4_3705_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI4_kismet01_a_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.5524365050431403,
+      "native_duration": 0.70575,
+      "source_duration": 1.7503333333333333,
+      "asset": "VI4_4105_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI4_kismet01_a_LOC_INT",
+      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
+      "tempo": 1.6419192605681663,
+      "native_duration": 0.7863541666666667,
+      "source_duration": 1.2582916666666666,
+      "decoded_frames": 37617,
+      "asset": "VI4_4205_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI4_kismet01_a_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 3.8357619227381408,
+      "native_duration": 0.8478125,
+      "source_duration": 3.175291666666667,
+      "asset": "VI4_4206_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI4_kismet01_a_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 3.2166147391800597,
+      "native_duration": 1.3707083333333334,
+      "source_duration": 4.344708333333333,
+      "asset": "VI4_4207_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI4_kismet01_a_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.115550626461243,
+      "native_duration": 1.4100833333333334,
+      "source_duration": 2.9407916666666667,
+      "asset": "VI4_4208_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI4_kismet01_a_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.0769248624683736,
+      "native_duration": 0.9175208333333333,
+      "source_duration": 1.8640833333333333,
+      "asset": "VI4_4210_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI4_kismet01_a_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 6.087874345549738,
+      "native_duration": 0.5173958333333334,
+      "source_duration": 3.0280833333333335,
+      "asset": "VI4_4220_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI4_kismet01_a_LOC_INT",
+      "tempo": 1.4894832175070234,
+      "guard_ms": 40,
+      "source_duration": 3.3577916666666665,
+      "native_frames": 109168,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "VI4_4411_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI4_kismet01_b_LOC_INT",
+      "tempo": 1.7411818352512005,
+      "guard_ms": 40,
+      "source_duration": 2.7047083333333335,
+      "native_frames": 75522,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "VI4_2005_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI4_kismet01_b_LOC_INT",
+      "tempo": 1.3784712993526815,
+      "guard_ms": 40,
+      "source_duration": 3.3495416666666666,
+      "native_frames": 117595,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "VI4_2010_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI4_kismet01_b_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 3.8641320692002097,
+      "native_duration": 1.3362291666666666,
+      "source_duration": 5.086083333333334,
+      "asset": "VI4_2011_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI4_kismet01_b_LOC_INT",
+      "tempo": 1.5800905609423925,
+      "guard_ms": 40,
+      "source_duration": 2.828,
+      "native_frames": 86869,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "VI4_2012_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI4_kismet01_b_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.391077327460662,
+      "native_duration": 0.6065208333333333,
+      "source_duration": 1.4024166666666666,
+      "asset": "VI4_3005_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI4_kismet01_b_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.9321412196240257,
+      "native_duration": 0.474375,
+      "source_duration": 1.3322916666666667,
+      "asset": "VI4_3012_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI4_kismet01_b_LOC_INT",
+      "tempo": 1.82285020270617,
+      "guard_ms": 40,
+      "source_duration": 4.440083333333333,
+      "native_frames": 117878,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "VI4_3015_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI4_kismet01_b_LOC_INT",
+      "tempo": 1.6012590373037912,
+      "guard_ms": 40,
+      "source_duration": 2.4270416666666668,
+      "native_frames": 73714,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "VI4_3305_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI4_kismet01_b_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 4.687765966053428,
+      "native_duration": 1.3075625,
+      "source_duration": 6.035791666666666,
+      "asset": "VI4_3505_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI4_kismet01_b_LOC_INT",
+      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
+      "tempo": 1.6179236584916097,
+      "native_duration": 0.697875,
+      "source_duration": 1.09675,
+      "decoded_frames": 33370,
+      "asset": "VI4_3510_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI4_kismet01_b_LOC_INT",
+      "tempo": 1.7392167516509236,
+      "guard_ms": 40,
+      "source_duration": 3.4677083333333334,
+      "native_frames": 96664,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "VI4_3705_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI4_kismet01_b_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 3.3717948717948723,
+      "native_duration": 0.70575,
+      "source_duration": 2.3122083333333334,
+      "asset": "VI4_4105_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI4_kismet01_b_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 6.914448824249015,
+      "native_duration": 0.7863541666666667,
+      "source_duration": 5.298916666666667,
+      "asset": "VI4_4205_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI4_kismet01_b_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 3.666289165722915,
+      "native_duration": 0.8478125,
+      "source_duration": 3.035,
+      "asset": "VI4_4206_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI4_kismet01_b_LOC_INT",
+      "tempo": 1.5138970293364593,
+      "guard_ms": 40,
+      "source_duration": 2.0448333333333335,
+      "native_frames": 65794,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "VI4_4207_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI4_kismet01_b_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 1.9892992026856904,
+      "native_duration": 1.4100833333333334,
+      "source_duration": 2.7652916666666667,
+      "asset": "VI4_4208_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI4_kismet01_b_LOC_INT",
+      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
+      "tempo": 1.482927508646503,
+      "native_duration": 0.9175208333333333,
+      "source_duration": 1.3309583333333332,
+      "decoded_frames": 43913,
+      "asset": "VI4_4210_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI4_kismet01_b_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.9349528795811515,
+      "native_duration": 0.5173958333333334,
+      "source_duration": 1.4598333333333333,
+      "asset": "VI4_4220_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI4_kismet01_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.436340371081254,
+      "native_duration": 1.6155625,
+      "source_duration": 3.8873333333333333,
+      "asset": "VI3_6110_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI4_kismet01_LOC_INT",
+      "tempo": 1.3573950740932983,
+      "guard_ms": 40,
+      "source_duration": 3.8682083333333335,
+      "native_frames": 137747,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "VI3_6112_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI4_kismet01_LOC_INT",
+      "tempo": 1.5169357937746548,
+      "guard_ms": 40,
+      "source_duration": 4.029708333333334,
+      "native_frames": 128471,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "VI3_6910_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI4_kismet01_LOC_INT",
+      "tempo": 1.606974135180477,
+      "guard_ms": 40,
+      "source_duration": 6.5055,
+      "native_frames": 195278,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "VI3_7005_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI4_kismet01_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 1.9394329551245943,
+      "native_duration": 1.573375,
+      "source_duration": 3.0126666666666666,
+      "asset": "VI4_2005_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI4_kismet01_LOC_INT",
+      "tempo": 1.4203112273331333,
+      "guard_ms": 40,
+      "source_duration": 3.451208333333333,
+      "native_frames": 117595,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "VI4_2010_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI4_kismet01_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.054733376596654,
+      "native_duration": 1.3362291666666666,
+      "source_duration": 2.7045,
+      "asset": "VI4_2011_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI4_kismet01_LOC_INT",
+      "tempo": 1.8409246993912165,
+      "guard_ms": 40,
+      "source_duration": 3.2948333333333335,
+      "native_frames": 86869,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "VI4_2012_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI4_kismet01_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 7.464781728412604,
+      "native_duration": 0.6065208333333333,
+      "source_duration": 4.37825,
+      "asset": "VI4_3005_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI4_kismet01_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 3.040862495581478,
+      "native_duration": 0.609375,
+      "source_duration": 1.7922083333333334,
+      "asset": "VI4_3006_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI4_kismet01_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 3.138743695552499,
+      "native_duration": 0.474375,
+      "source_duration": 1.4261666666666666,
+      "asset": "VI4_3012_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI4_kismet01_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.0731231272507356,
+      "native_duration": 1.5357083333333332,
+      "source_duration": 3.14225,
+      "asset": "VI4_3305_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI4_kismet01_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 4.411824668705403,
+      "native_duration": 1.3075625,
+      "source_duration": 5.6805,
+      "asset": "VI4_3505_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI4_kismet01_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 5.5191468436904545,
+      "native_duration": 0.697875,
+      "source_duration": 3.7412916666666667,
+      "asset": "VI4_3510_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI4_kismet01_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 1.8997743041043216,
+      "native_duration": 2.0138333333333334,
+      "source_duration": 3.7878333333333334,
+      "asset": "VI4_3705_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI4_kismet01_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.7393364928909953,
+      "native_duration": 0.70575,
+      "source_duration": 1.8785,
+      "asset": "VI4_4105_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI4_kismet01_LOC_INT",
+      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
+      "tempo": 1.7082506456436048,
+      "native_duration": 0.7863541666666667,
+      "source_duration": 1.309125,
+      "decoded_frames": 37617,
+      "asset": "VI4_4205_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI4_kismet01_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 3.1031584245627286,
+      "native_duration": 0.8478125,
+      "source_duration": 2.5688333333333335,
+      "asset": "VI4_4206_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI4_kismet01_LOC_INT",
+      "tempo": 1.7352315143289014,
+      "guard_ms": 40,
+      "source_duration": 2.3437916666666667,
+      "native_frames": 65794,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "VI4_4207_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI4_kismet01_LOC_INT",
+      "tempo": 1.656555362388346,
+      "guard_ms": 40,
+      "source_duration": 2.30275,
+      "native_frames": 67684,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "VI4_4208_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI4_kismet01_LOC_INT",
+      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
+      "tempo": 1.835101320767856,
+      "native_duration": 0.9175208333333333,
+      "source_duration": 1.6470416666666667,
+      "decoded_frames": 43913,
+      "asset": "VI4_4210_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI4_kismet01_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 8.69964397905759,
+      "native_duration": 0.5173958333333334,
+      "source_duration": 4.327166666666667,
+      "asset": "VI4_4220_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI4_kismet01_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 1.872146194649063,
+      "native_duration": 2.5257916666666667,
+      "source_duration": 4.691208333333333,
+      "asset": "VI4_4412_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet01_LOC_INT",
+      "tempo": 1.4555625620438413,
+      "guard_ms": 40,
+      "source_duration": 4.857,
+      "native_frames": 161129,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "VI1_5005_BER",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet01_LOC_INT",
+      "tempo": 1.8094634670045848,
+      "guard_ms": 40,
+      "source_duration": 4.283791666666667,
+      "native_frames": 114597,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "VI1_5007_BER",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet01_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.054800032187978,
+      "native_duration": 1.573375,
+      "source_duration": 3.191875,
+      "asset": "VI4_2005_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet01_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 1.978537172161636,
+      "native_duration": 1.3362291666666666,
+      "source_duration": 2.6042083333333332,
+      "asset": "VI4_2011_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet01_LOC_INT",
+      "tempo": 1.7979722729865322,
+      "guard_ms": 40,
+      "source_duration": 3.2179583333333333,
+      "native_frames": 86869,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "VI4_2012_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet01_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 4.080062515540085,
+      "native_duration": 0.6065208333333333,
+      "source_duration": 2.3930416666666665,
+      "asset": "VI4_3005_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet01_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 6.763134123954661,
+      "native_duration": 0.7349791666666666,
+      "source_duration": 4.8355,
+      "asset": "VI4_3010_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet01_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 4.936817973406694,
+      "native_duration": 0.474375,
+      "source_duration": 2.2431666666666668,
+      "asset": "VI4_3012_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet01_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.0094840146246256,
+      "native_duration": 1.5357083333333332,
+      "source_duration": 3.0457916666666667,
+      "asset": "VI4_3305_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet01_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 3.2911994563370714,
+      "native_duration": 1.3075625,
+      "source_duration": 4.237625,
+      "asset": "VI4_3505_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet01_LOC_INT",
+      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
+      "tempo": 1.6179236584916097,
+      "native_duration": 0.697875,
+      "source_duration": 1.09675,
+      "decoded_frames": 33370,
+      "asset": "VI4_3510_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet01_LOC_INT",
+      "tempo": 1.6399941486249268,
+      "guard_ms": 40,
+      "source_duration": 3.269875,
+      "native_frames": 96664,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "VI4_3705_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet01_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.141086401749909,
+      "native_duration": 0.70575,
+      "source_duration": 1.46825,
+      "asset": "VI4_4105_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet01_LOC_INT",
+      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
+      "tempo": 1.1323637352181595,
+      "native_duration": 0.7863541666666667,
+      "source_duration": 0.8677916666666666,
+      "decoded_frames": 38720,
+      "asset": "VI4_4205_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet01_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.367736252673965,
+      "native_duration": 0.8478125,
+      "source_duration": 1.9600416666666667,
+      "asset": "VI4_4206_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet01_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 1.9018107782953388,
+      "native_duration": 1.3707083333333334,
+      "source_duration": 2.568791666666667,
+      "asset": "VI4_4207_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet01_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.270727174629818,
+      "native_duration": 1.4100833333333334,
+      "source_duration": 3.1565,
+      "asset": "VI4_4208_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet01_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.1006940414567907,
+      "native_duration": 0.9175208333333333,
+      "source_duration": 1.8854166666666667,
+      "asset": "VI4_4210_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet01_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 9.417884816753926,
+      "native_duration": 0.5173958333333334,
+      "source_duration": 4.6844166666666665,
+      "asset": "VI4_4220_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet01_LOC_INT",
+      "tempo": 1.5082271121739321,
+      "guard_ms": 40,
+      "source_duration": 5.728875,
+      "native_frames": 183284,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "VI4_5005_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet01_LOC_INT",
+      "tempo": 1.5647649340859366,
+      "guard_ms": 40,
+      "source_duration": 1.7730416666666666,
+      "native_frames": 55349,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "VI5_1208_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet01_LOC_INT",
+      "tempo": 1.3945433309974302,
+      "guard_ms": 40,
+      "source_duration": 6.218791666666666,
+      "native_frames": 215010,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "VI5_1505_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet01_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 10.48116533679718,
+      "native_duration": 0.46908333333333335,
+      "source_duration": 4.706916666666666,
+      "asset": "VI5_1905_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet01_LOC_INT",
+      "tempo": 1.567653199783907,
+      "guard_ms": 40,
+      "source_duration": 4.473625,
+      "native_frames": 137938,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "VI5_2010_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet01_LOC_INT",
+      "tempo": 1.3894961781868989,
+      "guard_ms": 40,
+      "source_duration": 4.578708333333333,
+      "native_frames": 159131,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "VI5_2011_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet01_LOC_INT",
+      "tempo": 1.722405593412834,
+      "guard_ms": 40,
+      "source_duration": 4.044208333333334,
+      "native_frames": 113664,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "VI5_2012_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet01_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.1008095627439918,
+      "native_duration": 1.8291041666666668,
+      "source_duration": 3.8005833333333334,
+      "asset": "VI5_3505_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet01_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 3.04107917135057,
+      "native_duration": 1.3172916666666667,
+      "source_duration": 3.9451666666666667,
+      "asset": "VI5_4005_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet01_LOC_INT",
+      "tempo": 1.4815453356895536,
+      "guard_ms": 40,
+      "source_duration": 4.296666666666667,
+      "native_frames": 140166,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "VI5_4009_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet01_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.6352128883774455,
+      "native_duration": 1.5226458333333333,
+      "source_duration": 3.959791666666667,
+      "asset": "VI5_4012_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet01_LOC_INT",
+      "tempo": 1.4862053457951232,
+      "guard_ms": 40,
+      "source_duration": 3.1670416666666665,
+      "native_frames": 103246,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "VI5_4013_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet01_LOC_INT",
+      "tempo": 1.408543320676562,
+      "guard_ms": 40,
+      "source_duration": 3.4004583333333334,
+      "native_frames": 116840,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "VI5_4015_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet01_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.0186227544910182,
+      "native_duration": 0.7158333333333333,
+      "source_duration": 1.404625,
+      "asset": "VI5_5006_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet01_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.6168410774553714,
+      "native_duration": 1.0014791666666667,
+      "source_duration": 2.568375,
+      "asset": "VI5_5007_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet02_LOC_INT",
+      "tempo": 1.5170802212163437,
+      "guard_ms": 40,
+      "source_duration": 3.6518333333333333,
+      "native_frames": 116503,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "VI5_1805_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet02_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 14.909259602894785,
+      "native_duration": 0.46908333333333335,
+      "source_duration": 6.6955,
+      "asset": "VI5_1905_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet02_LOC_INT",
+      "tempo": 1.5515922264889253,
+      "guard_ms": 40,
+      "source_duration": 4.427791666666667,
+      "native_frames": 137938,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "VI5_2010_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet02_LOC_INT",
+      "tempo": 1.3833382857793148,
+      "guard_ms": 40,
+      "source_duration": 4.558416666666667,
+      "native_frames": 159131,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "VI5_2011_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet02_LOC_INT",
+      "tempo": 1.6133056501987508,
+      "guard_ms": 40,
+      "source_duration": 3.7880416666666665,
+      "native_frames": 113664,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "VI5_2012_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet02_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 4.3629768085842855,
+      "native_duration": 1.5246875,
+      "source_duration": 6.564916666666667,
+      "asset": "VI5_2205_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet02_LOC_INT",
+      "tempo": 1.4952842682266774,
+      "guard_ms": 40,
+      "source_duration": 2.705125,
+      "native_frames": 87797,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "VI5_3505_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet02_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.9847759755901717,
+      "native_duration": 1.3172916666666667,
+      "source_duration": 3.872125,
+      "asset": "VI5_4005_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet02_LOC_INT",
+      "tempo": 1.5400485611252388,
+      "guard_ms": 40,
+      "source_duration": 4.466333333333333,
+      "native_frames": 140166,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "VI5_4009_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet02_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.0095387302951737,
+      "native_duration": 1.5226458333333333,
+      "source_duration": 3.019625,
+      "asset": "VI5_4012_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet02_LOC_INT",
+      "tempo": 1.831570302876249,
+      "guard_ms": 40,
+      "source_duration": 3.903,
+      "native_frames": 103246,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "VI5_4013_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet02_LOC_INT",
+      "tempo": 1.5840869865377978,
+      "guard_ms": 40,
+      "source_duration": 3.82425,
+      "native_frames": 116840,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "VI5_4015_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet02_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 1.9640718562874253,
+      "native_duration": 0.7158333333333333,
+      "source_duration": 1.3666666666666667,
+      "asset": "VI5_5006_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet02_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.626180722124345,
+      "native_duration": 1.0014791666666667,
+      "source_duration": 2.577541666666667,
+      "asset": "VI5_5007_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
+      "tempo": 1.7341967012828345,
+      "native_duration": 0.8726041666666666,
+      "source_duration": 1.4785833333333334,
+      "decoded_frames": 41757,
+      "asset": "SD_ESP1_FIRE1",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.67424024291286,
+      "native_duration": 0.8158958333333334,
+      "source_duration": 2.128416666666667,
+      "asset": "SD_ESP1_FIRE2",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 1.9717819373671677,
+      "native_duration": 0.8336041666666667,
+      "source_duration": 1.60425,
+      "asset": "SD_ESP1_FIRE3",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
+      "tempo": 1.0169756374742525,
+      "native_duration": 0.8999375,
+      "source_duration": 0.894875,
+      "decoded_frames": 43069,
+      "asset": "SD_ESP1_MOVE_COVER2",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
+      "tempo": 1.3786206300256505,
+      "native_duration": 0.7428541666666667,
+      "source_duration": 0.9965416666666667,
+      "decoded_frames": 35529,
+      "asset": "SD_ESP1_MOVE_IN1",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 1.886707627753634,
+      "native_duration": 0.5760833333333333,
+      "source_duration": 1.0491666666666666,
+      "asset": "SD_ESP1_MOVE_IN2",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "tempo": 1.5130314552367785,
+      "guard_ms": 40,
+      "source_duration": 1.8238333333333334,
+      "native_frames": 58820,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "SD_ESP1_SEE_TARGET1",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
+      "tempo": 1.2743272686115277,
+      "native_duration": 0.7562708333333333,
+      "source_duration": 0.93825,
+      "decoded_frames": 36173,
+      "asset": "SD_ESP1_SEE_TARGET2",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
+      "tempo": 1.811211314608081,
+      "native_duration": 0.5443958333333333,
+      "source_duration": 0.9497916666666667,
+      "decoded_frames": 26003,
+      "asset": "SD_ESP1_SEE_TARGET4",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.6651611847488135,
+      "native_duration": 0.6565625,
+      "source_duration": 1.6965416666666666,
+      "asset": "SD_ESP1_SEE_TARGET5",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.5594277887688333,
+      "native_duration": 0.4306875,
+      "source_duration": 1.051125,
+      "asset": "SD_ESP1_SRCH_FIND1",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
+      "tempo": 1.4316675285600111,
+      "native_duration": 0.9062916666666667,
+      "source_duration": 1.268875,
+      "decoded_frames": 43374,
+      "asset": "SD_ESP1_SRCH_KILL2",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "tempo": 1.382496194824962,
+      "guard_ms": 40,
+      "source_duration": 1.5138333333333334,
+      "native_frames": 53520,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "SD_ESP2_FIRE1",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 3.071647532608042,
+      "native_duration": 0.7132083333333333,
+      "source_duration": 2.1292916666666666,
+      "asset": "SD_ESP2_FIRE2",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
+      "tempo": 1.3512838232948807,
+      "native_duration": 0.8037916666666667,
+      "source_duration": 1.059125,
+      "decoded_frames": 38454,
+      "asset": "SD_ESP2_FIRE_GRENADE3",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 3.005729970835478,
+      "native_duration": 0.6271875,
+      "source_duration": 1.8250416666666667,
+      "asset": "SD_ESP2_MOVE_IN5",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 4.042957154858583,
+      "native_duration": 0.7639583333333333,
+      "source_duration": 3.007791666666667,
+      "asset": "SD_ESP2_RPT_PINNED1",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.871622529909934,
+      "native_duration": 0.6399166666666667,
+      "source_duration": 1.7801666666666667,
+      "asset": "SD_ESP2_SEE_TARGET1",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 5.533593824454398,
+      "native_duration": 0.6758125,
+      "source_duration": 3.629,
+      "asset": "SD_ESP2_SEE_TARGET2",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 3.501835880795833,
+      "native_duration": 0.9959166666666667,
+      "source_duration": 3.4175,
+      "asset": "SD_ESP2_SEE_TARGET3",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
+      "tempo": 1.2794492437030418,
+      "native_duration": 0.6494375,
+      "source_duration": 0.8053333333333333,
+      "decoded_frames": 31045,
+      "asset": "SD_ESP2_SEE_TARGET4",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.0539828480791464,
+      "native_duration": 0.7949375,
+      "source_duration": 1.5917083333333333,
+      "asset": "SD_ESP2_SEE_TARGET5",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
+      "tempo": 1.523005526923346,
+      "native_duration": 0.9133541666666667,
+      "source_duration": 1.3605833333333333,
+      "decoded_frames": 43713,
+      "asset": "SD_ESP2_SRCH_KILL2",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "tempo": 1.736283185840708,
+      "guard_ms": 40,
+      "source_duration": 2.289,
+      "native_frames": 64240,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "SD_GRD1_FIRE2",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
+      "tempo": 1.4423463589474605,
+      "native_duration": 0.97325,
+      "source_duration": 1.3749166666666666,
+      "decoded_frames": 46588,
+      "asset": "SD_GRD1_FIRE3",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
+      "tempo": 1.5372097423836941,
+      "native_duration": 0.7906875,
+      "source_duration": 1.1847083333333333,
+      "decoded_frames": 38976,
+      "asset": "SD_GRD1_MOVE_IN1",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "tempo": 1.6486206265628494,
+      "guard_ms": 40,
+      "source_duration": 1.6894583333333333,
+      "native_frames": 50149,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "SD_GRD1_MOVE_IN2",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
+      "tempo": 1.0,
+      "native_duration": 0.9768125,
+      "source_duration": 0.8580833333333333,
+      "decoded_frames": 46759,
+      "asset": "SD_GRD1_MOVE_IN3",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "tempo": 1.6619382426709428,
+      "guard_ms": 40,
+      "source_duration": 1.6841666666666666,
+      "native_frames": 49602,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "SD_GRD1_MOVE_IN4",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "tempo": 1.731127750611247,
+      "guard_ms": 40,
+      "source_duration": 1.8880833333333333,
+      "native_frames": 53312,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "SD_GRD1_MOVE_IN5",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
+      "tempo": 1.6594780664332578,
+      "native_duration": 0.7281041666666667,
+      "source_duration": 1.1750833333333333,
+      "decoded_frames": 34821,
+      "asset": "SD_GRD1_SRCH_FIND1",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
+      "tempo": 1.3025070378826502,
+      "native_duration": 0.9598541666666667,
+      "source_duration": 1.2241666666666666,
+      "decoded_frames": 45945,
+      "asset": "SD_GRD1_SRCH_KILL1",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
+      "tempo": 1.4318525815054177,
+      "native_duration": 0.8871458333333333,
+      "source_duration": 1.241625,
+      "decoded_frames": 42455,
+      "asset": "SD_GST_ADVANCING1",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 4.833703539167777,
+      "native_duration": 1.0048125,
+      "source_duration": 4.760291666666666,
+      "asset": "SD_GST_ADVANCING2",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 3.401547162452058,
+      "native_duration": 0.6609583333333333,
+      "source_duration": 2.18025,
+      "asset": "SD_GST_CHK_LFT1",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 9.466535819430815,
+      "native_duration": 0.656875,
+      "source_duration": 6.029,
+      "asset": "SD_GST_CHK_RT1",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
+      "tempo": 1.8095940279249805,
+      "native_duration": 0.9242083333333333,
+      "source_duration": 1.63625,
+      "decoded_frames": 44234,
+      "asset": "SD_GST_FIRE1",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 1.9218784048812378,
+      "native_duration": 1.16725,
+      "source_duration": 2.204875,
+      "asset": "SD_GST_FIRE2",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.244973829672748,
+      "native_duration": 1.2976875,
+      "source_duration": 2.868375,
+      "asset": "SD_GST_FIRE_SUPPRESS1",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.2391580314704926,
+      "native_duration": 1.431375,
+      "source_duration": 3.1602916666666667,
+      "asset": "SD_GST_FIRE_SUPPRESS3",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 4.223340534171249,
+      "native_duration": 0.8686666666666667,
+      "source_duration": 3.584208333333333,
+      "asset": "SD_GST_GEN1",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 3.164632274819974,
+      "native_duration": 0.9023958333333333,
+      "source_duration": 2.7924583333333333,
+      "asset": "SD_GST_GEN2",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.0101409544142266,
+      "native_duration": 0.8787291666666667,
+      "source_duration": 1.7261666666666666,
+      "asset": "SD_GST_GEN3",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.412052976024317,
+      "native_duration": 1.363375,
+      "source_duration": 3.240291666666667,
+      "asset": "SD_GST_GEN4",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 3.266832107985249,
+      "native_duration": 0.9182708333333334,
+      "source_duration": 2.9345,
+      "asset": "SD_GST_GEN5",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
+      "tempo": 1.8313528902091842,
+      "native_duration": 0.69325,
+      "source_duration": 1.2329583333333334,
+      "decoded_frames": 34240,
+      "asset": "SD_GST_HELP2",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "tempo": 1.8107086874020293,
+      "guard_ms": 40,
+      "source_duration": 2.286208333333333,
+      "native_frames": 61565,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "SD_GST_LOCS1",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 3.6400088449915233,
+      "native_duration": 0.8679375,
+      "source_duration": 3.0865,
+      "asset": "SD_GST_LOCS2",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 1.9813371813371814,
+      "native_duration": 1.319375,
+      "source_duration": 2.5745,
+      "asset": "SD_GST_LOCS3",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.7808162761006554,
+      "native_duration": 1.0317083333333332,
+      "source_duration": 2.813375,
+      "asset": "SD_GST_LOCS4",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 5.604719891278555,
+      "native_duration": 0.9857708333333334,
+      "source_duration": 5.412875,
+      "asset": "SD_GST_LOC_ABV1",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 3.1923629756190164,
+      "native_duration": 0.7881875,
+      "source_duration": 2.4523333333333333,
+      "asset": "SD_GST_LOC_ABV2",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.3335794640142464,
+      "native_duration": 0.9792916666666667,
+      "source_duration": 2.238583333333333,
+      "asset": "SD_GST_LOC_AHD1",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 3.0363933618507986,
+      "native_duration": 0.9502291666666667,
+      "source_duration": 2.8245416666666667,
+      "asset": "SD_GST_LOC_AHD2",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 3.146074444791992,
+      "native_duration": 0.8858541666666667,
+      "source_duration": 2.7240416666666665,
+      "asset": "SD_GST_LOC_LFT1",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.630800685652919,
+      "native_duration": 1.0287708333333334,
+      "source_duration": 2.653875,
+      "asset": "SD_GST_LOC_LFT2",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 4.181216383947041,
+      "native_duration": 0.5738958333333334,
+      "source_duration": 2.315958333333333,
+      "asset": "SD_GST_LOC_LFT3",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 7.561769165531598,
+      "native_duration": 0.8306458333333333,
+      "source_duration": 6.1299166666666665,
+      "asset": "SD_GST_LOC_RT1",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 4.6927525588653785,
+      "native_duration": 0.9277916666666667,
+      "source_duration": 4.260041666666667,
+      "asset": "SD_GST_LOC_RT2",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 5.185321414824002,
+      "native_duration": 0.5071041666666667,
+      "source_duration": 2.5257916666666667,
+      "asset": "SD_GST_LOC_RT3",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.3291318653505444,
+      "native_duration": 0.843125,
+      "source_duration": 1.9171666666666667,
+      "asset": "SD_GST_MOVE_COVER1",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 3.1170840711695758,
+      "native_duration": 1.00825,
+      "source_duration": 3.0804583333333335,
+      "asset": "SD_GST_MOVE_COVER2",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.375938531654445,
+      "native_duration": 0.7331041666666667,
+      "source_duration": 1.6942916666666668,
+      "asset": "SD_GST_MOVE_COVER3",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 4.472297559085626,
+      "native_duration": 0.45016666666666666,
+      "source_duration": 1.9238333333333333,
+      "asset": "SD_GST_MOVE_HOLD2",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.5830651790957138,
+      "native_duration": 0.9069791666666667,
+      "source_duration": 2.291125,
+      "asset": "SD_GST_MOVE_HOLD3",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 7.8911725835118265,
+      "native_duration": 0.4771458333333333,
+      "source_duration": 3.6074166666666665,
+      "asset": "SD_GST_MOVE_IN1",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 9.190365537581554,
+      "native_duration": 0.48620833333333335,
+      "source_duration": 4.284625,
+      "asset": "SD_GST_MOVE_IN3",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.3151894078705406,
+      "native_duration": 0.8130416666666667,
+      "source_duration": 1.8360416666666666,
+      "asset": "SD_GST_MOVE_IT1",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.57335453539823,
+      "native_duration": 1.2253333333333334,
+      "source_duration": 3.10175,
+      "asset": "SD_GST_MOVE_IT2",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 1.9663285128426509,
+      "native_duration": 0.6956458333333333,
+      "source_duration": 1.3285416666666667,
+      "asset": "SD_GST_MOVE_LEFT1",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
+      "tempo": 1.6332721792687719,
+      "native_duration": 0.6559166666666667,
+      "source_duration": 1.038625,
+      "decoded_frames": 31356,
+      "asset": "SD_GST_MOVE_LEFT3",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 4.656952831014265,
+      "native_duration": 0.496125,
+      "source_duration": 2.2172916666666667,
+      "asset": "SD_GST_MOVE_OUT1",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 7.703513620213187,
+      "native_duration": 0.44216666666666665,
+      "source_duration": 3.2521666666666667,
+      "asset": "SD_GST_MOVE_OUT2",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.358943317912577,
+      "native_duration": 0.5018541666666667,
+      "source_duration": 1.1366666666666667,
+      "asset": "SD_GST_MOVE_OUT3",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 4.369369631678556,
+      "native_duration": 0.7355208333333333,
+      "source_duration": 3.126375,
+      "asset": "SD_GST_MOVE_RETREAT3",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.7207304295764105,
+      "native_duration": 0.7159375,
+      "source_duration": 1.8934583333333332,
+      "asset": "SD_GST_MOVE_RIGHT1",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.7800511508951407,
+      "native_duration": 0.5739166666666666,
+      "source_duration": 1.5399166666666666,
+      "asset": "SD_GST_MOVE_RIGHT3",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 5.666034967599951,
+      "native_duration": 0.7015833333333333,
+      "source_duration": 3.861875,
+      "asset": "SD_GST_MOVE_YOU1",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 3.99262888609461,
+      "native_duration": 0.9809583333333334,
+      "source_duration": 3.83675,
+      "asset": "SD_GST_MOVE_YOU2",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 3.9804870214602617,
+      "native_duration": 1.0577708333333333,
+      "source_duration": 4.130833333333333,
+      "asset": "SD_GST_REPORT_BEHIND1",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.427422988451232,
+      "native_duration": 0.8985208333333333,
+      "source_duration": 2.1325416666666666,
+      "asset": "SD_GST_REPORT_CLEAR1",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.8353598607171944,
+      "native_duration": 0.7618958333333333,
+      "source_duration": 2.1035416666666666,
+      "asset": "SD_GST_REPORT_DESTROY1",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 3.4312523324625475,
+      "native_duration": 0.4107708333333333,
+      "source_duration": 1.3408333333333333,
+      "asset": "SD_GST_REPORT_DESTROY2",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 4.113191367729027,
+      "native_duration": 0.6030833333333333,
+      "source_duration": 2.3983333333333334,
+      "asset": "SD_GST_REPORT_DESTROY3",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 3.433234554597701,
+      "native_duration": 0.948,
+      "source_duration": 3.1860416666666667,
+      "asset": "SD_GST_REPORT_FIRE1",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 3.8568953261062737,
+      "native_duration": 0.9578333333333333,
+      "source_duration": 3.617125,
+      "asset": "SD_GST_REPORT_FIRE2",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.7115873433254447,
+      "native_duration": 0.97075,
+      "source_duration": 2.5780416666666666,
+      "asset": "SD_GST_REPORT_PINNED1",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.09547853280344,
+      "native_duration": 1.2990833333333334,
+      "source_duration": 2.6802916666666667,
+      "asset": "SD_GST_REPORT_PINNED2",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
+      "tempo": 1.7400371439439708,
+      "native_duration": 0.9510625,
+      "source_duration": 1.6200833333333333,
+      "decoded_frames": 45523,
+      "asset": "SD_GST_REPORT_RELOAD2",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 5.689957035445757,
+      "native_duration": 0.7958333333333333,
+      "source_duration": 4.414458333333333,
+      "asset": "SD_GST_REPORT_RELOAD3",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 4.418678804963146,
+      "native_duration": 0.9216458333333334,
+      "source_duration": 3.9840833333333334,
+      "asset": "SD_GST_REPORT_SNIPER2",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 3.4557740134202994,
+      "native_duration": 0.9079583333333333,
+      "source_duration": 3.068583333333333,
+      "asset": "SD_GST_SEE_COVER1",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 1.8651924230736265,
+      "native_duration": 1.2353125,
+      "source_duration": 2.2667916666666668,
+      "asset": "SD_GST_SEE_COVER2",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 1.9844407457969444,
+      "native_duration": 1.1340208333333333,
+      "source_duration": 2.2107083333333333,
+      "asset": "SD_GST_SEE_GRENADE3",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 3.348416497882526,
+      "native_duration": 0.9251666666666667,
+      "source_duration": 3.030875,
+      "asset": "SD_GST_SEE_TARGET2",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 3.124152886961236,
+      "native_duration": 0.7885416666666667,
+      "source_duration": 2.4010416666666665,
+      "asset": "SD_GST_SEE_TARGET3",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.5652818205874572,
+      "native_duration": 0.8072916666666666,
+      "source_duration": 2.019625,
+      "asset": "SD_GST_SMOKE1",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
+      "tempo": 1.2398442656009385,
+      "native_duration": 0.6384580498866214,
+      "source_duration": 0.7667916666666666,
+      "decoded_frames": 28028,
+      "asset": "SD_SPT1_FIRE_GRENADE1",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "tempo": 1.46597353884858,
+      "guard_ms": 40,
+      "source_duration": 1.8234583333333334,
+      "native_frames": 55736,
+      "rate": 44100,
+      "channels": 1,
+      "asset": "SD_SPT1_MOVE_RETREAT1",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
+      "tempo": 1.7118490938127615,
+      "native_duration": 0.9571201814058957,
+      "source_duration": 1.6042083333333332,
+      "decoded_frames": 42081,
+      "asset": "SD_SPT1_MOVE_RETREAT3",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.081200852640776,
+      "native_duration": 0.7726303854875284,
+      "source_duration": 1.566375,
+      "asset": "SD_SPT1_SEE_GRENADE2",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
+      "tempo": 1.0313988407011663,
+      "native_duration": 0.9940816326530613,
+      "source_duration": 1.0046666666666666,
+      "decoded_frames": 44736,
+      "asset": "SD_SPT1_SEE_TARGET1",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
+      "tempo": 1.6104003612281759,
+      "native_duration": 0.5473015873015873,
+      "source_duration": 0.8491666666666666,
+      "decoded_frames": 24008,
+      "asset": "SD_SPT1_SEE_TARGET4",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
+      "tempo": 1.5623585252673875,
+      "native_duration": 0.8214058956916099,
+      "source_duration": 1.2520833333333334,
+      "decoded_frames": 36096,
+      "asset": "SD_SPT1_SEE_TARGET5",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "tempo": 1.4913651409656434,
+      "guard_ms": 40,
+      "source_duration": 1.7776666666666667,
+      "native_frames": 53448,
+      "rate": 44100,
+      "channels": 1,
+      "asset": "SD_SPT1_SRCH_KILL1",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.0326596564319144,
+      "native_duration": 1.2119727891156462,
+      "source_duration": 2.422875,
+      "asset": "SD_SPT1_SRCH_KILL2",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
+      "tempo": 1.4898254461353184,
+      "native_duration": 0.8484807256235828,
+      "source_duration": 1.2342916666666666,
+      "decoded_frames": 38336,
+      "asset": "SD_SPT2_FIRE1",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
+      "tempo": 1.5452530386340617,
+      "native_duration": 0.9602721088435374,
+      "source_duration": 1.4529583333333334,
+      "decoded_frames": 42220,
+      "asset": "SD_SPT2_FIRE_GRENADE1",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
+      "tempo": 1.0657996498387052,
+      "native_duration": 0.8424263038548753,
+      "source_duration": 0.8765416666666667,
+      "decoded_frames": 37023,
+      "asset": "SD_SPT2_MOVE_IN1",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "tempo": 1.663057502389296,
+      "guard_ms": 40,
+      "source_duration": 1.894,
+      "native_frames": 51106,
+      "rate": 44100,
+      "channels": 1,
+      "asset": "SD_SPT2_MOVE_IN2",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.0486941425120775,
+      "native_duration": 0.47061224489795916,
+      "source_duration": 0.9231666666666667,
+      "asset": "SD_SPT2_MOVE_IN5",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
+      "tempo": 1.2233037252186836,
+      "native_duration": 0.6914058956916099,
+      "source_duration": 0.8213333333333334,
+      "decoded_frames": 30363,
+      "asset": "SD_SPT2_MOVE_RETREAT1",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
+      "tempo": 1.2248035442225964,
+      "native_duration": 0.8683673469387755,
+      "source_duration": 1.0390833333333334,
+      "decoded_frames": 38167,
+      "asset": "SD_SPT2_MOVE_RETREAT2",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "tempo": 1.3783568701033642,
+      "guard_ms": 40,
+      "source_duration": 1.4242083333333333,
+      "native_frames": 46449,
+      "rate": 44100,
+      "channels": 1,
+      "asset": "SD_SPT2_RPT_PINNED1",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
+      "tempo": 1.044392793952067,
+      "native_duration": 0.724875283446712,
+      "source_duration": 0.7361666666666666,
+      "decoded_frames": 31839,
+      "asset": "SD_SPT2_SEE_TARGET1",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 1.8989192407621247,
+      "native_duration": 1.1196825396825396,
+      "source_duration": 2.088208333333333,
+      "asset": "SD_SPT2_SEE_TARGET5",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "tempo": 1.3795970949612717,
+      "guard_ms": 40,
+      "source_duration": 1.9426666666666668,
+      "native_frames": 62981,
+      "rate": 44100,
+      "channels": 1,
+      "asset": "SD_SPT2_SRCH_KILL1",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
+      "tempo": 1.3250523244361274,
+      "native_duration": 0.9409070294784581,
+      "source_duration": 1.22025,
+      "decoded_frames": 41366,
+      "asset": "SD_SPT2_SRCH_KILL2",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.448406942429851,
+      "native_duration": 0.9267120181405896,
+      "source_duration": 2.22,
+      "asset": "SD_SPT3_FIRE2",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
+      "tempo": 1.5247010292808727,
+      "native_duration": 1.0135827664399093,
+      "source_duration": 1.5149166666666667,
+      "decoded_frames": 44571,
+      "asset": "SD_SPT3_FIRE3",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
+      "tempo": 1.0712324835721638,
+      "native_duration": 0.8792517006802721,
+      "source_duration": 0.9204583333333334,
+      "decoded_frames": 38647,
+      "asset": "SD_SPT3_FIRE_GRENADE3",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
+      "tempo": 1.0,
+      "native_duration": 1.019591836734694,
+      "source_duration": 0.95425,
+      "decoded_frames": 44836,
+      "asset": "SD_SPT3_MOVE_IN2",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 1.9841792864476386,
+      "native_duration": 0.9917913832199546,
+      "source_duration": 1.9282083333333333,
+      "asset": "SD_SPT3_MOVE_IN5",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
+      "tempo": 1.3178955736453828,
+      "native_duration": 0.9113832199546485,
+      "source_duration": 1.17475,
+      "decoded_frames": 40064,
+      "asset": "SD_SPT3_MOVE_RETREAT2",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 1.9646047374429225,
+      "native_duration": 0.8542857142857143,
+      "source_duration": 1.6390416666666667,
+      "asset": "SD_SPT3_SEE_TARGET1",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
+      "tempo": 1.0,
+      "native_duration": 0.956530612244898,
+      "source_duration": 0.9008333333333334,
+      "decoded_frames": 42055,
+      "asset": "SD_SPT3_SEE_TARGET4",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "tempo": 1.727072771653121,
+      "guard_ms": 40,
+      "source_duration": 2.6827916666666667,
+      "native_frames": 75522,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "VI4_2005_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "tempo": 1.7113902344922194,
+      "guard_ms": 40,
+      "source_duration": 4.1585,
+      "native_frames": 117595,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "VI4_2010_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "tempo": 1.7607749410405358,
+      "guard_ms": 40,
+      "source_duration": 2.3175833333333333,
+      "native_frames": 64139,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "VI4_2011_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "tempo": 1.6364990862424194,
+      "guard_ms": 40,
+      "source_duration": 2.9289583333333336,
+      "native_frames": 86869,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "VI4_2012_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 4.124533797463859,
+      "native_duration": 0.6065208333333333,
+      "source_duration": 2.419125,
+      "asset": "VI4_3005_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.7284731774415407,
+      "native_duration": 0.474375,
+      "source_duration": 1.23975,
+      "asset": "VI4_3012_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 1.8523517607279325,
+      "native_duration": 1.5357083333333332,
+      "source_duration": 2.807625,
+      "asset": "VI4_3305_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.3185929485623675,
+      "native_duration": 1.3075625,
+      "source_duration": 2.985333333333333,
+      "asset": "VI4_3505_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 5.978117892925195,
+      "native_duration": 0.697875,
+      "source_duration": 4.052416666666667,
+      "asset": "VI4_3510_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "tempo": 1.8408634957786507,
+      "guard_ms": 40,
+      "source_duration": 3.670375,
+      "native_frames": 96664,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "VI4_3705_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 3.768866204885162,
+      "native_duration": 0.70575,
+      "source_duration": 2.5845,
+      "asset": "VI4_4105_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 5.040315345929047,
+      "native_duration": 0.7863541666666667,
+      "source_duration": 3.8626666666666667,
+      "asset": "VI4_4205_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.485667547502202,
+      "native_duration": 0.8478125,
+      "source_duration": 2.0576666666666665,
+      "asset": "VI4_4206_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.504889409877533,
+      "native_duration": 1.3707083333333334,
+      "source_duration": 3.383375,
+      "asset": "VI4_4207_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 1.9134344463761166,
+      "native_duration": 1.4100833333333334,
+      "source_duration": 2.6598333333333333,
+      "asset": "VI4_4208_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
+      "tempo": 1.0,
+      "native_duration": 0.9175208333333333,
+      "source_duration": 0.667625,
+      "decoded_frames": 43913,
+      "asset": "VI4_4210_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
+      "tempo": 1.5014869109947644,
+      "native_duration": 0.5173958333333334,
+      "source_duration": 0.7468333333333333,
+      "decoded_frames": 24707,
+      "asset": "VI4_4220_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "tempo": 1.4893008333478113,
+      "guard_ms": 40,
+      "source_duration": 5.357666666666667,
+      "native_frames": 173637,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "VI4_4405_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "tempo": 1.5035102612820201,
+      "guard_ms": 40,
+      "source_duration": 4.649041666666666,
+      "native_frames": 149382,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "VI4_4410_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "tempo": 1.7746007688895462,
+      "guard_ms": 40,
+      "source_duration": 4.000541666666667,
+      "native_frames": 109168,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "VI4_4411_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "tempo": 1.5082059894577564,
+      "guard_ms": 40,
+      "source_duration": 3.77925,
+      "native_frames": 121238,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "VI4_4412_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "tempo": 1.4308593492902744,
+      "guard_ms": 40,
+      "source_duration": 5.435,
+      "native_frames": 183284,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "VI4_5005_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "tempo": 1.4604791410027764,
+      "guard_ms": 40,
+      "source_duration": 1.654875,
+      "native_frames": 55349,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "VI5_1208_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "tempo": 1.4702639570193878,
+      "guard_ms": 40,
+      "source_duration": 6.5564583333333335,
+      "native_frames": 215010,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "VI5_1505_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 9.50918537762108,
+      "native_duration": 0.46908333333333335,
+      "source_duration": 4.270416666666667,
+      "asset": "VI5_1905_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "tempo": 1.4430420346754889,
+      "guard_ms": 40,
+      "source_duration": 5.0615,
+      "native_frames": 169321,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "VI5_2005_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "tempo": 1.5018762136985502,
+      "guard_ms": 40,
+      "source_duration": 4.285916666666667,
+      "native_frames": 137938,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "VI5_2010_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "tempo": 1.4588894297943367,
+      "guard_ms": 40,
+      "source_duration": 4.807375,
+      "native_frames": 159131,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "VI5_2011_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.169754400908575,
+      "native_duration": 2.368,
+      "source_duration": 5.0945833333333335,
+      "asset": "VI5_2012_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.2765801315334024,
+      "native_duration": 1.5246875,
+      "source_duration": 3.4255416666666667,
+      "asset": "VI5_2205_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "tempo": 1.5400444526764216,
+      "guard_ms": 40,
+      "source_duration": 3.4644583333333334,
+      "native_frames": 108940,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "VI5_3005_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "tempo": 1.7655146999550881,
+      "guard_ms": 40,
+      "source_duration": 3.194,
+      "native_frames": 87797,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "VI5_3505_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 3.194732616026979,
+      "native_duration": 1.3172916666666667,
+      "source_duration": 4.1445,
+      "asset": "VI5_4005_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "tempo": 1.555177219372728,
+      "guard_ms": 40,
+      "source_duration": 4.510208333333333,
+      "native_frames": 140166,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "VI5_4009_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "tempo": 1.4058278557010508,
+      "guard_ms": 40,
+      "source_duration": 1.697625,
+      "native_frames": 58923,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "VI5_4011_SPT1",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 1.87494280921153,
+      "native_duration": 1.5226458333333333,
+      "source_duration": 2.817375,
+      "asset": "VI5_4012_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "tempo": 1.5022192675439452,
+      "guard_ms": 40,
+      "source_duration": 3.2011666666666665,
+      "native_frames": 103246,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "VI5_4013_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "tempo": 1.5291853641698308,
+      "guard_ms": 40,
+      "source_duration": 3.691708333333333,
+      "native_frames": 116840,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "VI5_4015_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.4212122390264765,
+      "native_duration": 1.0917083333333333,
+      "source_duration": 2.5948333333333333,
+      "asset": "VI5_4018_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 8.72491017964072,
+      "native_duration": 0.7158333333333333,
+      "source_duration": 6.071083333333333,
+      "asset": "VI5_5006_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.174141920146038,
+      "native_duration": 1.0014791666666667,
+      "source_duration": 2.133875,
+      "asset": "VI5_5007_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI6_kismet01_LOC_INT",
+      "tempo": 1.738202878717529,
+      "guard_ms": 40,
+      "source_duration": 2.9637083333333334,
+      "native_frames": 82802,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "VI6_0511_GST",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI6_kismet01_LOC_INT",
+      "tempo": 1.461080572174811,
+      "guard_ms": 40,
+      "source_duration": 2.004541666666667,
+      "native_frames": 66814,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "VI6_1005_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI6_kismet01_LOC_INT",
+      "tempo": 1.4796635581595654,
+      "guard_ms": 40,
+      "source_duration": 5.798,
+      "native_frames": 189046,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "VI6_8008_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI6_kismet01_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.061935483870968,
+      "native_duration": 2.441875,
+      "source_duration": 4.99375,
+      "asset": "VI6_8009_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI6_kismet02_LOC_INT",
+      "tempo": 1.6643185996193204,
+      "guard_ms": 40,
+      "source_duration": 4.262666666666667,
+      "native_frames": 123898,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "VI6_1010_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI6_kismet02_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 1.8510474413356912,
+      "native_duration": 1.9403541666666666,
+      "source_duration": 3.554666666666667,
+      "asset": "VI6_1015_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI6_kismet02_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 3.1690203130988532,
+      "native_duration": 0.7266458333333333,
+      "source_duration": 2.239375,
+      "asset": "VI6_1021_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI6_kismet02_LOC_INT",
+      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
+      "tempo": 1.3683035183997339,
+      "native_duration": 0.8969375,
+      "source_duration": 1.1999166666666667,
+      "decoded_frames": 42925,
+      "asset": "VI6_1062_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI6_kismet03_LOC_INT",
+      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
+      "tempo": 1.6654992107340174,
+      "native_duration": 0.8646666666666667,
+      "source_duration": 1.4067916666666667,
+      "decoded_frames": 41376,
+      "asset": "VI6_1063_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI6_kismet04_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 4.316516759515732,
+      "native_duration": 0.6893958333333333,
+      "source_duration": 2.8894583333333332,
+      "asset": "VI6_1020_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI6_kismet04_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 3.864680303291942,
+      "native_duration": 1.3471041666666668,
+      "source_duration": 5.128833333333334,
+      "asset": "VI6_1025_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI6_kismet04_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.2222697739563477,
+      "native_duration": 1.0909583333333333,
+      "source_duration": 2.379958333333333,
+      "asset": "VI6_1064_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI6_kismet05_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.436864798275331,
+      "native_duration": 0.83175,
+      "source_duration": 1.978125,
+      "asset": "SD_KAT_FIRE1",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI6_kismet05_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.4753932454314134,
+      "native_duration": 1.461,
+      "source_duration": 3.567041666666667,
+      "asset": "SD_KAT_FIRE_SUPPRESS1",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI6_kismet05_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.202893294648614,
+      "native_duration": 1.054,
+      "source_duration": 2.277791666666667,
+      "asset": "SD_KAT_GEN1",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI6_kismet05_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.7659755811723596,
+      "native_duration": 0.9977291666666667,
+      "source_duration": 2.704375,
+      "asset": "SD_KAT_GEN2",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI6_kismet05_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.3488023528746362,
+      "native_duration": 0.7566875,
+      "source_duration": 1.7303333333333333,
+      "asset": "SD_KAT_GEN3",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI6_kismet05_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.63459734691143,
+      "native_duration": 0.7973958333333333,
+      "source_duration": 2.048125,
+      "asset": "SD_KAT_GEN4",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI6_kismet05_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.401361391275474,
+      "native_duration": 1.023875,
+      "source_duration": 2.4106666666666667,
+      "asset": "SD_KAT_GEN5",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI6_kismet05_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.1613390928725704,
+      "native_duration": 0.9845833333333334,
+      "source_duration": 2.084791666666667,
+      "asset": "SD_KAT_LOC_ABV1",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI6_kismet05_LOC_INT",
+      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
+      "tempo": 1.8325425620988,
+      "native_duration": 0.91575,
+      "source_duration": 1.6415,
+      "decoded_frames": 43828,
+      "asset": "SD_KAT_LOC_ABV2",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI6_kismet05_LOC_INT",
+      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
+      "tempo": 1.7966436781609194,
+      "native_duration": 0.92625,
+      "source_duration": 1.6282083333333333,
+      "decoded_frames": 44332,
+      "asset": "SD_KAT_LOC_AHD1",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI6_kismet05_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 3.5393968871595334,
+      "native_duration": 0.7053333333333334,
+      "source_duration": 2.425666666666667,
+      "asset": "SD_KAT_LOC_AHD2",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI6_kismet05_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 3.1997612679325362,
+      "native_duration": 0.9624791666666667,
+      "source_duration": 3.0157083333333334,
+      "asset": "SD_KAT_LOC_LFT1",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI6_kismet05_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.1266600443187897,
+      "native_duration": 1.3832291666666667,
+      "source_duration": 2.899125,
+      "asset": "SD_KAT_LOC_LFT2",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI6_kismet05_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 1.8583262489867738,
+      "native_duration": 1.0737708333333333,
+      "source_duration": 1.95825,
+      "asset": "SD_KAT_LOC_LFT3",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI6_kismet05_LOC_INT",
+      "tempo": 1.5838455676911356,
+      "guard_ms": 40,
+      "source_duration": 1.948625,
+      "native_frames": 60015,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "SD_KAT_LOC_RT1",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI6_kismet05_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.4303415643944994,
+      "native_duration": 0.7244791666666667,
+      "source_duration": 1.712125,
+      "asset": "SD_KAT_LOC_RT2",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI6_kismet05_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.0600983850009285,
+      "native_duration": 0.9178333333333333,
+      "source_duration": 1.849625,
+      "asset": "SD_KAT_LOC_RT3",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI6_kismet05_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.1144280047485307,
+      "native_duration": 0.7395208333333333,
+      "source_duration": 1.521375,
+      "asset": "SD_KAT_MOVE_COVER1",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI6_kismet05_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 4.326220935661593,
+      "native_duration": 0.9124166666666667,
+      "source_duration": 3.8607916666666666,
+      "asset": "SD_KAT_MOVE_COVER2",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI6_kismet05_LOC_INT",
+      "tempo": 1.8306948262064646,
+      "guard_ms": 40,
+      "source_duration": 2.1923333333333335,
+      "native_frames": 58442,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "SD_KAT_MOVE_COVER3",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI6_kismet05_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.2222559356747325,
+      "native_duration": 0.5692916666666666,
+      "source_duration": 1.2206666666666666,
+      "asset": "SD_KAT_MOVE_HOLD1",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI6_kismet05_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 4.451192925353886,
+      "native_duration": 0.6984791666666667,
+      "source_duration": 3.0200416666666667,
+      "asset": "SD_KAT_MOVE_IN1",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI6_kismet05_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.537671809256662,
+      "native_duration": 0.7627083333333333,
+      "source_duration": 1.88475,
+      "asset": "SD_KAT_MOVE_IN2",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI6_kismet05_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.4712484685610403,
+      "native_duration": 0.5471458333333333,
+      "source_duration": 1.3027083333333334,
+      "asset": "SD_KAT_MOVE_IN3",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI6_kismet05_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 1.8669658747968738,
+      "native_duration": 1.3661458333333334,
+      "source_duration": 2.5132083333333335,
+      "asset": "SD_KAT_MOVE_IT1",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI6_kismet05_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.335437212360289,
+      "native_duration": 0.970625,
+      "source_duration": 2.220125,
+      "asset": "SD_KAT_MOVE_IT2",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI6_kismet05_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.9079657900113838,
+      "native_duration": 0.7337291666666667,
+      "source_duration": 2.0755,
+      "asset": "SD_KAT_MOVE_LEFT1",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI6_kismet05_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 1.8660985046533516,
+      "native_duration": 0.8169166666666666,
+      "source_duration": 1.487125,
+      "asset": "SD_KAT_MOVE_LEFT3",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI6_kismet05_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 3.3110438848072916,
+      "native_duration": 0.5502708333333334,
+      "source_duration": 1.75575,
+      "asset": "SD_KAT_MOVE_OUT1",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI6_kismet05_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 4.958411135630623,
+      "native_duration": 0.5109166666666667,
+      "source_duration": 2.4341666666666666,
+      "asset": "SD_KAT_MOVE_OUT2",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI6_kismet05_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 5.53175284674258,
+      "native_duration": 0.5780208333333333,
+      "source_duration": 3.0868333333333333,
+      "asset": "SD_KAT_MOVE_OUT3",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI6_kismet05_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.4381112588999296,
+      "native_duration": 1.0850833333333334,
+      "source_duration": 2.596791666666667,
+      "asset": "SD_KAT_MOVE_RETREAT2",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI6_kismet05_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.5738403878554483,
+      "native_duration": 1.2317916666666666,
+      "source_duration": 3.1189583333333335,
+      "asset": "SD_KAT_MOVE_RETREAT3",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI6_kismet05_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.9991038924670965,
+      "native_duration": 0.7639583333333333,
+      "source_duration": 2.2312083333333335,
+      "asset": "SD_KAT_MOVE_RIGHT1",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI6_kismet05_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 5.972415218121239,
+      "native_duration": 0.8266041666666667,
+      "source_duration": 4.817375,
+      "asset": "SD_KAT_MOVE_RIGHT3",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI6_kismet05_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 3.2162501161386228,
+      "native_duration": 0.9169166666666667,
+      "source_duration": 2.884708333333333,
+      "asset": "SD_KAT_MOVE_YOU1",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI6_kismet05_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.7660259851820035,
+      "native_duration": 0.9901041666666667,
+      "source_duration": 2.683333333333333,
+      "asset": "SD_KAT_MOVE_YOU2",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI6_kismet05_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 4.637038756091901,
+      "native_duration": 0.7381666666666666,
+      "source_duration": 3.3301666666666665,
+      "asset": "SD_KAT_REPORT_BEHIND1",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI6_kismet05_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 3.947277968732676,
+      "native_duration": 0.7715833333333333,
+      "source_duration": 2.9667083333333335,
+      "asset": "SD_KAT_REPORT_CLEAR1",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI6_kismet05_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 4.223599706042113,
+      "native_duration": 0.6720208333333333,
+      "source_duration": 2.753875,
+      "asset": "SD_KAT_REPORT_CLEAR2",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI6_kismet05_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.8355810616929698,
+      "native_duration": 0.7460416666666667,
+      "source_duration": 2.05875,
+      "asset": "SD_KAT_REPORT_DESTROY1",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI6_kismet05_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 3.9688200600144863,
+      "native_duration": 0.6240208333333334,
+      "source_duration": 2.39725,
+      "asset": "SD_KAT_REPORT_DESTROY2",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI6_kismet05_LOC_INT",
+      "tempo": 1.6638369629448135,
+      "guard_ms": 40,
+      "source_duration": 2.4050416666666665,
+      "native_frames": 70343,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "SD_KAT_REPORT_HIT1",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI6_kismet05_LOC_INT",
+      "tempo": 1.6706593756329025,
+      "guard_ms": 40,
+      "source_duration": 2.4059583333333334,
+      "native_frames": 70086,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "SD_KAT_REPORT_PINNED1",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI6_kismet05_LOC_INT",
+      "tempo": 1.8113896827033555,
+      "guard_ms": 40,
+      "source_duration": 2.5618333333333334,
+      "native_frames": 68846,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "SD_KAT_REPORT_PINNED2",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI6_kismet05_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 1.9342675588099147,
+      "native_duration": 1.010125,
+      "source_duration": 1.9151666666666667,
+      "asset": "SD_KAT_REPORT_SNIPER1",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI6_kismet05_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.3941492487198857,
+      "native_duration": 1.01275,
+      "source_duration": 2.3767916666666666,
+      "asset": "SD_KAT_SEE_COVER1",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI6_kismet05_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.220316126892893,
+      "native_duration": 0.9623958333333333,
+      "source_duration": 2.092416666666667,
+      "asset": "SD_KAT_SEE_GRENADE1",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI6_kismet05_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.7054790251199905,
+      "native_duration": 0.6884583333333333,
+      "source_duration": 1.8085,
+      "asset": "SD_KAT_SEE_TARGET1",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI6_kismet05_LOC_INT",
+      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
+      "tempo": 1.8452287464381072,
+      "native_duration": 0.9485208333333334,
+      "source_duration": 1.7133333333333334,
+      "decoded_frames": 45401,
+      "asset": "SD_KAT_SEE_TARGET2",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI6_kismet05_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 1.8900168110694426,
+      "native_duration": 0.6644166666666667,
+      "source_duration": 1.2179583333333333,
+      "asset": "SD_KAT_SEE_TARGET3",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI6_kismet05_LOC_INT",
+      "tempo": 1.4074944440309223,
+      "guard_ms": 40,
+      "source_duration": 5.515208333333334,
+      "native_frames": 189046,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "VI6_8008_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_VI6_kismet05_LOC_INT",
+      "tempo": 1.628731182795699,
+      "guard_ms": 40,
+      "source_duration": 3.9445833333333336,
+      "native_frames": 117210,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "VI6_8009_KAT",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_WL1_kismet01_LOC_INT",
+      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
+      "tempo": 1.34768847610647,
+      "native_duration": 0.8230416666666667,
+      "source_duration": 1.08225,
+      "decoded_frames": 39378,
+      "asset": "WL1_0510_BAR",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_WL1_kismet01_LOC_INT",
+      "tempo": 1.6952968555501435,
+      "guard_ms": 40,
+      "source_duration": 1.95775,
+      "native_frames": 56391,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "WL1_0511_BAR",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_WL1_zone01_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 8.124730753141995,
+      "native_duration": 3.3568541666666665,
+      "source_duration": 27.111041666666665,
+      "asset": "VI1_5005_BER",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_WL1_zone01_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.445752703784859,
+      "native_duration": 2.3874375,
+      "source_duration": 5.790166666666667,
+      "asset": "VI1_5007_BER",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_WL2_kismet01_LOC_INT",
+      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
+      "tempo": 1.5374876770611736,
+      "native_duration": 0.8230416666666667,
+      "source_duration": 1.2346666666666666,
+      "decoded_frames": 39378,
+      "asset": "WL1_0510_BAR",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_WL2_kismet05_LOC_INT",
+      "tempo": 1.6220080581828114,
+      "guard_ms": 40,
+      "source_duration": 7.917291666666666,
+      "native_frames": 235256,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "WL1_9005_SPT2",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_WL2_zone03_LOC_INT",
+      "tempo": 1.3562210144167208,
+      "guard_ms": 40,
+      "source_duration": 4.03925,
+      "native_frames": 143919,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "VI1_5506_GD",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_WL4_kismet08_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 2.0894369706028897,
+      "native_duration": 2.027,
+      "source_duration": 4.1935,
+      "asset": "WL4_4405_SPT2",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_WL4_kismet10_LOC_INT",
+      "reason": "encoded native PCM budget mismatch; no metadata/delay guess",
+      "tempo": 1.0,
+      "native_duration": 0.7513151927437641,
+      "source_duration": 0.7147916666666667,
+      "decoded_frames": 33005,
+      "asset": "SD_SPT2_MOVE_HOLD1",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_WL4_kismet10_LOC_INT",
+      "tempo": 1.7004252793986747,
+      "guard_ms": 40,
+      "source_duration": 2.149125,
+      "native_frames": 61626,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "WL4_7005_SPT2",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_WL5_kismet03_LOC_INT",
+      "tempo": 1.4729816631183312,
+      "guard_ms": 40,
+      "source_duration": 4.915125,
+      "native_frames": 161129,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "VI1_5005_BER",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_WL5_kismet03_LOC_INT",
+      "reason": "guarded duration requires unsafe tempo",
+      "tempo": 1.8741783046014944,
+      "native_duration": 2.3874375,
+      "source_duration": 4.437,
+      "asset": "VI1_5007_BER",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_WL6_kismet_1950_LOC_INT",
+      "tempo": 1.4021423343904549,
+      "guard_ms": 40,
+      "source_duration": 2.634333333333333,
+      "native_frames": 91142,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "WL6_5207_SPT1",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_WL6_kismet_1950_LOC_INT",
+      "tempo": 1.6724798746170837,
+      "guard_ms": 40,
+      "source_duration": 4.890958333333334,
+      "native_frames": 141330,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "WL6_5209_SPT1",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_WL6_kismet_1950_LOC_INT",
+      "tempo": 1.5270234316509816,
+      "guard_ms": 40,
+      "source_duration": 5.141583333333333,
+      "native_frames": 162579,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "WL6_9005_PET",
+      "disposition": "accepted audio retained"
+    },
+    {
+      "package": "SP_WL6_kismet_1950_LOC_INT",
+      "tempo": 1.3742599110529046,
+      "guard_ms": 40,
+      "source_duration": 3.148,
+      "native_frames": 110913,
+      "rate": 48000,
+      "channels": 1,
+      "asset": "WL6_9306_PA",
+      "disposition": "accepted audio retained"
+    }
+  ]
+}

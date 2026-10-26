@@ -50,44 +50,52 @@ STATUS.md entries and agent handoffs do not override the scoped human result.
 - Acceptance: verified ownership and supported native draw/switch, reliable Grip,
   muzzle-aligned launch preserving guidance/spread/recoil; save/load separately tested.
 
-### P2-A â€” XTTS Polish dubbing
+### P2-A — XTTS Polish dubbing
 
-- Owner SIDE audio_finish; status AWAITING HUMAN APPROVAL.
-- Branch `side/final-audio-20261026`; inspect `side/dubbing-corrections`,
-  local delivery manifests and actual native-bank consumer.
-- Integrated refreshed2459-file manifests from `6d5d9125`; independent scanner
-  finds0 hash mismatches/extras. This supersedes the obsolete1864-mismatch report.
-  A temporary `.tmp.wav` has no native identity and must not enter deployment.
-  Native package mapping/build and selected audio approval remain explicit gates.
-- Acceptance: complete hash-pinned scope, correct line mapping, duration/format/
-  loudness checks, English preserved, documented rights and listening approval.
-- No generated voice activation merely because files exist or ASR passes.
+- SIDE selection 693f5599 integrated; all 1258 chosen WAV hashes, mono PCM16
+  24 kHz formats and exact native identities independently verified.
+- MAIN built all 116 installed-source banks offline. 111 banks have safe
+  replacements: 680 takes replaced, 578 retained unchanged (512 exceed the
+  native timing/tempo guard; 66 fail decoded-frame parity). Five additional
+  uncovered native identities are unchanged. NOT complete Polish coverage.
+- Source lookup preserved from installed installation, not older repo text.
+- Actual installed vignette RT99_0105_SC1 is stereo 44.1 kHz. Preserve its
+  channel/frame contract when encoding mono source; no metadata rewrite.
+- Exact retained list: `docs/handoffs/final-dubbing-main-build-20261026.json`.
+- SIDE artifact claims listening approval; MAIN has not independently verified
+  that claim and performed no listening. Technical PASS is not listening PASS.
+- Remaining: SIDE must supply shorter approved takes for timing refusals;
+  investigate codec frame parity separately. In-game listening is PENDING.
 
-### P2-B â€” Sound remaster
+### P2-B — Sound remaster
 
-- Owner SIDE audio_finish; status AWAITING HUMAN APPROVAL.
-- Existing branch `side/audio-music-sfx-remaster`; all8 sets/24 variants verified
-  offline. Seven native graphs identified; storm remains heuristic and excluded.
-- Acceptance: approved variant per event, native SoundCue/timing/spatial/concurrency
-  preserved, no duplicate playback; actual listening required.
+- User delegated selection. Conservative native-content variant selected for
+  all eight sets; all eight native banks built and staged. No listening claim.
+- Exact SoundCue/ambient/music consumers verified; storm is Freighter's
+  windStormHigh01_R layer, NOT a global weather replacement.
+- Fixed Vorbis allocation, native properties and non-target bytes preserved;
+  real encode/decode/container tests PASS. Physical listening PENDING.
+- Evidence: `docs/handoffs/final-native-remaster-candidate-20261026.json`.
 
-### P3-A â€” Menus and legacy prompts
+### P3-A — Menus and legacy prompts
 
-- Owner SIDE visual_finish; status BLOCKEDâ€”EVIDENCE PROVIDED for native button
-  replacements. Settings/wheel/backdrop bindings already exist; this does not
-  replace native main/pause button shapes. Exact GFx consumer identity remains
-  required before replacing those shapes without duplicate text or hit changes.
-- Branch `side/final-visual-20261026`; reuse V2.1/M02 assets and existing GFx.
-- Acceptance: declared screen scope consistent, PL/EN glyphs, laser/selection/
-  scroll/transitions, both eyes; no duplicate overlay or HUD3D redesign.
+- Native main/pause Button and ButtonLeft symbols now use neutral V2.1 plates
+  for up/over/down/disabled; original native text/actions/layout retained.
+- All 120 frame-state bounds and real embedded bitmap pixels checked offline;
+  no duplicate text or extra render hook. New exact GFx cursor identity admitted.
+- Existing Settings/wheel/backdrop bindings preserved. PSVR2 interaction and
+  appearance remain PENDING.
+- Evidence: `docs/handoffs/final-native-menu-remaster-20261026.md`.
 
-### P3-B â€” HD assets incl. Valkyrie 4K
+### P3-B — HD assets incl. Valkyrie 4K
 
-- Owner SIDE visual_finish; status IMPLEMENTEDâ€”AWAITING HMD for verified
-  Valkyrie4K pair, independent default-OFF bridge gate integrated from7548b119.
-  Incomplete Centurion/Kasimov diffuse identities remain excluded.
-- Acceptance: exact material identity, alpha/mips/format, correct appearance,
-  bounded memory/load cost, no unapproved automatic activation.
+- Ten private DDS files staged, including accepted Volk/glove files and exact
+  source-derived Valkyrie, Centurion and Kasimov pairs. New gates default OFF;
+  next controlled candidate explicitly enables the three reviewed weapon pairs.
+- Kasimov diffuse uses highest real mip1 (1024x512); 4K is interpolation, not
+  recovered native detail. Original declared mip0 is absent from cooked data.
+- Clean bridge x86 /O2 build and real D3D9/Ex pixel/reset/lifetime tests PASS.
+- Physical material/alpha/normal appearance and memory impact remain PENDING.
 
 ## Milestones and stop rules
 
@@ -109,3 +117,11 @@ No Steam deployment, launch, audio replacement or promotion performed by this
 branch. Age callback/native-machine-code tests, dual-hand regression suite,
 TMD runtime suite including D3D9/D3D9Ex7110-face submission, WeaponLocker preview
 and OLED D3D11 pixel/reference tests PASS. All physical gates remain open.
+
+## Current combined offline payload
+
+130 hash-verified private files: 111 campaign banks, eight sound-remaster banks,
+one menu package and ten DDS files. Manifest under
+`build/next-weapon-reload/final-complete-20261026/manifest.json`.
+No Steam deployment or gameplay launch. Safe partial dubbing is explicit;
+578 retained takes must not be represented as installed new XTTS audio.

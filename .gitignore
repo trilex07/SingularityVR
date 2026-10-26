@@ -131,3 +131,5 @@ offline-deliverables/
 # Local completion audit: owned game code, archived logs and private build receipts.
 /build/release-evidence/
 /build/seeker-final/
+
+/build/texture-ini-lease/

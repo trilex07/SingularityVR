@@ -20,16 +20,17 @@ def trim_guarded(source:Path,out:Path):
         w.setnchannels(1);w.setsampwidth(2);w.setframerate(rate);w.writeframes(kept.tobytes())
     return len(kept)/rate
 
-def fit(run,source,folder,asset,rate,frames):
+def fit(run,source,folder,asset,rate,frames,channels=1):
+    require(channels in (1,2),'unsupported native channel count')
     trimmed=folder/(asset+'.trim.wav');duration=trim_guarded(source,trimmed)
     budget=frames/rate;require(budget>.02,'native budget')
     tempo=max(1.,duration/(budget-.02))
     if tempo>1.85:return None,dict(reason='guarded duration requires unsafe tempo',tempo=tempo,native_duration=budget,source_duration=duration)
     spoken=folder/(asset+'.spoken.wav')
     run(['-v','error','-n','-i',str(trimmed),'-af',f'atempo={tempo:.9f},alimiter=limit=0.7:level=disabled:latency=1',
-        '-ac','1','-ar',str(rate),'-c:a','pcm_s16le',str(spoken)])
+        '-ac',str(channels),'-ar',str(rate),'-c:a','pcm_s16le',str(spoken)])
     with wave.open(str(spoken)) as w:
-        require(w.getframerate()==rate and w.getnchannels()==1,'spoken format')
+        require(w.getframerate()==rate and w.getnchannels()==channels,'spoken format')
         if w.getnframes()>frames:return None,dict(reason='atempo output exceeds native frames; refuse speech crop',tempo=tempo,native_duration=budget,source_duration=duration)
     target=folder/(asset+'.ogg')
     # Spoken frame count was checked above: atrim can remove padding ONLY.
@@ -38,6 +39,6 @@ def fit(run,source,folder,asset,rate,frames):
     decoded=folder/(asset+'.decoded.wav')
     run(['-v','error','-n','-i',str(target),'-c:a','pcm_s16le',str(decoded)])
     with wave.open(str(decoded)) as w:
-        require(w.getframerate()==rate and w.getnchannels()==1,'decoded format mismatch')
+        require(w.getframerate()==rate and w.getnchannels()==channels,'decoded format mismatch')
         if w.getnframes()!=frames:return None,dict(reason='encoded native PCM budget mismatch; no metadata/delay guess',tempo=tempo,native_duration=budget,source_duration=duration,decoded_frames=w.getnframes())
-    return target,dict(tempo=tempo,guard_ms=40,source_duration=duration,native_frames=frames,rate=rate)
+    return target,dict(tempo=tempo,guard_ms=40,source_duration=duration,native_frames=frames,rate=rate,channels=channels)

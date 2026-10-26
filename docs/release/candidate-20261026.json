@@ -1,14 +1,18 @@
 {
   "schema": "singularityvr-reviewed-source-candidate-v1",
   "branch": "integration/final-completion-20261026",
-  "source_commit": "b5b813d9f8ea459205eef107e8eebba2485021a5",
-  "dll_sha256": "DF498BE21DB99AD8CFC78F1E3603410D57E38B6C0E2E877CDB880DF3CBF2FE45",
+  "source_commit": "38ca72f88112bfcbd26addb0d6aa4f76095aa15e",
+  "dll_sha256": "23A3A768C44F1C6EB5479D899141924C4C44D5C6A73A3175A2827241105370B1",
   "architecture": "x86 PE32",
   "optimization": "/O2",
   "tracked_worktree_at_build": "clean",
   "physical_baseline_dll": "AB348E06080E479988E810375CC50D92EEA1936D94313A02360517269DC4F964",
-  "intended_gameplay_test_delta": {"Render.TmdTrackedAgeParticles": 1},
-  "seeker_test_when_legitimately_available": {"Input.SeekerBackSlot": 1},
+  "intended_gameplay_test_delta": {
+    "Render.TmdTrackedAgeParticles": 1
+  },
+  "seeker_test_when_legitimately_available": {
+    "Input.SeekerBackSlot": 1
+  },
   "offline": {
     "original_x86_particle_attachment_contract": "PASS",
     "production_x86_socket_beam_particle_callbacks": "PASS",
@@ -17,16 +21,22 @@
     "d3d9_and_d3d9ex_gauntlet_pixels_and_restoration": "PASS",
     "weapon_locker_preview_and_policy": "PASS",
     "oled_d3d11_pixels_and_lifetime": "PASS",
-    "audio_focused_tests": "PASS (39, SIDE receipt)"
+    "audio_focused_tests": "PASS (39, SIDE receipt)",
+    "native_buttons": "PASS: six private GFx tests, 20 public tests, cursor x86 regression",
+    "native_audio_channels": "PASS: real codec mono/stereo and frame mismatch refusal",
+    "texture_config_deploy": "PASS: production script fake Steam install, rollback and drift refusal",
+    "combined_assets": "PASS: 130 file hashes; no install"
   },
   "asset_state": {
-    "dubbing": "2459 WAV identities audited; new native bank replacement NOT BUILT; 103 take choices unresolved; one temporary file excluded; 409 MP targets excluded from campaign",
-    "sound_remaster": "24 variants inventoried; exact selected takes pending",
-    "valkyrie_4k": "verified private pair and default-OFF gate integrated; bridge rebuild and physical acceptance pending",
-    "native_menu_buttons": "exact GFx producer replacement remains open"
+    "dubbing": "116 banks checked; 111 changed; 680 replacements; 578 retained, incomplete coverage; physical listening PENDING",
+    "sound_remaster": "8 conservative native variants built; exact graph and container PASS; listening PENDING",
+    "hd": "10 DDS complete staged set; clean bridge build and pixel tests PASS; physical PENDING",
+    "native_menu_buttons": "native GFx Button/ButtonLeft remastered; real bounds, bitmap and action preservation PASS; physical PENDING"
   },
   "steam_modified": false,
   "game_launched": false,
   "physical_acceptance": "PENDING",
-  "release_complete": false
+  "release_complete": false,
+  "texture_bridge_sha256": "F58CB3A805E46C3D3F7E88137BD605AF21A8A8106C289385132F677A968E95FD",
+  "private_asset_manifest_sha256": "6cbc36b456d9ff7227c1d021339c7ee80231bab287d2784d9442ddac5b6ade03"
 }

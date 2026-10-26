@@ -106,9 +106,11 @@ def main():
             wav = a.candidate / 'payload/Binaries/vr-assets/audio/polish/story' / row['file']
             require(row['file'] in wav_pins and sha(wav.read_bytes()) == wav_pins[row['file']], 'WAV changed')
             props = {p['name']: p['value'] for p in exports[asset]['properties']}
-            require(props['NumChannels'] == 1 and props['SampleRate'] in (24000, 44100, 48000)
-                    and props['RawPCMDataSize'] > 0 and props['RawPCMDataSize'] % 2 == 0, 'native format')
-            target, receipt = fit(run, wav, folder, asset, props['SampleRate'], props['RawPCMDataSize'] // 2)
+            channels = props['NumChannels']
+            require(channels in (1, 2) and props['SampleRate'] in (24000, 44100, 48000)
+                    and props['RawPCMDataSize'] > 0 and props['RawPCMDataSize'] % (2 * channels) == 0, 'native format')
+            target, receipt = fit(run, wav, folder, asset, props['SampleRate'],
+                                  props['RawPCMDataSize'] // (2 * channels), channels=channels)
             if target is None or receipt['tempo'] > 1.35:
                 retained.append(dict(receipt, asset=asset, disposition='accepted audio retained'))
                 continue
