@@ -37,8 +37,11 @@ static void Configure(uintptr_t movie,uintptr_t cls,int kind){
         const int count=*(const int*)(info+raw+4),capacity=*(const int*)(info+raw+8);
         if(!uiwitness::ArrayBounds(count,capacity)||!PauseRttProbe::SafeRange(bytes,count))return;
         const auto hash=uiwitness::Fingerprint((const unsigned char*)bytes,count);
-        // Both audited AVM1 movies attach Mouse as _root.mouse, depth 65535.
-        if(hash!=0x28B71A137B55BB7Aull&&hash!=0xD2E964C936CCE902ull)return;
+        // Audited AVM1 movies attach Mouse as _root.mouse, depth 65535.
+        // 27D4... is the pinned native-button remaster: root AVM1 and Mouse
+        // are byte-identical; only Button/ButtonLeft visual timelines change.
+        if(hash!=0x28B71A137B55BB7Aull&&hash!=0xD2E964C936CCE902ull&&
+           hash!=0x27D40BFD1480CE52ull)return;
         const uintptr_t vt=PauseRttProbe::Pointer(movie);
         const uintptr_t get=PauseRttProbe::Pointer(vt+0x148),set=PauseRttProbe::Pointer(vt+0x158);
         if(!Method(get,214,0x9D912591BFBC040Eull)||!Method(set,187,0xEF5A6D846CDD5E7Bull))return;

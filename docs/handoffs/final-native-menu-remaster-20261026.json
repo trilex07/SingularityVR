@@ -1,0 +1,310 @@
+{
+  "movies": [
+    {
+      "movie": "iis",
+      "buttons": [
+        {
+          "symbol": "Button",
+          "character": 8,
+          "plate_bounds_twips": [
+            -3946,
+            5400,
+            -19,
+            597
+          ],
+          "original_sprite_sha256": "e3112d76db1415a32ee0b1f3246d8043402c018572ddbdb503a2a2bd28e6ece6",
+          "shapes": [
+            28,
+            29,
+            30,
+            31
+          ]
+        }
+      ],
+      "assets": [
+        {
+          "file": "btn_plate_idle_neutral.png",
+          "sha256": "4978fb004df09703add0d39d0e737ede2277cd35a29ad873cf5b91ea23fb3fff"
+        },
+        {
+          "file": "btn_plate_hover_neutral.png",
+          "sha256": "c2114f9f43b334e4dcb64b2e419e106839995a30dbd1751ef1f279fa9c6d0a36"
+        },
+        {
+          "file": "btn_plate_pressed_neutral.png",
+          "sha256": "68ed70a909d46297a7b5cc730b758657e309fe30c1f9ed7147f33283522ca97e"
+        },
+        {
+          "file": "btn_plate_disabled_neutral.png",
+          "sha256": "d1f4bcf2b855e845d9323909285052f42689b2cef388c0d12be5fac88785eedf"
+        }
+      ],
+      "bitmap_ids": [
+        24,
+        25,
+        26,
+        27
+      ],
+      "text_and_actions": "unchanged",
+      "physical": "PENDING",
+      "before_sha256": "ad34885ad6e7256abb1476b327b1fceec4c81652bb7f0c2a039445d759cc497e",
+      "after_sha256": "fc843c08fe55da875bfd5498917c7e7909343b39afb20524414462288889f384"
+    },
+    {
+      "movie": "SPMenus",
+      "buttons": [
+        {
+          "symbol": "Button",
+          "character": 104,
+          "plate_bounds_twips": [
+            0,
+            6400,
+            0,
+            617
+          ],
+          "original_sprite_sha256": "06f263ecb5f618eb381feb2bd6e33c774b359650608f7d14d1fdcf8e23a7e08a",
+          "shapes": [
+            362,
+            363,
+            364,
+            365
+          ]
+        },
+        {
+          "symbol": "ButtonLeft",
+          "character": 155,
+          "plate_bounds_twips": [
+            640,
+            6640,
+            0,
+            692
+          ],
+          "original_sprite_sha256": "a0cd04d3714b62fec820cc5209ae21d8c36787887e73f9457525fb008c3a0126",
+          "shapes": [
+            366,
+            367,
+            368,
+            369
+          ]
+        }
+      ],
+      "assets": [
+        {
+          "file": "btn_plate_idle_neutral.png",
+          "sha256": "4978fb004df09703add0d39d0e737ede2277cd35a29ad873cf5b91ea23fb3fff"
+        },
+        {
+          "file": "btn_plate_hover_neutral.png",
+          "sha256": "c2114f9f43b334e4dcb64b2e419e106839995a30dbd1751ef1f279fa9c6d0a36"
+        },
+        {
+          "file": "btn_plate_pressed_neutral.png",
+          "sha256": "68ed70a909d46297a7b5cc730b758657e309fe30c1f9ed7147f33283522ca97e"
+        },
+        {
+          "file": "btn_plate_disabled_neutral.png",
+          "sha256": "d1f4bcf2b855e845d9323909285052f42689b2cef388c0d12be5fac88785eedf"
+        }
+      ],
+      "bitmap_ids": [
+        358,
+        359,
+        360,
+        361
+      ],
+      "text_and_actions": "unchanged",
+      "physical": "PENDING",
+      "before_sha256": "c5547e15f7782bb3878b84ba3cc1520876a053ecb009a2d4d995e63b47b50b1a",
+      "after_sha256": "b371cada18282798acec8d20cc7e3bcaafbcfb76715173f4ae00f63c1a61d952"
+    }
+  ],
+  "exports_verified": 45,
+  "relocations": [
+    {
+      "export": "SPMenus_G0",
+      "local": 256,
+      "delta": 3318
+    },
+    {
+      "export": "SPMenus_G0",
+      "local": 276,
+      "delta": 3318
+    },
+    {
+      "export": "SPMenus_G2",
+      "local": 256,
+      "delta": 3318
+    },
+    {
+      "export": "SPMenus_G2",
+      "local": 276,
+      "delta": 3318
+    },
+    {
+      "export": "SPMenus_G2B",
+      "local": 256,
+      "delta": 3318
+    },
+    {
+      "export": "SPMenus_G2B",
+      "local": 276,
+      "delta": 3318
+    },
+    {
+      "export": "SPMenus_G30",
+      "local": 256,
+      "delta": 3318
+    },
+    {
+      "export": "SPMenus_G30",
+      "local": 276,
+      "delta": 3318
+    },
+    {
+      "export": "SPMenus_G56",
+      "local": 256,
+      "delta": 3318
+    },
+    {
+      "export": "SPMenus_G56",
+      "local": 276,
+      "delta": 3318
+    },
+    {
+      "export": "SPMenus_G57",
+      "local": 256,
+      "delta": 3318
+    },
+    {
+      "export": "SPMenus_G57",
+      "local": 276,
+      "delta": 3318
+    },
+    {
+      "export": "SPMenus_G58",
+      "local": 256,
+      "delta": 3318
+    },
+    {
+      "export": "SPMenus_G58",
+      "local": 276,
+      "delta": 3318
+    },
+    {
+      "export": "SPMenus_G59",
+      "local": 256,
+      "delta": 3318
+    },
+    {
+      "export": "SPMenus_G59",
+      "local": 276,
+      "delta": 3318
+    },
+    {
+      "export": "SPMenus_G5A",
+      "local": 256,
+      "delta": 3318
+    },
+    {
+      "export": "SPMenus_G5A",
+      "local": 276,
+      "delta": 3318
+    },
+    {
+      "export": "SPMenus_G5B",
+      "local": 256,
+      "delta": 3318
+    },
+    {
+      "export": "SPMenus_G5B",
+      "local": 276,
+      "delta": 3318
+    },
+    {
+      "export": "SPMenus_G5D",
+      "local": 256,
+      "delta": 3318
+    },
+    {
+      "export": "SPMenus_G5D",
+      "local": 276,
+      "delta": 3318
+    },
+    {
+      "export": "SPMenus_I129",
+      "local": 228,
+      "delta": 3318
+    },
+    {
+      "export": "SPMenus_I129",
+      "local": 248,
+      "delta": 3318
+    },
+    {
+      "export": "SPMenus_I4",
+      "local": 228,
+      "delta": 3318
+    },
+    {
+      "export": "SPMenus_I4",
+      "local": 248,
+      "delta": 3318
+    },
+    {
+      "export": "SPMenus_I40",
+      "local": 228,
+      "delta": 3318
+    },
+    {
+      "export": "SPMenus_I40",
+      "local": 248,
+      "delta": 3318
+    },
+    {
+      "export": "SPMenus_I7",
+      "local": 228,
+      "delta": 3318
+    },
+    {
+      "export": "SPMenus_I7",
+      "local": 248,
+      "delta": 3318
+    },
+    {
+      "export": "SPMenus_ICD",
+      "local": 228,
+      "delta": 3318
+    },
+    {
+      "export": "SPMenus_ICD",
+      "local": 248,
+      "delta": 3318
+    },
+    {
+      "export": "SPMenus_IF6",
+      "local": 228,
+      "delta": 3318
+    },
+    {
+      "export": "SPMenus_IF6",
+      "local": 248,
+      "delta": 3318
+    },
+    {
+      "export": "RTT_UI2",
+      "local": 200,
+      "delta": 3318
+    },
+    {
+      "export": "RTT_VRPause",
+      "local": 200,
+      "delta": 3318
+    }
+  ],
+  "source_sha256": "51cdab5c892a7b682d89319721330aa3e78c7013d1c60e1476a0115431f01a1a",
+  "logical_sha256": "39fa0746a02334cd1c7db52464ca24796d8f04d70f1e7c9814b0068c673c863d",
+  "physical": "PENDING",
+  "candidate_sha256": "9482bcc00ba91377e5d7aecc18dc3ee35ea1ed37bbd0bee4c696d19f7d8acc9a",
+  "candidate_logical_sha256": "f46e78e950fe1067b8ee20be185b8ed2b4c094d3c9a836fe175429102c3a230c",
+  "compression": "independent decoder byte-exact PASS"
+}
