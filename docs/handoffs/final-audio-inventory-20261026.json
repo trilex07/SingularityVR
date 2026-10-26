@@ -2,10 +2,10 @@
   "schema": "singularityvr-audio-inventory-summary-v1",
   "baseline": "71728b5d7e2712d1640fa18fa58e48bd6dc708ee",
   "audit_local_path": "build\\audio-release-private\\inventory-final-20261026.json",
-  "audit_sha256": "410fb9cdc22237b3ccbe0be60c91047bd25cdea5978929960ab29bd4e445cc6e",
-  "dubbing_manifest_sha256": "122b9fd3929f01d0c9cf0cdffc0e36340b4dea1cfe446a6513b61ab986c65a46",
+  "audit_sha256": "2fb5ceee425dbf5f594d074b9a9bc9b784bd43f37f0517fa30817a28d5b99353",
+  "dubbing_manifest_sha256": "4265d48aeb82182ef0f70775514cb4391218398aa100b836edba4d336f0ae99e",
   "declared_counts": {
-    "story": 1084,
+    "story": 1668,
     "barks": 268,
     "mp": 409,
     "skipped": 97,
@@ -13,17 +13,17 @@
     "vignette": 6
   },
   "actual_counts": {
+    "story": 1668,
     "barks": 268,
-    "intro": 11,
     "mp": 409,
     "skipped": 97,
-    "story": 1668,
+    "intro": 11,
     "vignette": 6
   },
-  "manifest_mismatches": 1864,
-  "unmanifested_count": 584,
+  "manifest_mismatches": 0,
+  "unmanifested_count": 0,
   "all_actual_file_sha256_list_digest": "304b05329528cb92407fca2be0218357baa57c6f0824dce4b37162c6ce3fc500",
-  "dubbing_status": "BLOCKED_MANIFEST_DRIFT_AND_APPROVAL",
+  "dubbing_status": "TECHNICAL_PASS_APPROVAL_PENDING",
   "remaster": [
     {
       "id": "01_weapon_centurion_revolver",
