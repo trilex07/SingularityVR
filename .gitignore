@@ -127,3 +127,4 @@ offline-deliverables/
 
 # Private MAIN logs, accepted-install snapshots and compiled evidence.
 /build/main-seeker-evidence/
+/build/seeker-final/
