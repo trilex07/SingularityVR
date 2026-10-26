@@ -58,6 +58,8 @@ See `docs/textures/hires-first-person-manifest.json` and the existing side-hires
 
 Generated build logs, JSON receipts, synthetic test binaries and private assets are not committed. No new main `d3d9.cpp` change is required; the changed runtime component is the existing `dinput8.dll` texture bridge. MAIN must build from the integrated source and record its exact final binary hash.
 
+Clean-source bridge receipt: implementation commit `7548b1196047219ca2e51cad5616fd1650b0b6c6`, tracked diff empty, x86 PE32 `/O2`, SHA256 `1C4EFA71112CADEDA023FB35FE5091F55AE11F8892754E189ED5EFC106AC2027`. Local artifact and input-hash receipt: `build/final-visual/texture-cache/dinput8.dll` and `dinput8.build.json`. This documentation follow-up does not change those compiled inputs.
+
 ## Grouped MAIN acceptance / stop criteria
 
 First verify source/installed atlas identity, preserved UI flags and accepted features without changing texture quality. Check PL/EN detailed wheel icons, Settings laser/R2, native main/pause navigation, modal text and HUD3D. Native buttons are still the explicitly open remaster item above.
