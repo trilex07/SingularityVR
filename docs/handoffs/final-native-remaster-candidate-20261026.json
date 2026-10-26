@@ -1,0 +1,621 @@
+{
+  "schema": "singularityvr-native-remaster-candidate-v1",
+  "selection_authority": "User explicitly delegated variant selection to MAIN/SIDE, 2026-10-26; no claim of human listening",
+  "selection": "restored_conservative.wav for all eight sets: existing native content, minimal processing, exact duration/channel parity, no invented assets. Highest enumerated Vorbis quality fitting native allocation; up to -3 dB codec headroom only if decoded saturation requires it",
+  "listening_performed": false,
+  "physical_acceptance": "PENDING",
+  "source_provenance": "Private user game-source lab; no third-party generated audio; proprietary content remains local, not distributable in Git",
+  "ffmpeg_sha256": "589e50b766d251afdf181dd664d40bd94407e200b019989fd7468c7d118a28d0",
+  "decoder_hashes": {
+    "unpack_chunks.exe": "c8300215ee625117d9d6294a40b8c7e9c64f3d8d3d6d48d51f893d83e09477fc",
+    "uedecompress.exe": "abe84e9ef2fc0e66741c9de39b1219d2d99db7ac42fc35eae2e44c2ec4553a52"
+  },
+  "storm_reference": {
+    "cue_export": 268,
+    "ambient_node_export": 281,
+    "wave_import": -98,
+    "wave": "windStormHigh01_R",
+    "scope": "Freighter high-wind layer only; not a global weather replacement",
+    "consumer_source_sha256": "334bf45a414ac05bb7ae61ff9fb6dc2fe45a36c4099dac1554c31e3813c56601",
+    "consumer_logical_sha256": "85a698aefe6f17c3f2ee358565d887e12956aec1987d11c4d80d6b038577822e"
+  },
+  "banks": [
+    {
+      "id": "01_weapon_centurion_revolver",
+      "package": "wp_SP_ARPistol_SF.xxx",
+      "asset": "arPistolFire03",
+      "cue": "arPistolFireNEW",
+      "selected_wav_sha256": "8629847f03d9d4fa67054397b30f71c7df0f1cee458dd91704f65faeed67912b",
+      "native_consumer": {
+        "cues": [
+          "mARPistolFire",
+          "arPistolFireNEW"
+        ],
+        "paths": [
+          "Cue(arPistolFireNEW) -> SoundNodeMixer(SoundNodeMixer) -> SoundNodeAttenuation(SoundNodeAttenuation) -> RSoundNodeMultichannelCollapseAttenuation(RSoundNodeMultichannelCollapseAttenuation) -> RSoundNodeCue(RSoundNodeCue) -> LinkedCue(mARPistolFire) -> SoundNodeModulator(SoundNodeModulator) -> SoundNodeWave(arPistolFire03)",
+          "Cue(mARPistolFire) -> SoundNodeModulator(SoundNodeModulator) -> SoundNodeWave(arPistolFire03)"
+        ],
+        "confidence": "VERIFIED_REFERENCE"
+      },
+      "decoded_saturated_samples": 0,
+      "source_package_sha256": "b06d1516e5f4ae15bd9225a38e52ba706ec32d9c6d0e060320149a2f38da44af",
+      "source_logical_sha256": "0534c5c9a5878d280294168bd12711b99cb3948503d4ed53608a0316479d1b18",
+      "source_ogg_sha256": "d3e22e6dc5283a4cd8370017f106d019331667d51ff58976aea5fe01783395f5",
+      "candidate_sha256": "a5fa0d72bb6b32d845e6d0fc89990f18d3a87a9fac444d698689d74233756d39",
+      "candidate_logical_sha256": "abe4e7b41686ed5111a769a4fa29ba8f0bcf212129b4d7604c9b4fe14f68a92c",
+      "candidate_ogg_sha256": "144ba8c160b7da57ee3720015a771a50e2c8d1a56650c21b5afdc6022d6c7918",
+      "bytes": 2293760,
+      "source_bytes": 1245184,
+      "payload_offset": 1554490,
+      "payload_bytes": 20559,
+      "vorbis_quality": 2.5,
+      "codec_headroom_gain_db": -1,
+      "pcm": {
+        "frames": 60000,
+        "channels": 2,
+        "sample_width": 2,
+        "sample_rate": 48000
+      },
+      "failed_higher_quality_attempts": [
+        {
+          "q": 6,
+          "gain_db": 0,
+          "bytes": 31016,
+          "refusal": "encoded Vorbis exceeds native allocation"
+        },
+        {
+          "q": 5,
+          "gain_db": 0,
+          "bytes": 25823,
+          "refusal": "encoded Vorbis exceeds native allocation"
+        },
+        {
+          "q": 4,
+          "gain_db": 0,
+          "bytes": 22433,
+          "refusal": "encoded Vorbis exceeds native allocation"
+        },
+        {
+          "q": 3,
+          "gain_db": 0,
+          "bytes": 21036,
+          "refusal": "encoded Vorbis exceeds native allocation"
+        },
+        {
+          "q": 2.5,
+          "gain_db": 0,
+          "bytes": 19560,
+          "refusal": "codec timing mismatch or saturation"
+        }
+      ],
+      "native_properties_unchanged": true,
+      "non_target_logical_bytes_unchanged": true,
+      "roundtrip_decoder": "PASS",
+      "decoded_timing_channels": "PASS",
+      "relative_candidate_path": "build/audio-release-private/remaster/native_candidate/wp_SP_ARPistol_SF.xxx"
+    },
+    {
+      "id": "02_weapon_kasimov_sniper",
+      "package": "wp_SP_ARSniperRifle_SF.xxx",
+      "asset": "sniperFire08",
+      "cue": "arSniperFire",
+      "selected_wav_sha256": "9fbc5ffba74a3eb0ec868882b9ecea5e3eaebf1b0d958e055fdc8aee106972ec",
+      "native_consumer": {
+        "cues": [
+          "mSniperFire",
+          "arSniperFire"
+        ],
+        "paths": [
+          "Cue(arSniperFire) -> SoundNodeMixer(SoundNodeMixer) -> SoundNodeAttenuation(SoundNodeAttenuation) -> RSoundNodeMultichannelCollapseAttenuation(RSoundNodeMultichannelCollapseAttenuation) -> RSoundNodeCue(RSoundNodeCue) -> LinkedCue(mSniperFire) -> SoundNodeModulator(SoundNodeModulator) -> SoundNodeWave(sniperFire08)",
+          "Cue(mSniperFire) -> SoundNodeModulator(SoundNodeModulator) -> SoundNodeWave(sniperFire08)"
+        ],
+        "confidence": "VERIFIED_REFERENCE"
+      },
+      "decoded_saturated_samples": 0,
+      "source_package_sha256": "0f6b809bc25c35d871de7b8b8b66f4306db90a1acfcc9a0abde6cf7946cc6c98",
+      "source_logical_sha256": "6c1f0910bf932eb62e5b67a1b9de5b370e0da65168f97d71495cff598ff2eebc",
+      "source_ogg_sha256": "9198b66d51c2152faf0f76127a55a86261ca63c7e1ef9a37d0f6a907f83b0ffd",
+      "candidate_sha256": "e2d5dcae9fa7815d8ee944c4ce62c0fa2bbde60a1303f45c61221c9cab60362b",
+      "candidate_logical_sha256": "17cc4520aeb44fba421723b917b216d9918c6b2917dbbd3f1d72eea94ea7a8af",
+      "candidate_ogg_sha256": "a28d0b0b7f891e615984d1fd78d2bd0b106ced65fe1c1df99b80f631599a00b6",
+      "bytes": 2621440,
+      "source_bytes": 1540096,
+      "payload_offset": 1895751,
+      "payload_bytes": 32629,
+      "vorbis_quality": 2.5,
+      "codec_headroom_gain_db": -1,
+      "pcm": {
+        "frames": 108000,
+        "channels": 2,
+        "sample_width": 2,
+        "sample_rate": 48000
+      },
+      "failed_higher_quality_attempts": [
+        {
+          "q": 6,
+          "gain_db": 0,
+          "bytes": 48900,
+          "refusal": "encoded Vorbis exceeds native allocation"
+        },
+        {
+          "q": 5,
+          "gain_db": 0,
+          "bytes": 40890,
+          "refusal": "encoded Vorbis exceeds native allocation"
+        },
+        {
+          "q": 4,
+          "gain_db": 0,
+          "bytes": 35258,
+          "refusal": "encoded Vorbis exceeds native allocation"
+        },
+        {
+          "q": 3,
+          "gain_db": 0,
+          "bytes": 32892,
+          "refusal": "encoded Vorbis exceeds native allocation"
+        },
+        {
+          "q": 2.5,
+          "gain_db": 0,
+          "bytes": 30751,
+          "refusal": "codec timing mismatch or saturation"
+        }
+      ],
+      "native_properties_unchanged": true,
+      "non_target_logical_bytes_unchanged": true,
+      "roundtrip_decoder": "PASS",
+      "decoded_timing_channels": "PASS",
+      "relative_candidate_path": "build/audio-release-private/remaster/native_candidate/wp_SP_ARSniperRifle_SF.xxx"
+    },
+    {
+      "id": "03_e99_tmd_impulse",
+      "package": "RvGame.xxx",
+      "asset": "tmdFireImpulse16",
+      "cue": "tmdFireImpulse",
+      "selected_wav_sha256": "218bad46ed2451fe9751b7e118b081da8cf7aa825e629ec60e92486853de9cb4",
+      "native_consumer": {
+        "cues": [
+          "tmdFireImpulse",
+          "tmdDeadLockFire",
+          "mTMDImpulseFire"
+        ],
+        "paths": [
+          "Cue(tmdDeadLockFire) -> RSoundNodeCue(RSoundNodeCue) -> LinkedCue(tmdFireImpulse) -> SoundNodeAttenuation(SoundNodeAttenuation) -> SoundNodeMixer(SoundNodeMixer) -> RSoundNodeMultichannelCollapseAttenuation(RSoundNodeMultichannelCollapseAttenuation) -> RSoundNodeCue(RSoundNodeCue) -> LinkedCue(mTMDImpulseFire) -> SoundNodeModulator(SoundNodeModulator) -> SoundNodeWave(tmdFireImpulse16)",
+          "Cue(tmdFireImpulse) -> SoundNodeAttenuation(SoundNodeAttenuation) -> SoundNodeMixer(SoundNodeMixer) -> RSoundNodeMultichannelCollapseAttenuation(RSoundNodeMultichannelCollapseAttenuation) -> RSoundNodeCue(RSoundNodeCue) -> LinkedCue(mTMDImpulseFire) -> SoundNodeModulator(SoundNodeModulator) -> SoundNodeWave(tmdFireImpulse16)",
+          "Cue(mTMDImpulseFire) -> SoundNodeModulator(SoundNodeModulator) -> SoundNodeWave(tmdFireImpulse16)"
+        ],
+        "confidence": "VERIFIED_REFERENCE"
+      },
+      "decoded_saturated_samples": 0,
+      "source_package_sha256": "4153c4889c90635069ed226d918cdb76be618f46b1baea152ac10cffdf59e9ef",
+      "source_logical_sha256": "09de450d9f620952c3701d874beb90a8bd9235263975157a641b9e3441336c92",
+      "source_ogg_sha256": "26c7bbc22a9b9c88092bd53707a44a9c8de36933a777cc1c0b0fd9eea366f742",
+      "candidate_sha256": "5c0cce4713cf76f857b2b771b83353ece3a0028d46317db6e4b7f499c80bbf10",
+      "candidate_logical_sha256": "851186367fed2e8631c4c7db83e1f43361594e2cbb87842b1050dd930ed20dea",
+      "candidate_ogg_sha256": "5cbfa9c2b341320dbafb2cbc074a0058c44525cd0a1e60f287f9e7ede3e911c0",
+      "bytes": 28137730,
+      "source_bytes": 13369344,
+      "payload_offset": 18445127,
+      "payload_bytes": 30268,
+      "vorbis_quality": 1.5,
+      "codec_headroom_gain_db": 0,
+      "pcm": {
+        "frames": 96000,
+        "channels": 2,
+        "sample_width": 2,
+        "sample_rate": 48000
+      },
+      "failed_higher_quality_attempts": [
+        {
+          "q": 6,
+          "gain_db": 0,
+          "bytes": 54382,
+          "refusal": "encoded Vorbis exceeds native allocation"
+        },
+        {
+          "q": 5,
+          "gain_db": 0,
+          "bytes": 43615,
+          "refusal": "encoded Vorbis exceeds native allocation"
+        },
+        {
+          "q": 4,
+          "gain_db": 0,
+          "bytes": 38180,
+          "refusal": "encoded Vorbis exceeds native allocation"
+        },
+        {
+          "q": 3,
+          "gain_db": 0,
+          "bytes": 35210,
+          "refusal": "encoded Vorbis exceeds native allocation"
+        },
+        {
+          "q": 2.5,
+          "gain_db": 0,
+          "bytes": 32903,
+          "refusal": "encoded Vorbis exceeds native allocation"
+        },
+        {
+          "q": 2,
+          "gain_db": 0,
+          "bytes": 31484,
+          "refusal": "encoded Vorbis exceeds native allocation"
+        }
+      ],
+      "native_properties_unchanged": true,
+      "non_target_logical_bytes_unchanged": true,
+      "roundtrip_decoder": "PASS",
+      "decoded_timing_channels": "PASS",
+      "relative_candidate_path": "build/audio-release-private/remaster/native_candidate/RvGame.xxx"
+    },
+    {
+      "id": "04_weapon_walkiria_ar9",
+      "package": "wp_SP_ARMachineGun_SF.xxx",
+      "asset": "machinegunFire57",
+      "cue": "arMachinegunFire",
+      "selected_wav_sha256": "4261e52899878fa5f36090d90f9f69e7dd2928545ade63dc52aa69bb77f48b32",
+      "native_consumer": {
+        "cues": [
+          "mMachinegunFire",
+          "arMachinegunFire"
+        ],
+        "paths": [
+          "Cue(arMachinegunFire) -> SoundNodeMixer(SoundNodeMixer) -> SoundNodeAttenuation(SoundNodeAttenuation) -> RSoundNodeMultichannelCollapseAttenuation(RSoundNodeMultichannelCollapseAttenuation) -> RSoundNodeCue(RSoundNodeCue) -> LinkedCue(mMachinegunFire) -> SoundNodeModulator(SoundNodeModulator) -> SoundNodeWave(machinegunFire57)",
+          "Cue(mMachinegunFire) -> SoundNodeModulator(SoundNodeModulator) -> SoundNodeWave(machinegunFire57)"
+        ],
+        "confidence": "VERIFIED_REFERENCE"
+      },
+      "decoded_saturated_samples": 0,
+      "source_package_sha256": "e1d4127893d568a5cbd92ec61a79477ecc4dd6305008a8d6125d15fbac159715",
+      "source_logical_sha256": "6f949f292cd8151965f73bdf34ebd2e77eac02eca244b4a5776afab659137be7",
+      "source_ogg_sha256": "c7c8f8927296ba50bc5c6d47c7c6907f2938ba259888f2557ccab26f9671826e",
+      "candidate_sha256": "59e33f9950081e91916e07f3a86473b35826572e2dbdfa26d7749a4387d2618a",
+      "candidate_logical_sha256": "0ec0e714c420aeb2f3b875a3f566d24b6b4733a5b49bf8f30c5f19103842e7c2",
+      "candidate_ogg_sha256": "3551e2b63e35a0cb20269a3e2bbc8326ec644fbb6dada7c5f001361dde56e1c1",
+      "bytes": 1966080,
+      "source_bytes": 1048576,
+      "payload_offset": 1294850,
+      "payload_bytes": 21996,
+      "vorbis_quality": 2.5,
+      "codec_headroom_gain_db": -2,
+      "pcm": {
+        "frames": 66603,
+        "channels": 2,
+        "sample_width": 2,
+        "sample_rate": 48000
+      },
+      "failed_higher_quality_attempts": [
+        {
+          "q": 6,
+          "gain_db": 0,
+          "bytes": 31526,
+          "refusal": "encoded Vorbis exceeds native allocation"
+        },
+        {
+          "q": 5,
+          "gain_db": 0,
+          "bytes": 27299,
+          "refusal": "encoded Vorbis exceeds native allocation"
+        },
+        {
+          "q": 4,
+          "gain_db": 0,
+          "bytes": 23793,
+          "refusal": "encoded Vorbis exceeds native allocation"
+        },
+        {
+          "q": 3,
+          "gain_db": 0,
+          "bytes": 22330,
+          "refusal": "encoded Vorbis exceeds native allocation"
+        },
+        {
+          "q": 2.5,
+          "gain_db": 0,
+          "bytes": 21013,
+          "refusal": "codec timing mismatch or saturation"
+        },
+        {
+          "q": 2.5,
+          "gain_db": -1,
+          "bytes": 20954,
+          "refusal": "codec timing mismatch or saturation"
+        }
+      ],
+      "native_properties_unchanged": true,
+      "non_target_logical_bytes_unchanged": true,
+      "roundtrip_decoder": "PASS",
+      "decoded_timing_channels": "PASS",
+      "relative_candidate_path": "build/audio-release-private/remaster/native_candidate/wp_SP_ARMachineGun_SF.xxx"
+    },
+    {
+      "id": "05_weapon_spikeshot_shotgun",
+      "package": "wp_SP_ARShotgun_SF.xxx",
+      "asset": "shotgunFire35",
+      "cue": "arShotgunFire",
+      "selected_wav_sha256": "8d5e830b7ea2285750c2515c4c964bb779dbe278345235bcc5b235a56f3950e7",
+      "native_consumer": {
+        "cues": [
+          "mShotgunFire",
+          "arShotgunFire"
+        ],
+        "paths": [
+          "Cue(arShotgunFire) -> SoundNodeMixer(SoundNodeMixer) -> SoundNodeAttenuation(SoundNodeAttenuation) -> RSoundNodeMultichannelCollapseAttenuation(RSoundNodeMultichannelCollapseAttenuation) -> RSoundNodeCue(RSoundNodeCue) -> LinkedCue(mShotgunFire) -> SoundNodeModulator(SoundNodeModulator) -> SoundNodeRandom(SoundNodeRandom) -> SoundNodeWave(shotgunFire35)",
+          "Cue(mShotgunFire) -> SoundNodeModulator(SoundNodeModulator) -> SoundNodeRandom(SoundNodeRandom) -> SoundNodeWave(shotgunFire35)"
+        ],
+        "confidence": "VERIFIED_REFERENCE"
+      },
+      "decoded_saturated_samples": 0,
+      "source_package_sha256": "50254fad1daa0b62d2d08740f22a447160691b5e6fc9058f83a3d6c4d3bebc9f",
+      "source_logical_sha256": "4bb21b02abc69a9db2c3e4f350e0abc29783ea665f54de1c8eee11b6a78355ca",
+      "source_ogg_sha256": "6bdfcc1908ee7b91087cd27ce8ca279b1652cc2a1ddd8ecc4eaed2d611654603",
+      "candidate_sha256": "57e8e5a37b667a4cb0a4ec4c2095ddda3782063e92a7aa559cf314d4b84f33a4",
+      "candidate_logical_sha256": "da589b6a283f20390fe3abc0a2f94e64300a6be156988b9b619daef9994ee46e",
+      "candidate_ogg_sha256": "c72a99049191f9a3d40ea0e2a4789ccd97b47a6dc3cfb8445718df897a020d7d",
+      "bytes": 2555904,
+      "source_bytes": 1441792,
+      "payload_offset": 1851881,
+      "payload_bytes": 24712,
+      "vorbis_quality": 2.5,
+      "codec_headroom_gain_db": -2,
+      "pcm": {
+        "frames": 72745,
+        "channels": 2,
+        "sample_width": 2,
+        "sample_rate": 48000
+      },
+      "failed_higher_quality_attempts": [
+        {
+          "q": 6,
+          "gain_db": 0,
+          "bytes": 39719,
+          "refusal": "encoded Vorbis exceeds native allocation"
+        },
+        {
+          "q": 5,
+          "gain_db": 0,
+          "bytes": 32772,
+          "refusal": "encoded Vorbis exceeds native allocation"
+        },
+        {
+          "q": 4,
+          "gain_db": 0,
+          "bytes": 26597,
+          "refusal": "encoded Vorbis exceeds native allocation"
+        },
+        {
+          "q": 3,
+          "gain_db": 0,
+          "bytes": 24790,
+          "refusal": "encoded Vorbis exceeds native allocation"
+        },
+        {
+          "q": 2.5,
+          "gain_db": 0,
+          "bytes": 22931,
+          "refusal": "codec timing mismatch or saturation"
+        },
+        {
+          "q": 2.5,
+          "gain_db": -1,
+          "bytes": 22839,
+          "refusal": "codec timing mismatch or saturation"
+        }
+      ],
+      "native_properties_unchanged": true,
+      "non_target_logical_bytes_unchanged": true,
+      "roundtrip_decoder": "PASS",
+      "decoded_timing_channels": "PASS",
+      "relative_candidate_path": "build/audio-release-private/remaster/native_candidate/wp_SP_ARShotgun_SF.xxx"
+    },
+    {
+      "id": "06_music_explore_drone",
+      "package": "MUSIC_exploreDrone01_XSA.xxx",
+      "asset": "CONCEPTexploreDrone01",
+      "cue": "CONCEPTexploreDrone01",
+      "selected_wav_sha256": "f6ab16fd8ecdc33b5343b7306d40131a0afe7dd3fc8fb97499c99bd65d3a33ee",
+      "native_consumer": {
+        "consumer_export": 16,
+        "consumer_class": "SoundCue",
+        "property": "FirstNode",
+        "wave_import": -23,
+        "wave": "CONCEPTexploreDrone01",
+        "consumer_package": "MUSIC_exploreDrone01.xxx",
+        "consumer_package_sha256": "c194e61476d43d2a6bab36ac970ef315fb4e7040c8f79c7ded4f637c6f146a61",
+        "consumer_logical_sha256": "e497aeff1f48f959450c321b033886065e194e6204d626c3bec050a6f9105952"
+      },
+      "decoded_saturated_samples": 0,
+      "source_package_sha256": "aca2b5f130e08d63eba8f749d3fec860af18df610eca0b984aae93d608261857",
+      "source_logical_sha256": "23be8808c8226529092e67b8da2913d8e3d8fe080f44387ae9de765bdc99b8ed",
+      "source_ogg_sha256": "5c0777acd4c5775317a0115b6fbfef67efc67d4ac882e41a6765f7d12a772cda",
+      "candidate_sha256": "20f4d520538691383a7e6fc9ccfe7b4dff6682f978db4cee2ef5b8217806da14",
+      "candidate_logical_sha256": "1d7e254e842b996951d0f82e069db22520097477564fdd9b0cb78308c4d6d4a9",
+      "candidate_ogg_sha256": "f2595d159f4e1c9ffaec47a4784ee1e4d90842248c3d31d325a17621b78ab890",
+      "bytes": 1376256,
+      "source_bytes": 1343488,
+      "payload_offset": 11119,
+      "payload_bytes": 1332084,
+      "vorbis_quality": 2.5,
+      "codec_headroom_gain_db": 0,
+      "pcm": {
+        "frames": 4224000,
+        "channels": 2,
+        "sample_width": 2,
+        "sample_rate": 32000
+      },
+      "failed_higher_quality_attempts": [
+        {
+          "q": 6,
+          "gain_db": 0,
+          "bytes": 2133132,
+          "refusal": "encoded Vorbis exceeds native allocation"
+        },
+        {
+          "q": 5,
+          "gain_db": 0,
+          "bytes": 1784477,
+          "refusal": "encoded Vorbis exceeds native allocation"
+        },
+        {
+          "q": 4,
+          "gain_db": 0,
+          "bytes": 1511611,
+          "refusal": "encoded Vorbis exceeds native allocation"
+        },
+        {
+          "q": 3,
+          "gain_db": 0,
+          "bytes": 1392809,
+          "refusal": "encoded Vorbis exceeds native allocation"
+        }
+      ],
+      "native_properties_unchanged": true,
+      "non_target_logical_bytes_unchanged": true,
+      "roundtrip_decoder": "PASS",
+      "decoded_timing_channels": "PASS",
+      "relative_candidate_path": "build/audio-release-private/remaster/native_candidate/MUSIC_exploreDrone01_XSA.xxx"
+    },
+    {
+      "id": "07_music_combat_boss_grom",
+      "package": "MUSIC_combatBossGrom01_XSA.xxx",
+      "asset": "combatBossGrom01",
+      "cue": "combatBossGrom01",
+      "selected_wav_sha256": "8eba9434d997916e197f0450343815c195bd5f566d71d39fba033299f366e04b",
+      "native_consumer": {
+        "consumer_export": 1,
+        "consumer_class": "DynamicMusic",
+        "property": "MusicTracks",
+        "wave_import": -58,
+        "wave": "combatBossGrom01",
+        "consumer_package": "MUSIC_combatBossGrom01.xxx",
+        "consumer_package_sha256": "daf8cdb51b8dcc38e52253f9b3f72fa73dca250804490a84e2aedc338c14d533",
+        "consumer_logical_sha256": "c71b4bc0aa7e378a38644cd9d9f4f72b2f464c51ef6c729eccc7a026d2f37d20"
+      },
+      "decoded_saturated_samples": 0,
+      "source_package_sha256": "582e8b56e92753af6847d8102b3e49a4ce4d2d64c83fc4fdf8ce47fe147d0b4e",
+      "source_logical_sha256": "4a70dd2699a5f37c8327e5e09c6d80e5886fa4196fc3f0283f6806b0dfe69060",
+      "source_ogg_sha256": "2d28c4706d36b12508ab22b7230c280139f851ae55a8926401434e3359f5a568",
+      "candidate_sha256": "eef7866eb2541ead378fc0de4a39bea5e7517c7488952404e5b1925c80fd9133",
+      "candidate_logical_sha256": "1c6a392eb87a6e2a1e34b8ce18804d859c8e123f8639b88739cab2844e58ea43",
+      "candidate_ogg_sha256": "bd368173943c4c5d166df8cd1e7a649e38c1fc20575a86b445b3dbaf2fc1ba40",
+      "bytes": 4784128,
+      "source_bytes": 4784128,
+      "payload_offset": 10979,
+      "payload_bytes": 4745657,
+      "vorbis_quality": 4,
+      "codec_headroom_gain_db": 0,
+      "pcm": {
+        "frames": 3432648,
+        "channels": 6,
+        "sample_width": 2,
+        "sample_rate": 44100
+      },
+      "failed_higher_quality_attempts": [
+        {
+          "q": 6,
+          "gain_db": 0,
+          "bytes": 5944104,
+          "refusal": "encoded Vorbis exceeds native allocation"
+        },
+        {
+          "q": 5,
+          "gain_db": 0,
+          "bytes": 5074292,
+          "refusal": "encoded Vorbis exceeds native allocation"
+        }
+      ],
+      "native_properties_unchanged": true,
+      "non_target_logical_bytes_unchanged": true,
+      "roundtrip_decoder": "PASS",
+      "decoded_timing_channels": "PASS",
+      "relative_candidate_path": "build/audio-release-private/remaster/native_candidate/MUSIC_combatBossGrom01_XSA.xxx"
+    },
+    {
+      "id": "08_ambience_ocean_storm",
+      "package": "SP_Freight_Audio_2010_XSA.xxx",
+      "asset": "windStormHigh01_R",
+      "cue": "native SoundCue export 268",
+      "selected_wav_sha256": "045847995de02ff029a74d25026812302c67eb6517805cf2ac6af85cd4f67cef",
+      "native_consumer": {
+        "cue_export": 268,
+        "ambient_node_export": 281,
+        "wave_import": -98,
+        "wave": "windStormHigh01_R",
+        "scope": "Freighter high-wind layer only; not a global weather replacement",
+        "consumer_source_sha256": "334bf45a414ac05bb7ae61ff9fb6dc2fe45a36c4099dac1554c31e3813c56601",
+        "consumer_logical_sha256": "85a698aefe6f17c3f2ee358565d887e12956aec1987d11c4d80d6b038577822e"
+      },
+      "decoded_saturated_samples": 0,
+      "source_package_sha256": "9a938d0fc31e3cfebfe9037db0a5241fc01e5a7852b2499bd67af39e3bcede70",
+      "source_logical_sha256": "8e7310ee7d130215f794cdd37f9e95df8d0bc14067582b26d43e1e550431ae48",
+      "source_ogg_sha256": "ccc8d5343500cb99d0fb2a35032ca86b752a1ed9cb7cba00842900f4cbf69f20",
+      "candidate_sha256": "5a8c5cf19c38e97e4a5c4c7fef476385739978b6a1b0347767e42b194d3a2818",
+      "candidate_logical_sha256": "7b819724cef8958805765f66713c2107e9d365b632eace414e992dadd4259b31",
+      "candidate_ogg_sha256": "2f37abd9b298c38e3cce7b355052e78c42b21ee77e96f6dd3a7e84479e08ce40",
+      "bytes": 2883584,
+      "source_bytes": 2785280,
+      "payload_offset": 1403225,
+      "payload_bytes": 298775,
+      "vorbis_quality": 1.5,
+      "codec_headroom_gain_db": 0,
+      "pcm": {
+        "frames": 1323000,
+        "channels": 1,
+        "sample_width": 2,
+        "sample_rate": 22050
+      },
+      "failed_higher_quality_attempts": [
+        {
+          "q": 6,
+          "gain_db": 0,
+          "bytes": 429704,
+          "refusal": "encoded Vorbis exceeds native allocation"
+        },
+        {
+          "q": 5,
+          "gain_db": 0,
+          "bytes": 383823,
+          "refusal": "encoded Vorbis exceeds native allocation"
+        },
+        {
+          "q": 4,
+          "gain_db": 0,
+          "bytes": 367357,
+          "refusal": "encoded Vorbis exceeds native allocation"
+        },
+        {
+          "q": 3,
+          "gain_db": 0,
+          "bytes": 335061,
+          "refusal": "encoded Vorbis exceeds native allocation"
+        },
+        {
+          "q": 2.5,
+          "gain_db": 0,
+          "bytes": 319091,
+          "refusal": "encoded Vorbis exceeds native allocation"
+        },
+        {
+          "q": 2,
+          "gain_db": 0,
+          "bytes": 301941,
+          "refusal": "encoded Vorbis exceeds native allocation"
+        }
+      ],
+      "native_properties_unchanged": true,
+      "non_target_logical_bytes_unchanged": true,
+      "roundtrip_decoder": "PASS",
+      "decoded_timing_channels": "PASS",
+      "relative_candidate_path": "build/audio-release-private/remaster/native_candidate/SP_Freight_Audio_2010_XSA.xxx"
+    }
+  ],
+  "builder_file_hashes": {
+    "build_native_remaster_candidate.py": "c6e1a7a33c9a444f5bc2127239934d1f296dacb5e96101fc6de6a19b1b2ea934",
+    "vorbis_fixed_allocation.py": "f6e2eb4ac8e7183e87dec6de3f2feb2212c81ab9848edad06bbafd6efd38dd4f",
+    "native_story_package.py": "940ff1a2506f22de5ff8136df63871b8ea41f31616fb6369ee034c9b7911925d",
+    "patch_opening_dialogue.py": "b692f56ac24be46393b35496db14066d55b4bd38049374b595df60313f394fda"
+  },
+  "status": "COMPLETE_OFFLINE_ONLY"
+}
