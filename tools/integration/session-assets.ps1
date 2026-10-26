@@ -9,6 +9,7 @@ param(
 # timer, DLL/config/MP/UI-audio ownership, recursive deletion or broad restore.
 Set-StrictMode -Version Latest
 $ErrorActionPreference='Stop'
+. (Join-Path $PSScriptRoot 'session-asset-scope.ps1')
 $repo=[IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\..'))
 $allowed=[IO.Path]::GetFullPath((Join-Path $repo 'build\next-weapon-reload')).TrimEnd('\')+'\'
 $manifestPath=[IO.Path]::GetFullPath($ManifestPath)
@@ -45,7 +46,7 @@ if($m.schema -cne 'singularityvr-session-assets-delta-v1' -or @($m.files).Count 
 $seen=@{}
 foreach($f in $m.files){
     $relative=[string]$f.path
-    if($relative -cnotmatch '^(Binaries/vr-assets/audio/polish/story/[A-Za-z0-9_.-]+\.wav|Binaries/vr-assets/localization/pl/polish_(text|story_voice)\.jsonl|Binaries/texture-override-remaster/revert_[dn]2\.dds|RvGame/CookedPC/[sS][pP]_[A-Za-z0-9_]+_LOC_INT\.xxx|Binaries/vr-assets/ui/remaster/[A-Za-z0-9_.-]+\.png|Binaries/vr-assets/hud/diegetic/[A-Za-z0-9_.-]+\.png)$'){
+    if(-not (Test-SessionAssetPath $relative)){
         throw "Target outside campaign delta: $relative"
     }
     if($seen.ContainsKey($relative.ToLowerInvariant())){throw 'Duplicate asset target'}
