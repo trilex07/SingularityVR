@@ -2285,6 +2285,7 @@ static bool g_trackedDepthPrimeProbe=false; // bounded first-refusal only; OFF
 static bool g_trackedDepthSourcePose=false; // keep original wrist producer when omitting depth; OFF
 static bool g_tmdTrackedMuzzle=false; // original TMD_Muzzle socket -> final rendered wrist; OFF
 static bool g_tmdTrackedBeam=false; // exact owned aging-beam child attachment; OFF
+static bool g_tmdTrackedAgeParticles=false; // exact original ageOld/ageNew attached emitters; OFF
 static bool g_tmdBeamAgeProbe=false; // bounded Square-edge component census
 static trackedprime::Cache g_trackedPrimeCache;
 static dualaction::Frame g_dualActionFrame;
@@ -21484,7 +21485,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
         // Read the exact material-0 wrist palette actually consumed by this
         // eye, after independent tracking. Ride lives in the camera matrix,
         // not c230: include it once when reconstructing world space.
-        if((g_tmdTrackedMuzzle||g_tmdTrackedBeam)&&assemblyGlove&&eye<2&&independentRegs>=6&&nSeg>0&&
+        if((g_tmdTrackedMuzzle||g_tmdTrackedBeam||g_tmdTrackedAgeParticles)&&assemblyGlove&&eye<2&&independentRegs>=6&&nSeg>0&&
            g_boundShaderLayout.bones==5&&g_boundShaderLayout.local==230&&
            !g_boundShaderLayout.shadow&&Rd(g_camPosValid)&&TmdRaised()&&
            !Rd(g_twoHandActive)&&Rd(g_offHandValid)&&Rd(g_tmdOnOffHand)&&
@@ -21815,7 +21816,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
                 Rd(g_handsStatus)==HANDS_WEAPON);
         }
     }
-    if((g_tmdTrackedMuzzle||g_tmdTrackedBeam)&&tmdmuzzle::Completed(tmdSocketEye,tmdSocketDrawn,assemblyEye,
+    if((g_tmdTrackedMuzzle||g_tmdTrackedBeam||g_tmdTrackedAgeParticles)&&tmdmuzzle::Completed(tmdSocketEye,tmdSocketDrawn,assemblyEye,
        SUCCEEDED(dhr),SUCCEEDED(nativeRestore),SUCCEEDED(handRestore),SUCCEEDED(nextRestore))) {
         NativeTmdSocket::Publish(tmdSocketEye[0]);
         static unsigned notes=0;
@@ -37165,7 +37166,9 @@ void LoadIniSettings() {
     g_trackedDepthSourcePose=GetPrivateProfileIntA("Render","TrackedDepthSourcePose",0,path)!=0;
     g_tmdTrackedMuzzle=GetPrivateProfileIntA("Render","TmdTrackedMuzzle",0,path)!=0;
     g_tmdTrackedBeam=GetPrivateProfileIntA("Render","TmdTrackedBeam",0,path)!=0;
+    g_tmdTrackedAgeParticles=GetPrivateProfileIntA("Render","TmdTrackedAgeParticles",0,path)!=0;
     Log("ini: TmdTrackedBeam=%d (default OFF; owned native aging-beam attachment, native endpoint preserved)",g_tmdTrackedBeam?1:0);
+    Log("ini: TmdTrackedAgeParticles=%d (default OFF; exact owned original Age particle attachment)",g_tmdTrackedAgeParticles?1:0);
     g_tmdBeamAgeProbe=GetPrivateProfileIntA("Diagnostic","TmdBeamAgeProbe",0,path)!=0;
     Log("ini: TmdBeamAgeProbe=%d (bounded Square-edge owned component census; default OFF)",g_tmdBeamAgeProbe?1:0);
     Log("ini: TmdTrackedMuzzle=%d (default OFF; original socket on final both-eye rendered wrist)",g_tmdTrackedMuzzle?1:0);

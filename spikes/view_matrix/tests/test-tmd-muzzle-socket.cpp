@@ -11,6 +11,7 @@ static armbind::Mat Product(const armbind::Mat& a,const armbind::Mat& b){armbind
 static void Near(const armbind::Mat& a,const armbind::Mat& b){for(unsigned i=0;i<4;++i)for(unsigned j=0;j<4;++j)assert(std::fabs(a.m[i][j]-b.m[i][j])<.0002f);}
 static bool g_tmdTrackedMuzzle=true;
 static bool g_tmdTrackedBeam=false;
+static bool g_tmdTrackedAgeParticles=false;
 static bool g_tmdBeamAgeProbe=false;
 static LONG g_rawAgePressed=0;
 static LONG g_gamePaused=0,g_inCinematic=0,g_panelOpen=0,g_vrMenuClass=0,g_vrUiMenu=0,
@@ -28,8 +29,20 @@ static bool NameFromIndex(int i,char* out,size_t){strcpy_s(out,96,i==7?"TMD_Muzz
 namespace NativeOwnedInventory {
 struct Name {int index,number;};
 static bool fail=false;
+static bool particle=true,templateMatch=true,attachment=true,methods=true;
+static unsigned attachments=1;
+static bool Named(uintptr_t p,const char* n){return templateMatch&&p==900&&!strcmp(n,"fx_FP_TMD_ageOld");}
 static uintptr_t childReturn=0;
 static uintptr_t P(uintptr_t p){if(fail)RaiseException(EXCEPTION_ACCESS_VIOLATION,0,0,nullptr);
+    if(p==601+OBJ_CLASS)return particle?701:0;
+    if(p==601+0x1D4)return 900;
+    if(p==900+OBJ_CLASS)return 702;
+    if(p==601)return 1000;
+    if(p==1000+0x154)return 1100;
+    if(p==1000+0x120)return 1200;
+    if(p==300+0x27C)return 2000;
+    if(p==300+0x280)return attachments;
+    if(p==2000||p==2000+0x30)return attachment?601:999;
     return p==200+OBJ_CLASS?400:p==200+0x204?300:p==300+OBJ_CLASS?500:
         p==200+0x530?600:p==600+OBJ_CLASS?700:p==300?800:p==800+0x138?childReturn-0x161:0;}
 struct MemberCache {int Get(uintptr_t,const char* n){return !strcmp(n,"mAgingBeam")?24:16;}};
@@ -37,10 +50,12 @@ struct MemberCache {int Get(uintptr_t,const char* n){return !strcmp(n,"mAgingBea
 namespace NativeTmdAim {
 static uintptr_t LocalTmd(uintptr_t& pawn){pawn=100;return 200;}
 static bool ExactClass(uintptr_t c,const char* n){return (c==500&&!strcmp(n,"SkeletalMeshComponent"))||
-    (c==700&&!strcmp(n,"RvCurvedBeamComponent"));}
+    (c==700&&!strcmp(n,"RvCurvedBeamComponent"))||
+    (c==701&&!strcmp(n,"ParticleSystemComponent"))||
+    (c==702&&!strcmp(n,"ParticleSystem"));}
 }
 namespace NativeRegistry {static uintptr_t Find(const char*){return 0;}}
-namespace NativeContextCursor {static bool Method(uintptr_t,size_t,unsigned long long){return false;}}
+namespace NativeContextCursor {static bool Method(uintptr_t p,size_t,unsigned long long){return NativeOwnedInventory::methods&&(p==1100||p==1200);}}
 namespace NativeRifleFx {static uintptr_t Helper(uintptr_t,unsigned,size_t,unsigned long long){return 0;}}
 constexpr int MH_OK=0;
 static int MH_CreateHook(void*,void*,void**){return 1;}
@@ -192,7 +207,29 @@ int main(){
     w.tick=GetTickCount64()-151;NativeTmdSocket::Publish(w);beamUnchanged((void*)600);
     w.tick=GetTickCount64();w.pawn=99;NativeTmdSocket::Publish(w);beamUnchanged((void*)600);
     w.pawn=100;NativeTmdSocket::Publish(w);
+    // Exercise the REAL production callback for the independently switched
+    // particle route. Identical wrist delta, exactly one native call, no beam
+    // flag dependency and no unowned/name-only component correction.
+    g_tmdTrackedBeam=false;g_tmdTrackedAgeParticles=true;
+    const auto beforeParticles=componentCalls;
+    for(const auto& rotated:wristRotations){
+        w=rotated;w.tick=GetTickCount64();NativeTmdSocket::Publish(w);
+        assert(BeamParent(w,100,GetTickCount64(),cpuParent,expected));
+        for(unsigned i=0;i<25;++i)InvokeComponent(&NativeTmdBeam::Hook,(void*)601,&cpuParent);
+        Near(nativeParent,expected);Near(cpuParent,savedParent);
+    }
+    assert(componentCalls==beforeParticles+100&&Esp()==componentStack);
+    beamUnchanged((void*)600);
+    NativeOwnedInventory::particle=false;beamUnchanged((void*)601);NativeOwnedInventory::particle=true;
+    NativeOwnedInventory::templateMatch=false;beamUnchanged((void*)601);NativeOwnedInventory::templateMatch=true;
+    NativeOwnedInventory::attachment=false;beamUnchanged((void*)601);NativeOwnedInventory::attachment=true;
+    NativeOwnedInventory::attachments=2;beamUnchanged((void*)601);
+    NativeOwnedInventory::attachments=65;beamUnchanged((void*)601);NativeOwnedInventory::attachments=1;
+    NativeOwnedInventory::methods=false;beamUnchanged((void*)601);NativeOwnedInventory::methods=true;
+    g_tmdTrackedAgeParticles=false;beamUnchanged((void*)601);
+    g_tmdTrackedBeam=true;
     NativeOwnedInventory::fail=true;beamUnchanged((void*)600);assert(!g_tmdTrackedBeam);
+    puts("PASS Age particles: production callback x100, four rotations, exact template/class/owned attachment/method gates, duplicate/foreign/oversized/OFF refusal; original call and ESP preserved");
     puts("PASS TMD aging attachment: real four-argument production callback x100 across 4 wrist rotations, preserved ESP/non-overwritten parent, aligned copy, exact owned child/caller, stale/pawn/tracking/support/cinema/AV/OFF fallback; original called once; no endpoint/power/energy writes");
     puts("PASS TMD socket: original bind/animated skin + final local/ride + native socket; 4 rotations, stereo identity, no double camera; real adapter ABI 100 calls ESP preserved, exact owner/name/thread/freshness/contexts, original once, no gameplay writes");
 }

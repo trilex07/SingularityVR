@@ -28,21 +28,44 @@ static bool OwnedBeam(uintptr_t tmd,uintptr_t beam) {
         PauseRttProbe::SafeRange(beam,OBJ_CLASS+sizeof(uintptr_t))&&
         NativeTmdAim::ExactClass(NativeOwnedInventory::P(beam+OBJ_CLASS),"RvCurvedBeamComponent");
 }
+// Native PSC::SetTemplate (754480) stores Template at +1D4. The audited
+// SkeletalMeshComponent child updater enumerates +27C/+280, stride 30h.
+// Template name alone is NOT ownership: require exactly one attachment on the
+// local TMD mesh and the same fingerprinted update/copy methods as the beam.
+static bool OwnedAgeParticle(uintptr_t owned,uintptr_t component) {
+    if(!g_tmdTrackedAgeParticles||!component||
+       !PauseRttProbe::SafeRange(component,0x1D4+sizeof(uintptr_t))||
+       !NativeTmdAim::ExactClass(NativeOwnedInventory::P(component+OBJ_CLASS),"ParticleSystemComponent"))return false;
+    const auto asset=NativeOwnedInventory::P(component+0x1D4);
+    if(!asset||!PauseRttProbe::SafeRange(asset,OBJ_CLASS+sizeof(uintptr_t))||
+       !NativeTmdAim::ExactClass(NativeOwnedInventory::P(asset+OBJ_CLASS),"ParticleSystem")||
+       !(NativeOwnedInventory::Named(asset,"fx_FP_TMD_ageOld")||
+         NativeOwnedInventory::Named(asset,"fx_FP_TMD_ageNew")))return false;
+    const auto vt=NativeOwnedInventory::P(component);
+    if(!vt||!NativeContextCursor::Method(NativeOwnedInventory::P(vt+0x154),124,0x81209A2B80795CAEull)||
+       !NativeContextCursor::Method(NativeOwnedInventory::P(vt+0x120),68,0x0DBA87D91A4465CCull))return false;
+    if(!PauseRttProbe::SafeRange(owned+0x27C,8))return false;
+    const auto rows=NativeOwnedInventory::P(owned+0x27C),count=NativeOwnedInventory::P(owned+0x280);
+    if(!rows||!count||count>64||!PauseRttProbe::SafeRange(rows,count*0x30))return false;
+    unsigned matches=0;
+    for(uintptr_t i=0;i<count;++i)if(NativeOwnedInventory::P(rows+i*0x30)==component)++matches;
+    return matches==1;
+}
 static bool Prepare(void* component,uintptr_t caller,const armbind::Mat* parent,
                     armbind::Mat& corrected) {
-    if(!g_tmdTrackedBeam||GetCurrentThreadId()!=thread||!attachmentReturn||caller!=attachmentReturn)return false;
+    if((!g_tmdTrackedBeam&&!g_tmdTrackedAgeParticles)||GetCurrentThreadId()!=thread||!attachmentReturn||caller!=attachmentReturn)return false;
     __try {
         if(!VrModeOn()||Rd(g_gamePaused)||Rd(g_inCinematic)||Rd(g_panelOpen)||
            Rd(g_vrMenuClass)||Rd(g_vrUiMenu)||Rd(g_twoHandActive)||!TmdRaised()||
            !Rd(g_tmdOnOffHand)||!Rd(g_offHandValid))return false;
         uintptr_t pawn=0;const auto tmd=NativeTmdAim::LocalTmd(pawn);
         if(!tmd)return false;
-        const auto beam=Beam(tmd);
-        if(beam!=(uintptr_t)component||!OwnedBeam(tmd,beam))return false;
         const auto owned=OwnerMesh(tmd);
         if(!owned||!IsLive(owned)||NativeOwnedInventory::P(NativeOwnedInventory::P(owned)+0x138)+0x161!=caller) {
             Note("attachment-owner");return false;
         }
+        const bool beam=g_tmdTrackedBeam&&OwnedBeam(tmd,(uintptr_t)component);
+        if(!beam&&!OwnedAgeParticle(owned,(uintptr_t)component))return false;
         if(!PauseRttProbe::SafeRange((uintptr_t)parent,sizeof(*parent))||!tmdmuzzle::Affine(*parent)) {
             Note("invalid-native-parent");return false;
         }
@@ -52,14 +75,16 @@ static bool Prepare(void* component,uintptr_t caller,const armbind::Mat* parent,
         if(!tmdmuzzle::BeamParent(w,pawn,GetTickCount64(),*parent,corrected)) {
             Note("no-fresh-rendered-wrist");return false;
         }
+        if(!beam){static unsigned receipts=0;if(receipts++<8)
+            Log("TMD Age particle: exact owned attached ageOld/ageNew component=%p frame=%u parent corrected once; native particle simulation unchanged; PSVR2 PENDING",component,w.frame);}
         static unsigned count=0;
-        if(count++<12)Log("TMD tracked beam: owned aging attachment component=%p pawn=%08X frame=%u age=%llums nativeParent=(%.3f %.3f %.3f) trackedParent=(%.3f %.3f %.3f) [native curve endpoint unchanged; physical acceptance pending]",
-            component,(unsigned)pawn,w.frame,(unsigned long long)(GetTickCount64()-w.tick),
+        if(count++<12)Log("TMD tracked attachment: route=%s component=%p pawn=%08X frame=%u age=%llums nativeParent=(%.3f %.3f %.3f) trackedParent=(%.3f %.3f %.3f) [physical acceptance pending]",
+            beam?"curve":"particle",component,(unsigned)pawn,w.frame,(unsigned long long)(GetTickCount64()-w.tick),
             parent->m[3][0],parent->m[3][1],parent->m[3][2],
             corrected.m[3][0],corrected.m[3][1],corrected.m[3][2]);
         return true;
     } __except(GetExceptionCode()==EXCEPTION_ACCESS_VIOLATION?EXCEPTION_EXECUTE_HANDLER:EXCEPTION_CONTINUE_SEARCH) {
-        g_tmdTrackedBeam=false;Note("unreadable-context-disabled");return false;
+        g_tmdTrackedBeam=false;g_tmdTrackedAgeParticles=false;Note("unreadable-context-disabled");return false;
     }
 }
 static void Forward(void* component,uintptr_t caller,void* scene,void* owner,
@@ -79,7 +104,7 @@ static void Forward(void* component,uintptr_t caller,void* scene,void* owner,
             __try {
                 if(PauseRttProbe::SafeRange((uintptr_t)component+0xA0,sizeof(float)*3)) {
                     const float* start=reinterpret_cast<const float*>((uintptr_t)component+0xA0);
-                    Log("TMD tracked beam: post-update source=(%.3f %.3f %.3f) parent=(%.3f %.3f %.3f) delta=(%.3f %.3f %.3f) [TickFX source witness]",
+                    Log("TMD tracked attachment: post-update source=(%.3f %.3f %.3f) parent=(%.3f %.3f %.3f) delta=(%.3f %.3f %.3f) [component LocalToWorld witness, not visible particle content]",
                         start[0],start[1],start[2],corrected.m[3][0],corrected.m[3][1],corrected.m[3][2],
                         start[0]-corrected.m[3][0],start[1]-corrected.m[3][1],start[2]-corrected.m[3][2]);
                     tmdmuzzle::Witness w;
@@ -87,7 +112,7 @@ static void Forward(void* component,uintptr_t caller,void* scene,void* owner,
                         w=NativeTmdSocket::published;ReleaseSRWLockShared(&NativeTmdSocket::lock);
                         armbind::Mat socket;
                         if(tmdmuzzle::Socket(w,w.pawn,GetTickCount64(),socket))
-                            Log("TMD tracked beam: tracked socket=(%.3f %.3f %.3f) source-minus-socket=(%.3f %.3f %.3f) frame=%u",
+                            Log("TMD tracked attachment: tracked socket=(%.3f %.3f %.3f) source-minus-socket=(%.3f %.3f %.3f) frame=%u",
                                 socket.m[3][0],socket.m[3][1],socket.m[3][2],
                                 start[0]-socket.m[3][0],start[1]-socket.m[3][1],
                                 start[2]-socket.m[3][2],w.frame);
@@ -105,7 +130,7 @@ static void __fastcall Hook(void* component,void*,void* scene,void* owner,
     Forward(component,(uintptr_t)_ReturnAddress(),scene,owner,parent,collision);
 }
 static void Poll() {
-    if(!g_tmdTrackedBeam||original)return;
+    if((!g_tmdTrackedBeam&&!g_tmdTrackedAgeParticles)||original)return;
     static ULONGLONG retry=0;static unsigned agePolls=0,ageEdges=0;
     static bool wasAge=false;
     const auto now=GetTickCount64();
@@ -148,11 +173,11 @@ static void Poll() {
         }
         attachmentReturn=children+0x161;thread=GetCurrentThreadId();
         if(MH_EnableHook((void*)update)!=MH_OK) {
-            g_tmdTrackedBeam=false;Note("enable-failed-disabled");return;
+            g_tmdTrackedBeam=false;g_tmdTrackedAgeParticles=false;Note("enable-failed-disabled");return;
         }
         Log("TMD tracked beam: audited owned aging child update armed; complete CPU attachment parent follows original-to-tracked wrist delta; native target unchanged");
     } __except(GetExceptionCode()==EXCEPTION_ACCESS_VIOLATION?EXCEPTION_EXECUTE_HANDLER:EXCEPTION_CONTINUE_SEARCH) {
-        g_tmdTrackedBeam=false;Note("installer-unreadable-disabled");
+        g_tmdTrackedBeam=false;g_tmdTrackedAgeParticles=false;Note("installer-unreadable-disabled");
     }
 }
 } // namespace NativeTmdBeam

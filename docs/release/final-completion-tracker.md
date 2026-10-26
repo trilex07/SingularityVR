@@ -21,7 +21,12 @@ STATUS.md entries and agent handoffs do not override the scoped human result.
 
 ### P1-A — Age/Square visual producer
 
-- Owner MAIN; status NOT STARTED (root-cause verification in progress).
+- Owner MAIN; status IMPLEMENTED—AWAITING HMD.
+- Default-OFF `TmdTrackedAgeParticles` corrects exact owned ageOld/ageNew
+  particle attachment parents through the existing native update callback.
+  Original x86 contracts and production callback tests PASS; runtime visual
+  attribution remains falsifiable, not claimed proven from source.
+- Evidence: `docs/handoffs/final-age-particle-attachment-20261026.md`.
 - Sources: `native_tmd_socket.inl`, `native_tmd_beam.inl`,
   `tmd_muzzle_socket.h`, original RvEffectObject/particle route.
 - Evidence: `docs/handoffs/main-l2-square-native-audit-20261025.md`;
@@ -33,11 +38,15 @@ STATUS.md entries and agent handoffs do not override the scoped human result.
 
 ### P1-B — Seeker
 
-- Owner SIDE seeker_finish, MAIN integration; status NOT STARTED (audit running).
+- Owner SIDE seeker_finish, MAIN integration; status IMPLEMENTED—AWAITING HMD.
+- Existing source retained after native ABI, geometry and archived-session audit;
+  no new unsupported pose/zone/accuracy adjustment. Integrated `f14e7995`.
 - Branch `side/final-seeker-20261026`; base `71728b5d`.
 - Sources: native ownership/slot/support/projectile code and archived physical logs.
 - Dependency: legitimate acquired Seeker for physical test, native lifecycle
-  decision (earlier user accepted original drop lifecycle; no silent fake retention).
+  test. Completion directive selects optional `SeekerBackSlot=1` for the next
+  controlled candidate; prior native-drop preference is superseded for this test.
+  Retention must use native owned weapons, with no injection or duplication.
 - Acceptance: verified ownership and supported native draw/switch, reliable Grip,
   muzzle-aligned launch preserving guidance/spread/recoil; save/load separately tested.
 
@@ -46,6 +55,10 @@ STATUS.md entries and agent handoffs do not override the scoped human result.
 - Owner SIDE audio_finish; status AWAITING HUMAN APPROVAL.
 - Branch `side/final-audio-20261026`; inspect `side/dubbing-corrections`,
   local delivery manifests and actual native-bank consumer.
+- Integrated refreshed2459-file manifests from `6d5d9125`; independent scanner
+  finds0 hash mismatches/extras. This supersedes the obsolete1864-mismatch report.
+  A temporary `.tmp.wav` has no native identity and must not enter deployment.
+  Native package mapping/build and selected audio approval remain explicit gates.
 - Acceptance: complete hash-pinned scope, correct line mapping, duration/format/
   loudness checks, English preserved, documented rights and listening approval.
 - No generated voice activation merely because files exist or ASR passes.
@@ -53,21 +66,26 @@ STATUS.md entries and agent handoffs do not override the scoped human result.
 ### P2-B — Sound remaster
 
 - Owner SIDE audio_finish; status AWAITING HUMAN APPROVAL.
-- Existing branch `side/audio-music-sfx-remaster`; 8 sets/24 variants are claims
-  to verify against actual assets/consumers.
+- Existing branch `side/audio-music-sfx-remaster`; all8 sets/24 variants verified
+  offline. Seven native graphs identified; storm remains heuristic and excluded.
 - Acceptance: approved variant per event, native SoundCue/timing/spatial/concurrency
   preserved, no duplicate playback; actual listening required.
 
 ### P3-A — Menus and legacy prompts
 
-- Owner SIDE visual_finish; status NOT STARTED (deployment/binding audit running).
+- Owner SIDE visual_finish; status BLOCKED—EVIDENCE PROVIDED for native button
+  replacements. Settings/wheel/backdrop bindings already exist; this does not
+  replace native main/pause button shapes. Exact GFx consumer identity remains
+  required before replacing those shapes without duplicate text or hit changes.
 - Branch `side/final-visual-20261026`; reuse V2.1/M02 assets and existing GFx.
 - Acceptance: declared screen scope consistent, PL/EN glyphs, laser/selection/
   scroll/transitions, both eyes; no duplicate overlay or HUD3D redesign.
 
 ### P3-B — HD assets incl. Valkyrie 4K
 
-- Owner SIDE visual_finish; status NOT STARTED (identity/approval audit running).
+- Owner SIDE visual_finish; status IMPLEMENTED—AWAITING HMD for verified
+  Valkyrie4K pair, independent default-OFF bridge gate integrated from7548b119.
+  Incomplete Centurion/Kasimov diffuse identities remain excluded.
 - Acceptance: exact material identity, alpha/mips/format, correct appearance,
   bounded memory/load cost, no unapproved automatic activation.
 
@@ -86,6 +104,8 @@ STATUS.md entries and agent handoffs do not override the scoped human result.
 
 ## Delivery ledger
 
-No changes integrated yet. No Steam deployment, launch, audio replacement or
-promotion performed by this branch. Commit/build/test receipts will be appended
-as work lands. Every unresolved human or runtime dependency stays explicit.
+Integrated visual7548b119/22117405, Seekerf14e7995, audio5d56338f/6d5d9125.
+No Steam deployment, launch, audio replacement or promotion performed by this
+branch. Age callback/native-machine-code tests, dual-hand regression suite,
+TMD runtime suite including D3D9/D3D9Ex7110-face submission, WeaponLocker preview
+and OLED D3D11 pixel/reference tests PASS. All physical gates remain open.
