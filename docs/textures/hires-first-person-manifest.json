@@ -2,17 +2,222 @@
   "schema": 1,
   "status": "offline only; not deployed or PSVR2 validated",
   "private_stage": "<assets-local>/material-remaster-hires/ready",
-  "runtime_note": "PriorityMaterial retains Volk/glove only. Independently default-OFF valkyrie_material_mode admits only the verified Valkyrie diffuse/normal pair for MAIN review. Other entries remain staging-only; no physical acceptance is implied.",
+  "runtime_note": "Independent default-OFF valkyrie/centurion/kasimov_material_mode gates. PriorityMaterial remains Volk/glove only. Exact measured source hashes only; no physical approval implied.",
   "maps": {
-    "AR_E99Rifle_alt_d": {"asset": "Valkyrie", "role": "diffuse", "status": "staged", "confidence": "high-source-medium-runtime", "source_package": "RvGame", "source_layout": [2048, 1024], "source_fourcc": "DXT5", "source_sha256": "93ee1b484c982fa953604a9f020e01c82955c3e7e6d06786c52b4ef7df6864f4", "source_fnv64": 16160022635740620080, "width": 4096, "height": 2048, "fourcc": "DXT5", "sha256": "a0cdc3dd8528f6b278ef814c77c8f81e7efa708a12c6d32a30c69b7dc3b59ee9", "preview": "<assets-local>/material-remaster-batch2/weapon_e99/comparison/AR_E99Rifle_alt_diffuse_compare.png"},
-    "AR_E99Rifle_n": {"asset": "Valkyrie", "role": "normal", "status": "staged", "confidence": "high-source-medium-runtime", "source_package": "RvGame", "source_layout": [2048, 1024], "source_fourcc": "DXT1", "source_sha256": "05bfb7f5d361e95eefc3f720bb3731d25f5be52ecf45bbf519854beac9522736", "source_fnv64": 185541836161454253, "width": 4096, "height": 2048, "fourcc": "DXT1", "sha256": "54d47f3b7f15ee63410f321b945acb310dbc95d94346cc006ffd2d7460d06fee", "preview": "<assets-local>/material-remaster-batch2/weapon_e99/comparison/AR_E99Rifle_alt_normal_compare.png"},
-    "AR_shotgun_d": {"asset": "Volk", "role": "diffuse", "status": "staged", "confidence": "medium-visual", "source_package": "RvGameMPLoader_SF", "source_layout": [1024, 1024], "source_fourcc": "DXT5", "source_sha256": "62e4dd278e0ea9288b81c5d5f3d25fa85e3799ff73c70b3eaaf5602358030ecb", "source_fnv64": 5337964157207211514, "width": 2048, "height": 2048, "fourcc": "DXT5", "sha256": "d6a98ef03ec588a31fefdb7393757738b19b86b9e9381029e47e5c26c0506237", "preview": "<assets-local>/material-remaster-hires/volk-glove-clean-v2/previews/AR_shotgun_d.png", "note": "Source RGB has dark sparse color speckles; no new procedural grain, inspect in-game before acceptance"},
-    "AR_shotgun_n": {"asset": "Volk", "role": "normal", "status": "staged", "confidence": "high-source-medium-runtime", "source_package": "RvGameMPLoader_SF", "source_layout": [1024, 1024], "source_fourcc": "DXT1", "source_sha256": "3a36fd5d3c856bb38d448dcc7f488a4a5379e83686c2e5878f8487438969510c", "source_fnv64": 10487084446201973189, "width": 2048, "height": 2048, "fourcc": "DXT1", "sha256": "83f64bfce085107a4ec80f14d236eb1409a402b8d879bcf8691667c3f92cd798", "preview": "<assets-local>/material-remaster-hires/volk-glove-clean-v2/previews/AR_shotgun_n.png"},
-    "inview_glove_d": {"asset": "first-person gloves", "role": "diffuse", "status": "staged", "confidence": "high-source-medium-runtime", "source_package": "RvGame", "source_layout": [1024, 1024], "source_fourcc": "DXT1", "source_sha256": "f49feef3c08085e6c104fadaea93f533b0b97a7ffde6fb86e618161178125560", "source_fnv64": 14169204449685679501, "width": 2048, "height": 2048, "fourcc": "DXT1", "sha256": "d76d05b122a6c81b24b3560e88cf181167fab3ee64a967a7017d21770f3d4754", "preview": "<assets-local>/material-remaster-hires/volk-glove-clean-v2/previews/inview_glove_d.png"},
-    "inview_glove_n": {"asset": "first-person gloves", "role": "normal", "status": "staged", "confidence": "high-source-medium-runtime", "source_package": "RvGame", "source_layout": [1024, 1024], "source_fourcc": "DXT1", "source_sha256": "67342ce3a34cd6ba9fd4903c58efaeda2973633c576dc71dd5b78f4525a6bd23", "source_fnv64": 14124171308224505833, "width": 2048, "height": 2048, "fourcc": "DXT1", "sha256": "5f0a8e9e4c65763a58bc5e88cafeee238ef715935730065336cdff2ca3d8e049", "preview": "<assets-local>/material-remaster-hires/volk-glove-clean-v2/previews/inview_glove_n.png"},
-    "ar_sniper_rifle_n": {"asset": "Kasimov", "role": "normal", "status": "staged", "confidence": "high-source-medium-runtime", "source_package": "RvGameMPLoader_SF", "source_layout": [2048, 1024], "source_fourcc": "DXT1", "source_sha256": "1ea5f3484a3ed988015e12c69bdeb5a75687bd3e078044fe5b08b9894e744b2c", "source_fnv64": 10616915492120553037, "width": 4096, "height": 2048, "fourcc": "DXT1", "sha256": "37ea2c1a3c368e1a2b7428490d5a36d9673ab0244dfc5af013ac604c17daed77", "preview": "<assets-local>/material-remaster-batch3/weapon_sniper_normal/comparison/ar_sniper_rifle_n_normal_compare.png"},
-    "ar_sniper_rifle_d": {"asset": "Kasimov", "role": "diffuse", "status": "blocked-lower-mip", "confidence": "low", "source_package": "RvGameMPLoader_SF", "object_layout": [2048, 1024], "available_extraction": [1024, 512], "reason": "UE3 object declares 2048x1024; private extraction contains only 1024x512"},
-    "handgun_d": {"asset": "Centurion", "role": "diffuse", "status": "blocked-identity-and-lower-mip", "confidence": "low", "source_package": "RvGameMPLoader_SF", "object_layout": [2048, 2048], "available_capture": [1024, 1024], "reason": "UE3 object is PF_DXT1 2048x2048 while capture is DXT5 1024x1024; identity/layout not proven"},
-    "handgun_n": {"asset": "Centurion", "role": "normal", "status": "blocked-lower-mip", "confidence": "low", "source_package": "captured", "reason": "No verified top mip plus UE3 identity match"}
+    "AR_E99Rifle_alt_d": {
+      "asset": "Valkyrie",
+      "role": "diffuse",
+      "status": "staged",
+      "confidence": "high-source-medium-runtime",
+      "source_package": "RvGame",
+      "source_layout": [
+        2048,
+        1024
+      ],
+      "source_fourcc": "DXT5",
+      "source_sha256": "93ee1b484c982fa953604a9f020e01c82955c3e7e6d06786c52b4ef7df6864f4",
+      "source_fnv64": 16160022635740620080,
+      "width": 4096,
+      "height": 2048,
+      "fourcc": "DXT5",
+      "sha256": "a0cdc3dd8528f6b278ef814c77c8f81e7efa708a12c6d32a30c69b7dc3b59ee9",
+      "preview": "<assets-local>/material-remaster-batch2/weapon_e99/comparison/AR_E99Rifle_alt_diffuse_compare.png"
+    },
+    "AR_E99Rifle_n": {
+      "asset": "Valkyrie",
+      "role": "normal",
+      "status": "staged",
+      "confidence": "high-source-medium-runtime",
+      "source_package": "RvGame",
+      "source_layout": [
+        2048,
+        1024
+      ],
+      "source_fourcc": "DXT1",
+      "source_sha256": "05bfb7f5d361e95eefc3f720bb3731d25f5be52ecf45bbf519854beac9522736",
+      "source_fnv64": 185541836161454253,
+      "width": 4096,
+      "height": 2048,
+      "fourcc": "DXT1",
+      "sha256": "54d47f3b7f15ee63410f321b945acb310dbc95d94346cc006ffd2d7460d06fee",
+      "preview": "<assets-local>/material-remaster-batch2/weapon_e99/comparison/AR_E99Rifle_alt_normal_compare.png"
+    },
+    "AR_shotgun_d": {
+      "asset": "Volk",
+      "role": "diffuse",
+      "status": "staged",
+      "confidence": "medium-visual",
+      "source_package": "RvGameMPLoader_SF",
+      "source_layout": [
+        1024,
+        1024
+      ],
+      "source_fourcc": "DXT5",
+      "source_sha256": "62e4dd278e0ea9288b81c5d5f3d25fa85e3799ff73c70b3eaaf5602358030ecb",
+      "source_fnv64": 5337964157207211514,
+      "width": 2048,
+      "height": 2048,
+      "fourcc": "DXT5",
+      "sha256": "d6a98ef03ec588a31fefdb7393757738b19b86b9e9381029e47e5c26c0506237",
+      "preview": "<assets-local>/material-remaster-hires/volk-glove-clean-v2/previews/AR_shotgun_d.png",
+      "note": "Source RGB has dark sparse color speckles; no new procedural grain, inspect in-game before acceptance"
+    },
+    "AR_shotgun_n": {
+      "asset": "Volk",
+      "role": "normal",
+      "status": "staged",
+      "confidence": "high-source-medium-runtime",
+      "source_package": "RvGameMPLoader_SF",
+      "source_layout": [
+        1024,
+        1024
+      ],
+      "source_fourcc": "DXT1",
+      "source_sha256": "3a36fd5d3c856bb38d448dcc7f488a4a5379e83686c2e5878f8487438969510c",
+      "source_fnv64": 10487084446201973189,
+      "width": 2048,
+      "height": 2048,
+      "fourcc": "DXT1",
+      "sha256": "83f64bfce085107a4ec80f14d236eb1409a402b8d879bcf8691667c3f92cd798",
+      "preview": "<assets-local>/material-remaster-hires/volk-glove-clean-v2/previews/AR_shotgun_n.png"
+    },
+    "inview_glove_d": {
+      "asset": "first-person gloves",
+      "role": "diffuse",
+      "status": "staged",
+      "confidence": "high-source-medium-runtime",
+      "source_package": "RvGame",
+      "source_layout": [
+        1024,
+        1024
+      ],
+      "source_fourcc": "DXT1",
+      "source_sha256": "f49feef3c08085e6c104fadaea93f533b0b97a7ffde6fb86e618161178125560",
+      "source_fnv64": 14169204449685679501,
+      "width": 2048,
+      "height": 2048,
+      "fourcc": "DXT1",
+      "sha256": "d76d05b122a6c81b24b3560e88cf181167fab3ee64a967a7017d21770f3d4754",
+      "preview": "<assets-local>/material-remaster-hires/volk-glove-clean-v2/previews/inview_glove_d.png"
+    },
+    "inview_glove_n": {
+      "asset": "first-person gloves",
+      "role": "normal",
+      "status": "staged",
+      "confidence": "high-source-medium-runtime",
+      "source_package": "RvGame",
+      "source_layout": [
+        1024,
+        1024
+      ],
+      "source_fourcc": "DXT1",
+      "source_sha256": "67342ce3a34cd6ba9fd4903c58efaeda2973633c576dc71dd5b78f4525a6bd23",
+      "source_fnv64": 14124171308224505833,
+      "width": 2048,
+      "height": 2048,
+      "fourcc": "DXT1",
+      "sha256": "5f0a8e9e4c65763a58bc5e88cafeee238ef715935730065336cdff2ca3d8e049",
+      "preview": "<assets-local>/material-remaster-hires/volk-glove-clean-v2/previews/inview_glove_n.png"
+    },
+    "ar_sniper_rifle_n": {
+      "asset": "Kasimov",
+      "role": "normal",
+      "status": "staged",
+      "confidence": "high-source-medium-runtime",
+      "source_package": "RvGameMPLoader_SF",
+      "source_layout": [
+        2048,
+        1024
+      ],
+      "source_fourcc": "DXT1",
+      "source_sha256": "1ea5f3484a3ed988015e12c69bdeb5a75687bd3e078044fe5b08b9894e744b2c",
+      "source_fnv64": 10616915492120553037,
+      "width": 4096,
+      "height": 2048,
+      "fourcc": "DXT1",
+      "sha256": "37ea2c1a3c368e1a2b7428490d5a36d9673ab0244dfc5af013ac604c17daed77",
+      "preview": "<assets-local>/material-remaster-batch3/weapon_sniper_normal/comparison/ar_sniper_rifle_n_normal_compare.png"
+    },
+    "ar_sniper_rifle_d": {
+      "asset": "Kasimov",
+      "role": "diffuse",
+      "status": "staged",
+      "confidence": "high-source-runtime-and-visual-pending",
+      "source_package": "RvGameMPLoader_SF",
+      "source_name": "ar_sniper_rifle_d",
+      "source_layout": [
+        1024,
+        512
+      ],
+      "source_fourcc": "DXT5",
+      "source_sha256": "ac7d2276fff2042fac8ea210519115cf712719f83162e914557ec7b83b7e936b",
+      "source_fnv64": 14906919060078924434,
+      "source_cooked_mip": 1,
+      "width": 4096,
+      "height": 2048,
+      "fourcc": "DXT5",
+      "sha256": "61e4cc32ed2ded5e369076c5e4ccf4f099d09ea52f63def76e9669b4ed40b7a8",
+      "preview": "<assets-local>/material-remaster-hires/centurion-kasimov-complete-20261026-v2/previews/ar_sniper_rifle_d.png",
+      "method": "4x original interpolation, mild RGB-only unsharp; no invented detail",
+      "exact_bulk_dds_match": true,
+      "source_package_sha256": "6c1f0910bf932eb62e5b67a1b9de5b370e0da65168f97d71495cff598ff2eebc",
+      "source_bulk_offset": 774963200,
+      "source_bulk_raw_sha256": "73f2e3483b53914a06a068a7adc22c6a22309d242438eb7d50af7eb279bfe240",
+      "note": "Nominal2048x1024 mip0 is serialized UNUSED in SP and MP. Highest present diffuse is1024x512 mip1, verified byte-for-byte from TFC. 4K is interpolation, not recovered detail. Exact runtime identity match still required."
+    },
+    "handgun_d": {
+      "asset": "Centurion",
+      "role": "diffuse",
+      "status": "staged",
+      "confidence": "high-source-runtime-and-visual-pending",
+      "source_package": "wp_SP_ARPistol_SF",
+      "source_name": "AR_Pistol_d",
+      "source_layout": [
+        1024,
+        1024
+      ],
+      "source_fourcc": "DXT5",
+      "source_sha256": "0c958ed11c3311ddbb517a8893ec7e372d0811a58582220f04a6efd30a0d9a39",
+      "source_fnv64": 5208987696962520514,
+      "source_cooked_mip": 0,
+      "width": 2048,
+      "height": 2048,
+      "fourcc": "DXT5",
+      "sha256": "3590579edf7f67ed49675b0104798ea6d66818e9b2663c5bcccffe3dfe618e9c",
+      "preview": "<assets-local>/material-remaster-hires/centurion-kasimov-complete-20261026-v2/previews/handgun_d.png",
+      "method": "2x original interpolation, mild RGB-only unsharp; no invented detail",
+      "exact_bulk_dds_match": true,
+      "source_package_sha256": "0534c5c9a5878d280294168bd12711b99cb3948503d4ed53608a0316479d1b18",
+      "source_bulk_offset": 866385920,
+      "source_bulk_raw_sha256": "e05b476436a3b64a6cc800657672454690a426fc2daa0ea3c538b1bda4be4297",
+      "note": "Existing captured runtime alias retained; full source FNV equals original AR_Pistol texture, not unrelated wp_handgun material."
+    },
+    "handgun_n": {
+      "asset": "Centurion",
+      "role": "normal",
+      "status": "staged",
+      "confidence": "high-source-runtime-and-visual-pending",
+      "source_package": "wp_SP_ARPistol_SF",
+      "source_name": "AR_Pistol_n",
+      "source_layout": [
+        1024,
+        1024
+      ],
+      "source_fourcc": "DXT1",
+      "source_sha256": "ae206388bb839175c3d3d0db453a7b7a0f0505b6db76fc3dc46d950ec23ae2d8",
+      "source_fnv64": 6877428834008494221,
+      "source_cooked_mip": 0,
+      "width": 2048,
+      "height": 2048,
+      "fourcc": "DXT1",
+      "sha256": "ed70b5eb67e85bcca99b305865c574f7023da622d0ec8e9a41dc1f352d67e255",
+      "preview": "<assets-local>/material-remaster-hires/centurion-kasimov-complete-20261026-v2/previews/handgun_n.png",
+      "method": "2x original interpolation, mild RGB-only unsharp; no invented detail",
+      "exact_bulk_dds_match": true,
+      "source_package_sha256": "0534c5c9a5878d280294168bd12711b99cb3948503d4ed53608a0316479d1b18",
+      "source_bulk_offset": 866058240,
+      "source_bulk_raw_sha256": "18369932a7a8eb898c4b28142267845a5f20d9b351865d15c56079587a0c62ba",
+      "note": "Existing captured runtime alias retained; full source FNV equals original AR_Pistol texture, not unrelated wp_handgun material."
+    }
   }
 }

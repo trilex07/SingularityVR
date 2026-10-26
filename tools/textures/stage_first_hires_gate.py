@@ -10,7 +10,9 @@ from pathlib import Path
 from verify_hires_set import verify
 
 FIRST = ('AR_shotgun_d', 'AR_shotgun_n', 'inview_glove_d', 'inview_glove_n')
-GROUPS = {'first': FIRST, 'valkyrie': ('AR_E99Rifle_alt_d', 'AR_E99Rifle_n')}
+GROUPS = {'first': FIRST, 'valkyrie': ('AR_E99Rifle_alt_d', 'AR_E99Rifle_n'),
+          'centurion': ('handgun_d', 'handgun_n'), 'kasimov': ('ar_sniper_rifle_d', 'ar_sniper_rifle_n')}
+GROUPS['complete'] = tuple(n for group in ('first','valkyrie','centurion','kasimov') for n in GROUPS[group])
 
 def stage(root: Path, name: str, manifest: dict, targets: str, group: str = 'first'):
     if group not in GROUPS:
@@ -33,7 +35,8 @@ def stage(root: Path, name: str, manifest: dict, targets: str, group: str = 'fir
     (output / 'manifest.json').write_text(json.dumps({n: receipts[n] for n in GROUPS[group]}, indent=2))
     (output / 'review.json').write_text(json.dumps({
         'group': group, 'physical_acceptance': 'PENDING', 'deployed': False,
-        'ini_key': 'valkyrie_material_mode' if group == 'valkyrie' else 'priority_material_mode',
+        'ini_key': None if group == 'complete' else ('priority_material_mode' if group == 'first' else group+'_material_mode'),
+        'ini_keys': ['priority_material_mode','valkyrie_material_mode','centurion_material_mode','kasimov_material_mode'] if group == 'complete' else [],
         'default': 0, 'modes': {'0': 'existing policy', '1': 'log only', '2': 'apply reviewed pair'},
         'dds_bytes': sum(len(data) for data in payloads.values()),
         'note': 'Staging does not enable replacement or establish visual approval.'

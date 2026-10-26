@@ -54,7 +54,10 @@ def verify(manifest: dict, stage: Path, targets: str, originals: Path | None = N
         if targets.count(expected_target) != 1:
             raise ValueError(f"target identity/layout mismatch: {name}")
         if originals is not None:
-            original = originals / spec["source_package"] / "Texture2D" / f"{name}.dds"
+            source_name = spec.get("source_name", name)
+            if not re.fullmatch(r"[A-Za-z0-9_]+", source_name):
+                raise ValueError(f"unsafe source identity: {name}")
+            original = originals / spec["source_package"] / "Texture2D" / f"{source_name}.dds"
             if not original.is_file():
                 raise FileNotFoundError(original)
             if hashlib.sha256(original.read_bytes()).hexdigest().lower() != spec["source_sha256"].lower():

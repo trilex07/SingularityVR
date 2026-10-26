@@ -48,5 +48,30 @@ class Stage(unittest.TestCase):
             with patch.object(s,'verify') as verify:
                 with self.assertRaisesRegex(ValueError,'Steam'): s.stage(root,'candidate',{},'')
                 verify.assert_not_called()
+    def test_remaining_pairs_use_independent_off_gates(self):
+        import json
+        for group in ('centurion','kasimov'):
+            with tempfile.TemporaryDirectory(dir=TEMP_ROOT) as tmp:
+                root=Path(tmp);src=root/'material-remaster-hires/ready';src.mkdir(parents=True)
+                receipts={}
+                for name in s.GROUPS[group]:
+                    data=name.encode();(src/(name+'.dds')).write_bytes(data)
+                    receipts[name]={'sha256':hashlib.sha256(data).hexdigest()}
+                with patch.object(s,'verify',return_value=receipts):out=s.stage(root,'candidate',{},'',group)
+                r=json.loads((out/'review.json').read_text())
+                self.assertEqual(r['ini_key'],group+'_material_mode');self.assertEqual(r['default'],0)
+                self.assertEqual({p.stem for p in out.glob('*.dds')},set(s.GROUPS[group]))
+    def test_complete_stage_lists_real_independent_keys(self):
+        import json
+        with tempfile.TemporaryDirectory(dir=TEMP_ROOT) as tmp:
+            root=Path(tmp);src=root/'material-remaster-hires/ready';src.mkdir(parents=True)
+            receipts={}
+            for name in s.GROUPS['complete']:
+                data=name.encode();(src/(name+'.dds')).write_bytes(data)
+                receipts[name]={'sha256':hashlib.sha256(data).hexdigest()}
+            with patch.object(s,'verify',return_value=receipts):out=s.stage(root,'candidate',{},'','complete')
+            r=json.loads((out/'review.json').read_text())
+            self.assertIsNone(r['ini_key']);self.assertEqual(len(r['ini_keys']),4)
+            self.assertEqual(len(list(out.glob('*.dds'))),10);self.assertEqual(r['default'],0)
 
 if __name__=='__main__': unittest.main()

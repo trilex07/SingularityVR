@@ -19,6 +19,17 @@ static void Exercise(IDirect3DDevice9* dev,IDirect3DTexture9* input,IDirect3DTex
     if(bound)bound->Release();
 }
 int main() {
+    D3DSURFACE_DESC sniper{};sniper.Width=1024;sniper.Height=512;sniper.Format=D3DFMT_DXT5;
+    bool have=true;
+    g_kasimovMaterialMode=remasterscope::PriorityMode::Off;
+    Check(MatchTarget(sniper,14906919060078924434ULL,have)==nullptr,"actual target matcher excludes new Kasimov diffuse in default OFF for BOTH hook owners");
+    g_kasimovMaterialMode=remasterscope::PriorityMode::LogOnly;
+    const auto* selected=MatchTarget(sniper,14906919060078924434ULL,have);
+    Check(selected&&!std::strcmp(selected->name,"ar_sniper_rifle_d"),"actual target matcher admits exact first-present cooked diffuse in log-only");
+    Check(MatchTarget(sniper,14906919060078924435ULL,have)==nullptr,"new diffuse refuses incorrect original pixel hash");
+    g_kasimovMaterialMode=remasterscope::PriorityMode::Apply;
+    Check(MatchTarget(sniper,14906919060078924434ULL,have)==selected,"actual matcher preserves exact target for explicit apply");
+    g_kasimovMaterialMode=remasterscope::PriorityMode::Off;
     HMODULE system9=LoadLibraryExW(L"d3d9.dll",nullptr,LOAD_LIBRARY_SEARCH_SYSTEM32);
     auto create=system9?reinterpret_cast<IDirect3D9* (WINAPI*)(UINT)>(GetProcAddress(system9,"Direct3DCreate9")):nullptr;
     IDirect3D9* d3d=create?create(D3D_SDK_VERSION):nullptr;if(!d3d)return 1;
