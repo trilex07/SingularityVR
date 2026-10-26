@@ -1,5 +1,23 @@
 # STATUS — session handoff
 
+## 2026-10-26 — MAIN: Trilex accepts V7 as first-release baseline
+
+- User PSVR2 feedback: "wszystko wydaje się dobrze"; explicitly requested main,
+  README credit to Trilex and preservation as the first-release baseline.
+- Accepted exact runtime source `38ca72f8`, renderer `23A3A768...`, bridge
+  `F58CB3A8...`, 134 assets / 138 total source matches. General session
+  acceptance; no fabricated per-feature, unvisited-level, dialogue or 90 Hz PASS.
+- Old lease completed its verified restore and exited. MAIN then persistently
+  installed V7 through production tooling; backups retained. New accepted profile
+  `895A8E84...`: all 164 pins and INI PASS, original core/EXE protected.
+- Main-only historical reports retained through merge `5667aa5c`; runtime
+  sources unchanged from the physically tested build. No new gameplay launch.
+- README now documents Trilex authorship, features, PSVR2 controls and limits.
+  First-release installer/publication awaits the user's upcoming requirements;
+  no version, tag or public release asset has been invented.
+- Current receipt: `docs/release/first-release-baseline-20261026.json`.
+  Old AB348E06-targeted runners are historical and must not restore over V7.
+
 ## 2026-10-26 — MAIN: startup isolated; V7 ready for physical acceptance
 
 - Full updated payload boots with original `RvGame.xxx` retained; source

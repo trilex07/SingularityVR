@@ -38,23 +38,23 @@
     "asset_scope": "PASS:21 allowed/105 escapes/11 excluded"
   },
   "asset_state": {
-    "dubbing": "V7:1248 replacements across116 banks,541 new+707 preserved; ten content refusals retain base and five other identities uncovered. Physical/listening PENDING.",
-    "sound_remaster": "Seven sets included; one TMD impulse core replacement blocked. Native core/audio preserved. Listening PENDING.",
-    "hd": "10 DDS complete staged set; clean bridge build and pixel tests PASS; physical PENDING",
-    "native_menu_buttons": "native GFx Button/ButtonLeft remastered; real bounds, bitmap and action preservation PASS; physical PENDING"
+    "dubbing": "V7:1248 replacements across116 banks; general session accepted, exhaustive listening not established. Ten content refusals retain base and five other identities uncovered.",
+    "sound_remaster": "Seven sets included; one TMD impulse core replacement withheld. Native core/audio preserved. General session accepted.",
+    "hd": "10 DDS installed; general session accepted, not every material certified.",
+    "native_menu_buttons": "Native GFx Button/ButtonLeft remaster installed; general session accepted."
   },
   "steam_modified": true,
   "game_launched": true,
-  "physical_acceptance": "PENDING",
+  "physical_acceptance": "ACCEPTED_GENERAL_SESSION_20261026",
   "release_complete": false,
   "texture_bridge_sha256": "F58CB3A805E46C3D3F7E88137BD605AF21A8A8106C289385132F677A968E95FD",
   "private_asset_manifest_sha256": "df6a7a3ff4ae8e012f4c9b2837537333977a25e79376b852000f73030541fa82",
   "private_asset_manifest": "build/next-weapon-reload/final-complete-v7-safe-20261026/manifest.json",
   "readiness_receipt": "docs/release/final-session-readiness-20261026.json",
-  "steam_currently_modified": false,
+  "steam_currently_modified": true,
   "live_startup": "PASS_WITH_IDENTICAL_PAYLOAD_AND_RUNTIME_BYTES",
-  "recommendation": "GO_CONTROLLED_PSVR2_TEST_ONLY",
-  "current_installation": "RESTORED_VERIFIED_AB348E06",
+  "recommendation": "ACCEPTED_BASELINE_FOR_MAIN_FIRST_RELEASE_PREPARATION",
+  "current_installation": "PERSISTENT_ACCEPTED_V7",
   "live_attempts": [
     {
       "candidate": "final-complete-v3-20261026",
@@ -205,5 +205,9 @@
   "side_content_refusals": 10,
   "additional_uncovered_native_identities": 5,
   "withheld_core_sound_remasters": 1,
-  "requires_new_user_start": true
+  "requires_new_user_start": true,
+  "acceptance_receipt": "docs/release/first-release-baseline-20261026.json",
+  "installer_status": "PENDING_USER_INSTRUCTIONS",
+  "accepted_profile_sha256": "895A8E845304F601F1DFCC37AF6DFD88E24D69F83656C04095207F25D7419E8D",
+  "physical_scope": "User: everything seems good. General grouped-session acceptance, not exhaustive per-level, dialogue, Seeker or 90 Hz certification."
 }

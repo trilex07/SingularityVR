@@ -49,7 +49,7 @@
     "content_refusals_preserve_base": 10,
     "additional_uncovered_identities": 5,
     "engine": "Pocket-TTS Polish 6L per SIDE implementation; no XTTS claim",
-    "listening": "PENDING"
+    "listening": "General session accepted; exhaustive content/listening approval not established"
   },
   "sound_remaster": {
     "included_sets": 7,
@@ -57,14 +57,14 @@
     "withheld": "TMD impulse SoundNodeWave in RvGame.xxx",
     "native_tmd_audio": "UNCHANGED"
   },
-  "textures": "10 DDS staged including original-derived Valkyrie/Centurion/Kasimov pairs; material acceptance PENDING",
-  "menus": "native main/pause Button and ButtonLeft package included; physical acceptance PENDING",
+  "textures": "10 DDS installed including original-derived Valkyrie/Centurion/Kasimov pairs; general session accepted, not every material certified",
+  "menus": "Native main/pause Button and ButtonLeft included in accepted grouped session",
   "startup": "PASS_WITH_IDENTICAL_PAYLOAD_AND_RUNTIME_BYTES",
-  "openxr": "READY; shouldRender=0 while headset asleep; not physical/pixel proof",
-  "physical_acceptance": "PENDING",
-  "recommendation": "GO_CONTROLLED_PSVR2_TEST_ONLY",
+  "openxr": "CONFIRMED: V7 session reached shouldRender=1 and submitted stereo; user accepted latest session",
+  "physical_acceptance": "ACCEPTED_GENERAL_SESSION_20261026",
+  "recommendation": "ACCEPTED_BASELINE_FOR_MAIN_FIRST_RELEASE_PREPARATION",
   "release_complete": false,
-  "steam_currently_modified": false,
+  "steam_currently_modified": true,
   "launch_before_user_start": false,
   "lease": {
     "launch_window_seconds": 1800,
@@ -108,5 +108,10 @@
     "Input/SeekerBackSlot": 1,
     "Input/SeekerSupportGrip": 1,
     "Input/SeekerProjectileAim": 1
-  }
+  },
+  "acceptance_receipt": "docs/release/first-release-baseline-20261026.json",
+  "current_installation": "PERSISTENT_ACCEPTED_V7",
+  "installer_status": "PENDING_USER_INSTRUCTIONS",
+  "accepted_profile_sha256": "895A8E845304F601F1DFCC37AF6DFD88E24D69F83656C04095207F25D7419E8D",
+  "physical_scope": "User: everything seems good. General grouped-session acceptance, not exhaustive per-level, dialogue, Seeker or 90 Hz certification."
 }

@@ -1,5 +1,11 @@
 # V7: integrated candidate for one grouped PSVR2 test
 
+**SUPERSEDED AFTER ACCEPTANCE, 26 October 2026.** Trilex accepted the grouped
+session and requested persistent promotion. V7 is now the installed baseline;
+see [first-release acceptance](first-release-baseline-20261026.md). The old
+instructions and runner below target AB348E06 for restore. Do not rerun them
+against the promoted installation. The following text is historical test scope.
+
 **READY_FOR_PHYSICAL_ACCEPTANCE**; startup PASS with identical bytes.
 Not project completion/new accepted baseline. Steam holds verified AB348E06;
 game and restore guards stopped. Wait for user **start**.

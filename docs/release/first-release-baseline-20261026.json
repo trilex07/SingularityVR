@@ -1,0 +1,100 @@
+{
+  "schema": "singularityvr-first-release-baseline-v1",
+  "accepted_on": "2026-10-26",
+  "author": "Trilex / trilex07",
+  "candidate": "V7 safe integrated payload",
+  "runtime_source_commit": "38ca72f88112bfcbd26addb0d6aa4f76095aa15e",
+  "integration_parent_commit": "5667aa5ca6c68635e5a498b7a1b4373008ee267d",
+  "runtime": [
+    {
+      "path": "Binaries/d3d9.dll",
+      "sha256": "23a3a768c44f1c6eb5479d899141924c4c44d5c6a73a3175a2827241105370b1"
+    },
+    {
+      "path": "Binaries/dinput8.dll",
+      "sha256": "f58cb3a805e46c3d3f7e88137bd605af21a8a8106c289385132f677a968e95fd"
+    },
+    {
+      "path": "Binaries/SingularityVR.ini",
+      "sha256": "9cd972f47e53c253893d8e969a99dc57de4d960cc75aaa98fba8805d296367fc"
+    },
+    {
+      "path": "Binaries/texture_override.ini",
+      "sha256": "ce081d774143bc247af9af4a4ef96dde7c877fe0a0f1d5a2c4f08b7f3a2836c1"
+    }
+  ],
+  "asset_manifest_sha256": "df6a7a3ff4ae8e012f4c9b2837537333977a25e79376b852000f73030541fa82",
+  "asset_files": 134,
+  "changed_asset_files": 131,
+  "verified_source_files": 138,
+  "accepted_file_pins": 164,
+  "accepted_profile_sha256": "895A8E845304F601F1DFCC37AF6DFD88E24D69F83656C04095207F25D7419E8D",
+  "previous_restore_profile_sha256": "0DCE55947822E21394F9ED8E451ABFC0A83830547395374DB928A95E9B274506",
+  "protected": [
+    {
+      "path": "Binaries/Singularity.exe",
+      "sha256": "bd459acd87d4b82693928dee4ed437c086d5928a8e0428f3ad54b6fc114c0f51"
+    },
+    {
+      "path": "RvGame/CookedPC/RvGame.xxx",
+      "sha256": "4153c4889c90635069ed226d918cdb76be618f46b1baea152ac10cffdf59e9ef"
+    }
+  ],
+  "physical": {
+    "status": "ACCEPTED_GENERAL_SESSION",
+    "session": "20261026-144635",
+    "feedback": "wszystko wydaje się dobrze",
+    "authorization": "User explicitly requested main integration, README attribution to Trilex and first-release baseline",
+    "scope": "Latest combined PSVR2 session. No invented per-feature or unvisited-content PASS.",
+    "not_established": [
+      "exhaustive campaign coverage",
+      "all dialogue listening/acting approval",
+      "specific Seeker retrieval/support/save-load results",
+      "universal 90 Hz performance"
+    ]
+  },
+  "offline": {
+    "x86_pe32_o2": "PASS: retained exact tested binaries",
+    "runtime_source_unchanged_after_integration": "PASS: no spikes diff from 38ca72f8",
+    "installed_source_comparisons": "PASS:138",
+    "accepted_profile": "PASS:164 pins plus INI",
+    "protected_core_and_exe": "PASS",
+    "headset_resolution_cache_preserved": "PASS"
+  },
+  "installation": {
+    "status": "PERSISTENT_ACCEPTED_V7",
+    "new_game_launch": "NOT_RUN",
+    "old_restore_guard": "EXITED_AFTER_VERIFIED_RESTORE_BEFORE_PROMOTION",
+    "runtime_backup": "deployment/install-backups/20261026-145856",
+    "runtime_install_report": "deployment/install-reports/20261026-145859.json",
+    "asset_backup": "build/next-weapon-reload/accepted-v7-promotion-20261026-145847/asset-backup",
+    "private_receipt": "deployment/accepted-v7-promotion-20261026.json",
+    "private_accepted_profile": "deployment/accepted-profile.json",
+    "stale_runners": "Old candidate leases target AB348E06. Do not rerun them against the promoted V7 baseline."
+  },
+  "included": {
+    "campaign_banks": 116,
+    "campaign_replacements": 1248,
+    "new_takes": 541,
+    "earlier_takes_preserved": 707,
+    "native_sound_remaster_sets": 7,
+    "dds_candidates": 10,
+    "native_main_pause_buttons": true,
+    "age_particle_attachment_gate": 1
+  },
+  "limits": [
+    "Original RvGame.xxx and native TMD impulse sound preserved; one core sound-remaster set withheld after startup failures.",
+    "Ten refused dubbing replacements retain prior/base audio; five additional native identities remain uncovered.",
+    "Generated SIDE batch is Pocket-TTS Polish 6L, not an XTTS release.",
+    "Texture coverage varies; Kasimov diffuse is interpolated from the highest available extracted mip.",
+    "General physical approval does not replace unvisited-level/audio or specific Seeker save/load validation."
+  ],
+  "release": {
+    "status": "BASELINE_ACCEPTED_INSTALLER_PENDING",
+    "version": null,
+    "tag_created": false,
+    "github_release_published": false,
+    "installer": "Await user requirements; no installer or release artifact generated"
+  },
+  "tracked_asset_policy": "No extracted game packages/audio/DDS payloads added to Git."
+}

@@ -63,13 +63,13 @@
   },
   "steam_modified": true,
   "game_launched": true,
-  "physical_acceptance": "PENDING",
+  "physical_acceptance": "ACCEPTED_GENERAL_SESSION_20261026",
   "release_complete": false,
   "remaining_side_timing_takes": 0,
-  "steam_currently_modified": false,
+  "steam_currently_modified": true,
   "live_startup": "PASS_WITH_IDENTICAL_PAYLOAD_AND_RUNTIME_BYTES",
-  "recommendation": "GO_CONTROLLED_PSVR2_TEST_ONLY",
-  "current_installation": "RESTORED_VERIFIED_AB348E06",
+  "recommendation": "ACCEPTED_BASELINE_FOR_MAIN_FIRST_RELEASE_PREPARATION",
+  "current_installation": "PERSISTENT_ACCEPTED_V7",
   "live_attempts": [
     {
       "candidate": "final-complete-v3-20261026",
@@ -195,5 +195,9 @@
   "side_content_refusals": 10,
   "additional_uncovered_native_identities": 5,
   "withheld_core_sound_remasters": 1,
-  "requires_new_user_start": true
+  "requires_new_user_start": true,
+  "acceptance_receipt": "docs/release/first-release-baseline-20261026.json",
+  "installer_status": "PENDING_USER_INSTRUCTIONS",
+  "accepted_profile_sha256": "895A8E845304F601F1DFCC37AF6DFD88E24D69F83656C04095207F25D7419E8D",
+  "physical_scope": "User: everything seems good. General grouped-session acceptance, not exhaustive per-level, dialogue, Seeker or 90 Hz certification."
 }

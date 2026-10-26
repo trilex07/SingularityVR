@@ -3,16 +3,21 @@
 Owner: MAIN. Updated 2026-10-26. This document owns release status; historical
 STATUS.md entries and agent handoffs do not override the scoped human result.
 
-CURRENT: V7 READY FOR CONTROLLED PHYSICAL ACCEPTANCE. Its exact runtime and
-134-asset payload booted through Steam/OpenXR with original RvGame.xxx retained.
-One TMD sound remaster is WITHHELD. Included: seven sound sets, 1248 campaign
-replacements, native menu buttons and ten DDS. Ten content refusals preserve base
-audio; five more identities are uncovered. No full-game/listening/physical PASS.
-AB348E06 is installed, all hashes verified; no active game/guard or promotion.
-Current instructions: final-v7-safe-session-20261026.md. Dated V3/V4 entries below
-are historical; the final section supersedes their candidate/launch status.
+CURRENT: V7 ACCEPTED AS THE FIRST-RELEASE BASELINE on 2026-10-26.
+User feedback after the grouped PSVR2 session: "wszystko wydaje się dobrze".
+User explicitly requested main integration, Trilex authorship in README and
+preservation as the first-release baseline. The exact tested V7 runtime plus
+134 assets is now persistently installed; 138 source comparisons, 164 accepted
+file pins and INI verification PASS. No restore writer remains active.
 
-## Verified starting point
+Current acceptance: first-release-baseline-20261026.md / .json. The installer
+and release publication await user requirements. Seven sound sets are included;
+original RvGame/TMD impulse audio is preserved. Ten dubbing refusals retain base,
+five further identities are uncovered. General acceptance does not certify all
+levels, dialogue acting, Seeker save/load or 90 Hz. The following starting-point
+and work notes are historical evidence, superseded by the current receipt.
+
+## Historical verified starting point
 
 - Source: `71728b5d7e2712d1640fa18fa58e48bd6dc708ee`.
 - Physically tested DLL: `AB348E06080E479988E810375CC50D92EEA1936D94313A02360517269DC4F964`.
@@ -216,3 +221,14 @@ No real deployment, launch, physical acceptance or baseline promotion occurred.
 - Source evidence: docs/handoffs/final-startup-core-isolation-20261026.md/json.
   Exact candidate and plan: final-v7-safe-candidate-20261026.json and
   final-v7-safe-session-20261026.md. No full-completion or stable 90 Hz claim.
+
+
+## 2026-10-26: accepted baseline and first release preparation
+
+The old lease restored AB348E06 and exited before promotion. V7 was then
+installed persistently with exact backups; new accepted profile SHA256
+`895A8E845304F601F1DFCC37AF6DFD88E24D69F83656C04095207F25D7419E8D`.
+Runtime sources are unchanged from clean build `38ca72f8`. User acceptance is
+general to the latest PSVR2 session; no unreported individual checks are PASS.
+Next: user-supplied installer requirements, then complete distribution assembly.
+Do not run old AB348E06-targeted leases against this new baseline.
