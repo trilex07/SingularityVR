@@ -25,7 +25,7 @@ function MustRefuse([scriptblock]$call){$refused=$false;try{& $call | Out-Null}c
 Put (Join-Path $game 'Binaries\Singularity.exe') 'FAKE NON-EXECUTABLE FIXTURE; NEVER LAUNCHED'
 $files=@()
 foreach($relative in @('Binaries/texture-override-remaster/revert_d2.dds','Binaries/vr-assets/localization/pl/polish_text.jsonl','Binaries/vr-assets/audio/polish/story/new.wav',
-    'RvGame/CookedPC/UI_SinglePlayer_SF.xxx','RvGame/CookedPC/RvGame.xxx',
+    'RvGame/CookedPC/UI_SinglePlayer_SF.xxx',
     'Binaries/texture-override-remaster/ar_sniper_rifle_d.dds')){
     $live=Join-Path $game $relative
     if(-not $relative.EndsWith('new.wav')){Put $live ('before '+$relative)}
@@ -36,6 +36,19 @@ foreach($relative in @('Binaries/texture-override-remaster/revert_d2.dds','Binar
 $protected=Join-Path $game 'Binaries\dinput8.dll'
 Put $protected 'protected injector'
 [ordered]@{schema='singularityvr-session-assets-delta-v1';files=$files;protected=@(@{path='Binaries/dinput8.dll';sha256=(Hash $protected)})} | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath $manifest -Encoding UTF8
+# Exercise the real parser/deployer: even a correctly hashed core-bank delta
+# must be rejected before creating a backup or touching another live asset.
+$coreRelative='RvGame/CookedPC/RvGame.xxx'
+Put (Join-Path $game $coreRelative) 'accepted core fixture'
+Put (Join-Path (Join-Path $candidate 'payload') $coreRelative) 'modified core fixture'
+$badManifest=Join-Path $candidate 'unsafe-core-manifest.json'
+$badBackup=Join-Path $base 'unsafe-core-backup'
+$badFiles=@($files)+@(@{path=$coreRelative;before=(Hash (Join-Path $game $coreRelative));after=(Hash (Join-Path (Join-Path $candidate 'payload') $coreRelative))})
+[ordered]@{schema='singularityvr-session-assets-delta-v1';files=$badFiles;protected=@(@{path='Binaries/dinput8.dll';sha256=(Hash $protected)})} | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath $badManifest -Encoding UTF8
+MustRefuse {& $adapter -Action Deploy -ManifestPath $badManifest -BackupDir $badBackup -GameRoot $game}
+Assert (-not (Test-Path -LiteralPath $badBackup)) 'Unsafe core-bank delta must refuse before backup/write'
+foreach($f in $files){Assert ((Hash (Join-Path $game $f.path)) -ceq $f.before) 'Unsafe core-bank refusal changed another asset'}
+Assert ([IO.File]::ReadAllText((Join-Path $game $coreRelative)) -ceq 'accepted core fixture') 'Unsafe core-bank refusal changed core'
 & $adapter -Action ValidateCandidate -ManifestPath $manifest -BackupDir $backup -GameRoot $game
 $global:sessionAssetFixtureGameRunning=$true
 MustRefuse {& $adapter -Action Deploy -ManifestPath $manifest -BackupDir $backup -GameRoot $game}
@@ -58,5 +71,5 @@ MustRefuse {& $adapter -Action Restore -ManifestPath $manifest -BackupDir $backu
 Put $saved ('before '+$files[0].path)
 & $adapter -Action Restore -ManifestPath $manifest -BackupDir $backup -GameRoot $game
 foreach($f in $files){Assert ((Hash (Join-Path $game $f.path)) -ceq $f.before) 'Exact old state not restored'}
-Write-Output 'PASS: fake install/deploy/full verification, running-game refusal, foreign drift preservation, bad backup refusal, exact restore and absent-file restoration'
+Write-Output 'PASS: fake install/deploy/full verification, native core-bank refusal before writes, running-game refusal, foreign drift preservation, bad backup refusal, exact restore and absent-file restoration'
 Remove-Variable -Name sessionAssetFixtureGameRunning -Scope Global

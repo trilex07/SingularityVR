@@ -3,9 +3,14 @@
 Owner: MAIN. Updated 2026-10-26. This document owns release status; historical
 STATUS.md entries and agent handoffs do not override the scoped human result.
 
-CURRENT: V3 Steam startup FAIL twice; physical tests NOT RUN. Both guards
-restored the verified AB348E06 baseline. No baseline promotion. Pre-launch
-entries below are historical; the live failure section at the end is current.
+CURRENT: V7 READY FOR CONTROLLED PHYSICAL ACCEPTANCE. Its exact runtime and
+134-asset payload booted through Steam/OpenXR with original RvGame.xxx retained.
+One TMD sound remaster is WITHHELD. Included: seven sound sets, 1248 campaign
+replacements, native menu buttons and ten DDS. Ten content refusals preserve base
+audio; five more identities are uncovered. No full-game/listening/physical PASS.
+AB348E06 is installed, all hashes verified; no active game/guard or promotion.
+Current instructions: final-v7-safe-session-20261026.md. Dated V3/V4 entries below
+are historical; the final section supersedes their candidate/launch status.
 
 ## Verified starting point
 
@@ -182,3 +187,32 @@ No real deployment, launch, physical acceptance or baseline promotion occurred.
   pins verified. V3 startup corruption remains UNPROVEN and blocks deployment.
 - V4 needs a fresh combined preflight/rollback receipt including the five newly
   changed banks; do not reuse V3 guard metadata. Not a headset-ready release.
+
+
+## Current V7 startup-safe integration (2026-10-26)
+
+- New runtime with accepted assets/config boots (PID 38504). Full V4 minus
+  RvGame.xxx boots (PID 32108), reaches OpenXR and scene/split draws. Headset
+  asleep: shouldRender=0; no HMD/pixel, listening or performance acceptance.
+- Padded core (PID 39540) and native-block-preserving core (PID 33644) both
+  crash at EXE+ACA50. First corrupting writer remains UNPROVEN. Decoder
+  equality is insufficient. Earlier V3 assertion that core was unchanged was wrong.
+- Asset installer excludes RvGame; V7 protects exact 4153c488... original core.
+  One TMD impulse sound stays original. Age visual fix is independently included.
+  Seven other sounds, native menu, ten DDS and all 116 campaign banks retained.
+- V4 adds 541 recordings to 707 earlier native replacements =1248, not 1258.
+  Ten content refusals keep base audio; five uncovered identities unchanged.
+  Actual SIDE tool is Pocket-TTS Polish 6L, not XTTS. No listening claim.
+- 134 assets (131 changed +three identical), four runtime sources, 164 baseline
+  pins; production read-only core/assets/combined preflight PASS. New guard tests
+  refuse core replacement and protected-core drift before any writes.
+- Existing clean x86 PE32 /O2 pair retained: renderer 23A3A768..., bridge F58CB3A8...
+  from source 38ca72f8. No C++ changes or guessed graphics fixes in this follow-up.
+- All four controls fully restored; AB348E06 and original core independently
+  rehashed. No active game/guard. User start is needed before deploying V7.
+- READY: Age/Seeker/menu/material/audio grouped physical test; BLOCKED: one core
+  TMD sound replacement; NEEDS SIDE: ten content corrections; NEEDS HMD/listening:
+  all unverified presentation/content, Seeker only when legitimately present.
+- Source evidence: docs/handoffs/final-startup-core-isolation-20261026.md/json.
+  Exact candidate and plan: final-v7-safe-candidate-20261026.json and
+  final-v7-safe-session-20261026.md. No full-completion or stable 90 Hz claim.

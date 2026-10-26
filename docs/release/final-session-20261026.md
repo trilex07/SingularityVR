@@ -1,5 +1,10 @@
 # Final V3: controlled MAIN session
 
+**Historical failed payload; do not launch.** Current safe candidate and grouped
+test: `final-v7-safe-session-20261026.md`. It keeps the updated campaign, menu,
+textures and seven sound sets while protecting original `RvGame.xxx`. Current
+readiness JSON points to V7; the hashes and instructions below describe old V3.
+
 Offline preparation PASS. Two controlled Steam launches FAILED during startup.
 Both installations were restored to verified AB348E06. Physical acceptance was
 NOT RUN: neither attempt reached the D3D device/OpenXR session. V3 is NO-GO.

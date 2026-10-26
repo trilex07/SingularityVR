@@ -1,0 +1,118 @@
+{
+  "schema": "singularityvr-startup-core-isolation-v1",
+  "runtime_source_commit": "38ca72f88112bfcbd26addb0d6aa4f76095aa15e",
+  "runtime_sha256": "23A3A768C44F1C6EB5479D899141924C4C44D5C6A73A3175A2827241105370B1",
+  "trials": [
+    {
+      "candidate": "startup-control-20261026",
+      "session": "20261026-140236",
+      "game_pid": 38504,
+      "actual_scope": "runtime pair only; accepted assets/config",
+      "asset_files": 1,
+      "manifest_sha256": "4aa93d1706b8ea3eeadbb20b0dcb56cce90792d72e0e3bc5a7065141092c5bff",
+      "runtime_backup": "deployment/install-backups/20261026-140242",
+      "result": "PASS_STARTUP_OPENXR",
+      "openxr_session": "READY",
+      "headset_should_render": 0,
+      "physical_acceptance": "NOT_RUN",
+      "exception": null,
+      "fault_exe_rva": null,
+      "baseline_restore": "PASS_HASH_VERIFIED",
+      "log": "build/next-weapon-reload/startup-control-20261026/sessions/20261026-140236/view_matrix-control.log",
+      "log_sha256": "2357ad84b6a4c1b158b84d1e2b9c807812511e4569af8c837108156636cd8cc6",
+      "guard_log_sha256": "a146b2a8c19ad2db476810621e51de7ec75416c3d69fbacf8703c1242911cda3",
+      "raw_receipt_label_correction": null,
+      "dump_sha256": null
+    },
+    {
+      "candidate": "startup-all-except-corebank-20261026",
+      "session": "20261026-140714",
+      "game_pid": 32108,
+      "actual_scope": "full V4 except accepted core retained",
+      "asset_files": 134,
+      "manifest_sha256": "c2f1fab7c54ac1def404697f77f16d466b4352678295adf4f67f1886d6f7fae6",
+      "runtime_backup": "deployment/install-backups/20261026-140720",
+      "result": "PASS_STARTUP_OPENXR",
+      "openxr_session": "READY",
+      "headset_should_render": 0,
+      "physical_acceptance": "NOT_RUN",
+      "exception": null,
+      "fault_exe_rva": null,
+      "baseline_restore": "PASS_HASH_VERIFIED",
+      "log": "build/next-weapon-reload/startup-all-except-corebank-20261026/sessions/20261026-140714/view_matrix-startup.log",
+      "log_sha256": "0039ea7819d1de52ec7624f08151487751285a8365dce504390058227da96052",
+      "guard_log_sha256": "b74530be1326c24c34c9071e4dc889b3943747a47f1087fa3cf151f474d685df",
+      "raw_receipt_label_correction": "Inherited descriptive labels are stale; actual scope established by manifest/install/backup",
+      "dump_sha256": null
+    },
+    {
+      "candidate": "final-complete-v5-aligned-20261026",
+      "session": "20261026-141341",
+      "game_pid": 39540,
+      "actual_scope": "full V4 with padding-only modified core",
+      "asset_files": 135,
+      "manifest_sha256": "859b8cec3cb4b5f4bedeb9b5ef362a54c7bfdf8be0f9875a6b288700d378c29b",
+      "runtime_backup": "deployment/install-backups/20261026-141348",
+      "result": "FAIL_STARTUP",
+      "openxr_session": "NOT_REACHED",
+      "headset_should_render": null,
+      "physical_acceptance": "NOT_RUN",
+      "exception": "c0000005",
+      "fault_exe_rva": "0xACA50",
+      "baseline_restore": "PASS_HASH_VERIFIED",
+      "log": "build/next-weapon-reload/final-complete-v5-aligned-20261026/sessions/20261026-141341/view_matrix-startup.log",
+      "log_sha256": "69838ab69caf60ebff5f4277385dcfac5497e45e110d8e6245878de464f38677",
+      "guard_log_sha256": "79c1f63f0ae7e7e16620b4da7a6b9fed08dc5de20d62365122dafe1e3f8e843a",
+      "raw_receipt_label_correction": null,
+      "dump_sha256": "402e78b762b6e4a1997dc2707f28030ddf60d85441059837750a9482bb578e0e"
+    },
+    {
+      "candidate": "final-complete-v6-native-blocks-20261026",
+      "session": "20261026-141926",
+      "game_pid": 33644,
+      "actual_scope": "full V4 with 213 native blocks retained",
+      "asset_files": 135,
+      "manifest_sha256": "c5d20c09201000d9d9063e04393c02714a698721b88466caa50515bec80a83cf",
+      "runtime_backup": "deployment/install-backups/20261026-141932",
+      "result": "FAIL_STARTUP",
+      "openxr_session": "NOT_REACHED",
+      "headset_should_render": null,
+      "physical_acceptance": "NOT_RUN",
+      "exception": "c0000005",
+      "fault_exe_rva": "0xACA50",
+      "baseline_restore": "PASS_HASH_VERIFIED",
+      "log": "build/next-weapon-reload/final-complete-v6-native-blocks-20261026/sessions/20261026-141926/view_matrix-startup.log",
+      "log_sha256": "53a7941faf287b7aea49d52a9fb2147d13cc7b78ca2a0d34bdea8848f76a40cf",
+      "guard_log_sha256": "57f04967845ad4267d9e981fe4d94f59fbac300de4ce33da78955cca0c70657c",
+      "raw_receipt_label_correction": null,
+      "dump_sha256": "d50effa3bdf89c562d4b9e848c24ef00ffa17bede3e687438e7f261c2b95e750"
+    }
+  ],
+  "core_original_sha256": "4153c4889c90635069ed226d918cdb76be618f46b1baea152ac10cffdf59e9ef",
+  "core_modified_versions": [
+    {
+      "kind": "literal-only",
+      "sha256": "5c0cce4713cf76f857b2b771b83353ece3a0028d46317db6e4b7f499c80bbf10"
+    },
+    {
+      "kind": "padding-only",
+      "sha256": "d6ac8b3987d2049197d92afe61d470daeb0c963d719a8bde7009c87d6ce028b4",
+      "startup": "FAIL"
+    },
+    {
+      "kind": "213 native blocks retained",
+      "sha256": "b2ac74fa4ec8d66aee8bab1bc530559333b0d91664373c3c7be31dbe40d8a123",
+      "startup": "FAIL"
+    }
+  ],
+  "conclusion": "Full updated payload boots with original core; modified core reproduces failure. Initial corrupting operation UNPROVEN.",
+  "disproven_fixes": [
+    "64 KiB alignment alone",
+    "native block reuse plus valid compressed-size budgets"
+  ],
+  "production_change": "Forbid core package asset delta and protect original hash; withhold one TMD impulse sound",
+  "physical_acceptance": "NOT_RUN",
+  "steam_currently_modified": false,
+  "active_game": false,
+  "active_restore_guards": false
+}

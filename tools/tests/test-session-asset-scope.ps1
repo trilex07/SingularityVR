@@ -2,7 +2,7 @@ $ErrorActionPreference='Stop'
 . (Join-Path $PSScriptRoot '../integration/session-asset-scope.ps1')
 $allowed=@(
  'RvGame/CookedPC/UI_SinglePlayer_SF.xxx','RvGame/CookedPC/wp_SP_ARPistol_SF.xxx',
- 'RvGame/CookedPC/wp_SP_ARSniperRifle_SF.xxx','RvGame/CookedPC/RvGame.xxx',
+ 'RvGame/CookedPC/wp_SP_ARSniperRifle_SF.xxx',
  'RvGame/CookedPC/wp_SP_ARMachineGun_SF.xxx','RvGame/CookedPC/wp_SP_ARShotgun_SF.xxx',
  'RvGame/CookedPC/MUSIC_exploreDrone01_XSA.xxx','RvGame/CookedPC/MUSIC_combatBossGrom01_XSA.xxx',
  'RvGame/CookedPC/SP_Freight_Audio_2010_XSA.xxx',
@@ -28,7 +28,8 @@ foreach($p in $allowed) {
 foreach($bad in @('Binaries/d3d9.dll','Binaries/dinput8.dll','Binaries/texture_override.ini',
  'Binaries/SingularityVR.ini','RvGame/CookedPC/Engine.xxx','RvGame/CookedPC/wp_MP_ARPistol_SF.xxx',
  'RvGame/CookedPC/MUSIC_combatBossGrom01.xxx','RvGame/CookedPC/ui_GFx_fonts.xxx',
- 'Binaries/texture-override-remaster/unknown.dds','RvGame\CookedPC\RvGame.xxx')){
+ 'Binaries/texture-override-remaster/unknown.dds','RvGame\CookedPC\RvGame.xxx',
+ 'RvGame/CookedPC/RvGame.xxx')){
  if(Test-SessionAssetPath $bad){throw "Unowned target admitted: $bad"}
 }
-Write-Output 'PASS: 22 owned paths, 110 path-escape variants, 10 excluded targets; no writes'
+Write-Output 'PASS: 21 owned paths, 105 path-escape variants, 11 excluded targets including native RvGame; no writes'

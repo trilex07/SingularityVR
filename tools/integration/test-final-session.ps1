@@ -45,9 +45,13 @@ foreach($relative in @('RvGame/CookedPC/UI_SinglePlayer_SF.xxx','Binaries/textur
     $files += [pscustomobject]@{path=$relative;before=(Hash "$game/$relative");after=(Hash "$candidate/payload/$relative").ToLowerInvariant()}
 }
 foreach($row in $files){if($row.before){$row.before=$row.before.ToLowerInvariant()}}
-Json "$candidate/manifest.json" @{schema='singularityvr-session-assets-delta-v1';files=$files;protected=@(@{path='Binaries/Singularity.exe';sha256=(Hash "$bin/Singularity.exe").ToLowerInvariant()})}
+Put "$game/RvGame/CookedPC/RvGame.xxx" 'accepted original core fixture'
+Json "$candidate/manifest.json" @{schema='singularityvr-session-assets-delta-v1';files=$files;protected=@(
+ @{path='Binaries/Singularity.exe';sha256=(Hash "$bin/Singularity.exe").ToLowerInvariant()},
+ @{path='RvGame/CookedPC/RvGame.xxx';sha256=(Hash "$game/RvGame/CookedPC/RvGame.xxx").ToLowerInvariant()})}
 $pins=@(@('d3d9.dll','dinput8.dll','texture_override.ini','Singularity.exe')|ForEach-Object{@{path='Binaries/'+$_;sha256=(Hash "$bin/$_")}})
 $pins+=@($files|ForEach-Object{@{path=$_.path;sha256=$_.before}})
+$pins+=@{path='RvGame/CookedPC/RvGame.xxx';sha256=(Hash "$game/RvGame/CookedPC/RvGame.xxx")}
 Json "$base/profile.json" @{schema='singularityvr-accepted-profile-v1';approved=$true;acceptedBy='synthetic fixture';acceptanceScope='offline fake Steam only';iniPath='Binaries/SingularityVR.ini';ini=(Read-GuardIni "$bin/SingularityVR.ini");ignoredIniKeys=@();files=$pins}
 $changes=@(@('d3d9.dll','dinput8.dll','texture_override.ini')|ForEach-Object{@{path='Binaries/'+$_;before=(Hash "$bin/$_");after=(Hash "$stage/$_");reason='fixture'}})
 $plan=@{schema='singularityvr-change-plan-v1';profileSha256=(Hash "$base/profile.json");reason='fixture';files=$changes;ini=@(@{key='Diagnostic/Fixture';before=$null;after='1';reason='fixture'})}
@@ -73,6 +77,10 @@ function CandidateIntact {
 $global:finalLeaseFixtureRunning=$true
 Refuse {& $watch @args -RestoreNow};CandidateIntact
 $global:finalLeaseFixtureRunning=$false
+$saved=[IO.File]::ReadAllBytes("$game/RvGame/CookedPC/RvGame.xxx")
+Put "$game/RvGame/CookedPC/RvGame.xxx" 'foreign core package'
+Refuse {& $watch @args -RestoreNow};CandidateIntact
+[IO.File]::WriteAllBytes("$game/RvGame/CookedPC/RvGame.xxx",$saved)
 $saved=[IO.File]::ReadAllBytes("$backup/dinput8.dll")
 Put "$backup/dinput8.dll" 'corrupt bridge preimage'
 Refuse {& $watch @args -RestoreNow};CandidateIntact
@@ -89,4 +97,4 @@ Refuse {& $watch @args -RestoreNow};CandidateIntact
 foreach($pin in $pins){Check ((Hash "$game/$($pin.path)") -ieq $pin.sha256) 'Exact baseline restoration failed'}
 Check ((Hash "$bin/SingularityVR.ini") -ieq $iniHash) 'Exact INI restoration failed'
 Remove-Variable finalLeaseFixtureRunning -Scope Global
-Write-Output 'PASS: production four-file + assets install, ValidateOnly, running refusal, corrupt runtime/asset backup and live config refusal BEFORE writes, exact restore including absent DDS. Fake Steam only.'
+Write-Output 'PASS: production four-file + assets install, ValidateOnly, running refusal, protected core drift, corrupt runtime/asset backup and live config refusal BEFORE writes, exact restore including absent DDS. Fake Steam only.'

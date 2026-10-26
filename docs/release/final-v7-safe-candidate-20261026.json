@@ -1,0 +1,112 @@
+{
+  "schema": "singularityvr-final-session-v7-safe-v1",
+  "candidate": "build/next-weapon-reload/final-complete-v7-safe-20261026",
+  "runtime_source_commit": "38ca72f88112bfcbd26addb0d6aa4f76095aa15e",
+  "packaging_parent_commit": "dfe10be355864119054a1c7eb7210b03ca91667a",
+  "asset_manifest_sha256": "df6a7a3ff4ae8e012f4c9b2837537333977a25e79376b852000f73030541fa82",
+  "asset_files": 134,
+  "changed_asset_files": 131,
+  "baseline_file_pins": 164,
+  "profile_sha256": "0dce55947822e21394f9ed8e451abfc0a83830547395374db928a95e9b274506",
+  "core_plan_sha256": "0fe7fa85043fd81613f0e245f89aa5a74a89b28c96fe2a9c423039eb1b45637a",
+  "combined_plan_sha256": "7a2c6454e0bb4eec844fa4903da8042218fa8d2f1ffbb3ef07adf1b8543869e9",
+  "runner_sha256": "10a18376a7cef8fb6305d77b06cf8c8cf1b9ab148e7f2455b3b8f734bb9bfa8f",
+  "runtime": [
+    {
+      "path": "Binaries/d3d9.dll",
+      "sha256": "23a3a768c44f1c6eb5479d899141924c4c44d5c6a73a3175a2827241105370b1"
+    },
+    {
+      "path": "Binaries/dinput8.dll",
+      "sha256": "f58cb3a805e46c3d3f7e88137bd605af21a8a8106c289385132f677a968e95fd"
+    },
+    {
+      "path": "Binaries/SingularityVR.ini",
+      "sha256": "9cd972f47e53c253893d8e969a99dc57de4d960cc75aaa98fba8805d296367fc"
+    },
+    {
+      "path": "Binaries/texture_override.ini",
+      "sha256": "ce081d774143bc247af9af4a4ef96dde7c877fe0a0f1d5a2c4f08b7f3a2836c1"
+    }
+  ],
+  "protected": [
+    {
+      "path": "Binaries/Singularity.exe",
+      "sha256": "bd459acd87d4b82693928dee4ed437c086d5928a8e0428f3ad54b6fc114c0f51"
+    },
+    {
+      "path": "RvGame/CookedPC/RvGame.xxx",
+      "sha256": "4153c4889c90635069ed226d918cdb76be618f46b1baea152ac10cffdf59e9ef"
+    }
+  ],
+  "payload_matches_booted_control": true,
+  "payload_matches_v4_except_rvgame": true,
+  "native_dubbing": {
+    "campaign_banks": 116,
+    "new_takes": 541,
+    "earlier_payloads_preserved": 707,
+    "total_replacements": 1248,
+    "content_refusals_preserve_base": 10,
+    "additional_uncovered_identities": 5,
+    "engine": "Pocket-TTS Polish 6L per SIDE implementation; no XTTS claim",
+    "listening": "PENDING"
+  },
+  "sound_remaster": {
+    "included_sets": 7,
+    "withheld_sets": 1,
+    "withheld": "TMD impulse SoundNodeWave in RvGame.xxx",
+    "native_tmd_audio": "UNCHANGED"
+  },
+  "textures": "10 DDS staged including original-derived Valkyrie/Centurion/Kasimov pairs; material acceptance PENDING",
+  "menus": "native main/pause Button and ButtonLeft package included; physical acceptance PENDING",
+  "startup": "PASS_WITH_IDENTICAL_PAYLOAD_AND_RUNTIME_BYTES",
+  "openxr": "READY; shouldRender=0 while headset asleep; not physical/pixel proof",
+  "physical_acceptance": "PENDING",
+  "recommendation": "GO_CONTROLLED_PSVR2_TEST_ONLY",
+  "release_complete": false,
+  "steam_currently_modified": false,
+  "launch_before_user_start": false,
+  "lease": {
+    "launch_window_seconds": 1800,
+    "active_game_timeout": null,
+    "restore": "After normal exit +30 seconds quiet, verify all 164 baseline pins; no writes during active game"
+  },
+  "tests": {
+    "session_asset_scope": "PASS:21 allowed/105 escapes/11 excluded",
+    "production_asset_fixture": "PASS: core replacement/running/drift/corrupt backup refusal before writes; full restore",
+    "production_final_session_fixture": "PASS: all four runtime files/assets; protected core drift; exact baseline restore",
+    "fixed_audio_allocation_and_independent_whole_decode": "PASS:10/10; correct uedecompress.exe",
+    "timing_delivery": "PASS:8/8",
+    "runtime_build_provenance": "UNCHANGED clean source 38ca72f8; x86 PE32 /O2; exact hashes verified",
+    "runtime_functional_regressions": "Prior PASS retained at same source and binary; no new runtime source changes"
+  },
+  "preflight": "PASS: real production core WhatIf, 134 asset preimages/protected targets, combined 138 sources and all 164 baseline pins; no writes",
+  "startup_evidence": {
+    "candidate": "startup-all-except-corebank-20261026",
+    "session": "20261026-140714",
+    "game_pid": 32108,
+    "actual_scope": "full V4 except accepted core retained",
+    "asset_files": 134,
+    "manifest_sha256": "c2f1fab7c54ac1def404697f77f16d466b4352678295adf4f67f1886d6f7fae6",
+    "runtime_backup": "deployment/install-backups/20261026-140720",
+    "result": "PASS_STARTUP_OPENXR",
+    "openxr_session": "READY",
+    "headset_should_render": 0,
+    "physical_acceptance": "NOT_RUN",
+    "exception": null,
+    "fault_exe_rva": null,
+    "baseline_restore": "PASS_HASH_VERIFIED",
+    "log": "build/next-weapon-reload/startup-all-except-corebank-20261026/sessions/20261026-140714/view_matrix-startup.log",
+    "log_sha256": "0039ea7819d1de52ec7624f08151487751285a8365dce504390058227da96052",
+    "guard_log_sha256": "b74530be1326c24c34c9071e4dc889b3943747a47f1087fa3cf151f474d685df",
+    "raw_receipt_label_correction": "Inherited descriptive labels are stale; actual scope established by manifest/install/backup",
+    "dump_sha256": null
+  },
+  "runtime_build_receipt_sha256": "fd55de626a42c8126dad050fb725f8e5d23cec9db1be0fab2a7df82c3f3c90b7",
+  "age_visual_ini_gate": "Render/TmdTrackedAgeParticles=1",
+  "seeker_ini_gates": {
+    "Input/SeekerBackSlot": 1,
+    "Input/SeekerSupportGrip": 1,
+    "Input/SeekerProjectileAim": 1
+  }
+}

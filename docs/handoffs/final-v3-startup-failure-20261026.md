@@ -1,5 +1,11 @@
 # Final V3 startup failure: evidence and next gate
 
+**Correction and supersession:** `RvGame.xxx` WAS replaced by the TMD sound
+remaster in V3. The contrary statement below was an inventory error. Subsequent
+isolation boots the full V4 payload with only the accepted original core retained.
+See `final-startup-core-isolation-20261026.md` and
+`../release/final-v7-safe-session-20261026.md`. This is a historical failure report.
+
 Status: live Steam startup FAIL; OpenXR NOT REACHED; physical PSVR2 NOT RUN.
 Both attempts are fully rolled back. Current Steam baseline is AB348E06.
 Root cause: UNPROVEN. No rendering, audio or UI source patch made from this fault.
@@ -70,8 +76,10 @@ establish a reliable original caller stack. DLL addresses found on that stack
 must not be reported as causal return addresses.
 
 Older project incidents at the same allocator RVA involved a modified
-`RvGame.xxx`. That package was unchanged in this candidate; history is a useful
-search lead, not evidence of the current cause.
+`RvGame.xxx`. Contrary to the original version of this report, the V3 manifest
+also replaced that package (`5c0cce47...`) for one TMD impulse sound.
+The accepted core is `4153c488...`. The follow-up records actual isolation;
+the allocator's first corrupting writer remains unproven.
 
 ## Restoration and acceptance
 

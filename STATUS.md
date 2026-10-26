@@ -1,5 +1,24 @@
 # STATUS — session handoff
 
+## 2026-10-26 — MAIN: startup isolated; V7 ready for physical acceptance
+
+- Full updated payload boots with original `RvGame.xxx` retained; source
+  `38ca72f8`, renderer `23A3A768...`, bridge `F58CB3A8...`. Steam PID 32108
+  reached OpenXR ready. Headset asleep (`shouldRender=0`): startup evidence
+  only, not physical rendering, audio or 90 Hz acceptance.
+- Padded and 213/214-native-block-preserving cores still crash at EXE+ACA50.
+  First corrupting operation UNPROVEN; failed experiments are excluded. Asset
+  installer now refuses RvGame replacement before any write.
+- V7: 134 assets + four runtime files, including 116 campaign banks (1248
+  replacements, ten content refusals retain base audio), seven sound sets,
+  native menu and ten DDS. Original core/one TMD sound remain unchanged. Age,
+  Seeker and preservation checks still require physical acceptance.
+- Deployment regressions PASS, retained x86 PE32 `/O2` artifacts checked,
+  real 138-source / 164-baseline-pin preflight PASS. AB348E06 restored and
+  independently rehashed; no active game/guard or baseline promotion.
+- Current instruction: `docs/release/final-v7-safe-session-20261026.md`.
+  MAIN installs/launches after user start; no active-game timeout. Completion OPEN.
+
 ## 2026-10-25 — MAIN: actual failed-session Seeker/depth/wheel corrections
 
 - Physical `B32E9A7E...` failed: black silhouette, Seeker support at floor, inaccurate launch, black wheel. Accepted `610F4C21...` DLL / `C5D24E16...` INI restored and independently verified.

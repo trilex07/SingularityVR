@@ -1,5 +1,10 @@
 # MAIN: 551-take delivery integrated offline with ten content refusals
 
+**Follow-up:** All 116 campaign banks are included unchanged in the startup-tested
+V7 payload. NO-GO below describes the earlier unisolated full payload. Original
+RvGame.xxx is now protected; its one TMD sound remaster is excluded. See
+`../release/final-v7-safe-session-20261026.md`. Listening remains unverified.
+
 Status: **offline audio packaging PASS; deployment NO-GO**. The existing V3
 startup crash is unresolved. No Steam writes or game launches in this delivery.
 Installed AB348E06 rollback profile: all 159 file pins independently verified.
