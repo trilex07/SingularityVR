@@ -2,7 +2,7 @@
   "schema": 1,
   "status": "offline only; not deployed or PSVR2 validated",
   "private_stage": "<assets-local>/material-remaster-hires/ready",
-  "runtime_note": "PR57 PriorityMaterial allows only Volk and glove; other entries are staged for later MAIN scope review",
+  "runtime_note": "PriorityMaterial retains Volk/glove only. Independently default-OFF valkyrie_material_mode admits only the verified Valkyrie diffuse/normal pair for MAIN review. Other entries remain staging-only; no physical acceptance is implied.",
   "maps": {
     "AR_E99Rifle_alt_d": {"asset": "Valkyrie", "role": "diffuse", "status": "staged", "confidence": "high-source-medium-runtime", "source_package": "RvGame", "source_layout": [2048, 1024], "source_fourcc": "DXT5", "source_sha256": "93ee1b484c982fa953604a9f020e01c82955c3e7e6d06786c52b4ef7df6864f4", "source_fnv64": 16160022635740620080, "width": 4096, "height": 2048, "fourcc": "DXT5", "sha256": "a0cdc3dd8528f6b278ef814c77c8f81e7efa708a12c6d32a30c69b7dc3b59ee9", "preview": "<assets-local>/material-remaster-batch2/weapon_e99/comparison/AR_E99Rifle_alt_diffuse_compare.png"},
     "AR_E99Rifle_n": {"asset": "Valkyrie", "role": "normal", "status": "staged", "confidence": "high-source-medium-runtime", "source_package": "RvGame", "source_layout": [2048, 1024], "source_fourcc": "DXT1", "source_sha256": "05bfb7f5d361e95eefc3f720bb3731d25f5be52ecf45bbf519854beac9522736", "source_fnv64": 185541836161454253, "width": 4096, "height": 2048, "fourcc": "DXT1", "sha256": "54d47f3b7f15ee63410f321b945acb310dbc95d94346cc006ffd2d7460d06fee", "preview": "<assets-local>/material-remaster-batch2/weapon_e99/comparison/AR_E99Rifle_alt_normal_compare.png"},
