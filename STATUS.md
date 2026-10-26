@@ -81,23 +81,79 @@
   - Seeker test suite PASS (`test-seeker.ps1`: lifecycle, native adapter, projectile adapter)
   - Production build: x86 PE32 /O2 clean, zero compiler errors.
 - **Physical Acceptance Status**: READY FOR COMPREHENSIVE PSVR2 ACCEPTANCE SESSION.
+## 2026-10-25 — Seeker PR #60 Follow-Up Retest: Candidate 8112FB08 (PHYSICAL FAIL)
+
+- **Physical Acceptance Results (PSVR2 test by user)**:
+  - **Seeker Back Holster (PHYSICAL FAIL)**: Still cannot retrieve Seeker from back holster. All 39 shoulder grip attempts rejected with `gate=unavailable` (`availablePawn=00000000`). Root cause: `NativeSeekerSlot::Read(s)` consistently failed on `stage=weapon-owner-or-name-field` due to invalid reflection query `nameField.Get(cls,"mWeaponName")!=0x2e8` (`mWeaponName` is a raw struct at `+0x2E8`, not an exported `UProperty`), keeping `g_seekerBackAvailable = 0` despite Seeker being present in the inventory chain (`owned inventory: unmapped weapon item name=ARSteerable mWeaponName=ARSteerable` logged repeatedly).
+  - **Seeker Left Support Grip (PHYSICAL FAIL)**: Engaging two-hand grip caused the left hand glove mesh to completely disappear. Root cause: `seekergeometry::SupportTarget` produces `inv(wrist*local)*desired` which was fed directly into `LocalDeltaPair` expecting a World ride matrix `C`, double-inverting coordinate frames and collapsing the left wrist/arm transform.
+  - **Weapon Accuracy (PHYSICAL FAIL / UNSATISFACTORY)**: User reports aim still unsatisfactory; Seeker VR muzzle launch was blocked by `stage=weapon-owner-or-name-field` in `native_seeker_projectile.inl`. Sights/trace alignment across weapons requires Astra investigation.
+  - **Valkyrie Accuracy (PHYSICAL PASS preserved)**: 70% native spread with 50% two-hand multiplier remains accepted.
+  - **Valkyrie & Volk 20 cm Reload Comfort (PHYSICAL PASS preserved)**: 20 cm insertion radius remains accepted.
+  - **HD Textures (PHYSICAL PASS preserved)**: `priority_material_mode=2` with 4 verified 2K DDS files intact.
+  - **HUD 3D, TMD haptics, and Polish localization preserved**.
+- **Preserved PSVR2 Session Evidence Checkpoint**:
+  - Checkpoint Directory: `deployment/deploy-backups/20261025-seeker-8112fb08-session/`
+  - Steam DLL SHA256: `8112FB08142B380C6B8A6421D1522203CE0864017A95A8765A2A7379F303C60F` (commit `5e908879`, branch `fix/seeker-back-holster-evidence`)
+  - Steam SingularityVR.ini SHA256: `D8977B92BB7A21D87379AFECF1B5C87D179BC9EF9F69F58AF43E685A44DA363B`
+  - Steam texture_override.ini SHA256: `2492C8D08A067C9097AD24ACA5D8AA77EB56B883914369087C7FB6471F2D1BF7`
+  - Archived Session Log: `deployment/deploy-backups/20261025-seeker-8112fb08-session/view_matrix.log` (SHA256: `1EB237B8ED442C55A9E8CE41564C4B4FDCBA2163DB117290D21B3818C6D8B465`, 2,125,865 bytes, session 08:51:35 - 08:55:06)
+  - Startup Log: `deployment/deploy-backups/20261025-seeker-8112fb08-session/view_matrix_startup.log` (SHA256: `2D25D4D9408A54FA53AE3F81CC004FDFB7FFC528155982DE9AE4A730F40762D9`, 833 bytes)
+  - Texture Bridge Log: `deployment/deploy-backups/20261025-seeker-8112fb08-session/texture_override.log` (SHA256: `E3B60AB048E6655259114CE313058F7BEA4C72E47CAB04389741C57ED1CF81C1`)
+  - Session Manifest: `deployment/deploy-backups/20261025-seeker-8112fb08-session/manifest.json`
+- **Safe Steam Profile Applied (MAIN)**:
+  - Set `SeekerBackSlot=0`, `SeekerSupportGrip=0`, `SeekerProjectileAim=0` in Steam `SingularityVR.ini` under `[Input]`.
+  - Preserved `VrValkyrieSpreadPercent=70`, `VrValkyrieTwoHandPercent=50`, `ValkyrieInsertRadiusCm=20`, `VolkInsertRadiusCm=20`.
+- **Handoff to Astra**:
+  - Technical analysis document: `docs/handoffs/ASTRA_SEEKER_8112FB08_FAILURE_ANALYSIS.md`.
+  - Escalation rule active: Astra must fix the proven root causes (ownership read aligning with `NativeOwnedInventory`, support grip coordinate math in `seeker_geometry.h`, projectile aim arming, and accuracy investigation) without adding speculative diagnostics. PR #61 is barred from deployment.
+
+## 2026-10-25 — PSVR2 Physical Verification: Seeker PR #60 & Weapon Tuning (PARTIAL)
+
+- **Physical Acceptance Results (PSVR2 test by user)**:
+  - **Valkyrie Accuracy (PHYSICAL PASS)**: Candidate 70% native spread with 50% two-hand multiplier (35% combined) verified; noticeably tighter and consistent burst grouping in VR.
+  - **Valkyrie & Volk 20 cm Reload Comfort (PHYSICAL PASS)**: Enlarged 20 cm insertion radius confirmed; smooth magazine insertion without hitching or rejected entries.
+  - **Seeker Back Holster (FAIL)**: Gesture behind right shoulder failed to draw/stow Seeker. Runtime evidence: g_seekerBackAvailable remained 0 because NativeSeekerSlot::Read(s) returned false, preventing Bind(s) and back-slot gesture arming.
+  - **Seeker Firing (PARTIAL)**: Native rocket launch works, but VR-corrected muzzle launch hooks were not armed (dependent on NativeSeekerSlot::Read(s) via Local()).
+  - **Seeker Left Support Grip (NOT TESTED)**: In-engine witness published (log lines 21322-21326), but physical feel not tested by user.
+  - **Seeker Save/Load Persistence (NOT TESTED)**.
+- **Preserved PSVR2 Session Evidence Checkpoint**:
+  - Live Steam DLL: 98560D7413CBA7298321DA7EED85AC63ABCC457010C372295615780AAEBE0809 (commit 9ea16074, PR #60)
+  - Live Steam SingularityVR.ini: D8977B92BB7A21D87379AFECF1B5C87D179BC9EF9F69F58AF43E685A44DA363B
+  - Live Steam 	exture_override.ini: 2492C8D08A067C9097AD24ACA5D8AA77EB56B883914369087C7FB6471F2D1BF7
+  - Archived Session Log: deployment/deploy-backups/20261025-pr60-psvr2-session/view_matrix.log (SHA256: AD0A4DD62445BF6C3B0F287D6A3573D21A2FD1619CD6952F4B4A77622CF11AD5)
+  - Startup Log: deployment/deploy-backups/20261025-pr60-psvr2-session/view_matrix_startup.log (SHA256: 758E219117431EBFA7C85AD88AA231559F2A939D258DF5A1F7C60C6591AB56E0)
+  - Checkpoint Manifest: deployment/deploy-backups/20261025-pr60-psvr2-session/manifest.json
+- **Diagnosed Mechanism & Blocker (Handoff to Astra)**:
+  - Seeker possession confirmed: owned inventory: unmapped weapon item name=ARSteerable mWeaponName=ARSteerable logged repeatedly.
+  - NativeSeekerSlot::Bind() never called because NativeSeekerSlot::Read() failed closed silently (likely on strict Instigator offset 0x98 or MemberCache reflection timeout).
+  - Astra ownership: Astra must fix Read(s) / Bind(s) logging and validation without changing accepted systems.
+- **Preserved Baseline Settings for Next Candidate**:
+  - VrValkyrieSpreadPercent=70, VrValkyrieTwoHandPercent=50
+  - ValkyrieInsertRadiusCm=20, VolkInsertRadiusCm=20
+  - priority_material_mode=2 (HD textures)
 
 ## 2026-10-25 — PSVR2 Physical Acceptance: HD Textures Gate A → B → C (Volk & Gloves)
 
-- **Status: PHYSICAL PASS** (confirmed in PSVR2 by user: 'wyglada okej daj na main').
-- **Assets replaced (2048x2048)**:
+- **Status: PHYSICAL PASS** (confirmed in PSVR2 by user: 'jest okej' / 'wyglada okej').
+- **Accepted Texture Configuration**:
+  - priority_material_mode=2 in texture_override.ini, remasterdir=texture-override-priority, remaster_apply=0, bridge_owned=1, enabled=1, mode_apply=1.
+  - Strictly locked to the verified four first-person DDS targets; no expansion of texture replacements without independent validation.
+- **Assets Replaced (2048x2048 DDS)**:
   - AR_shotgun_d.dds (SHA256: D6A98EF03EC588A31FEFDB7393757738B19B86B9E9381029E47E5C26C0506237)
   - AR_shotgun_n.dds (SHA256: 83F64BFCE085107A4EC80F14D236EB1409A402B8D879BCF8691667C3F92CD798)
   - inview_glove_d.dds (SHA256: D76D05B122A6C81B24B3560E88CF181167FAB3EE64A967A7017D21770F3D4754)
   - inview_glove_n.dds (SHA256: 5F0A8E9E4C65763A58BC5E88CAFEEE238EF715935730065336CDFF2CA3D8E049)
+- **Preserved Steam Baseline & Checkpoint Hashes**:
+  - Live Steam DLL: A82184B2F82F019B7A59E3DBFB49EE60C1675BEC39FB7FE239E182B974F0FA73
+  - Steam SingularityVR.ini: 0805A7F9236ABF0947D04ADE32FEB272B59B4FFF96F45F7157FD6EB7C4E1C6D8
+  - Steam texture_override.ini: 2492C8D08A067C9097AD24ACA5D8AA77EB56B883914369087C7FB6471F2D1BF7
+  - Step A Log: deployment/deploy-backups/20261025-hd-textures-stepA/texture_override.log (SHA256: AB848E730B30086237D9FED26D606E39112A0272B02820B2F58442A03CDE3FA3)
+  - Step B Log: deployment/deploy-backups/20261025-hd-textures-stepB/texture_override.log (SHA256: B3942F5A734EADD76CA831E940B600C5A4C920524FED2B91115EEE331F32EAF3)
+  - Backup Checkpoint: deployment/deploy-backups/20261025-accepted-hd-textures (contains DLL, INI, logs, and manifest hashes.json)
 - **Runtime Verification**:
-  - priority_material_mode=2 in 	exture_override.ini, 
-emaster_apply=0, ridge_owned=1, mode_apply=1.
-  - Zero D3D errors, zero resource evictions (evictions=0, 	able=0/512), 532,877 native cache hits over 729,347 binds.
-  - Strict scope isolation: zero unintended overrides; UI and shadow passes fully protected.
-- **Archived Evidence Logs**:
-  - Step A: deployment/deploy-backups/20261025-hd-textures-stepA/texture_override.log (SHA256: AB848E730B30086237D9FED26D606E39112A0272B02820B2F58442A03CDE3FA3)
-  - Step B: deployment/deploy-backups/20261025-hd-textures-stepB/texture_override.log (SHA256: B3942F5A734EADD76CA831E940B600C5A4C920524FED2B91115EEE331F32EAF3)
+  - D3D9Ex cache: 532,877 native hits over 729,347 binds.
+  - Zero D3D errors, zero memory/eviction issues (evictions=0, table=0/512).
+  - Zero unintended overrides; UI and shadow passes fully protected.
 
 ## 2026-10-25 — SIDE Seeker back slot / measured support / launch candidate
 
