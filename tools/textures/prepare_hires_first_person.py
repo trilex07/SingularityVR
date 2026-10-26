@@ -46,8 +46,10 @@ def upscale_normal(image: Image.Image) -> Image.Image:
     return Image.fromarray(np.uint8(np.clip((up + 1.0) * 127.5 + 0.5, 0, 255)), "RGB")
 
 
-def upscale_diffuse(image: Image.Image) -> Image.Image:
-    clean = resize_rgba_independent(image, (image.width * 2, image.height * 2), Image.Resampling.LANCZOS)
+def upscale_diffuse(image: Image.Image, factor: int = 2) -> Image.Image:
+    if factor not in (2, 4):
+        raise ValueError('Only measured 2x/4x private candidates are supported')
+    clean = resize_rgba_independent(image, (image.width * factor, image.height * factor), Image.Resampling.LANCZOS)
     # Mild edge clarity, thresholded to avoid amplifying DXT block noise.
     rgb = clean.convert("RGB").filter(ImageFilter.UnsharpMask(radius=1.0, percent=38, threshold=5))
     result = rgb.convert("RGBA")
@@ -55,17 +57,18 @@ def upscale_diffuse(image: Image.Image) -> Image.Image:
     return result
 
 
-def preview(original: Image.Image, remaster: Image.Image, output: Path, label: str) -> None:
+def preview(original: Image.Image, remaster: Image.Image, output: Path, label: str,
+            factor: int = 2, source_label: str = 'source mip0', candidate_label: str = '2x private candidate') -> None:
     # Show equal physical UV coverage at both sampling densities.
     box = (original.width // 4, original.height // 4, original.width * 3 // 4, original.height * 3 // 4)
     crop_a = original.crop(box).resize((512, 512), Image.Resampling.NEAREST)
-    crop_b = remaster.crop(tuple(v * 2 for v in box)).resize((512, 512), Image.Resampling.BILINEAR)
+    crop_b = remaster.crop(tuple(v * factor for v in box)).resize((512, 512), Image.Resampling.BILINEAR)
     sheet = Image.new("RGB", (1024, 540), (18, 20, 24))
     sheet.paste(crop_a.convert("RGB"), (0, 28))
     sheet.paste(crop_b.convert("RGB"), (512, 28))
     pen = ImageDraw.Draw(sheet)
-    pen.text((8, 6), f"{label}: source mip0", fill="white")
-    pen.text((520, 6), "2x private candidate", fill="white")
+    pen.text((8, 6), f"{label}: {source_label}", fill="white")
+    pen.text((520, 6), candidate_label, fill="white")
     output.parent.mkdir(parents=True, exist_ok=True)
     sheet.save(output)
 

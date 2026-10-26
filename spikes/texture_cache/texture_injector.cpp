@@ -56,6 +56,8 @@ static bool      g_bridgeOwned = false; // new route default OFF; never arms Min
 static bool      g_remasterApply=false;
 static remasterscope::PriorityMode g_priorityMaterialMode=remasterscope::PriorityMode::Off;
 static remasterscope::PriorityMode g_valkyrieMaterialMode=remasterscope::PriorityMode::Off;
+static remasterscope::PriorityMode g_centurionMaterialMode=remasterscope::PriorityMode::Off;
+static remasterscope::PriorityMode g_kasimovMaterialMode=remasterscope::PriorityMode::Off;
 static bool      g_effectsRemaster=false; // reviewed effects candidate, startup-only, default OFF
 static char      g_remasterDir[MAX_PATH]="texture-override-remaster";
 struct alignas(8) CacheCounters {
@@ -144,6 +146,10 @@ static void LoadConfig() {
         iniInt("general","priority_material_mode",0,ini));
     g_valkyrieMaterialMode=remasterscope::ParsePriorityMode(
         iniInt("general","valkyrie_material_mode",0,ini));
+    g_centurionMaterialMode=remasterscope::ParsePriorityMode(
+        iniInt("general","centurion_material_mode",0,ini));
+    g_kasimovMaterialMode=remasterscope::ParsePriorityMode(
+        iniInt("general","kasimov_material_mode",0,ini));
     g_effectsRemaster=iniInt("general","effects_remaster",0,ini)!=0;
     iniStr("general","remasterdir","texture-override-remaster",g_remasterDir,MAX_PATH,ini);
     iniStr("general", "texturesdir", "texture-override", g_texturesDir, MAX_PATH, ini);
@@ -180,6 +186,8 @@ static void LoadConfig() {
         g_resourceNativeCache?1:0);
     Log("priority material mode=%d (0=accepted base, 1=log only, 2=four-map remaster)",
         static_cast<int>(g_priorityMaterialMode));
+    Log("weapon review modes: valkyrie=%d centurion=%d kasimov=%d (0=existing policy,1=log only,2=exact reviewed pair)",
+        static_cast<int>(g_valkyrieMaterialMode),static_cast<int>(g_centurionMaterialMode),static_cast<int>(g_kasimovMaterialMode));
 }
 
 // ---------------------------------------------------------------------------
@@ -523,14 +531,15 @@ static const Target* MatchTarget(const D3DSURFACE_DESC& d, uint64_t hash, bool& 
     for (int i = 0; i < kTargetCount; ++i) {
         const Target& t = kTargets[i];
         if (t.w == d.Width && t.h == d.Height && t.fmt == d.Format)
-            if (haveHash && t.hash == hash) return &t;
+            if (haveHash && t.hash == hash && remasterscope::ReviewTargetEnabled(t.name,g_kasimovMaterialMode)) return &t;
     }
     return nullptr;
 }
 
 static bool IsCandidate(const D3DSURFACE_DESC& d) {
     for (int i = 0; i < kTargetCount; ++i)
-        if (kTargets[i].w == d.Width && kTargets[i].h == d.Height && kTargets[i].fmt == d.Format)
+        if (kTargets[i].w == d.Width && kTargets[i].h == d.Height && kTargets[i].fmt == d.Format &&
+            remasterscope::ReviewTargetEnabled(kTargets[i].name,g_kasimovMaterialMode))
             return true;
     return false;
 }
@@ -660,10 +669,12 @@ extern "C" HRESULT WINAPI SingularityTextureBridgeV1(IDirect3DDevice9* dev,DWORD
     if(target){
         static volatile LONG seen[kTargetCount]{};
         const unsigned slot=unsigned(target-kTargets);
-        if(!InterlockedCompareExchange(&seen[slot],1,0))Log("BRIDGE MATCH %s exact original hash=%016llX remaster=%d remaster_apply=%d priority_mode=%d valkyrie_mode=%d; named proof before substitution",
+        if(!InterlockedCompareExchange(&seen[slot],1,0))Log("BRIDGE MATCH %s exact original hash=%016llX remaster=%d remaster_apply=%d priority_mode=%d valkyrie_mode=%d centurion_mode=%d kasimov_mode=%d; named proof before substitution",
             target->name,(unsigned long long)hash,remaster?1:0,g_remasterApply?1:0,
             remasterscope::PriorityMaterial(target->name)?static_cast<int>(g_priorityMaterialMode):0,
-            remasterscope::ValkyrieMaterial(target->name)?static_cast<int>(g_valkyrieMaterialMode):0);
+            remasterscope::ValkyrieMaterial(target->name)?static_cast<int>(g_valkyrieMaterialMode):0,
+            remasterscope::CenturionMaterial(target->name)?static_cast<int>(g_centurionMaterialMode):0,
+            remasterscope::KasimovMaterial(target->name)?static_cast<int>(g_kasimovMaterialMode):0);
     }
     IDirect3DTexture9* replacement=nullptr;
     // LogOnly never selects the selected review group's remaster files. It may still select
@@ -672,7 +683,7 @@ extern "C" HRESULT WINAPI SingularityTextureBridgeV1(IDirect3DDevice9* dev,DWORD
     if(target&&g_apply){
         char relative[MAX_PATH],path[MAX_PATH];
         const bool useRemaster=remasterscope::UseMaterialRemaster(target->name,remaster,g_remasterApply,
-            g_priorityMaterialMode,g_valkyrieMaterialMode);
+            g_priorityMaterialMode,g_valkyrieMaterialMode,g_centurionMaterialMode,g_kasimovMaterialMode);
         _snprintf_s(relative,_TRUNCATE,"%s\\%s",useRemaster?g_remasterDir:g_texturesDir,target->dds);
         if(relative[0]=='\\'||relative[1]==':')strcpy_s(path,relative);else BuildPath(relative,path,sizeof(path));
         DDSImage image;
