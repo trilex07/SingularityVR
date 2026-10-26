@@ -24,7 +24,9 @@ function Assert([bool]$condition,[string]$message){if(-not $condition){throw $me
 function MustRefuse([scriptblock]$call){$refused=$false;try{& $call | Out-Null}catch{$refused=$true};Assert $refused 'Expected guarded refusal'}
 Put (Join-Path $game 'Binaries\Singularity.exe') 'FAKE NON-EXECUTABLE FIXTURE; NEVER LAUNCHED'
 $files=@()
-foreach($relative in @('Binaries/texture-override-remaster/revert_d2.dds','Binaries/vr-assets/localization/pl/polish_text.jsonl','Binaries/vr-assets/audio/polish/story/new.wav')){
+foreach($relative in @('Binaries/texture-override-remaster/revert_d2.dds','Binaries/vr-assets/localization/pl/polish_text.jsonl','Binaries/vr-assets/audio/polish/story/new.wav',
+    'RvGame/CookedPC/UI_SinglePlayer_SF.xxx','RvGame/CookedPC/RvGame.xxx',
+    'Binaries/texture-override-remaster/ar_sniper_rifle_d.dds')){
     $live=Join-Path $game $relative
     if(-not $relative.EndsWith('new.wav')){Put $live ('before '+$relative)}
     $source=Join-Path (Join-Path $candidate 'payload') $relative

@@ -14,6 +14,7 @@ param(
     [switch]$DllOnly,
     [switch]$RuntimeDllPairOnly,
     [switch]$IncludeIni,
+    [switch]$IncludeTextureIni,
     [string]$OpeningCutsceneManifestPath = '',
     [string]$SessionAssetsManifestPath = '',
     [string]$AcceptedProfilePath = '',
@@ -25,7 +26,7 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 if($SessionAssetsManifestPath){
-    if($OpeningCutsceneManifestPath -or $DllOnly -or $RuntimeDllPairOnly -or $IncludeIni -or $StopGame -or $KeepIni -or $SkipTextures){
+    if($OpeningCutsceneManifestPath -or $DllOnly -or $RuntimeDllPairOnly -or $IncludeIni -or $IncludeTextureIni -or $StopGame -or $KeepIni -or $SkipTextures){
         throw 'Session asset delta is an exclusive narrow deployment mode'
     }
     $assetAction=if($Action -eq 'Rollback'){'Restore'}elseif($Action -eq 'Status'){'Preflight'}else{'Deploy'}
@@ -37,7 +38,7 @@ if($SessionAssetsManifestPath){
 }
 if($OpeningCutsceneManifestPath) {
     if($Action -ne 'Status'){throw 'Opening-cutscene writes need an accepted-profile adapter; v1 permits read-only Status only'}
-    if($DllOnly -or $RuntimeDllPairOnly -or $IncludeIni -or $StopGame -or $KeepIni -or $SkipTextures){
+    if($DllOnly -or $RuntimeDllPairOnly -or $IncludeIni -or $IncludeTextureIni -or $StopGame -or $KeepIni -or $SkipTextures){
         throw 'Opening cutscene lease is an exclusive exact four-file deployment mode'
     }
     $openingAction=if($Action -eq 'Rollback'){'Restore'}elseif($Action -eq 'Status'){'Preflight'}else{'Install'}
@@ -46,6 +47,9 @@ if($OpeningCutsceneManifestPath) {
     return
 }
 if($DllOnly -and $RuntimeDllPairOnly){throw 'Select one narrow deployment mode only'}
+if($IncludeTextureIni -and (-not $RuntimeDllPairOnly -or -not $ArtifactDir -or $KeepIni)){
+    throw 'IncludeTextureIni requires explicit RuntimeDllPairOnly artifact and exact profile change plan'
+}
 if($IncludeIni -and ((-not $RuntimeDllPairOnly -and -not $DllOnly) -or $KeepIni)){
     throw 'IncludeIni requires an explicit DllOnly or RuntimeDllPairOnly deployment without KeepIni'
 }
@@ -256,6 +260,7 @@ if (Test-Path -LiteralPath $dinputSource -PathType Leaf) {
     }
 }
 $textureIniSource = Join-Path $assets 'asset-tools\texture-injector\texture_override.ini'
+if($IncludeTextureIni){$textureIniSource=Join-Path $stage 'texture_override.ini'}
 $dinputOrigSource = Join-Path $env:windir 'SysWOW64\dinput8.dll'
 $targetDll = Join-Path $gameBin 'd3d9.dll'
 $targetIni = Join-Path $gameBin 'SingularityVR.ini'
@@ -351,6 +356,7 @@ if ($Action -eq 'Rollback') {
 if (-not $stageDll) { throw 'No d3d9.dll source found in the selected artifact directory or source tree.' }
 if(-not $narrowRuntime){throw 'Profile guard v1 requires DllOnly or RuntimeDllPairOnly; broad texture/INI installs are blocked'}
 if($IncludeIni -and -not $stageIni){throw 'IncludeIni requires a verified staged INI'}
+if($IncludeTextureIni -and -not (Test-Path -LiteralPath $textureIniSource -PathType Leaf)){throw 'IncludeTextureIni requires staged texture_override.ini'}
 if (-not $narrowRuntime -and -not $stageIni -and -not $KeepIni) { throw 'No SingularityVR.ini source found; use -KeepIni only if preserving the installed INI is intentional.' }
 if (-not $DllOnly -and -not (Test-Path -LiteralPath $dinputSource -PathType Leaf)) { throw "Texture injector dinput8.dll not found: $dinputSource" }
 if (-not $narrowRuntime -and -not (Test-Path -LiteralPath $textureIniSource -PathType Leaf)) { throw "Texture injector config not found: $textureIniSource" }
@@ -363,6 +369,7 @@ if (-not $DllOnly -and -not $dinputPe.IsPe32) { throw "The texture injector dinp
 $targets = @($targetDll)
 if($RuntimeDllPairOnly){$targets+=@($targetDinput)}
 if($IncludeIni){$targets+=@($targetIni)}
+if($IncludeTextureIni){$targets+=@($targetTextureIni)}
 if (-not $narrowRuntime) {
     $targets += @($targetDinput, $targetDinputOrig, $targetTextureIni)
     if (-not $KeepIni) { $targets += $targetIni }
@@ -372,6 +379,7 @@ if (-not $narrowRuntime -and -not $SkipTextures) { $textureSources = @(Get-Textu
 $guardMap=@([pscustomobject]@{Target='Binaries/d3d9.dll';Source=$stageDll})
 if($RuntimeDllPairOnly){$guardMap += [pscustomobject]@{Target='Binaries/dinput8.dll';Source=$dinputSource}}
 if($IncludeIni){$guardMap += [pscustomobject]@{Target='Binaries/SingularityVR.ini';Source=$stageIni}}
+if($IncludeTextureIni){$guardMap += [pscustomobject]@{Target='Binaries/texture_override.ini';Source=$textureIniSource}}
 $guardTicket=Assert-AcceptedDeployment -GameRoot $guardGameRoot -ProfilePath $AcceptedProfilePath -ChangePlanPath $ChangePlanPath -FileMap $guardMap
 if($WhatIfPreference){Write-Host 'Accepted-profile install preflight PASS; WhatIf creates/writes nothing';return}
 $backupRoot = Join-Path $root 'deployment\install-backups'
@@ -386,6 +394,7 @@ $installed = @()
 $installed += Copy-Verified $stageDll $targetDll
 if($RuntimeDllPairOnly){$installed+=Copy-Verified $dinputSource $targetDinput}
 if($IncludeIni){$installed+=Copy-Verified $stageIni $targetIni}
+if($IncludeTextureIni){$installed+=Copy-Verified $textureIniSource $targetTextureIni}
 if (-not $narrowRuntime) {
     if (-not $KeepIni) { $installed += Copy-Verified $stageIni $targetIni }
     $installed += Copy-Verified $dinputSource $targetDinput
@@ -415,6 +424,7 @@ $report = [pscustomobject]@{
     DllOnly = [bool]$DllOnly
     RuntimeDllPairOnly = [bool]$RuntimeDllPairOnly
     IncludeIni = [bool]$IncludeIni
+    IncludeTextureIni = [bool]$IncludeTextureIni
     DInput8Pe32 = if ($dinputPe) { $dinputPe.IsPe32 } else { $null }
     Installed = @($installed)
     TextureVariant = if ($narrowRuntime -or $SkipTextures) { 'skipped' } else { $TextureVariant }
