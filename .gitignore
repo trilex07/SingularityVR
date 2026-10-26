@@ -127,3 +127,6 @@ offline-deliverables/
 
 # Private MAIN logs, accepted-install snapshots and compiled evidence.
 /build/main-seeker-evidence/
+
+# Local completion audit: owned game code, archived logs and private build receipts.
+/build/release-evidence/
