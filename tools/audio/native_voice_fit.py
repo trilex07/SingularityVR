@@ -4,6 +4,7 @@ import sys
 import wave
 from pathlib import Path
 from patch_opening_dialogue import require
+from vorbis_fixed_allocation import _headers_and_audio, audio_packets
 
 MAX_DEPLOYMENT_TEMPO = 1.35
 
@@ -49,6 +50,23 @@ def fit(run,source,folder,asset,rate,frames,channels=1):
     with wave.open(str(decoded)) as w:
         require(w.getframerate()==rate and w.getnchannels()==channels,'decoded format mismatch')
         decoded_frames=w.getnframes()
+    repaged=False
+    if decoded_frames!=frames and len(_headers_and_audio(target.read_bytes())[1])==1:
+        # Observed short-file failure: first audio page is also EOS, so the
+        # demuxer cannot establish the same starting granule as the native
+        # multi-page stream. Re-page the SAME padded PCM, not its timing.
+        # Accept only byte-identical compressed speech packets and exact PCM
+        # parity on independent decode. No granule editing or speech cropping.
+        paged=folder/(asset+'.paged.ogg');paged_decoded=folder/(asset+'.paged.wav')
+        run(['-v','error','-n','-i',str(spoken),'-af',f'apad=whole_len={frames},atrim=end_sample={frames}',
+             '-c:a','libvorbis','-q:a','3','-page_duration','200000',str(paged)])
+        require(audio_packets(target.read_bytes())==audio_packets(paged.read_bytes()),
+                're-paging changed compressed audio packets')
+        run(['-v','error','-n','-i',str(paged),'-c:a','pcm_s16le',str(paged_decoded)])
+        with wave.open(str(paged_decoded)) as w:
+            require(w.getframerate()==rate and w.getnchannels()==channels,'re-paged format mismatch')
+            if w.getnframes()==frames:
+                decoded_frames=frames;target=paged;repaged=True
     padding_correction=0
     if 0 < frames-decoded_frames <= 256:
         # Measured decoder priming loss, not an assumed codec delay. Re-encode
@@ -69,4 +87,4 @@ def fit(run,source,folder,asset,rate,frames,channels=1):
             target=retry
     if decoded_frames!=frames:
         return None,dict(reason='encoded native PCM budget mismatch; bounded silence retry refused',tempo=tempo,native_duration=budget,source_duration=duration,decoded_frames=decoded_frames)
-    return target,dict(tempo=tempo,guard_ms=40,source_duration=duration,native_frames=frames,rate=rate,channels=channels,measured_tail_padding_frames=padding_correction)
+    return target,dict(tempo=tempo,guard_ms=40,source_duration=duration,native_frames=frames,rate=rate,channels=channels,measured_tail_padding_frames=padding_correction,repacketized_single_page=repaged)

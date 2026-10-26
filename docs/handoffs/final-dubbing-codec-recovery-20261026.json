@@ -1,0 +1,120 @@
+{
+  "base_manifest_sha256": "1d69a34b4e4d07f69ad3bb3fc815579b0ac3832f295b88d2e7cc12bf017e429e",
+  "recovered": 5,
+  "previous_packed_takes_preserved": 702,
+  "banks": [
+    {
+      "package": "SP_VI5_kismet01_LOC_INT",
+      "before": "8aab31fe5190662f939c587252697784117ed13ebd7d74ab24337e09640bdff7",
+      "after": "86296344c5788eb34ea31568cc24f85550822c15bbb8a822a6f9fa7f104b31a2",
+      "added": [
+        "VI4_4205_GST"
+      ],
+      "previous_packed_takes_preserved": 23,
+      "container_roundtrip": "PASS",
+      "native_properties_and_other_exports": "PASS"
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "before": "f76fd65f5baa5204555b6cb03ed1c36eb8de85d7b14d96fe8d39993753bd91ad",
+      "after": "2ceef224566923f7901175528d6f455063d638bd55abc28796a90b9a4ed38d12",
+      "added": [
+        "SD_SPT1_FIRE_GRENADE1",
+        "SD_SPT1_SEE_TARGET1",
+        "SD_SPT3_MOVE_IN2",
+        "SD_SPT3_SEE_TARGET4"
+      ],
+      "previous_packed_takes_preserved": 74,
+      "container_roundtrip": "PASS",
+      "native_properties_and_other_exports": "PASS"
+    }
+  ],
+  "decoder_frames": "PASS (Vorbis and libvorbis)",
+  "compressed_speech_packets": "IDENTICAL",
+  "speech_cropped": false,
+  "native_metadata_changed": false,
+  "steam_written": false,
+  "physical_acceptance": "PENDING",
+  "schema": "singularityvr-native-codec-recovery-v1",
+  "cases": [
+    {
+      "package": "SP_VI5_kismet01_LOC_INT",
+      "asset": "VI4_4205_GST",
+      "rate": 48000,
+      "native_frames": 37745,
+      "initial_pages": 3,
+      "recovered_pages": 6,
+      "decoded_frames": [
+        37745,
+        37745
+      ],
+      "packet_sequence_sha256": "a7e716b82c5db7ff90b4f4be0380c543286685a509c81a6bd0407a69bf2fb266",
+      "eos_granule_before": 37745,
+      "eos_granule_after": 37745
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "asset": "SD_SPT1_FIRE_GRENADE1",
+      "rate": 44100,
+      "native_frames": 28156,
+      "initial_pages": 3,
+      "recovered_pages": 6,
+      "decoded_frames": [
+        28156,
+        28156
+      ],
+      "packet_sequence_sha256": "9ae35eb0ca4d25d94d2e9948afb0cf132bbb4dfc15b029778dda5dab285d8129",
+      "eos_granule_before": 28156,
+      "eos_granule_after": 28156
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "asset": "SD_SPT1_SEE_TARGET1",
+      "rate": 44100,
+      "native_frames": 43839,
+      "initial_pages": 3,
+      "recovered_pages": 7,
+      "decoded_frames": [
+        43839,
+        43839
+      ],
+      "packet_sequence_sha256": "79fe71257a02bd4e7cc302fa755a35b3a5112b89c465fa7cab78749471028a5c",
+      "eos_granule_before": 43839,
+      "eos_granule_after": 43839
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "asset": "SD_SPT3_MOVE_IN2",
+      "rate": 44100,
+      "native_frames": 44964,
+      "initial_pages": 3,
+      "recovered_pages": 7,
+      "decoded_frames": [
+        44964,
+        44964
+      ],
+      "packet_sequence_sha256": "9dd4e6d95083d11a7f06c225831ff78808847ac58033f9f125e1b8e5cee53a21",
+      "eos_granule_before": 44964,
+      "eos_granule_after": 44964
+    },
+    {
+      "package": "SP_VI5_kismet03_LOC_INT",
+      "asset": "SD_SPT3_SEE_TARGET4",
+      "rate": 44100,
+      "native_frames": 42183,
+      "initial_pages": 3,
+      "recovered_pages": 7,
+      "decoded_frames": [
+        42183,
+        42183
+      ],
+      "packet_sequence_sha256": "9c18940b44b91b925e70c0c1f19220f53f119109faf06db46ff87f18026a1cfb",
+      "eos_granule_before": 42183,
+      "eos_granule_after": 42183
+    }
+  ],
+  "combined_manifest_sha256": "419975c167fcda2519866c5bbf4b45da6da2f9701ac1a65717e2db2cf640d97e",
+  "remaining_timing_cases": 551,
+  "remaining_codec_cases": 9,
+  "remaining_codec_only_cases": 0
+}

@@ -55,7 +55,7 @@ STATUS.md entries and agent handoffs do not override the scoped human result.
 - SIDE selection 693f5599 integrated; all 1258 chosen WAV hashes, mono PCM16
   24 kHz formats and exact native identities independently verified.
 - MAIN built all 116 installed-source banks offline. 111 banks have safe
-  replacements: 702 takes replaced, 556 retained unchanged (see exact
+  replacements: 707 takes replaced, 551 retained unchanged (see exact
   timing/codec reasons in the MAIN receipt). Five additional
   uncovered native identities are unchanged. NOT complete Polish coverage.
 - Source lookup preserved from installed installation, not older repo text.
@@ -67,7 +67,7 @@ STATUS.md entries and agent handoffs do not override the scoped human result.
 - Remaining: SIDE must supply shorter approved takes for timing refusals;
   investigate codec frame parity separately. In-game listening is PENDING.
 - Reconciled SIDE plan: 551 timing takes, including nine with codec refusals;
-  five additional codec-only takes. The receipt's guarded duration already
+  zero additional codec-only takes after five MAIN codec recoveries. The receipt's guarded duration already
   excludes outer silence. No new recordings arrived with SIDE d38b2407.
 
 ### P2-B — Sound remaster
@@ -125,6 +125,11 @@ and OLED D3D11 pixel/reference tests PASS. All physical gates remain open.
 
 130 hash-verified private files: 111 campaign banks, eight sound-remaster banks,
 one menu package and ten DDS files. Manifest under
-`build/next-weapon-reload/final-complete-v2-20261026/manifest.json`.
+`build/next-weapon-reload/final-complete-v3-20261026/manifest.json`.
 No Steam deployment or gameplay launch. Safe partial dubbing is explicit;
-556 retained takes must not be represented as installed new XTTS audio.
+551 retained takes must not be represented as installed new XTTS audio.
+
+V3 codec addendum: five short single-page Vorbis failures recovered without
+changing compressed speech packets or native metadata. Two banks changed; all
+previous 702 replacements preserved. SIDE 004e3051 supplied no new recordings.
+See docs/handoffs/final-dubbing-codec-recovery-20261026.md. Steam untouched.

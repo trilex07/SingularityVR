@@ -64,6 +64,20 @@ def _headers_and_audio(source):
     raise ValueError('missing Vorbis headers')
 
 
+def audio_packets(source):
+    """CRC-checked compressed packets, excluding the three Vorbis headers."""
+    _,audio,_=_headers_and_audio(source)
+    result=[];part=bytearray()
+    for page in audio:
+        at=27+page[26]
+        for size in page[27:at]:
+            part+=page[at:at+size];at+=size
+            if size<255:
+                result.append(bytes(part));part.clear()
+    require(not part and result,'incomplete/missing audio packet')
+    return result
+
+
 def pad_to_allocation(source,target_size):
     headers,audio,serial=_headers_and_audio(source)
     require(audio,'no audio pages')

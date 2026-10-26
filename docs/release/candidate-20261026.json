@@ -23,12 +23,12 @@
     "oled_d3d11_pixels_and_lifetime": "PASS",
     "audio_focused_tests": "PASS (39, SIDE receipt)",
     "native_buttons": "PASS: six private GFx tests, 20 public tests, cursor x86 regression",
-    "native_audio_channels": "PASS: real codec mono/stereo and frame mismatch refusal",
+    "native_audio_channels": "PASS: 21 focused Python tests, real single-page codec recovery, identical packets, both decoders and two actual bank round trips",
     "texture_config_deploy": "PASS: production script fake Steam install, rollback and drift refusal",
     "combined_assets": "PASS: 130 file hashes; no install"
   },
   "asset_state": {
-    "dubbing": "116 banks checked; 111 changed; 702 replacements; 556 retained, incomplete coverage; physical listening PENDING",
+    "dubbing": "116 banks checked; 111 changed; 707 replacements; 551 retained timing cases, including 9 codec refusals; incomplete coverage; physical listening PENDING",
     "sound_remaster": "8 conservative native variants built; exact graph and container PASS; listening PENDING",
     "hd": "10 DDS complete staged set; clean bridge build and pixel tests PASS; physical PENDING",
     "native_menu_buttons": "native GFx Button/ButtonLeft remastered; real bounds, bitmap and action preservation PASS; physical PENDING"
@@ -38,5 +38,6 @@
   "physical_acceptance": "PENDING",
   "release_complete": false,
   "texture_bridge_sha256": "F58CB3A805E46C3D3F7E88137BD605AF21A8A8106C289385132F677A968E95FD",
-  "private_asset_manifest_sha256": "1d69a34b4e4d07f69ad3bb3fc815579b0ac3832f295b88d2e7cc12bf017e429e"
+  "private_asset_manifest_sha256": "419975c167fcda2519866c5bbf4b45da6da2f9701ac1a65717e2db2cf640d97e",
+  "private_asset_manifest": "build/next-weapon-reload/final-complete-v3-20261026/manifest.json"
 }

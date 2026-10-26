@@ -1,3 +1,7 @@
+> Superseded count note: V3 now packs 707 takes; 551 timing cases remain.
+> The five codec-only cases below were recovered by MAIN without new speech;
+> see final-dubbing-codec-recovery-20261026.md. Historical V2 details follow.
+
 # MAIN correction of SIDE's timing plan — 2026-10-26
 
 This supersedes the timing classification/formula in SIDE d38b2407 and MAIN

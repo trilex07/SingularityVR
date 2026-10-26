@@ -1,3 +1,7 @@
+> Superseded count note: V3 now packs 707 takes; 551 timing cases remain.
+> The five codec-only cases below were recovered by MAIN without new speech;
+> see final-dubbing-codec-recovery-20261026.md. Historical V2 details follow.
+
 # MAIN integration result — not full campaign acceptance
 
 The user forwarded SIDE resolution `693f5599`. MAIN independently verified all

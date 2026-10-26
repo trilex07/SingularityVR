@@ -2,12 +2,12 @@
   "summary": {
     "banks_checked": 116,
     "banks_changed": 111,
-    "takes_replaced": 702,
-    "takes_retained": 556,
+    "takes_replaced": 707,
+    "takes_retained": 551,
     "reasons": {
       "guarded duration requires unsafe tempo": 333,
       "tempo exceeds 1.35": 209,
-      "encoded native PCM budget mismatch; bounded silence retry refused": 14
+      "encoded native PCM budget mismatch; bounded silence retry refused": 9
     },
     "physical_acceptance": "PENDING",
     "main_listening_performed": false
@@ -2861,16 +2861,6 @@
     },
     {
       "package": "SP_VI5_kismet01_LOC_INT",
-      "reason": "encoded native PCM budget mismatch; bounded silence retry refused",
-      "tempo": 1.1323637352181595,
-      "native_duration": 0.7863541666666667,
-      "source_duration": 0.8677916666666666,
-      "decoded_frames": 38720,
-      "asset": "VI4_4205_GST",
-      "disposition": "accepted audio retained"
-    },
-    {
-      "package": "SP_VI5_kismet01_LOC_INT",
       "reason": "guarded duration requires unsafe tempo",
       "tempo": 2.367736252673965,
       "native_duration": 0.8478125,
@@ -4105,16 +4095,6 @@
     },
     {
       "package": "SP_VI5_kismet03_LOC_INT",
-      "reason": "encoded native PCM budget mismatch; bounded silence retry refused",
-      "tempo": 1.2398442656009385,
-      "native_duration": 0.6384580498866214,
-      "source_duration": 0.7667916666666666,
-      "decoded_frames": 29248,
-      "asset": "SD_SPT1_FIRE_GRENADE1",
-      "disposition": "accepted audio retained"
-    },
-    {
-      "package": "SP_VI5_kismet03_LOC_INT",
       "tempo": 1.46597353884858,
       "guard_ms": 40,
       "source_duration": 1.8234583333333334,
@@ -4144,16 +4124,6 @@
       "native_duration": 0.7726303854875284,
       "source_duration": 1.566375,
       "asset": "SD_SPT1_SEE_GRENADE2",
-      "disposition": "accepted audio retained"
-    },
-    {
-      "package": "SP_VI5_kismet03_LOC_INT",
-      "reason": "encoded native PCM budget mismatch; bounded silence retry refused",
-      "tempo": 1.0313988407011663,
-      "native_duration": 0.9940816326530613,
-      "source_duration": 1.0046666666666666,
-      "decoded_frames": 44736,
-      "asset": "SD_SPT1_SEE_TARGET1",
       "disposition": "accepted audio retained"
     },
     {
@@ -4296,16 +4266,6 @@
     },
     {
       "package": "SP_VI5_kismet03_LOC_INT",
-      "reason": "encoded native PCM budget mismatch; bounded silence retry refused",
-      "tempo": 1.0,
-      "native_duration": 1.019591836734694,
-      "source_duration": 0.95425,
-      "decoded_frames": 45092,
-      "asset": "SD_SPT3_MOVE_IN2",
-      "disposition": "accepted audio retained"
-    },
-    {
-      "package": "SP_VI5_kismet03_LOC_INT",
       "reason": "guarded duration requires unsafe tempo",
       "tempo": 1.9841792864476386,
       "native_duration": 0.9917913832199546,
@@ -4320,16 +4280,6 @@
       "native_duration": 0.8542857142857143,
       "source_duration": 1.6390416666666667,
       "asset": "SD_SPT3_SEE_TARGET1",
-      "disposition": "accepted audio retained"
-    },
-    {
-      "package": "SP_VI5_kismet03_LOC_INT",
-      "reason": "encoded native PCM budget mismatch; bounded silence retry refused",
-      "tempo": 1.0,
-      "native_duration": 0.956530612244898,
-      "source_duration": 0.9008333333333334,
-      "decoded_frames": 43328,
-      "asset": "SD_SPT3_SEE_TARGET4",
       "disposition": "accepted audio retained"
     },
     {
