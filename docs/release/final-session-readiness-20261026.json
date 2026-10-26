@@ -1,0 +1,58 @@
+{
+  "schema": "singularityvr-final-session-readiness-v1",
+  "source_commit": "38ca72f88112bfcbd26addb0d6aa4f76095aa15e",
+  "packaging_commit": "ef259812",
+  "physical_baseline_dll": "AB348E06080E479988E810375CC50D92EEA1936D94313A02360517269DC4F964",
+  "baseline_ini_sha256": "9E68D94401ADD0986CF7ACB8E922F805BD3DCFBCAD967BE59388FAA13DF8831C",
+  "runtime": [
+    {
+      "path": "Binaries/d3d9.dll",
+      "sha256": "23a3a768c44f1c6eb5479d899141924c4c44d5c6a73a3175a2827241105370b1",
+      "architecture": "x86 PE32"
+    },
+    {
+      "path": "Binaries/dinput8.dll",
+      "sha256": "f58cb3a805e46c3d3f7e88137bd605af21a8a8106c289385132f677a968e95fd",
+      "architecture": "x86 PE32"
+    },
+    {
+      "path": "Binaries/SingularityVR.ini",
+      "sha256": "9cd972f47e53c253893d8e969a99dc57de4d960cc75aaa98fba8805d296367fc"
+    },
+    {
+      "path": "Binaries/texture_override.ini",
+      "sha256": "ce081d774143bc247af9af4a4ef96dde7c877fe0a0f1d5a2c4f08b7f3a2836c1"
+    }
+  ],
+  "asset_manifest_sha256": "419975c167fcda2519866c5bbf4b45da6da2f9701ac1a65717e2db2cf640d97e",
+  "asset_files": 130,
+  "unchanged_asset_files": 3,
+  "profile_sha256": "3be00f234eaa8839d7de074b4d4ed01125ca2089c61fa8d63b906289acaf231a",
+  "baseline_file_pins": 159,
+  "core_plan_sha256": "f22114f218bb566d6e23356df4825bd1676d666b27231ae1a86b8aa7cf77216d",
+  "combined_plan_sha256": "96ee03ca981d100385b54372f65a8787874a02ca1289eeadecd700de5a663c99",
+  "combined_changed_file_allowances": 130,
+  "ini_changes": [
+    {
+      "key": "Render/TmdTrackedAgeParticles",
+      "before": null,
+      "after": "1",
+      "reason": "Exact owned Age particle attachment experiment"
+    }
+  ],
+  "offline": {
+    "real_installed_baseline_and_dependencies": "PASS: read only",
+    "core_production_whatif": "PASS: no writes",
+    "all_asset_preimages_and_exe_identity": "PASS: production Preflight with full CIM visibility, no writes",
+    "all_134_sources_and_preimages": "PASS: production accepted-profile guard",
+    "combined_restore_guard": "PASS: production fake Steam install/restore and fault-injection tests",
+    "asset_scope": "PASS: 22 owned paths, 110 escapes and 10 excluded targets",
+    "texture_configuration": "PASS: production fake Steam narrow pair+config install/rollback/drift",
+    "focused_audio": "PASS: 21 tests including real short codec reproduction"
+  },
+  "steam_modified": false,
+  "game_launched": false,
+  "physical_acceptance": "PENDING",
+  "release_complete": false,
+  "remaining_side_timing_takes": 551
+}

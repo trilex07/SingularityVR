@@ -133,3 +133,9 @@ V3 codec addendum: five short single-page Vorbis failures recovered without
 changing compressed speech packets or native metadata. Two banks changed; all
 previous 702 replacements preserved. SIDE 004e3051 supplied no new recordings.
 See docs/handoffs/final-dubbing-codec-recovery-20261026.md. Steam untouched.
+
+Final V3 session preparation PASS: reviewed AB348E06 rollback profile, exact
+134-source/preimage guard, production core WhatIf and asset Preflight. Full
+four-runtime-file plus asset restoration tested on fake Steam, including drift
+and corrupt backup refusal before writes. See docs/release/final-session-20261026.md.
+No real deployment, launch, physical acceptance or baseline promotion occurred.
