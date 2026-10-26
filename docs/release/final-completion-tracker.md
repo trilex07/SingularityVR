@@ -3,6 +3,10 @@
 Owner: MAIN. Updated 2026-10-26. This document owns release status; historical
 STATUS.md entries and agent handoffs do not override the scoped human result.
 
+CURRENT: V3 Steam startup FAIL twice; physical tests NOT RUN. Both guards
+restored the verified AB348E06 baseline. No baseline promotion. Pre-launch
+entries below are historical; the live failure section at the end is current.
+
 ## Verified starting point
 
 - Source: `71728b5d7e2712d1640fa18fa58e48bd6dc708ee`.
@@ -139,3 +143,20 @@ Final V3 session preparation PASS: reviewed AB348E06 rollback profile, exact
 four-runtime-file plus asset restoration tested on fake Steam, including drift
 and corrupt backup refusal before writes. See docs/release/final-session-20261026.md.
 No real deployment, launch, physical acceptance or baseline promotion occurred.
+
+## Live Steam result: V3 startup FAIL (2026-10-26)
+
+- Full 130-asset V3 and 129-asset original-menu control both crashed before
+  device/OpenXR initialization: c0000005 at EXE+0xACA50, PIDs 13480/31072.
+- Captured unpacked allocator reads an invalid available-slot array:
+  Data=0, Num=-54, Capacity=0. First corrupting writer/caller UNPROVEN.
+- The new native menu package is not necessary to reproduce the fault.
+  Do not infer another culprit or patch the allocator from this alone.
+- Both guards restored every asset and all four runtime files; accepted
+  profile postflight PASS (159 pins). Independent installed hashes match
+  AB348E06 / 9E68D944 / 99FF4BF5 / 2492C8D0; original UI=51CDAB5C.
+- Offline PASS remains lower-level evidence. HMD/listening/frame times
+  NOT RUN. Candidate NO-GO. All unverified backlog gates remain open.
+- Next: isolate the exact runtime pair from all replaced asset groups
+  before any repeat headset request; no speculative rendering patch.
+- Evidence: docs/handoffs/final-v3-startup-failure-20261026.md.

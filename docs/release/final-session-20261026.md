@@ -1,6 +1,8 @@
 # Final V3: controlled MAIN session
 
-Offline preparation PASS. NOT deployed or launched. Physical acceptance PENDING.
+Offline preparation PASS. Two controlled Steam launches FAILED during startup.
+Both installations were restored to verified AB348E06. Physical acceptance was
+NOT RUN: neither attempt reached the D3D device/OpenXR session. V3 is NO-GO.
 Incomplete dubbing coverage is explicit: 707 replacements packed, 551 old takes
 retained awaiting SIDE, plus five uncovered identities outside this selection.
 SIDE 004e3051 supplied a synchronized plan, not new recordings.
@@ -79,3 +81,31 @@ four runtime files, changed native menu, unchanged DDS, newly absent/present DDS
 active-game refusal, corrupt core/asset backups and foreign live config refusal
 all occur before restoration writes; exact baseline and absent file state restore.
 Asset scope and texture-configuration install/rollback regressions PASS.
+
+## Actual Steam attempts: 2026-10-26
+
+Full V3: private session `20261026-124237`, game PID 13480, runtime backup
+`deployment/install-backups/20261026-124241`. All 130 assets and four runtime
+files installed and verified; restore guard READY before Steam launch. The game
+crashed before device creation, with read AV at `Singularity.exe+0xACA50`.
+
+Single-variable control: private session `20261026-125629` under
+`final-complete-v3-ui-control-20261026`, game PID 31072, runtime backup
+`deployment/install-backups/20261026-125632`. The native menu package was retained
+from AB while the runtime pair and other 129 V3 assets remained identical. The
+same startup fault occurred. The new menu package is therefore not required to
+reproduce this crash; this does not establish the package's runtime safety.
+
+Both dumps contain the same unpacked faulting instruction and invalid native
+available-slot array: Data=0, Num=-54, Capacity=0. The first writer/caller remains
+UNPROVEN. No source fix is justified by that observation alone. Details and the
+next orthogonal isolation gate are in
+`docs/handoffs/final-v3-startup-failure-20261026.md`.
+
+Both guards restored every asset preimage and the four runtime files, with
+accepted-profile postflight PASS (159 pinned baseline files and semantic INI
+checks). MAIN independently rehashed the installed runtime and native UI package
+afterwards: AB348E06 / 9E68D944 / 99FF4BF5 / 2492C8D0 / 51CDAB5C respectively.
+No baseline promotion, headset observation, listening acceptance or frame-rate
+measurement occurred. Do not relaunch either sealed failed payload as a test-ready
+candidate. The preparation instructions above are history, not launch approval.

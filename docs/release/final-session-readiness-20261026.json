@@ -50,9 +50,46 @@
     "texture_configuration": "PASS: production fake Steam narrow pair+config install/rollback/drift",
     "focused_audio": "PASS: 21 tests including real short codec reproduction"
   },
-  "steam_modified": false,
-  "game_launched": false,
-  "physical_acceptance": "PENDING",
+  "steam_modified": true,
+  "game_launched": true,
+  "physical_acceptance": "BLOCKED_STARTUP_CRASH",
   "release_complete": false,
-  "remaining_side_timing_takes": 551
+  "remaining_side_timing_takes": 551,
+  "steam_currently_modified": false,
+  "live_startup": "FAIL",
+  "recommendation": "NO_GO",
+  "current_installation": "RESTORED_VERIFIED_AB348E06",
+  "live_attempts": [
+    {
+      "candidate": "final-complete-v3-20261026",
+      "session": "20261026-124237",
+      "game_pid": 13480,
+      "asset_files": 130,
+      "excluded_asset": null,
+      "manifest_sha256": "419975c167fcda2519866c5bbf4b45da6da2f9701ac1a65717e2db2cf640d97e",
+      "runtime_backup": "deployment/install-backups/20261026-124241",
+      "exception": "c0000005",
+      "fault_exe_rva": "0xACA50",
+      "result": "FAIL_STARTUP",
+      "openxr_session": "NOT_REACHED",
+      "physical_acceptance": "NOT_RUN",
+      "baseline_restore": "PASS_HASH_VERIFIED"
+    },
+    {
+      "candidate": "final-complete-v3-ui-control-20261026",
+      "session": "20261026-125629",
+      "game_pid": 31072,
+      "asset_files": 129,
+      "excluded_asset": "RvGame/CookedPC/UI_SinglePlayer_SF.xxx",
+      "manifest_sha256": "f9c88a439763396191c7bd051f7c53b55dc7be3bfd7d3b4f1d297a9ee5c57d27",
+      "runtime_backup": "deployment/install-backups/20261026-125632",
+      "exception": "c0000005",
+      "fault_exe_rva": "0xACA50",
+      "result": "FAIL_STARTUP",
+      "openxr_session": "NOT_REACHED",
+      "physical_acceptance": "NOT_RUN",
+      "baseline_restore": "PASS_HASH_VERIFIED"
+    }
+  ],
+  "failure_report": "docs/handoffs/final-v3-startup-failure-20261026.md"
 }
