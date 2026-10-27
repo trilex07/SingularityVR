@@ -1,0 +1,429 @@
+[
+  {
+    "formerCheckout": "SingularityVR-final-completion",
+    "originalHead": "6991ef1facfe6936bba4d666329d87fecf67f77c",
+    "archivedSource": "6991ef1facfe6936bba4d666329d87fecf67f77c",
+    "branch": "archive/cleanup-20261027/final-completion",
+    "unvalidatedSourceSnapshot": false
+  },
+  {
+    "formerCheckout": "SingularityVR-cutscene",
+    "originalHead": "0aa758595af6895cc4e5ab7fce4b00d14bce657e",
+    "archivedSource": "49494ffd203cc7acaa63b95f4fbf7f840b4fb8b2",
+    "branch": "archive/cleanup-20261027/cutscene",
+    "unvalidatedSourceSnapshot": true
+  },
+  {
+    "formerCheckout": "SingularityVR-audio-music-sfx-remaster",
+    "originalHead": "ba8774c7b9f2c838b3138d42f676a0c692a9b99b",
+    "archivedSource": "ba8774c7b9f2c838b3138d42f676a0c692a9b99b",
+    "branch": "archive/cleanup-20261027/audio-music-sfx-remaster",
+    "unvalidatedSourceSnapshot": false
+  },
+  {
+    "formerCheckout": "SingularityVR-settings-rifle-reload",
+    "originalHead": "d38463cae59baed23c0b7fccf632bd056011c338",
+    "archivedSource": "51e5f44fc4312d59d41d50b6fbeb98b8459b218e",
+    "branch": "archive/cleanup-20261027/settings-rifle-reload",
+    "unvalidatedSourceSnapshot": true
+  },
+  {
+    "formerCheckout": "SingularityVR-production",
+    "originalHead": "3b6e93c4d09bef68532a3a68bacde97c1a6e7444",
+    "archivedSource": "2a1d192bd2d010b1de48ac323ee2d906fc124d42",
+    "branch": "archive/cleanup-20261027/production",
+    "unvalidatedSourceSnapshot": true
+  },
+  {
+    "formerCheckout": "SingularityVR-main-projector-integration",
+    "originalHead": "323ae257e7aced4d9eee9de991a832014f31f4dc",
+    "archivedSource": "9454cfc4a9231d07435bb4d5b54cf818bb32905d",
+    "branch": "archive/cleanup-20261027/main-projector-integration",
+    "unvalidatedSourceSnapshot": true
+  },
+  {
+    "formerCheckout": "SingularityVR-final-audio",
+    "originalHead": "c5b56ad1e21d1cccc8df4a0e38e6c6c8d68f5b59",
+    "archivedSource": "c5b56ad1e21d1cccc8df4a0e38e6c6c8d68f5b59",
+    "branch": "archive/cleanup-20261027/final-audio",
+    "unvalidatedSourceSnapshot": false
+  },
+  {
+    "formerCheckout": "SingularityVR-polish-integration",
+    "originalHead": "9d39babb89da747aa9ff9dcec85e818d1864bef0",
+    "archivedSource": "0d9339e0ecc393ab93de484669a435125f534a37",
+    "branch": "archive/cleanup-20261027/polish-integration",
+    "unvalidatedSourceSnapshot": true
+  },
+  {
+    "formerCheckout": "SingularityVR-main-plates",
+    "originalHead": "82ef1322f43e333a650a48a637d223e96543e437",
+    "archivedSource": "4e879af9dd9bf6806ae58dc35e33019d09330642",
+    "branch": "archive/cleanup-20261027/main-plates",
+    "unvalidatedSourceSnapshot": true
+  },
+  {
+    "formerCheckout": "SingularityVR-polish-remaining-voices",
+    "originalHead": "a510d95d514ec95199649411fcc73285c53cccac",
+    "archivedSource": "322fbe9bf1b8bc9714b75c5f232603e7f48269fa",
+    "branch": "archive/cleanup-20261027/polish-remaining-voices",
+    "unvalidatedSourceSnapshot": true
+  },
+  {
+    "formerCheckout": "SingularityVR-cutscene-observation",
+    "originalHead": "c3092cc9dc4635449995e93fc9dedd4c73d1fc7b",
+    "archivedSource": "41c6a556cdd2ab15ca14dc33cea903cf0196226a",
+    "branch": "archive/cleanup-20261027/cutscene-observation",
+    "unvalidatedSourceSnapshot": true
+  },
+  {
+    "formerCheckout": "SingularityVR-title-menu-fix",
+    "originalHead": "b42db3e4d8c8c92c3942eae0a3bb114d58d38de4",
+    "archivedSource": "6765253acfdc67928dcc5b638ba60c5aafc5de3d",
+    "branch": "archive/cleanup-20261027/title-menu-fix",
+    "unvalidatedSourceSnapshot": true
+  },
+  {
+    "formerCheckout": "SingularityVR-boot-logo-vr",
+    "originalHead": "514d7126beaeea8a426701ff1605ebff629964a5",
+    "archivedSource": "199b2bedb1399a1b574d1e26192bbd20a58de893",
+    "branch": "archive/cleanup-20261027/boot-logo-vr",
+    "unvalidatedSourceSnapshot": true
+  },
+  {
+    "formerCheckout": "SingularityVR-projector-main",
+    "originalHead": "62360e877e01b79cd00dd899e5b4fd9a0c97093c",
+    "archivedSource": "4962e925fef8e09c7708efc84b40a5cb181418fe",
+    "branch": "archive/cleanup-20261027/projector-main",
+    "unvalidatedSourceSnapshot": true
+  },
+  {
+    "formerCheckout": "SingularityVR-pause-native-rtt-integration",
+    "originalHead": "fcb7e8c342618023b0e2e850e5d72738fadaddc8",
+    "archivedSource": "48f183da57c761fe06890a92d257e804a03fd665",
+    "branch": "archive/cleanup-20261027/pause-native-rtt-integration",
+    "unvalidatedSourceSnapshot": true
+  },
+  {
+    "formerCheckout": "SingularityVR-sol-seeker",
+    "originalHead": "9ea16074c1d189e7140749d82b6790fce82dcc1e",
+    "archivedSource": "9ea16074c1d189e7140749d82b6790fce82dcc1e",
+    "branch": "archive/cleanup-20261027/sol-seeker",
+    "unvalidatedSourceSnapshot": false
+  },
+  {
+    "formerCheckout": "SingularityVR-astra-final-side",
+    "originalHead": "ca75fb37edb90471a0e363a07ce551864ba5bbdd",
+    "archivedSource": "f0c5f53bb72520bbb1e7e0cf35eef8f3c5ef3aec",
+    "branch": "archive/cleanup-20261027/astra-final-side",
+    "unvalidatedSourceSnapshot": true
+  },
+  {
+    "formerCheckout": "SingularityVR-m02-remaster",
+    "originalHead": "e4f425de2d845a802cedc197b5111ca31c975708",
+    "archivedSource": "017738b7dd22d32a18e3b49083cdf2da66c35295",
+    "branch": "archive/cleanup-20261027/m02-remaster",
+    "unvalidatedSourceSnapshot": true
+  },
+  {
+    "formerCheckout": "SingularityVR-integration",
+    "originalHead": "09887b1849c81649a687f6603dab85ccbbeae418",
+    "archivedSource": "1755c259bb54ecb735403948f3fd6ba40267d03d",
+    "branch": "archive/cleanup-20261027/integration",
+    "unvalidatedSourceSnapshot": true
+  },
+  {
+    "formerCheckout": "SingularityVR-visual-followup-integration",
+    "originalHead": "1053abc3717b4a6b1d52d4e2e79b1a421db6c328",
+    "archivedSource": "8812ee6cce7831550d5e944da4e33029618a8d45",
+    "branch": "archive/cleanup-20261027/visual-followup-integration",
+    "unvalidatedSourceSnapshot": true
+  },
+  {
+    "formerCheckout": "SingularityVR-hands-only",
+    "originalHead": "a894ce876fbbe92e650515c4db27ad574a3f0d47",
+    "archivedSource": "c7dbd50bdfab4a43f2ce2a150f63d983c0de57ad",
+    "branch": "archive/cleanup-20261027/hands-only",
+    "unvalidatedSourceSnapshot": true
+  },
+  {
+    "formerCheckout": "SingularityVR-diegetic",
+    "originalHead": "39f3a6f25034b446d1479cb0b10356cf40f24556",
+    "archivedSource": "82f2426b2ec8e7237e4411df27e1eb23fb8de6de",
+    "branch": "archive/cleanup-20261027/diegetic",
+    "unvalidatedSourceSnapshot": true
+  },
+  {
+    "formerCheckout": "SingularityVR-stereo-shadow-rootcause",
+    "originalHead": "5ee88deb8bfa2893d2d9f201cfd81b17a1b54d3d",
+    "archivedSource": "512c9b7b2ada8706c87b7421c63c7c982505f453",
+    "branch": "archive/cleanup-20261027/stereo-shadow-rootcause",
+    "unvalidatedSourceSnapshot": true
+  },
+  {
+    "formerCheckout": "SingularityVR-m09-current",
+    "originalHead": "3fa565543cc9c95fde57d1bfa458caf9ce01d270",
+    "archivedSource": "b35cd4dd0cead60da8fde65feeb5c696177ad11f",
+    "branch": "archive/cleanup-20261027/m09-current",
+    "unvalidatedSourceSnapshot": true
+  },
+  {
+    "formerCheckout": "SingularityVR-sol-master-integration",
+    "originalHead": "27f92bf605939ff67ad8235bfb6932cd46d4929d",
+    "archivedSource": "f37ff703edc0932b49e15f07308f8749d9cd8e11",
+    "branch": "archive/cleanup-20261027/sol-master-integration",
+    "unvalidatedSourceSnapshot": true
+  },
+  {
+    "formerCheckout": "SingularityVR-recovery",
+    "originalHead": "7a4660b2ba997524643d65068e21bcc22467642b",
+    "archivedSource": "7838e9b3328e3eb001336f01967f3c7cfc67428c",
+    "branch": "archive/cleanup-20261027/recovery",
+    "unvalidatedSourceSnapshot": true
+  },
+  {
+    "formerCheckout": "SingularityVR-m02-m09",
+    "originalHead": "459c18f5e6e4ad6a12cae792cba2fbf6578029ee",
+    "archivedSource": "7659253d5ce86ac344211b638b25b96d4df2c746",
+    "branch": "archive/cleanup-20261027/m02-m09",
+    "unvalidatedSourceSnapshot": true
+  },
+  {
+    "formerCheckout": "SingularityVR-startup-readiness",
+    "originalHead": "12ab08bcef14a771138292988eadf14b3fdbc4d0",
+    "archivedSource": "12ab08bcef14a771138292988eadf14b3fdbc4d0",
+    "branch": "archive/cleanup-20261027/startup-readiness",
+    "unvalidatedSourceSnapshot": false
+  },
+  {
+    "formerCheckout": "SingularityVR-ammo-plates",
+    "originalHead": "7dbbd5c77c5ec6829393477afe19b95e7f340bf1",
+    "archivedSource": "7fadd1238eba51dcc840ba1eccad9a4217d2f702",
+    "branch": "archive/cleanup-20261027/ammo-plates",
+    "unvalidatedSourceSnapshot": true
+  },
+  {
+    "formerCheckout": "SingularityVR-ui-prompt-cleanup",
+    "originalHead": "b4d2487428ec959131b6e2de7217dc84a0974a0a",
+    "archivedSource": "ae4b88f7b14606979e633fb91eea563e9730af17",
+    "branch": "archive/cleanup-20261027/ui-prompt-cleanup",
+    "unvalidatedSourceSnapshot": true
+  },
+  {
+    "formerCheckout": "SingularityVR-full-integration",
+    "originalHead": "218dea7344bcb89cbe630e06141121e0f9007a59",
+    "archivedSource": "218dea7344bcb89cbe630e06141121e0f9007a59",
+    "branch": "archive/cleanup-20261027/full-integration",
+    "unvalidatedSourceSnapshot": false
+  },
+  {
+    "formerCheckout": "SingularityVR-seeker-holster-fix",
+    "originalHead": "19bd45dad101307a4977ff13c77f2dd2070e8d52",
+    "archivedSource": "d6c21bf567f2c1131b3cc81b978e892689433758",
+    "branch": "archive/cleanup-20261027/seeker-holster-fix",
+    "unvalidatedSourceSnapshot": true
+  },
+  {
+    "formerCheckout": "SingularityVR-promo",
+    "originalHead": "551c64d7df3d2f84486b407c4de0514026b518b9",
+    "archivedSource": "9ff166b44269a9f24f301ec8936c7f8c412d603a",
+    "branch": "archive/cleanup-20261027/promo",
+    "unvalidatedSourceSnapshot": true
+  },
+  {
+    "formerCheckout": "SingularityVR-menu-latest-only",
+    "originalHead": "0d978cd04e85dce997d974b3ce009b74e1e0aefc",
+    "archivedSource": "0c26edefaa3bc64abd2b2a8cfe8afe4442e04122",
+    "branch": "archive/cleanup-20261027/menu-latest-only",
+    "unvalidatedSourceSnapshot": true
+  },
+  {
+    "formerCheckout": "SingularityVR-centurion-integration",
+    "originalHead": "db0aedbf904e00b8a543c67cb1f42dd703973b9e",
+    "archivedSource": "94428c35d30d1c3f727ecbbaee42ec886fe58e87",
+    "branch": "archive/cleanup-20261027/centurion-integration",
+    "unvalidatedSourceSnapshot": true
+  },
+  {
+    "formerCheckout": "SingularityVR-post-opening",
+    "originalHead": "1561d0650f0ad5e6d4b2bdd0043e6c775e3a7b34",
+    "archivedSource": "2b8ae9e0247ef39a682d75e32e8a142a9e538b2b",
+    "branch": "archive/cleanup-20261027/post-opening",
+    "unvalidatedSourceSnapshot": true
+  },
+  {
+    "formerCheckout": "SingularityVR-final-visual",
+    "originalHead": "35949eb1499726ff675de1c5fbebb58926330212",
+    "archivedSource": "d6fee60a1d348d59c9614305f2b5c45a74d2ccde",
+    "branch": "archive/cleanup-20261027/final-visual",
+    "unvalidatedSourceSnapshot": true
+  },
+  {
+    "formerCheckout": "integration-da690c7-sprint",
+    "originalHead": "da690c7821000b87ffaac18bca8541c88184dfc4",
+    "archivedSource": "b22c98eca358421504a0957a19de29b05b5ccec7",
+    "branch": "archive/cleanup-20261027/integration-da690c7-sprint",
+    "unvalidatedSourceSnapshot": true
+  },
+  {
+    "formerCheckout": "SingularityVR-settings-rifle-reload-bisect-da690c7",
+    "originalHead": "da690c7821000b87ffaac18bca8541c88184dfc4",
+    "archivedSource": "da690c7821000b87ffaac18bca8541c88184dfc4",
+    "branch": "archive/cleanup-20261027/settings-rifle-reload-bisect-da690c7",
+    "unvalidatedSourceSnapshot": false
+  },
+  {
+    "formerCheckout": "SingularityVR-native-muzzle-stereo",
+    "originalHead": "459c8d2a2d1a4538c58959b1cee7a8699a3f1a3c",
+    "archivedSource": "459c8d2a2d1a4538c58959b1cee7a8699a3f1a3c",
+    "branch": "archive/cleanup-20261027/native-muzzle-stereo",
+    "unvalidatedSourceSnapshot": false
+  },
+  {
+    "formerCheckout": "SingularityVR-main-check",
+    "originalHead": "3c5ab21be2c6657a3451248de30dadc4a1332510",
+    "archivedSource": "6b11dedc4727d1f29084a1276be095e6a5665822",
+    "branch": "archive/cleanup-20261027/main-check",
+    "unvalidatedSourceSnapshot": true
+  },
+  {
+    "formerCheckout": "SingularityVR-hud-design",
+    "originalHead": "5f4364c851934cb675b386b2199aa5acb7ae38f7",
+    "archivedSource": "9ae4455268861aabb09f586f152c61d80e8f2e4c",
+    "branch": "archive/cleanup-20261027/hud-design",
+    "unvalidatedSourceSnapshot": true
+  },
+  {
+    "formerCheckout": "SingularityVR-menu-flat",
+    "originalHead": "be39f5dc62e3286d9952e4168a3fee4e26b55690",
+    "archivedSource": "35a44867683753f4056cd3d6dcacc4da47558ece",
+    "branch": "archive/cleanup-20261027/menu-flat",
+    "unvalidatedSourceSnapshot": true
+  },
+  {
+    "formerCheckout": "SingularityVR-audit-baseline",
+    "originalHead": "df12f0f00264f795a3dca5a5611882e8092f51fe",
+    "archivedSource": "d930281dd989e8c4b41ea669d15f37316308e33d",
+    "branch": "archive/cleanup-20261027/audit-baseline",
+    "unvalidatedSourceSnapshot": true
+  },
+  {
+    "formerCheckout": "SingularityVR-pause-main",
+    "originalHead": "58e9c656543ad2c592ee28f55aa6576dd644e67c",
+    "archivedSource": "a17a65e652fae6f866b19eb8093830f137c7fda2",
+    "branch": "archive/cleanup-20261027/pause-main",
+    "unvalidatedSourceSnapshot": true
+  },
+  {
+    "formerCheckout": "SingularityVR-arm-ik",
+    "originalHead": "c7a11263186ebced56b4158511db57eab88bd17c",
+    "archivedSource": "755166891f4fc040240ecf33216f7ecb7692ee84",
+    "branch": "archive/cleanup-20261027/arm-ik",
+    "unvalidatedSourceSnapshot": true
+  },
+  {
+    "formerCheckout": "SingularityVR-menu-placement",
+    "originalHead": "0e6c08b98e9384af62f7e5cc77f04eb010ebf50d",
+    "archivedSource": "21e8af382c155c9e625ca939535d065c7d28cb11",
+    "branch": "archive/cleanup-20261027/menu-placement",
+    "unvalidatedSourceSnapshot": true
+  },
+  {
+    "formerCheckout": "SingularityVR-pause-row",
+    "originalHead": "3d5d14d6d4473692c580f9fd52967a57c6b14ae3",
+    "archivedSource": "ddefa87a3c3314d8c6a31b55e6492245f2c955b9",
+    "branch": "archive/cleanup-20261027/pause-row",
+    "unvalidatedSourceSnapshot": true
+  },
+  {
+    "formerCheckout": "SingularityVR-script-read",
+    "originalHead": "ea9de9701ce3f9e5223f2e7b5b545e390abcfc8b",
+    "archivedSource": "cf20da059bef2feb4ede6e51ee66ecf9b14e3746",
+    "branch": "archive/cleanup-20261027/script-read",
+    "unvalidatedSourceSnapshot": true
+  },
+  {
+    "formerCheckout": "SingularityVR-note-glyphs",
+    "originalHead": "219c6fa4aabf2b5aaac26a7774307d9610a8cc6a",
+    "archivedSource": "fc066763d3515851968a8e4fca527c8c970e62c9",
+    "branch": "archive/cleanup-20261027/note-glyphs",
+    "unvalidatedSourceSnapshot": true
+  },
+  {
+    "formerCheckout": "SingularityVR-menu-integration",
+    "originalHead": "0cfb98561f3b9ae19b3f162b5e3a1e97e2ee551f",
+    "archivedSource": "0cfb98561f3b9ae19b3f162b5e3a1e97e2ee551f",
+    "branch": "archive/cleanup-20261027/menu-integration",
+    "unvalidatedSourceSnapshot": false
+  },
+  {
+    "formerCheckout": "SingularityVR-shadow-fix",
+    "originalHead": "307270de36dfe634b88e37cb7df339217eed7baa",
+    "archivedSource": "3d71dc86c9ffdf04743a5680523d99947f5280a2",
+    "branch": "archive/cleanup-20261027/shadow-fix",
+    "unvalidatedSourceSnapshot": true
+  },
+  {
+    "formerCheckout": "SingularityVR-combined3",
+    "originalHead": "566355288ab6902c4780eebb1ccbcb3b6cd00026",
+    "archivedSource": "566355288ab6902c4780eebb1ccbcb3b6cd00026",
+    "branch": "archive/cleanup-20261027/combined3",
+    "unvalidatedSourceSnapshot": false
+  },
+  {
+    "formerCheckout": "SingularityVR-vr-audit",
+    "originalHead": "c421375e94aac46967c2b09fe66a02af3860b31b",
+    "archivedSource": "c4c81be96d04e17d8b18f1441e654f731a9fd644",
+    "branch": "archive/cleanup-20261027/vr-audit",
+    "unvalidatedSourceSnapshot": true
+  },
+  {
+    "formerCheckout": "SingularityVR-assets",
+    "originalHead": "cb73072c2d07a952ccfb36c772d1dd0afea0c163",
+    "archivedSource": "68f390216ac4fa3c4b0f1e4e70e7173144028dff",
+    "branch": "archive/cleanup-20261027/assets",
+    "unvalidatedSourceSnapshot": true
+  },
+  {
+    "formerCheckout": "SingularityVR-localization",
+    "originalHead": "691c5d112c136abaeab8c23c56898e71799d5234",
+    "archivedSource": "691c5d112c136abaeab8c23c56898e71799d5234",
+    "branch": "archive/cleanup-20261027/localization",
+    "unvalidatedSourceSnapshot": false
+  },
+  {
+    "formerCheckout": "SingularityVR-tools",
+    "originalHead": "26ce6eed9e539e1c2b3e7d9982e2e6821acc8329",
+    "archivedSource": "26ce6eed9e539e1c2b3e7d9982e2e6821acc8329",
+    "branch": "archive/cleanup-20261027/tools",
+    "unvalidatedSourceSnapshot": false
+  },
+  {
+    "formerCheckout": "SingularityVR-perf-B",
+    "originalHead": "71fa0361ffd9eef6bc978707c205de2c31af2f9a",
+    "archivedSource": "138b16a7f84941f96a5de1f373f7f49e0099ffe7",
+    "branch": "archive/cleanup-20261027/perf-b",
+    "unvalidatedSourceSnapshot": true
+  },
+  {
+    "formerCheckout": "SingularityVR-perf-A",
+    "originalHead": "8b934bd97ca98bf630012d9567bd7a53f2fb5f33",
+    "archivedSource": "8b934bd97ca98bf630012d9567bd7a53f2fb5f33",
+    "branch": "archive/cleanup-20261027/perf-a",
+    "unvalidatedSourceSnapshot": false
+  },
+  {
+    "formerCheckout": "SingularityVR",
+    "originalHead": "d3dde91b6f4df6a22778b9546418c709449229d5",
+    "archivedSource": "b12d4aa3a48bb6554220b61064cdf7133183733a",
+    "branch": "archive/cleanup-20261027/singularityvr",
+    "unvalidatedSourceSnapshot": true
+  },
+  {
+    "formerCheckout": "singularity-vr-mod",
+    "originalHead": "2382ff7cf1c41b163891722b71ac793bf44b85d3",
+    "archivedSource": "2382ff7cf1c41b163891722b71ac793bf44b85d3",
+    "branch": "archive/cleanup-20261027/legacy-original-repo",
+    "unvalidatedSourceSnapshot": false
+  }
+]
