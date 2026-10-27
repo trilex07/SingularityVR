@@ -1,0 +1,7 @@
+SD_SPT1_MOVE_IN2 :: 'We\udc92re moving up!' -> "We're moving up!"
+SD_SPT1_MOVE_RETREAT2 :: 'We can\udc92t hold here.' -> "We can't hold here."
+SD_SPT1_SEE_TARGET3 :: 'Let\udc92s get him.' -> "Let's get him."
+SD_SPT1_SRCH_FIND1 :: 'I\udc92ll find him.' -> "I'll find him."
+SD_SPT1_SRCH_KILL1 :: 'He\udc92s here somewhere.' -> "He's here somewhere."
+SD_SPT1_SRCH_KILL2 :: 'He\udc92s dead when I find him.' -> "He's dead when I find him."
+naprawiono: 6
