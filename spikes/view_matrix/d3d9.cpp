@@ -44,6 +44,7 @@ static unsigned g_startupTimeoutMs=5000,g_startupMinVisibleMs=3000;
 #include "weapon_wheel_layout.h"
 #include "health_gesture.h"
 #include "plates_atlas.h"
+#include "diegetic_hud.h"
 #include <wincodec.h>
 #include "grip_latch.h"
 #include "glove_isolate.h"
@@ -211,6 +212,9 @@ void PauseMenuDiagSampleSbsColumns(const uint8_t* bgra, unsigned width, unsigned
 // moving the older script-state block.
 extern vrscene::Controller g_sceneMode;
 extern volatile LONG g_sceneModeTrace;
+extern volatile LONG g_gameOwnsCamera;
+static LONG g_scriptedCameraFlat = 1;
+static LONG g_mainMenuVideoStereo = 1;
 extern volatile LONG g_sceneVideoSeen;
 extern volatile LONG g_sceneModeFrame;
 static void UpdateSceneModeFrame();
@@ -3634,6 +3638,7 @@ float g_povPos[3] = {0,0,0};
 volatile LONG g_camPosValid = 0;
 int g_cameraTranslationEvidence = 0; // bounded passive decomposition, default off
 float g_vrCameraStabOffset[3] = {0,0,0};
+float g_vrCameraStabSmooth[3] = {0,0,0};
 volatile LONG g_vrCameraStabValid = 0;
 volatile LONG g_vrTranslationStabilization = 0;
 
@@ -5972,6 +5977,8 @@ void NativeScopeReceipt(HRESULT hr);
 static thread_local unsigned g_scopeNativeDepth=0;
 static thread_local unsigned g_scopeNativeDraws=0,g_scopeNativeUploads=0;
 static bool NativeScopeRendering(){return g_scopeNativeDepth!=0;}
+void DrawDiegeticAmmo(IDirect3DDevice9* dev);
+void DrawDiegeticHealth(IDirect3DDevice9* dev);
 void DrawWristHealth(IDirect3DDevice9* dev);   // ⭐ run 217: defined late, called from the copy
 void DrawHealthPlate(IDirect3DDevice9* dev);   // Katorga plate: gesture-gated, left glove
 void DrawAmmoPlate(IDirect3DDevice9* dev);     // Katorga ammo plate: held gun, hides on R3
@@ -6020,6 +6027,8 @@ const CopySlot* CopyBackbufferToD3D11(IDirect3DDevice9* dev) {
     DrawWristHealth(dev);
     DrawHealthPlate(dev);
     DrawAmmoPlate(dev);
+    DrawDiegeticAmmo(dev);
+    DrawDiegeticHealth(dev);
     DrawHolsterMarker(dev);
     DrawKnifeBeltMarker(dev);
     DrawWeaponWheel(dev);
@@ -6555,6 +6564,7 @@ volatile LONG g_vrMenuOverlay=1;
 volatile LONG g_vrMenuLaser=1,g_vrMenuLaserOpacityPct=55,g_vrMenuLaserWidthPct=100;
 volatile LONG g_vrMenuDistanceMm=1200;
 volatile LONG g_frontMenuScalePct=72,g_frontMenuDistanceMm=0;
+volatile LONG g_stationMenuScalePct=50,g_stationMenuDistanceMm=1400;
 static LONG g_frontMenuCleanBackdrop=0;
 static bool g_frontMenuCleanFrame=false; // render-thread frame-local composition receipt
 static unsigned long long g_frontMenuCleanToken=0;
@@ -6640,9 +6650,13 @@ static void SnapshotMenuOnSlot(CopySlot& cap) {
     if (cls < 0 || cls > 4) cls = 0;
     cap.menuClass = cls;
     cap.uiFocus = Rd(g_vrUiMenu) != 0;
+    const bool stereoMenuHold =
+        (Rd(g_mainMenuVideoStereo) != 0 && !g_playerPawn && cap.menuClass == 2) ||
+        InteractiveStationMenu(cap.menuClass, cap.uiFocus);
     cap.menuFlat = MenuSubmitForcesFlat(cap.menuClass) ||
-        CinemaMenuIdenticalCrop(Rd(g_cutsceneMenuPairFix)!=0,cap.menuClass,
-            cap.uiFocus,Rd(g_inCinematic)!=0,Rd(g_gamePaused)!=0);
+        CinemaMenuIdenticalCrop(Rd(g_cutsceneMenuPairFix) != 0, cap.menuClass,
+            cap.uiFocus, Rd(g_inCinematic) != 0, Rd(g_gamePaused) != 0,
+            stereoMenuHold);
     const bool clean=frontmenu::CurrentReceipt(g_frontMenuCleanFrame,g_frontMenuCleanToken,VrMenuStateToken())&&cap.menuClass==2;
     cap.menuFlat=frontmenu::UseLegacyCrop(cap.menuFlat,clean,cap.menuClass);
     // The clean provider rendered BOTH halves from current XR eye poses even
@@ -11386,8 +11400,10 @@ void SyncXRInput(XrTime displayTime) {
         const float dz = (g_handLastPos[1].z - g_headPosXR[2]) - g_wwHandAnchor.z;
         handSector = wheel_layout::HandSector(dx, dy, dz, eye, (int)g_weaponWheelSlots);
     }
+    const bool stationWheel = Rd(g_ownedWeaponWheel) &&
+        InteractiveStationMenu((int)Rd(g_vrMenuClass), uiMenu);
     const weaponwheel::Event wheelEvent = weaponwheel::Update(
-        g_weaponWheelState, r3Held, l3Held, !uiMenu && feedGame && !Rd(g_gamePaused),
+        g_weaponWheelState, r3Held, l3Held, ((!uiMenu || stationWheel) && feedGame && !Rd(g_gamePaused)),
         WeaponInHands(), Rd(g_weaponHolstered), tx,
         (g_weaponWheelObserved&&!Rd(g_forceDesktopAutomation))?-ty:ty,
         (int)g_weaponWheelSlots, handSector);
@@ -11407,8 +11423,9 @@ void SyncXRInput(XrTime displayTime) {
             InterlockedExchange(&g_wwHandAnchorOk, 0);
         }
         MaybeLoadWheelCatalog();
-        Log("weapon wheel: OPEN slots=%ld (R3 held; %s selects, release commits)",
-            g_weaponWheelSlots, handPick ? "right hand moves" : "right stick");
+        Log("weapon wheel: OPEN slots=%ld (R3 held; %s selects, release commits)%s",
+            g_weaponWheelSlots, handPick ? "right hand moves" : "right stick",
+            stationWheel ? " [station locker]" : "");
         if (handPick && !Rd(g_wwHandAnchorOk))
             Log("weapon wheel: hand anchor invalid at open - stick fallback for this open");
     } else if (wheelEvent == weaponwheel::Event::SelectionChanged) {
@@ -12939,10 +12956,12 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
                 if (apartDeg > kOwnDeg) { ++above; below = 0; } else { ++below; above = 0; }
                 if (!gameOwnsCam && above >= 10) {
                     gameOwnsCam = true;
+                    InterlockedExchange(&g_gameOwnsCamera, 1);
                     Log("camera handed to the GAME (%.1f deg from the pawn) - following it rather"
                         " than the base, so menus and scripted cameras are not rotated", apartDeg);
                 } else if (gameOwnsCam && below >= 10) {
                     gameOwnsCam = false;
+                    InterlockedExchange(&g_gameOwnsCamera, 0);
                     Log("camera back under our control - base yaw resumes");
                 }
 
@@ -13511,7 +13530,10 @@ void UpdateCameraStabilizationThisFrame() {
         Readable((void*)(pawn + eyeOffset), 4)) {
         PawnCameraSample sample{};
         if (TryReadPawnCameraSample(pawn, ACTOR_LOCATION, eyeOffset, &sample)) {
-            if (ComputeVrCameraStabilization(g_povPos, sample.location, sample.eyeHeight, g_vrCameraStabOffset)) {
+            float rawStab[3]{};
+            if (ComputeVrCameraStabilization(g_povPos, sample.location, sample.eyeHeight, rawStab)) {
+                SmoothVrCameraStabilizationOffset(rawStab, g_vrCameraStabSmooth);
+                memcpy(g_vrCameraStabOffset, g_vrCameraStabSmooth, sizeof(g_vrCameraStabOffset));
                 InterlockedExchange(&g_vrCameraStabValid, 1);
                 return;
             }
@@ -13869,12 +13891,8 @@ HRESULT STDMETHODCALLTYPE Hook_SetVSConstF(IDirect3DDevice9* dev, UINT startReg,
             ApplyHeadRotation(m, c, curPitch, curYaw,
                               g_matDesPitchUU * kUUToRad, g_matDesYawUU * kUUToRad);
         } else if (VrModeOn() && Rd(g_vrCameraShakeSuppression) && !CutsceneNativeCameraArmed()) {
-            if (MeleeWindowActive()) {
-                const float kUUToRad = 6.2831853f / 65536.0f;
-                StabilizeMatrixBasis(m, c, g_wantPitch * kUUToRad, g_wantYaw * kUUToRad);
-            } else {
-                CancelMatrixRoll(m, c);
-            }
+            const float kUUToRad = 6.2831853f / 65536.0f;
+            StabilizeMatrixBasis(m, c, g_wantPitch * kUUToRad, g_wantYaw * kUUToRad);
         }
         if (inject) ApplyOffset(m, c, o);
         if (forceProj) {
@@ -20904,7 +20922,10 @@ HRESULT HudStereoPair(IDirect3DDevice9* dev, UINT primCount, UINT stride, DrawFn
                 dev->SetScissorRect(&sc);
                 const int insetPct = (int)InterlockedCompareExchange(&g_menuInsetPct, 0, 0);
                 const bool menuSafe = menuLayout || menuClassNow == 2 || menuClassNow == 3 || menuClassNow == 4;
-                const float k = ClassBackbufferScale((int)menuClassNow, menuSafe, insetPct);
+                float k = ClassBackbufferScale((int)menuClassNow, menuSafe, insetPct);
+                if (menuClassNow == 2 && Rd(g_mainMenuVideoStereo) && !g_playerPawn) k = 1.0f;
+                else if (menuClassNow == 4)
+                    k = StationMenuInset(4, false, k, (int)Rd(g_stationMenuScalePct));
                 float m[16];
                 memcpy(m, c, sizeof(m));
                 Reg4* q = reinterpret_cast<Reg4*>(m);
@@ -20983,7 +21004,10 @@ HRESULT HudStereoPair(IDirect3DDevice9* dev, UINT primCount, UINT stride, DrawFn
         // below applies only to the backbuffer fallback, not a second RT inset.
         const int insetPct = (int)InterlockedCompareExchange(&g_menuInsetPct, 0, 0);
         float k = ClassBackbufferScale((int)menuClassNow, menuSafe, insetPct);
-        if(Rd(g_rtIsBackbuffer))k=FrontMenuInset((int)menuClassNow,Rd(g_panelOpen)!=0,k,(int)Rd(g_frontMenuScalePct));
+        if (menuClassNow == 2 && Rd(g_mainMenuVideoStereo) && !g_playerPawn) k = 1.0f;
+        else if (menuClassNow == 4)
+            k = StationMenuInset(4, Rd(g_panelOpen) != 0, k, (int)Rd(g_stationMenuScalePct));
+        else if(Rd(g_rtIsBackbuffer))k=FrontMenuInset((int)menuClassNow,Rd(g_panelOpen)!=0,k,(int)Rd(g_frontMenuScalePct));
         Reg4* q = reinterpret_cast<Reg4*>(cIn);
         for (int i=0;i<4;++i) { q[i].x*=k; q[i].y*=k; }
         if (InterlockedCompareExchange(&g_rtIsBackbuffer, 0, 0)) {
@@ -23018,6 +23042,14 @@ void RefreshCameraPosition() {
 void ApplyVrFov() {
     if (!InterlockedCompareExchange(&g_vrProjection, 0, 0)) return;
     if (!g_haveEyes || g_srcW == 0 || g_srcH == 0) return;
+    if (!g_playerPawn && Rd(g_mainMenuVideoStereo)) {
+        static bool saidMenuFov = false;
+        if (!saidMenuFov) {
+            saidMenuFov = true;
+            Log("VR FOV: main menu without pawn - leaving engine FOV (MainMenuVideoStereo)");
+        }
+        return;
+    }
     uintptr_t cam = FindCamera();
     if (!cam) return;
 
@@ -23724,6 +23756,7 @@ static bool RestraintIdentity(uintptr_t object,char* name,size_t nameSize,char* 
 
 static void RefreshNativeCinematicState() {
     if(!Rd(g_nativeCinematicState) || !VrModeOn())return;
+    if (InteractiveStationMenu((int)Rd(g_vrMenuClass), Rd(g_vrUiMenu) != 0)) return;
     // Do not cache -1 offsets before the independent Actor layout controls pass.
     if(g_upChildren!=0x4c || g_upNext!=0x40 || g_upOffset!=0x64)return;
     // Read the authoritative local controller, not the last object seen by an
@@ -23785,13 +23818,18 @@ static void RefreshNativeCinematicState() {
     int32_t word=0;
     if(!property || !TryLoadAlignedI32(pc+offset,&word))return;
     const LONG active=nativecine::Active((uint32_t)word,mask)?1:0;
-    const LONG previous=InterlockedExchange(&g_inCinematic,active);
-    InterlockedExchange(&g_cineArgRaw,active);
     InterlockedExchange(&g_cineControllerObserved,(LONG)pc);
-    if(active && !Rd(g_vrUiMenu))g_menuLatch.menuSeen=false;
+    if(!nativecine::PublishesOn(active))return;
+    // Packed bool words can read ON during menu/attract before a pawn exists (log: nativeOn=1
+    // with eventWas=0 at PlayerWaiting). Never assert cinema from that state alone.
+    if(!g_playerPawn)return;
+    const LONG previous=InterlockedExchange(&g_inCinematic,1);
+    InterlockedExchange(&g_cineArgRaw,1);
+    if(!Rd(g_vrUiMenu))g_menuLatch.menuSeen=false;
     static uintptr_t oldPc=0;static LONG old=-1;static unsigned notes=0;
-    if((oldPc!=pc || old!=active || previous!=active) && notes++<64)
-        Log("native-cinematic: controller=%p active=%ld previous=%ld word=%08X mask=%08X (mod state only)",(void*)pc,active,previous,(uint32_t)word,mask);
+    if((oldPc!=pc || old!=active || previous!=1) && notes++<64)
+        Log("native-cinematic: controller=%p nativeOn=1 eventWas=%ld word=%08X mask=%08X (assert-only; native OFF never clears event latch)",
+            (void*)pc,previous,(uint32_t)word,mask);
     oldPc=pc;old=active;
 }
 
@@ -23800,26 +23838,32 @@ static void RefreshNativeRestraintHands() {
     // Not a sticky event/timer: reread the current native asset every frame.
     // Native mesh restoration, travel, nulls, and opt-out all release ownership.
     if(Rd(g_nativeRestraintHands) && VrModeOn() && g_playerPawn && IsLive(g_playerPawn) &&
-       ReadNativeLocalPlayer().pawn==g_playerPawn &&
        g_upChildren && g_upNext && g_upOffset) {
-        static NativeObjectFieldCache meshField,assetField;
-        const uintptr_t component=RestraintObjectProperty(g_playerPawn,"Mesh",meshField);
-        mesh=RestraintObjectProperty(component,"SkeletalMesh",assetField);
-        int32_t group=0,root=0,outer=1;
-        char mn[96]{},mt[64]{},gn[64]{},gt[64]{},rn[64]{},rt[64]{};
-        const bool identities=RestraintIdentity(mesh,mn,sizeof(mn),mt,sizeof(mt)) &&
-            TryLoadAlignedI32(mesh+OBJ_OUTER,&group) && group && (uint32_t)group!=mesh &&
-            RestraintIdentity((uint32_t)group,gn,sizeof(gn),gt,sizeof(gt)) &&
-            TryLoadAlignedI32((uint32_t)group+OBJ_OUTER,&root) && root && root!=group && (uint32_t)root!=mesh &&
-            RestraintIdentity((uint32_t)root,rn,sizeof(rn),rt,sizeof(rt)) &&
-            TryLoadAlignedI32((uint32_t)root+OBJ_OUTER,&outer);
-        active=restraint::OwnsHands(true,true,identities && meshField.offset>=0 && assetField.offset>=0,
-            mt,mn,gt,gn,rt,rn,outer==0);
-        static uintptr_t lastMesh=0;static unsigned receipts=0;
-        if(mesh!=lastMesh && receipts++<24) {
-            Log("native-restraint identity: component=%p mesh=%p type=%s name=%s group=%s/%s root=%s/%s rootOuter=%08X fields=%X/%X valid=%d active=%d",
-                (void*)component,(void*)mesh,mt,mn,gt,gn,rt,rn,(unsigned)outer,meshField.offset,assetField.offset,identities?1:0,active?1:0);
-            lastMesh=mesh;
+        static NativeObjectFieldCache meshFields[3],assetFields[3];
+        static const char* const kMeshLinks[]{"Mesh","mInviewMesh","mArmMeshComponent"};
+        uintptr_t component=0;int meshFieldIdx=-1;
+        for(unsigned i=0;i<3;++i) {
+            const uintptr_t candidate=RestraintObjectProperty(g_playerPawn,kMeshLinks[i],meshFields[i]);
+            if(!candidate)continue;
+            const uintptr_t skel=RestraintObjectProperty(candidate,"SkeletalMesh",assetFields[i]);
+            int32_t group=0,root=0,outer=1;
+            char mn[96]{},mt[64]{},gn[64]{},gt[64]{},rn[64]{},rt[64]{};
+            const bool identities=RestraintIdentity(skel,mn,sizeof(mn),mt,sizeof(mt)) &&
+                TryLoadAlignedI32(skel+OBJ_OUTER,&group) && group && (uint32_t)group!=skel &&
+                RestraintIdentity((uint32_t)group,gn,sizeof(gn),gt,sizeof(gt)) &&
+                TryLoadAlignedI32((uint32_t)group+OBJ_OUTER,&root) && root && root!=group && (uint32_t)root!=skel &&
+                RestraintIdentity((uint32_t)root,rn,sizeof(rn),rt,sizeof(rt)) &&
+                TryLoadAlignedI32((uint32_t)root+OBJ_OUTER,&outer);
+            if(restraint::OwnsHands(true,true,identities && meshFields[i].offset>=0 && assetFields[i].offset>=0,
+                mt,mn,gt,gn,rt,rn,outer==0)) {
+                component=candidate;mesh=skel;meshFieldIdx=(int)i;active=true;break;
+            }
+        }
+        static uintptr_t lastMesh=0;static int lastField=-1;static unsigned receipts=0;
+        if((mesh!=lastMesh || meshFieldIdx!=lastField) && receipts++<24) {
+            Log("native-restraint identity: field=%s component=%p mesh=%p active=%d pawn=%p",
+                meshFieldIdx>=0?kMeshLinks[meshFieldIdx]:"<none>",(void*)component,(void*)mesh,active?1:0,(void*)g_playerPawn);
+            lastMesh=mesh;lastField=meshFieldIdx;
         }
     }
     g_nativeRestraintPawn=active?g_playerPawn:0;
@@ -23902,24 +23946,50 @@ static void ObserveCinematicControllerState() {
 static void UpdateSceneModeFrame() {
     ObserveCinematicSceneProducer();
     ObserveCinematicControllerState();
+    const int menuClassNow = (int)Rd(g_vrMenuClass);
+    const bool menuFocused = Rd(g_vrUiMenu) != 0;
+    if (InteractiveStationMenu(menuClassNow, menuFocused)) {
+        InterlockedExchange(&g_inCinematic, 0);
+        InterlockedExchange(&g_cineArgRaw, 0);
+        static bool saidStationCine = false;
+        if (!saidStationCine) {
+            saidStationCine = true;
+            Log("station-menu: class=4 focus=1 -> cleared stale cinematic latch (weapon locker stays stereo)");
+        }
+    }
     const bool video = InterlockedExchange(&g_sceneVideoSeen, 0) != 0;
+    const bool engineCine = InterlockedCompareExchange(&g_inCinematic, 0, 0) != 0;
+    const bool scriptedFlat = vrscene::ScriptedCameraFlatPresentation(
+        Rd(g_scriptedCameraFlat) != 0, Rd(g_gameOwnsCamera) != 0, g_playerPawn != 0,
+        video, InterlockedCompareExchange(&g_vrUiMenu, 0, 0) != 0,
+        InterlockedCompareExchange(&g_gamePaused, 0, 0) != 0);
+    const bool presentationCine = engineCine || scriptedFlat;
+    const bool bootVideoStereo = vrscene::BootMenuVideoStereo(
+        Rd(g_mainMenuVideoStereo) != 0, g_playerPawn != 0, engineCine);
+    const bool mainMenuStereoHold = Rd(g_mainMenuVideoStereo) != 0 && !g_playerPawn;
     // REVERTED hub round 4b (melee->flat looked bad + different images per eye):
     // the flat gate lives only in StereoPairBody, so HUD/user-pointer draws kept
     // their per-eye remap over a mono world. Either the gate must cover every path
     // or melee stays stereo. Reverting to stereo until decided with measurements.
     const vrscene::Signals signals{
-        InterlockedCompareExchange(&g_inCinematic, 0, 0) != 0,
+        presentationCine,
         video,
         InterlockedCompareExchange(&g_vrUiMenu, 0, 0) != 0,
         InterlockedCompareExchange(&g_gamePaused, 0, 0) != 0,
         frontmenu::OwnsPresentation(Rd(g_frontMenuCleanBackdrop)!=0,(int)Rd(g_vrMenuClass),
-            Rd(g_vrUiMenu)!=0,Rd(g_inCinematic)!=0,Rd(g_gamePaused)!=0) ||
+            Rd(g_vrUiMenu)!=0,presentationCine,Rd(g_gamePaused)!=0) ||
         vrscene::FrontendMenuPresentation(Rd(g_cutsceneMenuHandoffFix)!=0,
             (int)Rd(g_vrMenuClass), Rd(g_vrUiMenu)!=0,
-            Rd(g_inCinematic)!=0, Rd(g_gamePaused)!=0),
+            presentationCine, Rd(g_gamePaused)!=0),
         CinemaMenuPauseOwnsPresentation(Rd(g_cutsceneMenuPairFix)!=0,
-            (int)Rd(g_vrMenuClass),Rd(g_vrUiMenu)!=0,Rd(g_inCinematic)!=0,Rd(g_gamePaused)!=0),
+            (int)Rd(g_vrMenuClass),Rd(g_vrUiMenu)!=0,presentationCine,Rd(g_gamePaused)!=0),
+        bootVideoStereo,
+        mainMenuStereoHold,
     };
+    static unsigned scriptedNotes = 0;
+    if (scriptedFlat && !engineCine && scriptedNotes++ < 16)
+        Log("scripted-cinema: gameOwnsCamera=1 pawn=%p -> CutsceneFlat presentation (no SetCinematicMode)",
+            (void*)g_playerPawn);
     const vrscene::Mode renderedMode = g_sceneMode.Current();
     const vrscene::Transition t = g_sceneMode.Advance(signals);
     g_scenePresentMode = vrscene::CompletedFrameMode(renderedMode, g_sceneMode.Current());
@@ -23958,6 +24028,7 @@ vrscene::Controller g_sceneMode;
 volatile LONG g_sceneModeTrace = 0;
 volatile LONG g_sceneVideoSeen = 0;
 volatile LONG g_sceneModeFrame = 0;
+volatile LONG g_gameOwnsCamera = 0; // camera vs controller yaw split; see run 168
 volatile LONG g_sceneFlatEnabled = 1;   // ini [Render] CutsceneFlatMode
 volatile LONG g_sceneCinemaMask = 1;   // ini [Render] CutsceneCinemaMask
 
@@ -24364,10 +24435,11 @@ static void* WINAPI ObserveBinkOpen(const char* filename, DWORD flags) {
         });
     if(result) {g_binkNativeTrackCount=1;g_binkNativeTracks[0]=0;g_binkNativeTracksValid=true;}
     else g_binkNativeTracksValid=false; // require a fresh native selection before another override
-    static unsigned introNotes=0;
-    if(plan.enabled && introNotes<8) {
-        ++introNotes;
-        Log("bink-audio: Polish INTRO track1->10; retained0/2/3; handle=%p post=%s",
+    static unsigned movieNotes=0;
+    if(plan.enabled && movieNotes<16) {
+        ++movieNotes;
+        Log("bink-audio: Polish movie %s track1->%lu; retained0/2/3; handle=%p post=%s",
+            readable?name:"<movie>", (unsigned long)plan.polish[1],
             result,result?"native-default0":"native-selection-rollback");
     }
     if(note) Log("bink-audio: opened name=%s flags=0x%08lX handle=%p (unchanged)",
@@ -27241,6 +27313,11 @@ static void WorldToClip(const float* m, int conv, const float pt[3], float out[4
 
 struct LaserVtx { float x, y, z, rhw; DWORD c; };
 
+// Minimalist in-world diegetic HUD globals
+volatile LONG g_diegeticHud = 1;
+static IDirect3DTexture9* g_diegeticAtlasTex = nullptr;
+static volatile LONG g_diegeticAtlasState = 0;
+
 volatile LONG g_wristHealth=1;
 // Katorga health plate (left glove, gesture-gated). Default OFF: the accepted
 // run-217 wrist band above is untouched. Plates atlas lives in
@@ -27607,6 +27684,7 @@ void ReleaseWristResources() {
     ReleaseVrMenuResources();
     ReleaseVrShadowResources();
     desktop_mirror::ReleaseScratch();
+    if (g_diegeticAtlasTex) { g_diegeticAtlasTex->Release(); g_diegeticAtlasTex = nullptr; InterlockedExchange(&g_diegeticAtlasState, 0); }
     if (g_wristState) { g_wristState->Release(); g_wristState = nullptr; }
 }
 void DrawCustomGloves(IDirect3DDevice9* dev) {
@@ -27651,6 +27729,7 @@ void DrawCustomGloves(IDirect3DDevice9* dev) {
     back->Release();
 }
 void DrawWristHealth(IDirect3DDevice9* dev) {
+    if (Rd(g_diegeticHud)) return;
     const bool hudGameplay = g_sceneMode.Current() == vrscene::Mode::GameplayStereo &&
         !Rd(g_inCinematic) && !CutsceneNativeCameraArmed();
     if (!handhud::Visible(Rd(g_wristHealth) != 0, VrModeOn(), Rd(g_dupDraws) != 0,
@@ -28989,6 +29068,7 @@ static void MaybeLoadPlatesAtlas(IDirect3DDevice9* dev) {
 // HP comes from the cached pawn (never a scan from rendering);
 // unknown HP hides the bar, never a guessed full one.
 void DrawHealthPlate(IDirect3DDevice9* dev) {
+    if (Rd(g_diegeticHud)) return;
     if(handhud::HideHealth(Rd(g_twoHandActive)!=0)){g_hbShown=false;return;}
     if(g_centurionPhysicalPolish){
         CenturionVisual visual;
@@ -29247,6 +29327,7 @@ static void MaybeLoadAmmoArt(IDirect3DDevice9* dev) {
 }
 
 void DrawAmmoPlate(IDirect3DDevice9* dev) {
+    if (Rd(g_diegeticHud)) return;
     if(handhud::HideAmmo(Rd(g_opticalHudHidden)!=0))return;
     const bool hudGameplay = g_sceneMode.Current() == vrscene::Mode::GameplayStereo &&
         !Rd(g_inCinematic) && !CutsceneNativeCameraArmed();
@@ -29458,6 +29539,314 @@ void DrawAmmoPlate(IDirect3DDevice9* dev) {
     if (old) g_origSetRenderTarget(dev, 0, old);
     dev->SetDepthStencilSurface(depth);
     if (old) old->Release(); if (depth) depth->Release(); back->Release();
+}
+
+// ---- Minimalist Diegetic In-World HUD (Weapon Receiver & Wrist / TMD) ----
+static volatile LONG g_diegeticAmmoSaid = 0;
+static volatile LONG g_diegeticHealthSaid = 0;
+
+static bool LoadDiegeticPng(IDirect3DDevice9* dev, const char* file, IDirect3DTexture9** out) {
+    char dll[MAX_PATH]{};
+    HMODULE self = nullptr;
+    if (!GetModuleHandleExA(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
+                            GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+                            (LPCSTR)&LoadDiegeticPng, &self) ||
+        !GetModuleFileNameA(self, dll, MAX_PATH)) return false;
+    char* slash = strrchr(dll, '\\');
+    if (!slash) return false;
+    *slash = 0;
+
+    const char* subpaths[] = {
+        "vr-assets\\hud\\diegetic",
+        "assets\\processed\\hud\\diegetic",
+        "vr-assets\\hud\\katorga\\ammo",
+        "."
+    };
+
+    char pngPath[MAX_PATH]{};
+    bool found = false;
+    for (const char* sub : subpaths) {
+        _snprintf_s(pngPath, sizeof(pngPath), _TRUNCATE, "%s\\%s\\%s", dll, sub, file);
+        if (GetFileAttributesA(pngPath) != INVALID_FILE_ATTRIBUTES) {
+            found = true;
+            break;
+        }
+    }
+    if (!found) {
+        for (const char* sub : subpaths) {
+            _snprintf_s(pngPath, sizeof(pngPath), _TRUNCATE, ".\\%s\\%s", sub, file);
+            if (GetFileAttributesA(pngPath) != INVALID_FILE_ATTRIBUTES) {
+                found = true;
+                break;
+            }
+        }
+    }
+    if (!found) return false;
+
+    CoInitializeEx(nullptr, COINIT_MULTITHREADED);
+    wchar_t wpng[MAX_PATH]{};
+    if (!MultiByteToWideChar(CP_ACP, 0, pngPath, -1, wpng, MAX_PATH)) return false;
+    IWICImagingFactory* fac = nullptr;
+    IWICBitmapDecoder* dec = nullptr;
+    IWICBitmapFrameDecode* frame = nullptr;
+    IWICFormatConverter* conv = nullptr;
+    UINT pw = 0, ph = 0;
+    std::vector<BYTE> px;
+    bool ok = SUCCEEDED(CoCreateInstance(CLSID_WICImagingFactory, nullptr, CLSCTX_INPROC_SERVER,
+                                         IID_PPV_ARGS(&fac))) && fac &&
+              SUCCEEDED(fac->CreateDecoderFromFilename(wpng, nullptr, GENERIC_READ,
+                                                       WICDecodeMetadataCacheOnDemand, &dec)) && dec &&
+              SUCCEEDED(dec->GetFrame(0, &frame)) && frame &&
+              SUCCEEDED(fac->CreateFormatConverter(&conv)) && conv &&
+              SUCCEEDED(conv->Initialize(frame, GUID_WICPixelFormat32bppBGRA, WICBitmapDitherTypeNone,
+                                         nullptr, 0.0, WICBitmapPaletteTypeCustom)) &&
+              SUCCEEDED(conv->GetSize(&pw, &ph)) && pw > 0 && pw <= 4096 && ph > 0 && ph <= 4096;
+    if (ok) {
+        px.resize((size_t)pw * ph * 4);
+        ok = SUCCEEDED(conv->CopyPixels(nullptr, pw * 4, (UINT)px.size(), px.data()));
+    }
+    if (conv) conv->Release();
+    if (frame) frame->Release();
+    if (dec) dec->Release();
+    if (fac) fac->Release();
+    if (!ok) return false;
+    IDirect3DTexture9* tex = nullptr;
+    if (FAILED(dev->CreateTexture(pw, ph, 1, 0, D3DFMT_A8R8G8B8, D3DPOOL_MANAGED, &tex, nullptr)) || !tex)
+        return false;
+    D3DLOCKED_RECT lr{};
+    if (FAILED(tex->LockRect(0, &lr, nullptr, 0))) { tex->Release(); return false; }
+    const BYTE* src = px.data();
+    for (UINT y = 0; y < ph; ++y)
+        memcpy((BYTE*)lr.pBits + (size_t)y * lr.Pitch, src + (size_t)y * pw * 4, (size_t)pw * 4);
+    tex->UnlockRect(0);
+    *out = tex;
+    return true;
+}
+
+void DrawDiegeticAmmo(IDirect3DDevice9* dev) {
+    if (!Rd(g_diegeticHud)) return;
+    if (handhud::HideAmmo(Rd(g_opticalHudHidden) != 0)) return;
+    const bool hudGameplay = g_sceneMode.Current() == vrscene::Mode::GameplayStereo &&
+        !Rd(g_inCinematic) && !CutsceneNativeCameraArmed();
+    if (!hudGameplay || Rd(g_gamePaused) != 0 || Rd(g_vrUiMenu) != 0 ||
+        Rd(g_panelOpen) != 0 || Rd(g_weaponWheelOpen) != 0 || !WeaponInHands() ||
+        !g_handPositionValid[AimHand()] || !g_haveEyes || !g_origDrawPrimUP) return;
+
+    if (InterlockedCompareExchange(&g_diegeticAtlasState, 0, 0) == 0) {
+        if (LoadDiegeticPng(dev, "diegetic_hud_atlas.png", &g_diegeticAtlasTex)) {
+            InterlockedExchange(&g_diegeticAtlasState, 1);
+            Log("diegetic HUD: atlas loaded successfully");
+        } else {
+            InterlockedExchange(&g_diegeticAtlasState, -1);
+            Log("diegetic HUD: atlas load failed - diegetic HUDs disabled");
+            return;
+        }
+    }
+    if (InterlockedCompareExchange(&g_diegeticAtlasState, 0, 0) != 1 || !g_diegeticAtlasTex) return;
+
+    const LONG heldVerts = InterlockedCompareExchange(&g_gunVerts, 0, 0);
+    if (!heldVerts) return;
+
+    const uintptr_t hud = FindHudObject();
+    if (!hud) return;
+    uintptr_t hc = 0;
+    if (Readable((const void*)(hud + OBJ_CLASS), sizeof(uintptr_t)))
+        hc = *reinterpret_cast<const uintptr_t*>(hud + OBJ_CLASS);
+    if (hc && hc != g_ammoHudCls) {
+        g_ammoHudCls = hc;
+        g_ammoOffClip = PropOffsetInChain(hc, "mClipAmmo");
+        g_ammoOffBin = PropOffsetInChain(hc, "mBinAmmo");
+        g_ammoOffSize = PropOffsetInChain(hc, "mClipSize");
+    }
+    if (g_ammoOffClip < 0 || g_ammoOffBin < 0 ||
+        !Readable((const void*)(hud + g_ammoOffClip), 4) ||
+        !Readable((const void*)(hud + g_ammoOffBin), 4)) return;
+
+    const int clip = *reinterpret_cast<const int32_t*>(hud + g_ammoOffClip);
+    const int bin = *reinterpret_cast<const int32_t*>(hud + g_ammoOffBin);
+    if (clip < 0 || bin < 0) return;
+
+    diegetichud::Quad3D localQuads[20];
+    const int quadCount = diegetichud::LayoutAmmoQuads(heldVerts, clip, bin, localQuads, 20);
+    if (quadCount <= 0) return;
+
+    float gunC[4][4];
+    BuildGunC(gunC);
+
+    diegetichud::Quad3D worldQuads[20];
+    for (int q = 0; q < quadCount; ++q) {
+        diegetichud::TransformQuad(localQuads[q], gunC, worldQuads[q]);
+    }
+
+    int slot = -1;
+    for (int i = 0; i < g_camMatUsed; ++i) if (g_camMats[i].valid) { slot = i; break; }
+    if (slot < 0) return;
+
+    D3DVIEWPORT9 vp{};
+    if (FAILED(dev->GetViewport(&vp)) || vp.Width < 4) return;
+
+    if (!g_wristState && FAILED(dev->CreateStateBlock(D3DSBT_ALL, &g_wristState))) return;
+    if (FAILED(g_wristState->Capture())) return;
+
+    dev->SetVertexShader(nullptr);
+    dev->SetPixelShader(nullptr);
+    dev->SetTexture(0, g_diegeticAtlasTex);
+    dev->SetFVF(D3DFVF_XYZRHW | D3DFVF_DIFFUSE | D3DFVF_TEX1);
+    dev->SetRenderState(D3DRS_ZENABLE, D3DZB_FALSE);
+    dev->SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
+    dev->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
+    dev->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
+    dev->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
+    dev->SetRenderState(D3DRS_LIGHTING, FALSE);
+    dev->SetRenderState(D3DRS_SCISSORTESTENABLE, FALSE);
+    dev->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_MODULATE);
+    dev->SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TEXTURE);
+    dev->SetTextureStageState(0, D3DTSS_COLORARG2, D3DTA_DIFFUSE);
+    dev->SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTOP_MODULATE);
+    dev->SetTextureStageState(0, D3DTSS_ALPHAARG1, D3DTA_TEXTURE);
+    dev->SetTextureStageState(0, D3DTSS_ALPHAARG2, D3DTA_DIFFUSE);
+    dev->SetTextureStageState(1, D3DTSS_COLOROP, D3DTOP_DISABLE);
+    dev->SetSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
+    dev->SetSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
+    dev->SetSamplerState(0, D3DSAMP_MIPFILTER, D3DTEXF_NONE);
+
+    struct HudVtx { float x, y, z, rhw; DWORD c; float u, v; };
+
+    for (int eye = 0; eye < 2; ++eye) {
+        float m[16];
+        memcpy(m, g_camMats[slot].m, sizeof(m));
+        const int conv = g_camMats[slot].conv;
+        if (eye) ApplyOffset(reinterpret_cast<Reg4*>(m), conv, g_eyeDeltaUU);
+        ApplyEyeRemap(reinterpret_cast<Reg4*>(m), conv, eye ? +0.5f : -0.5f);
+
+        for (int q = 0; q < quadCount; ++q) {
+            HudVtx v[4];
+            bool visible = true;
+            for (int k = 0; k < 4; ++k) {
+                float pt[3] = { worldQuads[q].v[k].x, worldQuads[q].v[k].y, worldQuads[q].v[k].z };
+                float clip[4];
+                WorldToClip(m, conv, pt, clip);
+                if (clip[3] <= 0.001f) { visible = false; break; }
+                v[k].x = (clip[0] / clip[3] * 0.5f + 0.5f) * (float)vp.Width + (float)vp.X;
+                v[k].y = (0.5f - clip[1] / clip[3] * 0.5f) * (float)vp.Height + (float)vp.Y;
+                v[k].z = clip[2] / clip[3];
+                v[k].rhw = 1.0f / clip[3];
+                v[k].c = worldQuads[q].v[k].color;
+                v[k].u = worldQuads[q].v[k].u;
+                v[k].v = worldQuads[q].v[k].v;
+            }
+            if (visible) {
+                g_origDrawPrimUP(dev, D3DPT_TRIANGLESTRIP, 2, v, sizeof(HudVtx));
+            }
+        }
+    }
+
+    if (!InterlockedCompareExchange(&g_diegeticAmmoSaid, 1, 0)) {
+        Log("diegetic HUD: weapon ammo counter active (verts=%ld clip=%d bin=%d)", heldVerts, clip, bin);
+    }
+    g_wristState->Apply();
+}
+
+void DrawDiegeticHealth(IDirect3DDevice9* dev) {
+    if (!Rd(g_diegeticHud)) return;
+    if (handhud::HideHealth(Rd(g_twoHandActive) != 0)) return;
+    const bool hudGameplay = g_sceneMode.Current() == vrscene::Mode::GameplayStereo &&
+        !Rd(g_inCinematic) && !CutsceneNativeCameraArmed();
+    if (!hudGameplay || Rd(g_gamePaused) != 0 || Rd(g_vrUiMenu) != 0 ||
+        Rd(g_panelOpen) != 0 || !g_handPositionValid[0] || !g_haveEyes || !g_origDrawPrimUP ||
+        g_offHealth < 0 || g_offHealthMax < 0) return;
+
+    if (InterlockedCompareExchange(&g_diegeticAtlasState, 0, 0) != 1 || !g_diegeticAtlasTex) return;
+
+    const uintptr_t pawn = g_playerPawn;
+    if (!pawn || !Readable((void*)(pawn + g_offHealth), 4) ||
+        !Readable((void*)(pawn + g_offHealthMax), 4)) return;
+
+    const std::int32_t hpBits = *reinterpret_cast<std::int32_t*>(pawn + g_offHealth);
+    const std::int32_t maxBits = *reinterpret_cast<std::int32_t*>(pawn + g_offHealthMax);
+    const float hp = healthbar::HpFromBits(hpBits);
+    const float maxHp = healthbar::HpFromBits(maxBits);
+    if (maxHp <= 0.0f) return;
+
+    diegetichud::Quad3D localQuads[20];
+    const int quadCount = diegetichud::LayoutHealthQuads(hp, maxHp, localQuads, 20);
+    if (quadCount <= 0) return;
+
+    float tmdC[4][4];
+    BuildTmdC(tmdC);
+
+    diegetichud::Quad3D worldQuads[20];
+    for (int q = 0; q < quadCount; ++q) {
+        diegetichud::TransformQuad(localQuads[q], tmdC, worldQuads[q]);
+    }
+
+    int slot = -1;
+    for (int i = 0; i < g_camMatUsed; ++i) if (g_camMats[i].valid) { slot = i; break; }
+    if (slot < 0) return;
+
+    D3DVIEWPORT9 vp{};
+    if (FAILED(dev->GetViewport(&vp)) || vp.Width < 4) return;
+
+    if (!g_wristState && FAILED(dev->CreateStateBlock(D3DSBT_ALL, &g_wristState))) return;
+    if (FAILED(g_wristState->Capture())) return;
+
+    dev->SetVertexShader(nullptr);
+    dev->SetPixelShader(nullptr);
+    dev->SetTexture(0, g_diegeticAtlasTex);
+    dev->SetFVF(D3DFVF_XYZRHW | D3DFVF_DIFFUSE | D3DFVF_TEX1);
+    dev->SetRenderState(D3DRS_ZENABLE, D3DZB_FALSE);
+    dev->SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
+    dev->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
+    dev->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
+    dev->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
+    dev->SetRenderState(D3DRS_LIGHTING, FALSE);
+    dev->SetRenderState(D3DRS_SCISSORTESTENABLE, FALSE);
+    dev->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_MODULATE);
+    dev->SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TEXTURE);
+    dev->SetTextureStageState(0, D3DTSS_COLORARG2, D3DTA_DIFFUSE);
+    dev->SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTOP_MODULATE);
+    dev->SetTextureStageState(0, D3DTSS_ALPHAARG1, D3DTA_TEXTURE);
+    dev->SetTextureStageState(0, D3DTSS_ALPHAARG2, D3DTA_DIFFUSE);
+    dev->SetTextureStageState(1, D3DTSS_COLOROP, D3DTOP_DISABLE);
+    dev->SetSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
+    dev->SetSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
+    dev->SetSamplerState(0, D3DSAMP_MIPFILTER, D3DTEXF_NONE);
+
+    struct HudVtx { float x, y, z, rhw; DWORD c; float u, v; };
+
+    for (int eye = 0; eye < 2; ++eye) {
+        float m[16];
+        memcpy(m, g_camMats[slot].m, sizeof(m));
+        const int conv = g_camMats[slot].conv;
+        if (eye) ApplyOffset(reinterpret_cast<Reg4*>(m), conv, g_eyeDeltaUU);
+        ApplyEyeRemap(reinterpret_cast<Reg4*>(m), conv, eye ? +0.5f : -0.5f);
+
+        for (int q = 0; q < quadCount; ++q) {
+            HudVtx v[4];
+            bool visible = true;
+            for (int k = 0; k < 4; ++k) {
+                float pt[3] = { worldQuads[q].v[k].x, worldQuads[q].v[k].y, worldQuads[q].v[k].z };
+                float clip[4];
+                WorldToClip(m, conv, pt, clip);
+                if (clip[3] <= 0.001f) { visible = false; break; }
+                v[k].x = (clip[0] / clip[3] * 0.5f + 0.5f) * (float)vp.Width + (float)vp.X;
+                v[k].y = (0.5f - clip[1] / clip[3] * 0.5f) * (float)vp.Height + (float)vp.Y;
+                v[k].z = clip[2] / clip[3];
+                v[k].rhw = 1.0f / clip[3];
+                v[k].c = worldQuads[q].v[k].color;
+                v[k].u = worldQuads[q].v[k].u;
+                v[k].v = worldQuads[q].v[k].v;
+            }
+            if (visible) {
+                g_origDrawPrimUP(dev, D3DPT_TRIANGLESTRIP, 2, v, sizeof(HudVtx));
+            }
+        }
+    }
+
+    if (!InterlockedCompareExchange(&g_diegeticHealthSaid, 1, 0)) {
+        Log("diegetic HUD: wrist bio-monitor active (hp=%.1f/%.1f)", hp, maxHp);
+    }
+    g_wristState->Apply();
 }
 
 // MAIN 2026-10-15: white translucent ring marks the hip holster spot while a
@@ -30665,7 +31054,9 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
         }
 
         // ---- the edge, and only the edge ----
-        const bool cineNow = InterlockedCompareExchange(&g_inCinematic, 0, 0) != 0;
+        // Presentation mode, not the raw engine latch: Matinee/Kathryn can be
+        // CutsceneFlat via gameOwnsCamera while SetCinematicMode stays OFF.
+        const bool cineNow = g_sceneMode.Current() == vrscene::Mode::CutsceneFlat;
         if (cineNow != g_cinePrev) {
             g_cinePrev = cineNow;
             // ⭐ run 273: the edge line stays, without the override it was added for. It is what
@@ -30903,8 +31294,14 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
                 if (++rejected <= 8)
                     Log("camera pawn sample: inaccessible pawn=%p, skipped stabilization and invalidated pawn cache (#%u)",
                         (void*)pawnAddress, rejected);
-            } else if (ComputeVrCameraStabilization(g_povPos, pawn.location, pawn.eyeHeight, g_vrCameraStabOffset))
-                InterlockedExchange(&g_vrCameraStabValid, 1);
+            } else {
+                float rawStab[3]{};
+                if (ComputeVrCameraStabilization(g_povPos, pawn.location, pawn.eyeHeight, rawStab)) {
+                    SmoothVrCameraStabilizationOffset(rawStab, g_vrCameraStabSmooth);
+                    memcpy(g_vrCameraStabOffset, g_vrCameraStabSmooth, sizeof(g_vrCameraStabOffset));
+                    InterlockedExchange(&g_vrCameraStabValid, 1);
+                }
+            }
         }
         if(g_cameraTranslationEvidence) {
             static camera_translation::Gate gate;
@@ -33827,6 +34224,11 @@ void LoadIniSettings() {
     if(frontDistance!=0)frontDistance=std::max(600L,std::min(3000L,frontDistance));InterlockedExchange(&g_frontMenuDistanceMm,frontDistance);
     g_holsterMarkerStyle=GetPrivateProfileIntA("Render","HolsterMarkerStyle",0,path)==1?1:0;
     Log("ini: frontend scale=%ld distanceMm=%ld (class2 only); holsterMarkerStyle=%d (visual only)",frontScale,frontDistance,g_holsterMarkerStyle);
+    LONG stationScale=GetPrivateProfileIntA("Render","StationMenuScalePct",50,path);
+    stationScale=std::max(35L,std::min(85L,stationScale));InterlockedExchange(&g_stationMenuScalePct,stationScale);
+    LONG stationDistance=GetPrivateProfileIntA("Render","StationMenuDistanceMm",1400,path);
+    stationDistance=std::max(600L,std::min(3000L,stationDistance));InterlockedExchange(&g_stationMenuDistanceMm,stationDistance);
+    Log("ini: StationMenuScalePct=%ld StationMenuDistanceMm=%ld (class4 weapon locker comfort)",stationScale,stationDistance);
     LONG noteIni = GetPrivateProfileIntA("Render", "NoteInsetPct", 40, path);
     if (noteIni < 25)  noteIni = 25;
     if (noteIni > 100) noteIni = 100;
@@ -33975,6 +34377,8 @@ void LoadIniSettings() {
     Log("VR render: menu laser=%ld opacity=%ld%% width=%ld%%; shadows=%ld; translation stabilization=%ld",
         Rd(g_vrMenuLaser),laserOpacity,laserWidth,Rd(g_vrShadows),Rd(g_vrTranslationStabilization));
     Log("shadow sampling: ShadowMode=%ld (0=full split 1=mono sample 2=drop sample 3=protect light-space; hub ADVANCED page)",Rd(g_shadowMode));
+    g_diegeticHud = GetPrivateProfileIntA("Render", "DiegeticHudEnabled", 1, path) ? 1 : 0;
+    Log("diegetic HUD: %s (in-world 3D weapon ammo counter + wrist bio-gauge)", Rd(g_diegeticHud) ? "ENABLED" : "off");
     g_wristHealth = GetPrivateProfileIntA("Render", "WristHealth", 1, path) ? 1 : 0;
     InterlockedExchange(&g_healthPlate,
         GetPrivateProfileIntA("Render", "HealthPlateEnabled", 0, path) ? 1 : 0);
@@ -34034,6 +34438,10 @@ void LoadIniSettings() {
     Log("ini: NativeCinematicState=%ld (default OFF; fingerprinted native packed bit, read-only)",g_nativeCinematicState);
     g_nativeRestraintHands=GetPrivateProfileIntA("Render","NativeRestraintHands",0,path)?1:0;
     Log("ini: NativeRestraintHands=%ld (default OFF; exact native rope mesh, independent of cinema)",g_nativeRestraintHands);
+    g_scriptedCameraFlat=GetPrivateProfileIntA("Render","ScriptedCameraFlat",1,path)?1:0;
+    g_mainMenuVideoStereo=GetPrivateProfileIntA("Render","MainMenuVideoStereo",1,path)?1:0;
+    Log("ini: ScriptedCameraFlat=%ld MainMenuVideoStereo=%ld (Matinee/Kathryn presentation + boot menu VR)",
+        g_scriptedCameraFlat,g_mainMenuVideoStereo);
     Log("followup: WeaponNativeAxis=%d CinematicHandsOwnership=%ld (default OFF)",g_weaponNativeAxis,g_cinematicHandsOwnership);
     Log("ini: SniperOpticalAccuracy=%d (default OFF; exact native spread aim callers, no zero-spread write)",g_sniperOpticalAccuracy);
     Log("ini: ScopeOpticalCalibration=%d SniperOpticalSlowTime=%d (default OFF; own4x/capture45Hz, native L3; no HMD filtering)",g_scopeOpticalCalibration,g_sniperOpticalSlowTime);

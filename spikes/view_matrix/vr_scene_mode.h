@@ -18,7 +18,20 @@ struct Signals {
     bool paused = false;
     bool frontendMenu = false; // opt-in identified native main menu; not dialogue/pause
     bool cinemaPauseMenu = false; // explicit focused pause owns presentation, not raw cinema
+    bool bootVideoStereo = false; // no pawn: keep 3D main menu in GameplayStereo (not VideoFlat)
+    bool mainMenuStereoHold = false; // attract class-2: ignore stale cine + MenuFlat
 };
+
+// Matinee segments (e.g. Kathryn) can run with camera/controller yaw split and no
+// SetCinematicMode. The existing gameOwnsCamera hysteresis is the producer.
+inline bool ScriptedCameraFlatPresentation(bool enabled, bool gameOwnsCamera, bool livePawn,
+                                           bool video, bool menu, bool paused) {
+    return enabled && gameOwnsCamera && livePawn && !video && !menu && !paused;
+}
+
+inline bool BootMenuVideoStereo(bool enabled, bool livePawn, bool engineCinematic) {
+    return enabled && !livePawn && !engineCinematic;
+}
 
 // Present classifies the NEXT draw frame. A completed cinema frame must not
 // suddenly be interpreted as SBS (nor a completed SBS frame as full-width mono).
@@ -38,8 +51,8 @@ inline Mode RecoveryFrameMode(Mode completed, bool recovering, unsigned splitDra
 
 inline bool FrontendMenuPresentation(bool enabled, int menuClass, bool focus,
                                      bool cinematic = false, bool paused = false) {
-    return enabled && focus && !(cinematic && paused) &&
-           (menuClass == 2 || menuClass == 4);
+    // Class 4 stations stay on the stereo world route (see InteractiveStationMenu).
+    return enabled && focus && !(cinematic && paused) && menuClass == 2;
 }
 
 struct Transition {
@@ -79,6 +92,14 @@ public:
         if (s.video) {
             cinematicFrames_ = 0; clearFrames_ = 0;
             return Change(Mode::VideoFlat, 2u, out);
+        }
+        if (s.mainMenuStereoHold) {
+            cinematicFrames_ = 0; clearFrames_ = 0;
+            return Change(Mode::GameplayStereo, 128u, out);
+        }
+        if (s.bootVideoStereo) {
+            cinematicFrames_ = 0; clearFrames_ = 0;
+            return Change(Mode::GameplayStereo, 64u, out);
         }
         if (s.frontendMenu) {
             // Native frontend backdrops may keep the cinematic bit ON.

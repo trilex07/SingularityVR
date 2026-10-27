@@ -14,11 +14,28 @@ inline bool ComputeVrCameraStabilization(const float pov[3], const float pawn[3]
     out[2] = pawn[2] + eyeHeight - pov[2];
     if (!std::isfinite(out[0]) || !std::isfinite(out[1]) || !std::isfinite(out[2])) return false;
     const float distSq = out[0]*out[0] + out[1]*out[1] + out[2]*out[2];
-    if (distSq > maxBobUu * maxBobUu) {
+    constexpr float hardRejectUu = 450.0f;
+    if (distSq > hardRejectUu * hardRejectUu) {
         out[0] = 0.0f; out[1] = 0.0f; out[2] = 0.0f;
         return false;
     }
+    if (distSq > maxBobUu * maxBobUu) {
+        const float dist = std::sqrt(distSq);
+        const float s = maxBobUu / dist;
+        out[0] *= s;
+        out[1] *= s;
+        out[2] *= s;
+    }
     return true;
+}
+
+// Low-pass the residual bob offset so sprint oscillation does not snap frame-to-frame.
+inline void SmoothVrCameraStabilizationOffset(const float raw[3], float smooth[3], float alpha = 0.22f) {
+    if (!raw || !smooth || !std::isfinite(alpha) || alpha <= 0.0f || alpha > 1.0f) return;
+    for (int i = 0; i < 3; ++i) {
+        if (!std::isfinite(raw[i])) return;
+        smooth[i] += alpha * (raw[i] - smooth[i]);
+    }
 }
 
 // Clears residual flat-game camera roll, head bobbing, and camera shake from

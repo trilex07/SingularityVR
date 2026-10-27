@@ -6,9 +6,23 @@ User reports Kathryn remains in VR with shaking character/hands; bound hands
 become freely tracked during escape; enemies attack behind VR loading. Scope,
 weapon alignment/VFX and gore were NOT tested in this session.
 
-Candidate 1161168 / DLL 5C9E6E62 was rejected. Private log:
+Candidate 1161168 / DLL 5C9E6E62 was rejected. Candidate 928767EA (same
+2026-10-21 afternoon session) failed again for Kathryn VR/ghosting and missing
+bound hands. Private log:
 `build/combined-followups/kathryn-native-1161168/physical-20261021-1413.log`,
 SHA256 `5E785C98B022996954676A302F0EB1F3B85580B74E1A4D58A5E624A466B701F1`.
+
+Log proof for 928767EA: `SetCinematicMode` latched cinema ON and SceneMode entered
+CutsceneFlat, but native `bCinematicMode` stayed clear so
+`RefreshNativeCinematicState` forced `g_inCinematic=0` every Present (view drift /
+stereo mid-Matinee). Rope mesh was on `Pawn.Mesh` while zero `native-restraint:`
+lines ran because reciprocal camera-pawn equality blocked the policy.
+
+Offline fix: native cinematic is assert-only (OFF never clears the event latch);
+restraint drops that reciprocal gate and checks Mesh/mInviewMesh/mArmMeshComponent.
+Rebuild DLL SHA256 `CA2E6EFDD235AF124DCE62D0D5940B988A96160FD8461141D6364A4A4F1C26AC`
+before the next deploy; do not redeploy 928767EA as-is.
+
 Official rollback and accepted-profile postflight passed; installed DLL
 `EF3A1F3B9F0641A291F9285DD7283EC7D3B4433A8F87BC210DBC98B721B7B753`
 and INI `55A3ED4DBC6E158F01A2219177D825C066E7306DABCE6ACFB1C7118EC9E3F659`

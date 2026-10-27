@@ -18,7 +18,7 @@
 #include <string>
 static const int OBJ_NAME=0x2c,OBJ_CLASS=0x34,OBJ_OUTER=0x28;
 static int g_upChildren=0x4c,g_upNext=0x40;
-static volatile LONG g_keepAcquiredWeapons=1,g_ownedWeaponWheel=1,g_gamePaused=0,g_vrMenuClass=0;
+static volatile LONG g_keepAcquiredWeapons=1,g_ownedWeaponWheel=1,g_gamePaused=0,g_vrMenuClass=0,g_vrUiMenu=0;
 static volatile LONG g_inCinematic=0;
 static uintptr_t g_playerPawn=0;
 static uintptr_t g_camera=0;

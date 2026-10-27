@@ -21,6 +21,7 @@ inline float ClassBackbufferScale(int menuClass, bool menuSafe, int insetPct) {
 // Main-menu placement only: +8% of eye-image height, expressed in clip Y.
 // Shared by native backbuffer HUD and tracking-space provider/pointer plane.
 inline float MenuPlacementClipY(int menuClass) { return menuClass == 2 ? -0.16f : 0.f; }
+inline float StationMenuClipY(int menuClass) { return menuClass == 4 ? -0.12f : 0.f; }
 
 // Presentation-only main/frontend tuning. Never re-scale the captured producer
 // RT: that would shrink twice and separate the native labels from pointer UVs.
@@ -38,8 +39,14 @@ inline float FrontMenuDistance(int menuClass,bool modPanel,int sharedMm,int fron
 
 // Direct contextual canvases and their input ray must use the same comfort
 // depth. Keep pause, RTT movies and the mod settings panel unchanged.
+inline float StationMenuInset(int menuClass, bool modPanel, float inset, int percent) {
+    if (menuClass != 4 || modPanel) return inset;
+    const int pct = percent < 35 ? 35 : (percent > 85 ? 85 : percent);
+    return inset * (pct / 100.f);
+}
 inline float ContextMenuDistance(int menuClass,bool modPanel,bool projectDirect,
-                                 float existing,int frontMm){
-    if(menuClass!=4||modPanel||!projectDirect||frontMm<=0)return existing;
-    return FrontMenuDistance(2,false,0,frontMm);
+                                 float existing,int stationMm){
+    if(menuClass!=4||modPanel||!projectDirect||stationMm<=0)return existing;
+    const int mm = stationMm < 600 ? 600 : (stationMm > 3000 ? 3000 : stationMm);
+    return mm / 1000.f;
 }

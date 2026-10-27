@@ -28,6 +28,14 @@ int main() {
     float distantPov[3] = {1000, 2000, 3000};
     Check(!ComputeVrCameraStabilization(distantPov, out.location, out.eyeHeight, residual) &&
         residual[0] == 0 && residual[1] == 0 && residual[2] == 0, "distant pawn offset safely rejected");
+    float sprintPov[3] = {10 + 80.0f, 22, 103};
+    Check(ComputeVrCameraStabilization(sprintPov, out.location, out.eyeHeight, residual) &&
+        std::fabs(residual[0] + 35.0f) < 1e-3f && residual[1] == -2 && residual[2] == -3,
+        "large sprint bob is clamped instead of disabling stabilization");
+    float raw[3] = {10, 5, 2}, smooth[3] = {0, 0, 0};
+    SmoothVrCameraStabilizationOffset(raw, smooth, 0.5f);
+    Check(std::fabs(smooth[0] - 5.0f) < 1e-5f && std::fabs(smooth[1] - 2.5f) < 1e-5f && std::fabs(smooth[2] - 1.0f) < 1e-5f,
+        "stabilization offset low-pass moves toward raw sample");
     int32_t op = 0, oy = 0, oroll = 0;
     Check(StabilizeVrCameraRotation(100, 200, 115, 205, 50, op, oy, oroll, true) &&
         op == 100 && oy == 200 && oroll == 0, "rotation stabilization locks pitch/yaw and zeros roll");
