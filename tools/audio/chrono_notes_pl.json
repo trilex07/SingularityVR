@@ -1,0 +1,130 @@
+[
+  {
+    "key": "Default",
+    "pl": "Domyślne napisy notatki chrono"
+  },
+  {
+    "key": "RL_FindBarisov",
+    "pl": "Znajdź Barisowa"
+  },
+  {
+    "key": "RL_ChangePast",
+    "pl": "Zmień przeszłość. Zmień teraźniejszość."
+  },
+  {
+    "key": "RL_StopRuin",
+    "pl": "Stój — niszczysz wszystko!"
+  },
+  {
+    "key": "RL_FollowBarisov",
+    "pl": "Nie ufaj Barisowowi"
+  },
+  {
+    "key": "RL_Forget",
+    "pl": "Zaczynam zapominać... minęło zbyt wiele czasu"
+  },
+  {
+    "key": "RL_HeStarted",
+    "pl": "To on wszystko zaczął"
+  },
+  {
+    "key": "RL_MIR12",
+    "pl": "MIR-12 się myli"
+  },
+  {
+    "key": "RT_Smell",
+    "pl": "To potrafi wyczuć twój zapach."
+  },
+  {
+    "key": "RT_Findtrain",
+    "pl": "Znajdź pociąg i dotrzyj do doków. Kończy ci się czas."
+  },
+  {
+    "key": "RT_Slowly",
+    "pl": "Poruszaj się powoli. Te stwory są ślepe i reagują na każdy dźwięk"
+  },
+  {
+    "key": "RT_Lives",
+    "pl": "To wciąż żyje, po tylu latach."
+  },
+  {
+    "key": "RT_Trust",
+    "pl": "Nie ufaj jej."
+  },
+  {
+    "key": "RT_TrustGirl",
+    "pl": "Nie ufaj tej dziewczynie."
+  },
+  {
+    "key": "RT_Here",
+    "pl": "Jestem tutaj! To żyje"
+  },
+  {
+    "key": "FR_Die",
+    "pl": "Ona zginie"
+  },
+  {
+    "key": "FR_Escape",
+    "pl": "Uciekaj, zanim statek zatonie!"
+  },
+  {
+    "key": "FR_Trust",
+    "pl": "Nie ufaj mi"
+  },
+  {
+    "key": "FR_Sunk",
+    "pl": "On go zatopił — wszyscy ci ludzie... nie żyją"
+  },
+  {
+    "key": "FR_BarisovWrong",
+    "pl": "Barisow się myli"
+  },
+  {
+    "key": "FR_NotFixed",
+    "pl": "To wciąż nie zostało naprawione"
+  },
+  {
+    "key": "FR_Coming",
+    "pl": "On nadchodzi"
+  },
+  {
+    "key": "FR_Slowly",
+    "pl": "Ruszaj się powoli, są ślepi"
+  },
+  {
+    "key": "FR_Mother",
+    "pl": "Mamo, boli mnie mózg!"
+  },
+  {
+    "key": "WL_Fool",
+    "pl": "Byłem głupcem"
+  },
+  {
+    "key": "WL_Tried",
+    "pl": "Próbowaliśmy już wcześniej"
+  },
+  {
+    "key": "WL_Beg",
+    "pl": "Błagam cię — przestań."
+  },
+  {
+    "key": "WL_Altered",
+    "pl": "Znowu zmieniłeś przeszłość. Znowu świat uległ zmianie. Znowu tylko my o tym wiemy."
+  },
+  {
+    "key": "SL_Done",
+    "pl": "Co się stało, to się nie odstanie"
+  },
+  {
+    "key": "SL_Change",
+    "pl": "Nie zdołasz tego zmienić"
+  },
+  {
+    "key": "SL_WhatIf",
+    "pl": "A co, jeśli to miało się wydarzyć?"
+  },
+  {
+    "key": "SL_Plan",
+    "pl": "Plan jest zły, ale wciąż można go zmienić."
+  }
+]
