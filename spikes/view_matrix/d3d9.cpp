@@ -2278,7 +2278,7 @@ static IDirect3DIndexBuffer9* g_nextIB[3]{};
 static bool g_nextIBVerified[3]{};static unsigned g_nextIBAttempts[3]{};
 static SRWLOCK g_nextVisualLock=SRWLOCK_INIT;
 static int g_startupPrewarm=0,g_startupLoadingGate=0,g_startupProbe=0;
-static unsigned g_startupTimeoutMs=5000;
+static unsigned g_startupTimeoutMs=5000,g_startupMinVisibleMs=2000;
 struct NextReloadVisual {
     bool valid=false;weaponreload::Kind kind=weaponreload::Kind::None;
     weaponreload::Phase phase=weaponreload::Phase::Idle;
@@ -27785,7 +27785,8 @@ static void StartupReadinessFrame(IDirect3DDevice9* dev){
     if(!Rd(g_cutsceneAuto)||(g_origProcessEvent&&g_hookedAt==g_processInternal))ready|=startup::Script;
     if(Rd(g_aimMode)<6||g_origSLC)ready|=startup::Aim;
     if(g_haveCentre&&g_haveCentrePos&&g_haveEyes&&Rd(g_camPosValid))ready|=startup::Centre;
-    const bool visible=gate.Update(eligible,(uint32_t)g_playerPawn,ready,now,g_startupTimeoutMs);
+    const bool visible=gate.Update(eligible,(uint32_t)g_playerPawn,ready,now,
+        g_startupTimeoutMs,g_startupMinVisibleMs);
     if(notes<64&&eligible&&(ready!=previous||visible!=wasVisible)){
         ++notes;previous=ready;
         Log("startup readiness: pawn=%08X ready=%02X missing=%02X elapsed=%llu hold=%d timeout=%d t=%llu (hook readiness; NOT native move-input acceptance)",
@@ -31962,8 +31963,10 @@ void LoadIniSettings() {
     g_startupProbe=GetPrivateProfileIntA("Diagnostic","StartupReadinessProbe",0,path)?1:0;
     const int startupTimeout=GetPrivateProfileIntA("Render","StartupLoadingMaxMs",5000,path);
     g_startupTimeoutMs=(unsigned)(std::max)(500,(std::min)(startupTimeout,10000));
-    Log("ini: StartupPrewarm=%d StartupLoadingGate=%d probe=%d max=%u ms (default OFF; presentation only, simulation/input untouched)",
-        g_startupPrewarm,g_startupLoadingGate,g_startupProbe,g_startupTimeoutMs);
+    const int startupMin=GetPrivateProfileIntA("Render","StartupLoadingMinMs",2000,path);
+    g_startupMinVisibleMs=(unsigned)(std::max)(0,(std::min)(startupMin,(int)g_startupTimeoutMs));
+    Log("ini: StartupPrewarm=%d StartupLoadingGate=%d probe=%d min=%u max=%u ms (default OFF; hook readiness only, not UE3 asset-load completion; simulation/input untouched)",
+        g_startupPrewarm,g_startupLoadingGate,g_startupProbe,g_startupMinVisibleMs,g_startupTimeoutMs);
     const int priorNextMask=g_nextReload[0]|(g_nextReload[1]<<1)|(g_nextReload[2]<<2);
     const int priorNativeMagazine=g_nextNativeMagazine;
     const char* nextKeys[]{"ValkyrieManualReload","VolkManualReload","KasimovManualReload"};

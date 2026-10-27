@@ -9,6 +9,9 @@ class Tests(unittest.TestCase):
         for section, key in [('Input','StartupPrewarm'),('Render','StartupLoadingGate'),('Diagnostic','StartupReadinessProbe')]:
             self.assertIn(f'GetPrivateProfileIntA("{section}","{key}",0,path)', SRC)
         self.assertIn('(std::max)(500,(std::min)(startupTimeout,10000))', SRC)
+        self.assertIn('GetPrivateProfileIntA("Render","StartupLoadingMinMs",2000,path)', SRC)
+        self.assertIn('g_startupTimeoutMs,g_startupMinVisibleMs', SRC)
+        self.assertIn('now-start>=minVisible', (ROOT/'spikes/view_matrix/startup_readiness.h').read_text(encoding='utf-8'))
 
     def test_reciprocal_reflected_pawn_not_guessed_or_global_scan(self):
         block=SRC.split('static uintptr_t FindPlayerPawn(bool force) {',1)[1].split('if (g_playerPawn &&',1)[0]

@@ -1,5 +1,42 @@
 # STATUS — session handoff
 
+MAIN L3 RESULT 2026-10-17 — startup curtain + Centurion version mismatch:
+Candidate CE297F0AF8BADFAE941FB500BE8A07D9D139DCCF15E427FCABD2A2CC3867F003
+was built from SIDE `fix/startup-readiness` (source e243f97, based on
+origin/main 92396ca), with StartupPrewarm=1 and StartupLoadingGate=1. User
+reports the loading view appears only briefly. Runtime log confirms the gate
+became ready at `ready=3F` and released after 110 ms; the six bits are hook/pawn/
+XR readiness, NOT asset-stream completion or native movement acceptance. Do
+not claim this extends the UE3 loading phase. User also reports the Centurion
+cylinder is beside the gun; this candidate did not include later unmerged
+Centurion visual/refill work from `fix/centurion-visual-feedback` (HEAD
+63b89cf; L2-only latest patches), so this was the wrong candidate for checking
+that newer presentation. Do not repeat this startup-only DLL for a combined
+reload test.
+
+After the user closed the game, guarded rollback from
+`deployment/install-backups/20261017-182903` passed. Installed state verified:
+d3d9.dll DADE170B579A3C9D5FBDA72327BB1BCD02B7F665DECBC592D3A5A8EF2D4F51EA,
+SingularityVR.ini 789E02921D80C4BB1E945FFBF28D82004778B99B8A007ED6FF9C489002635117,
+dinput8.dll 5B948DDBDE07F16AE779C274CEBA133F7F24A218ABD9FFF2D4133FCADF729D59.
+Next: integrate the startup change onto the current MAIN Centurion source, fix
+the blink with a bounded visible-duration/readiness policy, then L1/L2 and one
+fresh PSVR2 test. Keep the current accepted Steam profile until a new candidate
+is explicitly started; do not claim full engine/resource readiness from hooks.
+
+OFFLINE FOLLOW-UP (not for Steam): added configurable
+`StartupLoadingMinMs` (default 2000; capped by `StartupLoadingMaxMs`). The
+curtain now requires both the existing100ms stable hook-ready mask and the
+minimum display duration; maximum timeout still fails open. L1_PASS:
+`test-startup-readiness.ps1` (6 C++ fixtures including two D3D9Ex Reset rounds,
+5 Python guards). L2_PASS build x86 PE32 `/O2`, instrumentation OFF, SHA-256
+DD9235EA9A1226194FD9DDD9E33F61ADB88FB55D19A710CCD6CD04743634DDCC. Build
+receipt points at `1053abc`, but working tree is dirty with the listed startup
+changes and STATUS note. NOT a test candidate: branch `fix/next-weapon-startup-integration`
+contains a separate next-weapon integration and does not include the latest
+Centurion visual/refill integration. Do not install this DLL; port the bounded
+startup change onto the correct MAIN Centurion source and rebuild cleanly first.
+
 LATEST 2026-10-17 SIDE, port Centurion-proven lessons to ALL3 profiles:
 Valkyrie/Volk/Kasimov resolver stops at4 distinct bindings BEFORE unrelated Next;
 all live ABI/body/cast/conservation guards retained. Exact-stage diagnostics,

@@ -27,5 +27,17 @@ int main(){
     assert(menu.Update(true,1,0,20000));assert(!menu.Update(false,1,0,20001)); // immediate menu/cine escape
     assert(menu.Update(true,1,0,30000));assert(!menu.Update(true,1,0,29999)&&menu.timedOut); // clock fault fails open
     startup::Curtain clamp;assert(clamp.Update(true,1,0,1000,0));assert(!clamp.Update(true,1,0,1500,0));
+    startup::Curtain minHold;
+    assert(minHold.Update(true,1,startup::All,1000,5000,2000));
+    assert(minHold.Update(true,1,startup::All,1099,5000,2000));
+    assert(minHold.Update(true,1,startup::All,2999,5000,2000));
+    assert(!minHold.Update(true,1,startup::All,3000,5000,2000)&&!minHold.timedOut);
+    startup::Curtain lateReady;
+    assert(lateReady.Update(true,1,0,1000,5000,2000));
+    assert(lateReady.Update(true,1,startup::All,2999,5000,2000));
+    assert(!lateReady.Update(true,1,startup::All,3099,5000,2000));
+    startup::Curtain bounded;
+    assert(bounded.Update(true,1,0,1000,3000,5000));
+    assert(!bounded.Update(true,1,0,4000,3000,5000)&&bounded.timedOut);
     puts("PASS startup policy: wall-clock retry cap,100ms stable, each missing gate, timeout/fail-open, pause/cine escape, identity rearm");
 }
