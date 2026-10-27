@@ -14,6 +14,7 @@ enum class Family : unsigned {
 	menu_classification,
 	foreground_classification,
 	shadow_classification,
+	track_fp_caster,
 	ik_arm_solve,
 	bone_palette,
 	set_texture,
@@ -33,6 +34,14 @@ enum class Counter : unsigned {
 	xr_locate_views,
 	xr_locate_left,
 	xr_locate_right,
+	track_fp_candidate,
+	track_fp_get_stream_source,
+	track_fp_get_indices,
+	track_fp_vb_ref_acquired,
+	track_fp_ib_ref_acquired,
+	track_fp_matched_caster,
+	track_fp_vb_release,
+	track_fp_ib_release,
 	count
 };
 
@@ -176,6 +185,7 @@ inline const char* name(Family f) noexcept {
 	case Family::menu_classification: return "menu";
 	case Family::foreground_classification: return "foreground";
 	case Family::shadow_classification: return "shadow";
+	case Family::track_fp_caster: return "TrackFpCaster";
 	case Family::ik_arm_solve: return "ik";
 	case Family::bone_palette: return "palette";
 	case Family::set_texture: return "set_texture";

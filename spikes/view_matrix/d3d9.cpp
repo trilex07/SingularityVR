@@ -5267,6 +5267,16 @@ static void ReportHotPathSampler() {
            static_cast<unsigned long long>(g_hotPathSampler.counter(hotpath::Counter::xr_locate_views)),
            static_cast<unsigned long long>(g_hotPathSampler.counter(hotpath::Counter::xr_locate_left)),
            static_cast<unsigned long long>(g_hotPathSampler.counter(hotpath::Counter::xr_locate_right)));
+    append("TrackFpCaster counters[calls/candidates/GetStreamSource/GetIndices/VB-ref/IB-ref/matched/VB-Release/IB-Release]=%llu/%llu/%llu/%llu/%llu/%llu/%llu/%llu/%llu; ",
+           static_cast<unsigned long long>(g_hotPathSampler.read(hotpath::Family::track_fp_caster).calls),
+           static_cast<unsigned long long>(g_hotPathSampler.counter(hotpath::Counter::track_fp_candidate)),
+           static_cast<unsigned long long>(g_hotPathSampler.counter(hotpath::Counter::track_fp_get_stream_source)),
+           static_cast<unsigned long long>(g_hotPathSampler.counter(hotpath::Counter::track_fp_get_indices)),
+           static_cast<unsigned long long>(g_hotPathSampler.counter(hotpath::Counter::track_fp_vb_ref_acquired)),
+           static_cast<unsigned long long>(g_hotPathSampler.counter(hotpath::Counter::track_fp_ib_ref_acquired)),
+           static_cast<unsigned long long>(g_hotPathSampler.counter(hotpath::Counter::track_fp_matched_caster)),
+           static_cast<unsigned long long>(g_hotPathSampler.counter(hotpath::Counter::track_fp_vb_release)),
+           static_cast<unsigned long long>(g_hotPathSampler.counter(hotpath::Counter::track_fp_ib_release)));
     for (unsigned i = 0; i < static_cast<unsigned>(hotpath::Family::count); ++i) {
         const auto family = static_cast<hotpath::Family>(i);
         const auto r = g_hotPathSampler.read(family);
@@ -14497,12 +14507,15 @@ static LONG g_fpCasterWeapon=0;
 void ReleaseFpCasterCache() {
     for(unsigned i=0;i<g_fpCasterCount;++i) {
         ((IDirect3DVertexBuffer9*)g_fpCasterKeys[i].vb)->Release();
+        g_hotPathSampler.count(hotpath::Counter::track_fp_vb_release);
         ((IDirect3DIndexBuffer9*)g_fpCasterKeys[i].ib)->Release();
+        g_hotPathSampler.count(hotpath::Counter::track_fp_ib_release);
     }
     g_fpCasterCount=0;g_fpCasterWeapon=0;
 }
 static bool TrackFpCaster(IDirect3DDevice9* dev,INT baseVertex,UINT minIndex,
                           UINT vertices,UINT startIndex,UINT primitives) {
+    hotpath::scope trackScope(g_hotPathSampler, hotpath::Family::track_fp_caster);
     hotpath::scope hotScope(g_hotPathSampler, (g_boundShaderLayout.shadow ? hotpath::Family::shadow_classification : hotpath::Family::foreground_classification));
     const LONG weapon=Rd(g_weaponObj);
     if(weapon!=g_fpCasterWeapon) {ReleaseFpCasterCache();g_fpCasterWeapon=weapon;}
@@ -14510,19 +14523,33 @@ static bool TrackFpCaster(IDirect3DDevice9* dev,INT baseVertex,UINT minIndex,
     const bool shadow=g_boundShaderLayout.shadow;
     if(!shadow && !(FgMatchWindow() && FgMatchesSignature(vertices)))return false;
     if(shadow && (Rd(g_rtIsScene) || Rd(g_vrShadows) || !g_fpCasterCount))return false;
+    g_hotPathSampler.count(hotpath::Counter::track_fp_candidate);
     IDirect3DVertexBuffer9* vb=nullptr;IDirect3DIndexBuffer9* ib=nullptr;
     UINT offset=0,stride=0;
-    dev->GetStreamSource(0,&vb,&offset,&stride);dev->GetIndices(&ib);
-    if(!vb||!ib){if(vb)vb->Release();if(ib)ib->Release();return false;}
+    g_hotPathSampler.count(hotpath::Counter::track_fp_get_stream_source);
+    dev->GetStreamSource(0,&vb,&offset,&stride);
+    if(vb) g_hotPathSampler.count(hotpath::Counter::track_fp_vb_ref_acquired);
+    g_hotPathSampler.count(hotpath::Counter::track_fp_get_indices);
+    dev->GetIndices(&ib);
+    if(ib) g_hotPathSampler.count(hotpath::Counter::track_fp_ib_ref_acquired);
+    if(!vb||!ib){
+        if(vb){vb->Release();g_hotPathSampler.count(hotpath::Counter::track_fp_vb_release);}
+        if(ib){ib->Release();g_hotPathSampler.count(hotpath::Counter::track_fp_ib_release);}
+        return false;
+    }
     fpshadow::DrawKey key;key.verts=vertices;key.prims=primitives;key.vb=vb;key.ib=ib;
     key.vbOffset=offset;key.stride=stride;key.baseVertex=baseVertex;key.minIndex=minIndex;
     key.startIndex=startIndex;key.layoutShadow=shadow;key.rtIsScene=Rd(g_rtIsScene)!=0;
     const unsigned signature=vertices;
     const bool skip=shadow && fpshadow::IsFpShadowCasterDraw(key,&signature,1,g_fpCasterKeys,g_fpCasterCount);
+    if(skip) g_hotPathSampler.count(hotpath::Counter::track_fp_matched_caster);
     bool known=false;
     for(unsigned i=0;i<g_fpCasterCount;++i)if(fpshadow::SameGeometry(key,g_fpCasterKeys[i])){known=true;break;}
     if(!shadow && !known && g_fpCasterCount<32)g_fpCasterKeys[g_fpCasterCount++]=key;
-    else {vb->Release();ib->Release();}
+    else {
+        vb->Release();g_hotPathSampler.count(hotpath::Counter::track_fp_vb_release);
+        ib->Release();g_hotPathSampler.count(hotpath::Counter::track_fp_ib_release);
+    }
     return skip;
 }
 
