@@ -1,0 +1,65 @@
+{
+  "Action": "Install",
+  "Timestamp": "2026-10-12T19:20:46.1015991+02:00",
+  "GameBin": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries",
+  "BackupPath": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-stereo-shadow-rootcause\\deployment\\install-backups\\20261012-192046",
+  "Pe32": true,
+  "DllOnly": true,
+  "DInput8Pe32": null,
+  "Installed": [
+    {
+      "Source": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-stereo-shadow-rootcause\\spikes\\view_matrix\\d3d9.dll",
+      "Target": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\d3d9.dll",
+      "Sha256": "7A8BA6642D4EC207FB0E5BFD33CE994B5AE26A4A5E618BD6AFB893AA5B7B1CCD"
+    }
+  ],
+  "TextureVariant": "skipped",
+  "TextureCount": 0,
+  "FinalState": [
+    {
+      "Path": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\d3d9.dll",
+      "Exists": true,
+      "Size": 905216,
+      "Sha256": "7A8BA6642D4EC207FB0E5BFD33CE994B5AE26A4A5E618BD6AFB893AA5B7B1CCD",
+      "Pe32": true,
+      "Machine": "0x014C",
+      "OptionalMagic": "0x010B"
+    },
+    {
+      "Path": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\SingularityVR.ini",
+      "Exists": true,
+      "Size": 11936,
+      "Sha256": "61AEC56CF0F961C3D771DE186ADF469E39A978900DE8F8609086A965B4FE378B",
+      "Pe32": null,
+      "Machine": null,
+      "OptionalMagic": null
+    },
+    {
+      "Path": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\dinput8.dll",
+      "Exists": true,
+      "Size": 38400,
+      "Sha256": "AAA07005F4FF658C4A71CC30EA258E469DAF250C77BFE447011FFD650379E4F7",
+      "Pe32": true,
+      "Machine": "0x014C",
+      "OptionalMagic": "0x010B"
+    },
+    {
+      "Path": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\dinput8_orig.dll",
+      "Exists": true,
+      "Size": 176640,
+      "Sha256": "2A746CCF3922AECCED0387F3C6E21E55C6DF786DF8164C482F2A2E6165EDD395",
+      "Pe32": true,
+      "Machine": "0x014C",
+      "OptionalMagic": "0x010B"
+    },
+    {
+      "Path": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture_override.ini",
+      "Exists": true,
+      "Size": 1834,
+      "Sha256": "146140CD8DAB8867CBAA15BD13BC983EE90E30EE73E80A6325E83FE2962E5093",
+      "Pe32": null,
+      "Machine": null,
+      "OptionalMagic": null
+    }
+  ]
+}
