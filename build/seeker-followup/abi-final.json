@@ -1,0 +1,79 @@
+{
+  "native_text_base": "0x402000",
+  "switch_return_offsets": [
+    210,
+    233
+  ],
+  "native_contracts": [
+    {
+      "name": "SwitchWeapon",
+      "va": "0x1047220",
+      "bytes": 447,
+      "fnv64": "BD62E75D7EBD62DB"
+    },
+    {
+      "name": "SelectOwned",
+      "va": "0x102f650",
+      "bytes": 168,
+      "fnv64": "CB797F59504492C3"
+    },
+    {
+      "name": "RocketProjectileFire",
+      "va": "0xe87ba0",
+      "bytes": 26,
+      "fnv64": "5B3CC29BF4ACD7E6"
+    },
+    {
+      "name": "ProjectileFire",
+      "va": "0xe86da0",
+      "bytes": 558,
+      "fnv64": "B4AEC94DBDB7CE21"
+    },
+    {
+      "name": "PhysicalFireStart",
+      "va": "0xe6a1a0",
+      "bytes": 1110,
+      "fnv64": "0A70C4D3EEE25B1C"
+    },
+    {
+      "name": "GetAdjustedAim",
+      "va": "0xe87580",
+      "bytes": 213,
+      "fnv64": "538700ED62A99B3E"
+    },
+    {
+      "name": "SpawnProjectile",
+      "va": "0xe8fcc0",
+      "bytes": 294,
+      "fnv64": "3DC3105D1A3C1A2B"
+    }
+  ],
+  "compiled": {
+    "StartHook@NativeSeekerProjectile": {
+      "va": "0x100bc330",
+      "ret_cleanup": "0x10",
+      "ret_count": 1
+    },
+    "SpawnHook@NativeSeekerProjectile": {
+      "va": "0x100ba750",
+      "ret_cleanup": "0xc",
+      "ret_count": 1
+    },
+    "FireHook@NativeSeekerProjectile": {
+      "va": "0x100500e0",
+      "ret_cleanup": "0",
+      "ret_count": 2
+    },
+    "Heavy@NativeSeekerSlot": {
+      "va": "0x10053870",
+      "ret_cleanup": "0",
+      "ret_count": 2
+    }
+  },
+  "input_sha256": {
+    "Singularity.exe": "bd459acd87d4b82693928dee4ed437c086d5928a8e0428f3ad54b6fc114c0f51",
+    "Singularity.text-memory.bin": "858f2fc33b1c99b3a4a27a817a11205da66414ee1b030a03df821f1ad6a0c78a",
+    "d3d9.dll": "8112fb08142b380c6b8a6421d1522203ce0864017a95a8765a2a7379f303c60f"
+  },
+  "limitation": "Offline native and emitted x86 contracts, not live selection or headset proof"
+}
