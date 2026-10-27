@@ -45,7 +45,9 @@ def test_atlas_rects_and_alpha() -> None:
     manifest = json.loads((KIT / "atlas" / "atlas.json").read_text(encoding="utf-8"))
     assert manifest["width"] == 512 and manifest["height"] == 256
     rects = manifest["rects"]
-    assert len(rects) == 16
+    assert len(rects) == 22
+    weapon_ids = {r["id"] for r in rects if r["y"] == 128}
+    assert "weapon-centurion" in weapon_ids and "wheel-current" in weapon_ids
     for rect in rects:
         assert 0 <= rect["x"] and rect["x"] + rect["w"] <= 512
         assert 0 <= rect["y"] and rect["y"] + rect["h"] <= 256

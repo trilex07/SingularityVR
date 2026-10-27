@@ -1,0 +1,37 @@
+{
+  "schema": "singularityvr-weapon-wheel-icons-v1",
+  "source": "wheel/reference/weapon-wheel-ref.png (user reference crop)",
+  "method": "angular wedge mask + luminance bbox; ammo/text bands excluded",
+  "icons": [
+    {
+      "atlas_icon": "weapon-centurion",
+      "file": "centurion.png",
+      "ref_sector": 0,
+      "note": "Pistol / Centurion"
+    },
+    {
+      "atlas_icon": "weapon-valkyrie",
+      "file": "valkyrie.png",
+      "ref_sector": 1,
+      "note": "Assault rifle"
+    },
+    {
+      "atlas_icon": "weapon-spikeshot",
+      "file": "spikeshot.png",
+      "ref_sector": 5,
+      "note": "Shotgun"
+    },
+    {
+      "atlas_icon": "weapon-kasimov",
+      "file": "kasimov.png",
+      "ref_sector": 4,
+      "note": "Sniper"
+    },
+    {
+      "atlas_icon": "wheel-current",
+      "file": "obecna.png",
+      "ref_sector": 0,
+      "note": "Current (same crop as pistol)"
+    }
+  ]
+}

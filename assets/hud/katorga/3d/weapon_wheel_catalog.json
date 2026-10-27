@@ -1,0 +1,77 @@
+{
+  "schema": "singularityvr-weapon-wheel-catalog-v1",
+  "notes": {
+    "gun_verts": "Latched first-person mesh vertex count (g_gunVerts). MAIN must verify each id in-game.",
+    "cycle_order": "Proposed native CycleWeapon order. Replace after one logged manual cycle through all carried weapons.",
+    "sector_0": "Display only — current weapon. Commit on sector 0 remains Cancel in legacy FSM; direct select should treat release on 0 as no-op.",
+    "atlas_icons": "Sylwetki z katorga-hud-atlas.png rząd y=128 (weapon-* / wheel-*). Oryginalny art moda."
+  },
+  "cycle_order_verified": false,
+  "cycle_order": [5799, 11387, 8297, 11389],
+  "sectors": [
+    {
+      "index": 0,
+      "gun_verts": 0,
+      "class_hint": "",
+      "common_text_key": "",
+      "label_pl": "Obecna",
+      "atlas_icon": "wheel-current"
+    },
+    {
+      "index": 1,
+      "gun_verts": 5799,
+      "class_hint": "ARPistol",
+      "common_text_key": "CommonText.ARPistol",
+      "label_pl": "Centurion",
+      "atlas_icon": "weapon-centurion"
+    },
+    {
+      "index": 2,
+      "gun_verts": 11387,
+      "class_hint": "RvWeaponShared",
+      "common_text_key": "CommonText.ARValkyrie",
+      "label_pl": "AR9 Valkyrie",
+      "atlas_icon": "weapon-valkyrie"
+    },
+    {
+      "index": 3,
+      "gun_verts": 8297,
+      "class_hint": "RvWeaponShared",
+      "common_text_key": "CommonText.Shotgun",
+      "label_pl": "Spikeshot",
+      "atlas_icon": "weapon-spikeshot"
+    },
+    {
+      "index": 4,
+      "gun_verts": 11389,
+      "class_hint": "RvWeaponShared",
+      "common_text_key": "CommonText.Sniper",
+      "label_pl": "Kasimov SNV-E99",
+      "atlas_icon": "weapon-kasimov"
+    },
+    {
+      "index": 5,
+      "gun_verts": 0,
+      "class_hint": "",
+      "common_text_key": "",
+      "label_pl": "",
+      "atlas_icon": "wheel-slot-empty"
+    },
+    {
+      "index": 6,
+      "gun_verts": 0,
+      "class_hint": "",
+      "common_text_key": "",
+      "label_pl": "",
+      "atlas_icon": "wheel-slot-empty"
+    },
+    {
+      "index": 7,
+      "gun_verts": 0,
+      "class_hint": "",
+      "common_text_key": "",
+      "label_pl": "",
+      "atlas_icon": "wheel-slot-empty"
+    }
+  ]
+}

@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" id="weapon-valkyrie">
+<!-- Original Katorga HUD art. MIT, same terms as the repository. Not taken from the game, from Kenney, or from a console mark sheet. No font is embedded. -->
+<title>weapon-valkyrie</title>
+<path d="M6 36 H12 V44 H8 V38 H6 Z" fill="#e6e1d6"/><path d="M12 34 H46 V38 H12 Z" fill="#e6e1d6" stroke="#e6e1d6" stroke-width="1"/><path d="M46 35 H58 V37 H46 Z" fill="none" stroke="#e6e1d6" stroke-width="2.5"/><rect x="28" y="38" width="6" height="10" fill="none" stroke="#5a6f8d" stroke-width="1.5"/><path d="M20 32 H34 V34 H20 Z" fill="none" stroke="#5a6f8d" stroke-width="1.5"/>
+</svg>

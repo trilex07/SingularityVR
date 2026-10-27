@@ -16,8 +16,14 @@ Kolory są z projektu HUD-u: płyta `#101214`, stal `#5a6f8d`, papier `#e6e1d6`,
 - `assets/hud/katorga/atlas/katorga-hud-atlas.svg`, `.png` i `atlas.json`.
 - `assets/hud/katorga/previews/` — jasne i ciemne tło, mały rozmiar, obie ręce, zdania promptów, wersja bez koloru.
 - `assets/hud/katorga/frame/plate-frame.obj` — płaska ramka 64×20×1,6 mm. Nie ma kości ani gniazda na broń albo TMD.
+- `assets/hud/katorga/previews/weapon-wheel.png` — koło broni (atlas rząd 3, nie concept art).
+- `assets/hud/katorga/3d/previews/weapon_wheel_generated.png` — ten sam renderer co wyżej, dla paczki MAIN.
 
-Źródłem odtwarzalnym jest `tools/hud/katorga_kit.py`.
+Źródłem odtwarzalnym jest `tools/hud/katorga_kit.py`. Sylwetki broni w atlasie (`weapon-*`, `wheel-*`) są oryginalnym line-art moda, nie wycinkami z Singularity.
+
+## Koło broni (R3)
+
+Komórki atlasu y=128: `wheel-current`, `weapon-centurion`, `weapon-valkyrie`, `weapon-spikeshot`, `weapon-kasimov`, `wheel-slot-empty`. Mapowanie sektorów: `assets/hud/katorga/3d/weapon_wheel_catalog.json`. Podgląd: `python tools/hud/render_weapon_wheel_preview.py`.
 
 ## Stany
 
@@ -51,7 +57,7 @@ Siedzenie na podłodze: podgląd `hands-floor` stawia płyty w dolnej części k
 
 ## Budżet renderowania
 
-Jedna tekstura atlasu 512×256 RGBA8, 524288 bajtów nieskompresowanych, SHA-256 `5ff19fc5c18d49b7…`. Komórka 64×64, początek w lewym górnym rogu. Prostokąty są w `atlas.json`.
+Jedna tekstura atlasu 512×256 RGBA8, 524288 bajtów nieskompresowanych, SHA-256 `c8287e418147b999…`. Komórka 64×64, początek w lewym górnym rogu. Prostokąty są w `atlas.json`.
 
 Na oko: dwa quady (zdrowie i amunicja). Nazwa broni jest drugą linią quadu amunicji, nie trzecim rysowaniem. Ikona promptu nie jest quadem: zastępuje glif w już rysowanym zdaniu. Jedno mieszanie alfa, bez drugiego przejścia pełnoekranowego, bez cienia i bez poświaty. Puls poniżej 0,5 Hz tylko na kreskach niskiego zdrowia, bez skalowania płyty. Atlas nie przebudowuje się co klatkę. Jedna mipmapa wystarcza, bo płyta jest blisko dłoni.
 

@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" id="wheel-current">
+<!-- Original Katorga HUD art. MIT, same terms as the repository. Not taken from the game, from Kenney, or from a console mark sheet. No font is embedded. -->
+<title>wheel-current</title>
+<path d="M10 34 H18 V46 H14 V38 H10 Z" fill="#e6e1d6"/><path d="M18 33 H40 L42 36 V38 H46 L48 34 H54" fill="none" stroke="#e6e1d6" stroke-width="2" stroke-linejoin="round"/><path d="M48 34 H54 V35" fill="none" stroke="#e6e1d6" stroke-width="2"/>
+</svg>

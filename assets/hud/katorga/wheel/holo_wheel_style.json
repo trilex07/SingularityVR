@@ -1,0 +1,33 @@
+{
+  "schema": "singularityvr-holo-wheel-style-v1",
+  "reference": "Alyx-style radial panels; cyan idle, orange selected",
+  "colors_rgb": {
+    "cyan": [
+      110,
+      205,
+      255
+    ],
+    "orange": [
+      255,
+      158,
+      64
+    ],
+    "background": [
+      0,
+      0,
+      0
+    ]
+  },
+  "layout_normalized": {
+    "r_hub": 0.11,
+    "r_panel_inner": 0.16,
+    "r_panel_outer": 0.44
+  },
+  "hub_label_pl": "WYBIERZ BRO\u0143",
+  "glb_ring_cm": {
+    "r0": 20.16,
+    "r1": 24.84
+  },
+  "note": "Visual panels extend beyond GLB ring; MAIN may scale ring mesh or draw holo wedges in controller space.",
+  "preview_visible_sectors": "Only catalog sectors with label_pl (5); empty slots hidden in PNG. Runtime WeaponWheelSlots may still be 8."
+}

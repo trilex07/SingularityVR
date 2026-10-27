@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" id="weapon-kasimov">
+<!-- Original Katorga HUD art. MIT, same terms as the repository. Not taken from the game, from Kenney, or from a console mark sheet. No font is embedded. -->
+<title>weapon-kasimov</title>
+<path d="M6 37 H14 V43 H6 Z" fill="#e6e1d6"/><path d="M14 35 H58" fill="none" stroke="#e6e1d6" stroke-width="2.5"/><path d="M14 35 H58 V36 H14 Z" fill="none" stroke="#e6e1d6" stroke-width="2"/><rect x="22" y="28" width="16" height="6" fill="none" stroke="#5a6f8d" stroke-width="1.5"/><path d="M50 33 V37" fill="none" stroke="#5a6f8d" stroke-width="1.5"/>
+</svg>

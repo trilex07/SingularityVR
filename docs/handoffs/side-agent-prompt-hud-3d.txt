@@ -1,0 +1,8 @@
+Pracujesz jako agent SIDE w worktree SingularityVR-hud-design, gałąź side/hud-3d-attach-pack (od fix/psvr2-hud-design).
+
+Przeczytaj i wykonaj w całości:
+  docs/handoffs/side-hud-3d-attach-pack.md
+
+Skrót: dostarcz assets/hud/katorga/3d/ — glTF rękawic (noTMD bez ramion), pistolet in-view, płyty HUD, pełne kółko zmiany broni, attach_schema.json, rendery Blender (spokoj/walka/zmiana_broni), ATTACHMENTS.md. Wygląd jak katorga-target-*.jpg i katorga-hud-walka.jpg (glove-only). Źródła PSK/tekstury w handoffie.
+
+Nie dotykaj d3d9, Steam, recovery, dubbingu. Po zakończeniu uzupełnij docs/handoffs/main-hud-3d-attach-pack.md i uruchom: python tools/hud/tests/test_hud_3d_pack.py (musi PASS; pełna paczka gdy jest attach_schema.json).

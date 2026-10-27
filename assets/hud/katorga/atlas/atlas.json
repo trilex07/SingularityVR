@@ -6,7 +6,7 @@
   "origin": "top-left",
   "format": "RGBA8",
   "bytes_rgba": 524288,
-  "png_sha256": "5ff19fc5c18d49b799684ab26945aee81bcd5f07b66729654e0a5c0bb16126b6",
+  "png_sha256": "c8287e418147b99950d8649e52bee39d554fc01f84ec209fd8bc3edd5f6a1f3d",
   "license": "MIT",
   "origin_note": "Original drawings for this mod. Not extracted from Singularity, Kenney, or a platform button sheet.",
   "rects": [
@@ -121,45 +121,51 @@
       "y": 64,
       "w": 64,
       "h": 64
-    }
-  ],
-  "reserved": [
+    },
     {
+      "id": "wheel-current",
       "x": 0,
       "y": 128,
       "w": 64,
       "h": 64
     },
     {
+      "id": "weapon-centurion",
       "x": 64,
       "y": 128,
       "w": 64,
       "h": 64
     },
     {
+      "id": "weapon-valkyrie",
       "x": 128,
       "y": 128,
       "w": 64,
       "h": 64
     },
     {
+      "id": "weapon-spikeshot",
       "x": 192,
       "y": 128,
       "w": 64,
       "h": 64
     },
     {
+      "id": "weapon-kasimov",
       "x": 256,
       "y": 128,
       "w": 64,
       "h": 64
     },
     {
+      "id": "wheel-slot-empty",
       "x": 320,
       "y": 128,
       "w": 64,
       "h": 64
-    },
+    }
+  ],
+  "reserved": [
     {
       "x": 384,
       "y": 128,
@@ -172,6 +178,14 @@
       "w": 64,
       "h": 64
     }
+  ],
+  "weapon_wheel_icons": [
+    "wheel-current",
+    "weapon-centurion",
+    "weapon-valkyrie",
+    "weapon-spikeshot",
+    "weapon-kasimov",
+    "wheel-slot-empty"
   ],
   "tokens": [
     {

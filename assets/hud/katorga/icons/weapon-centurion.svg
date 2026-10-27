@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" id="weapon-centurion">
+<!-- Original Katorga HUD art. MIT, same terms as the repository. Not taken from the game, from Kenney, or from a console mark sheet. No font is embedded. -->
+<title>weapon-centurion</title>
+<path d="M8 34 H16 V48 H12 V38 H8 Z" fill="#e6e1d6"/><path d="M16 32 H38 L40 35 V37 H44 L46 33 H54" fill="none" stroke="#e6e1d6" stroke-width="2.5" stroke-linejoin="round"/><path d="M44 33 H54" fill="none" stroke="#e6e1d6" stroke-width="2.5"/><path d="M22 37 H26 V42 H22 Z" fill="none" stroke="#5a6f8d" stroke-width="1.5"/>
+</svg>

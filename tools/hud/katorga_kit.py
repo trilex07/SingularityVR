@@ -51,6 +51,13 @@ RECTS = [
     ("sense-stick-down", 320, 64),
     ("digit-slot", 384, 64),
     ("name-rule", 448, 64),
+    # Row 3 — koło broni (sylwetki oryginalne, nie z gry)
+    ("wheel-current", 0, 128),
+    ("weapon-centurion", 64, 128),
+    ("weapon-valkyrie", 128, 128),
+    ("weapon-spikeshot", 192, 128),
+    ("weapon-kasimov", 256, 128),
+    ("wheel-slot-empty", 320, 128),
 ]
 
 
@@ -124,6 +131,41 @@ def _icons() -> dict[str, str]:
         "name-rule": (
             f'<path d="M10 40 H54" fill="none" stroke="{STEEL}" stroke-width="2"/>'
             f'<path d="M10 40 H18 M46 40 H54" fill="none" stroke="{PAPER}" stroke-width="2"/>'
+        ),
+        "wheel-current": (
+            f'<path d="M10 34 H18 V46 H14 V38 H10 Z" fill="{PAPER}"/>'
+            f'<path d="M18 33 H40 L42 36 V38 H46 L48 34 H54" fill="none" stroke="{PAPER}" stroke-width="2" stroke-linejoin="round"/>'
+            f'<path d="M48 34 H54 V35" fill="none" stroke="{PAPER}" stroke-width="2"/>'
+        ),
+        "weapon-centurion": (
+            f'<path d="M8 34 H16 V48 H12 V38 H8 Z" fill="{PAPER}"/>'
+            f'<path d="M16 32 H38 L40 35 V37 H44 L46 33 H54" fill="none" stroke="{PAPER}" stroke-width="2.5" stroke-linejoin="round"/>'
+            f'<path d="M44 33 H54" fill="none" stroke="{PAPER}" stroke-width="2.5"/>'
+            f'<path d="M22 37 H26 V42 H22 Z" fill="none" stroke="{STEEL}" stroke-width="1.5"/>'
+        ),
+        "weapon-valkyrie": (
+            f'<path d="M6 36 H12 V44 H8 V38 H6 Z" fill="{PAPER}"/>'
+            f'<path d="M12 34 H46 V38 H12 Z" fill="{PAPER}" stroke="{PAPER}" stroke-width="1"/>'
+            f'<path d="M46 35 H58 V37 H46 Z" fill="none" stroke="{PAPER}" stroke-width="2.5"/>'
+            f'<rect x="28" y="38" width="6" height="10" fill="none" stroke="{STEEL}" stroke-width="1.5"/>'
+            f'<path d="M20 32 H34 V34 H20 Z" fill="none" stroke="{STEEL}" stroke-width="1.5"/>'
+        ),
+        "weapon-spikeshot": (
+            f'<path d="M6 38 H10 V44 H6 Z" fill="{PAPER}"/>'
+            f'<path d="M10 30 H38 V42 H10 Z" fill="none" stroke="{PAPER}" stroke-width="2.5"/>'
+            f'<path d="M38 32 H56 V36 H38 Z" fill="none" stroke="{PAPER}" stroke-width="2.5"/>'
+            f'<path d="M18 42 H32 V46 H18 Z" fill="none" stroke="{STEEL}" stroke-width="1.5"/>'
+        ),
+        "weapon-kasimov": (
+            f'<path d="M6 37 H14 V43 H6 Z" fill="{PAPER}"/>'
+            f'<path d="M14 35 H58" fill="none" stroke="{PAPER}" stroke-width="2.5"/>'
+            f'<path d="M14 35 H58 V36 H14 Z" fill="none" stroke="{PAPER}" stroke-width="2"/>'
+            f'<rect x="22" y="28" width="16" height="6" fill="none" stroke="{STEEL}" stroke-width="1.5"/>'
+            f'<path d="M50 33 V37" fill="none" stroke="{STEEL}" stroke-width="1.5"/>'
+        ),
+        "wheel-slot-empty": (
+            f'<rect x="18" y="18" width="28" height="28" fill="none" stroke="{STEEL}" stroke-width="1.5" stroke-dasharray="4 3"/>'
+            f'<circle cx="32" cy="32" r="3" fill="{STEEL}"/>'
         ),
     }
 
@@ -501,6 +543,39 @@ def _draw_icon_pil(draw, name: str, ox: int, oy: int) -> None:
         line((10, 40), (54, 40), steel, 2)
         line((10, 40), (18, 40), paper, 2)
         line((46, 40), (54, 40), paper, 2)
+    elif name == "wheel-current":
+        draw.rectangle([ox + 10, oy + 34, ox + 18, oy + 46], fill=paper)
+        line((18, 33), (38, 33), paper, 2)
+        line((38, 33), (40, 35), paper, 2)
+        line((40, 35), (46, 33), paper, 2)
+        line((46, 33), (54, 33), paper, 2)
+    elif name == "weapon-centurion":
+        draw.rectangle([ox + 8, oy + 34, ox + 16, oy + 48], fill=paper)
+        line((16, 32), (38, 32), paper, 3)
+        line((38, 32), (40, 35), paper, 3)
+        line((40, 35), (44, 35), paper, 3)
+        line((44, 35), (46, 33), paper, 3)
+        line((46, 33), (54, 33), paper, 3)
+        draw.rectangle([ox + 22, oy + 37, ox + 26, oy + 42], outline=steel, width=2)
+    elif name == "weapon-valkyrie":
+        draw.polygon([(ox + 6, oy + 36), (ox + 12, oy + 36), (ox + 12, oy + 44), (ox + 8, oy + 44), (ox + 6, oy + 38)], fill=paper)
+        draw.rectangle([ox + 12, oy + 34, ox + 46, oy + 38], fill=paper)
+        draw.rectangle([ox + 46, oy + 35, ox + 58, oy + 37], outline=paper, width=2)
+        draw.rectangle([ox + 28, oy + 38, ox + 34, oy + 48], outline=steel, width=2)
+        draw.rectangle([ox + 20, oy + 32, ox + 34, oy + 34], outline=steel, width=2)
+    elif name == "weapon-spikeshot":
+        draw.rectangle([ox + 6, oy + 38, ox + 10, oy + 44], fill=paper)
+        draw.rectangle([ox + 10, oy + 30, ox + 38, oy + 42], outline=paper, width=3)
+        draw.rectangle([ox + 38, oy + 32, ox + 56, oy + 36], outline=paper, width=3)
+        draw.rectangle([ox + 18, oy + 42, ox + 32, oy + 46], outline=steel, width=2)
+    elif name == "weapon-kasimov":
+        draw.rectangle([ox + 6, oy + 37, ox + 14, oy + 43], fill=paper)
+        line((14, 35), (58, 35), paper, 3)
+        draw.rectangle([ox + 22, oy + 28, ox + 38, oy + 34], outline=steel, width=2)
+        line((50, 33), (50, 37), steel, 2)
+    elif name == "wheel-slot-empty":
+        draw.rectangle([ox + 18, oy + 18, ox + 46, oy + 46], outline=steel, width=2)
+        draw.ellipse([ox + 29, oy + 29, ox + 35, oy + 35], fill=steel)
 
 
 def _plate_pil(image, origin, kind: str, mode: str, scale: float, sample: str | None, name: str | None = None, medial: str | None = None) -> None:
@@ -721,8 +796,14 @@ Kolory są z projektu HUD-u: płyta `#101214`, stal `#5a6f8d`, papier `#e6e1d6`,
 - `assets/hud/katorga/atlas/katorga-hud-atlas.svg`, `.png` i `atlas.json`.
 - `assets/hud/katorga/previews/` — jasne i ciemne tło, mały rozmiar, obie ręce, zdania promptów, wersja bez koloru.
 - `assets/hud/katorga/frame/plate-frame.obj` — płaska ramka 64×20×1,6 mm. Nie ma kości ani gniazda na broń albo TMD.
+- `assets/hud/katorga/previews/weapon-wheel.png` — koło broni (atlas rząd 3, nie concept art).
+- `assets/hud/katorga/3d/previews/weapon_wheel_generated.png` — ten sam renderer co wyżej, dla paczki MAIN.
 
-Źródłem odtwarzalnym jest `tools/hud/katorga_kit.py`.
+Źródłem odtwarzalnym jest `tools/hud/katorga_kit.py`. Sylwetki broni w atlasie (`weapon-*`, `wheel-*`) są oryginalnym line-art moda, nie wycinkami z Singularity.
+
+## Koło broni (R3)
+
+Komórki atlasu y=128: `wheel-current`, `weapon-centurion`, `weapon-valkyrie`, `weapon-spikeshot`, `weapon-kasimov`, `wheel-slot-empty`. Mapowanie sektorów: `assets/hud/katorga/3d/weapon_wheel_catalog.json`. Podgląd: `python tools/hud/render_weapon_wheel_preview.py`.
 
 ## Stany
 
@@ -856,7 +937,15 @@ def write_all() -> dict:
             for name, x, y in RECTS
         ],
         "reserved": [
-            {"x": x, "y": 128, "w": CELL, "h": CELL} for x in range(0, ATLAS_W, CELL)
+            {"x": x, "y": 128, "w": CELL, "h": CELL} for x in (384, 448)
+        ],
+        "weapon_wheel_icons": [
+            "wheel-current",
+            "weapon-centurion",
+            "weapon-valkyrie",
+            "weapon-spikeshot",
+            "weapon-kasimov",
+            "wheel-slot-empty",
         ],
         "tokens": _token_table(),
     }

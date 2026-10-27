@@ -1,0 +1,65 @@
+{
+  "schema": "singularityvr-holster-slots-v1",
+  "body_frame": {
+    "id": "body_yaw_hip",
+    "axes": "+X forward, +Y right, +Z up (same as weaponholster::HipPoint / HolsterHipWorld)",
+    "units": "UU",
+    "ini_sync_weapon": {
+      "HolsterFwd": 8,
+      "HolsterRight": 12,
+      "HolsterUp": -30,
+      "HolsterRadius": 12
+    }
+  },
+  "slots": [
+    {
+      "id": "weapon_holster_right",
+      "label_pl": "Kabura broni",
+      "side": "right",
+      "role": "weapon_store",
+      "hip_offset_uu": {
+        "fwd": 8,
+        "right": 12,
+        "up": -30
+      },
+      "activation_radius_uu": 12,
+      "mesh": "hud/holster_weapon_right.glb",
+      "attach_node": "holster_weapon",
+      "runtime": {
+        "enabled_ini": "HolsterEnabled",
+        "toggle": "right_grip_rising_edge_within_radius",
+        "state": "g_weaponHolstered",
+        "hip_fn": "HolsterHipWorld",
+        "notes": "Already in recovery d3d9.cpp; visual follows same hip point as stored weapon pivot."
+      }
+    },
+    {
+      "id": "medkit_pouch_left",
+      "label_pl": "Apteczka",
+      "side": "left",
+      "role": "health_pack_stow",
+      "hip_offset_uu": {
+        "fwd": 8,
+        "right": -12,
+        "up": -30
+      },
+      "activation_radius_uu": 10,
+      "mesh": "hud/holster_medkit_left.glb",
+      "attach_node": "holster_medkit",
+      "atlas_icon": "sense-circle",
+      "runtime": {
+        "enabled_ini": "MedkitHolsterEnabled",
+        "proposed_ini": {
+          "MedkitHolsterEnabled": 0,
+          "MedkitHolsterFwd": 8,
+          "MedkitHolsterRight": -12,
+          "MedkitHolsterUp": -30,
+          "MedkitHolsterRadius": 10
+        },
+        "toggle_proposal": "left_grip_rising_edge_within_radius while carrying health pickup OR stash from inventory",
+        "gameplay_link": "CB_HEALTH / Pickup.TakeHealthPack — MAIN wires after L4 holster visual",
+        "notes": "SIDE defines placement only; no new input path until MAIN implements MedkitHolster*."
+      }
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "schema": "singularityvr-hud-attach-v1",
+  "coordinate": "UE3_cm_right_handed_Z_up",
+  "aim_hand": "right",
+  "bind_reference": {
+    "mesh_gloves": "ch_inview_noTMD.psk",
+    "mesh_pistol": "ch_inview_pistol_mesh.psk",
+    "bone_wrist_right": "r_arm_wrist",
+    "bone_pistol_cog": "cog_pistol",
+    "notes": "Replace offsets after Blender measure from bind pose, not Python preview pose."
+  },
+  "nodes": {
+    "grip": {
+      "parent": "openxr_grip_pose",
+      "offset_pos": [0, 0, 0],
+      "offset_rot_quat": [0, 0, 0, 1],
+      "source": "bind"
+    },
+    "plate_health": {
+      "parent": "left_wrist_proxy",
+      "offset_pos": [0, 0, 0],
+      "offset_rot_quat": [0, 0, 0, 1],
+      "face_camera": true,
+      "source": "art_psvr2"
+    },
+    "plate_ammo": {
+      "parent": "right_grip_proxy",
+      "offset_pos": [0, 0, 0],
+      "offset_rot_quat": [0, 0, 0, 1],
+      "face_camera": true,
+      "source": "art_psvr2"
+    },
+    "weapon_wheel": {
+      "parent": "right_grip_proxy",
+      "offset_pos": [0, 0, 0],
+      "offset_rot_quat": [0, 0, 0, 1],
+      "radius_cm": 18.0,
+      "segments": 10,
+      "selected_label": "CENTURION",
+      "face_camera": true,
+      "source": "art_psvr2"
+    }
+  }
+}

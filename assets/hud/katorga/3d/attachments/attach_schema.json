@@ -1,0 +1,142 @@
+{
+  "schema": "singularityvr-hud-attach-v1",
+  "coordinate": "UE3_cm_right_handed_Z_up",
+  "aim_hand": "right",
+  "body_frame": {
+    "parent": "body_yaw_hip",
+    "axes": "+X forward, +Y right, +Z up",
+    "units": "UU",
+    "holster_slots_file": "holster_slots.json"
+  },
+  "bind_reference": {
+    "mesh_gloves": "ch_inview_noTMD.psk",
+    "mesh_pistol": "ch_inview_pistol_mesh.psk",
+    "bone_wrist_left": "l_arm_wrist",
+    "bone_wrist_right": "r_arm_wrist",
+    "bone_pistol_cog": "cog_pistol",
+    "wrist_left_bind_cm": [
+      -36.3182,
+      95.817,
+      -2.301
+    ],
+    "wrist_right_bind_cm": [
+      36.3182,
+      95.8169,
+      -2.3014
+    ],
+    "cog_pistol_bind_cm": [
+      21.7091,
+      149.2878,
+      46.4098
+    ]
+  },
+  "nodes": {
+    "grip": {
+      "parent": "openxr_grip_pose",
+      "offset_pos": [
+        0,
+        0,
+        0
+      ],
+      "offset_rot_quat": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "source": "bind"
+    },
+    "plate_health": {
+      "parent": "l_arm_wrist",
+      "offset_pos": [
+        0.0,
+        6.5,
+        4.0
+      ],
+      "offset_rot_quat": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "face_camera": true,
+      "source": "art_psvr2"
+    },
+    "plate_ammo": {
+      "parent": "r_arm_wrist",
+      "offset_pos": [
+        -5.0,
+        2.0,
+        5.0
+      ],
+      "offset_rot_quat": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "face_camera": true,
+      "source": "art_psvr2"
+    },
+    "weapon_wheel": {
+      "parent": "r_arm_wrist",
+      "offset_pos": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "offset_rot_quat": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "radius_cm": 18.0,
+      "segments": 8,
+      "catalog_file": "weapon_wheel_catalog.json",
+      "face_camera": true,
+      "source": "art_psvr2"
+    },
+    "holster_weapon": {
+      "parent": "body_yaw_hip",
+      "offset_pos_uu": [
+        8.0,
+        12.0,
+        -30.0
+      ],
+      "offset_rot_quat": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "mesh": "hud/holster_weapon_right.glb",
+      "activation_radius_uu": 12.0,
+      "slot_id": "weapon_holster_right",
+      "source": "runtime_holster_sync"
+    },
+    "holster_medkit": {
+      "parent": "body_yaw_hip",
+      "offset_pos_uu": [
+        8.0,
+        -12.0,
+        -30.0
+      ],
+      "offset_rot_quat": [
+        0.0,
+        0.0,
+        1.0,
+        0.0
+      ],
+      "mesh": "hud/holster_medkit_left.glb",
+      "activation_radius_uu": 10.0,
+      "slot_id": "medkit_pouch_left",
+      "atlas_icon": "sense-circle",
+      "source": "art_psvr2"
+    }
+  },
+  "runtime_paths": {
+    "asset_root_ini_key": "KatorgaHudAssetRoot",
+    "default_relative": "vr-assets/hud/katorga/3d"
+  }
+}
