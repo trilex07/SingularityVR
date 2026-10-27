@@ -1,0 +1,52 @@
+﻿{
+    "preservedAt":  "2026-10-11T18:10:40.2481187+02:00",
+    "source":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries",
+    "destination":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-audit-baseline\\deployment\\preserved-working-install",
+    "note":  "Read-only copy of the working Steam install before the origin/main candidate was deployed. Hashes verified after copy.",
+    "repoIniSha256":  "2A0C3A5D8779067E171C7B30E1BE48FA10ACE0330E95F6C56367236C2DED64CE",
+    "repoIniMatchesInstalled":  false,
+    "files":  [
+                  {
+                      "name":  "d3d9.dll",
+                      "size":  651264,
+                      "lastWriteTime":  "2026-10-11T00:39:51.7208678+02:00",
+                      "sha256":  "590788116C7C173737E285D6D1B9575544AD2517690003ECC24CE378FDD0BDAD"
+                  },
+                  {
+                      "name":  "SingularityVR.ini",
+                      "size":  12775,
+                      "lastWriteTime":  "2026-10-11T00:45:51.9684169+02:00",
+                      "sha256":  "44A3C4DBE089C82D951916F772EB7EA6DB8849256CDA77EB22BA892FF9AEFD20"
+                  },
+                  {
+                      "name":  "dinput8.dll",
+                      "size":  54784,
+                      "lastWriteTime":  "2026-10-08T15:07:18.6248828+02:00",
+                      "sha256":  "939E46948B60CC64A029E17480364A65C09E8FAEAA185DE6A33D15CF45EF21F8"
+                  },
+                  {
+                      "name":  "dinput8_orig.dll",
+                      "size":  176640,
+                      "lastWriteTime":  "2026-06-09T19:56:00.4747314+02:00",
+                      "sha256":  "2A746CCF3922AECCED0387F3C6E21E55C6DF786DF8164C482F2A2E6165EDD395"
+                  },
+                  {
+                      "name":  "texture_override.ini",
+                      "size":  1164,
+                      "lastWriteTime":  "2026-10-08T10:08:53.5229649+02:00",
+                      "sha256":  "2AE24B9C322988B28FDD103362D5D9121C54956009512123D12C0DFA01929D4B"
+                  },
+                  {
+                      "name":  "SingularityVfx.dll",
+                      "size":  10752,
+                      "lastWriteTime":  "2026-10-08T18:47:08.1557456+02:00",
+                      "sha256":  "120E6C7534D2F3B29FE7DBD4D5464CDE179F14BD5A891608793D61A3ABCCF456"
+                  },
+                  {
+                      "name":  "openxr_loader.dll",
+                      "size":  607232,
+                      "lastWriteTime":  "2026-10-06T14:59:48.0344827+02:00",
+                      "sha256":  "98B21D279402E84B95014D4F86259EFA75F3A015A715F71811150122D318C3F7"
+                  }
+              ]
+}

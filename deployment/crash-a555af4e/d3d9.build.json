@@ -1,0 +1,15 @@
+﻿{
+    "builtAt":  "2026-10-11T18:11:00.3923475+02:00",
+    "repository":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-audit-baseline",
+    "branch":  "audit/production-baseline",
+    "commit":  "f74210eb0a4f0ed3b7ddb52181f7448aa5f0ddaa",
+    "workingTreeStatus":  [
+                              "?? deployment/preserved-working-install/"
+                          ],
+    "optimization":  "/O2",
+    "performanceInstrumentation":  false,
+    "architecture":  "x86 PE32",
+    "machine":  "0x014C",
+    "optionalHeaderMagic":  "0x010B",
+    "sha256":  "A555AF4E7736357826CCC826EB6B8BE3F20313F09CFFEC8D465CDC1D510D6E91"
+}
