@@ -1,0 +1,1 @@
+Superseded by menu-latest-only-final-v2-20261021; do not install this intermediate artifact.

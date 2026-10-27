@@ -1,0 +1,15 @@
+{
+  "builtAt": "2026-10-21T19:12:54.2188278+02:00",
+  "repository": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-menu-latest-only",
+  "branch": "codex/menu-latest-only-20261021",
+  "commit": "543c3bdd093f897b62229427d76e78dd9e8fe24a",
+  "workingTreeStatus": [
+    "?? build/"
+  ],
+  "optimization": "/O2",
+  "performanceInstrumentation": false,
+  "architecture": "x86 PE32",
+  "machine": "0x014C",
+  "optionalHeaderMagic": "0x010B",
+  "sha256": "06C6182B2B1938835F91E78DC82FD9A1047F7D4D4131114EE33505F18512FC52"
+}

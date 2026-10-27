@@ -1,0 +1,929 @@
+{
+  "schema": "singularityvr-accepted-profile-v1",
+  "approved": true,
+  "acceptedBy": "User 2026-10-21 requests latest features retained and only menu repaired; MAIN reviewed transition from the exact previously deployed D00D plan; not new physical acceptance",
+  "acceptanceScope": "Transition/restore identity only: derived from approved EF3A profile plus verified prior integration-da690c7-sprint change plan, all installed files and logical INI keys matched independently. Not a claim that D00D or this candidate has physical PSVR2 acceptance. Persistent latest-feature repair requested; preserve frozen assets and calibration. Initial menu-repair candidate FFE1CFFF is a verified task-owned transition only, not physical acceptance; final candidate also gives observed SPIIS class1 frontend ownership. All latest feature settings retained.",
+  "iniPath": "Binaries/SingularityVR.ini",
+  "ini": {
+    "Input/KeepAcquiredWeapons": "1",
+    "Input/WeaponWheelOwnedInventory": "1",
+    "Render/NpcNameScalePct": "60",
+    "Render/CutsceneNativeHands": "1",
+    "Diagnostic/GunAlign2Up": "-13",
+    "Input/ValkyrieAuthoredGrip": "1",
+    "Localization/PolishStoryManifest": "localization/pl/polish_story_voice.jsonl",
+    "Render/ScopeDrawCensus": "0",
+    "Input/TmdPitchTenths": "0",
+    "PSVR2/TriggerRifleFire": "3,7,40",
+    "Render/NativeGloveCuffClosure": "1",
+    "Input/TmdBoneLo1": "-1",
+    "Diagnostic/TmdArmMesh0": "4818",
+    "Render/AdsConstDump": "0",
+    "Input/GunAlign0PitchTenths": "-28",
+    "Localization/PolishVoiceManifest": "localization/pl/polish_voice.jsonl",
+    "Render/GloveLeftShift": "12",
+    "Input/WeaponTraceRigidOrigin": "1",
+    "Diagnostic/GunAlign0Verts": "11387",
+    "Render/XrCaptureOpaqueAlpha": "1",
+    "Render/VfxSmoke": "0",
+    "Input/GunAlign2Up": "-13",
+    "Input/TmdRight": "-9",
+    "Input/HipKnifeIgnoreTMD": "1",
+    "Input/TmdBoneLo2": "-1",
+    "Input/GunAlign1Verts": "8297",
+    "Input/AimMethod": "1",
+    "Localization/PolishUiAudioPath": "audio/polish/ui",
+    "Input/HolsterFwd": "6",
+    "Input/TmdBoneHi1": "-1",
+    "Input/HolsterUp": "-36",
+    "Localization/ShowPolishLabels": "1",
+    "Diagnostic/GunAlign7Verts": "0",
+    "Input/CenturionNativeReloadTap": "1",
+    "Input/TmdArmMode1": "0",
+    "Input/TmdArmTo1": "1000",
+    "Diagnostic/GunAlign6Verts": "0",
+    "Input/TmdArmMesh1": "0",
+    "Input/TmdArmTo0": "1000",
+    "Input/CenturionCylinderAnimation": "1",
+    "Render/HandThumbPoseFix": "1",
+    "Localization/UiNarratorEnabled": "0",
+    "Render/PropDumpPawn": "0",
+    "Diagnostic/GunAlign2Fwd": "30",
+    "Diagnostic/GunAlign0PitchTenths": "-28",
+    "Input/GunAlign2Verts": "5799",
+    "Input/HipKnifeLeftCm": "20",
+    "Diagnostic/GunAlign1Fwd": "30",
+    "Input/GunAlign3YawTenths": "43",
+    "Render/CutsceneFlatMode": "1",
+    "Input/HolsterDrawRadius": "32",
+    "Render/ShadowTest": "0",
+    "Upscaling/RenderScale": "1.00",
+    "Input/TriggerTouchGateGraceFrames": "120",
+    "Render/GloveNativeEnabled": "1",
+    "Diagnostic/GunAlign1YawTenths": "30",
+    "Input/GunAlign7Verts": "0",
+    "Diagnostic/GunAlign1Up": "-13",
+    "Render/HideMuzzleFx": "0",
+    "Input/CenturionCylinderGestures": "1",
+    "Input/CenturionPhysicalPolish": "1",
+    "Input/GunAlign1YawTenths": "30",
+    "Input/GunAlign5Verts": "0",
+    "Diagnostic/TmdBoneHi0": "29",
+    "Input/HolsterTrimUpCm": "0",
+    "Render/ShadowFirstPersonReceiverFix": "1",
+    "Render/AdsMaskLo": "5",
+    "Input/TmdHideVerts": "0",
+    "Render/VrSettingsMinimal": "1",
+    "Upscaling/Mode": "Off",
+    "Input/GunAlign0Up": "-13",
+    "Localization/PolishTextManifest": "localization/pl/polish_text.jsonl",
+    "Diagnostic/GunAlign3Up": "-13",
+    "Render/PauseMenuDiag": "0",
+    "Render/VrTranslationStabilization": "0",
+    "Diagnostic/NativeMuzzleProbe": "0",
+    "Render/StartupLoadingMinMs": "3000",
+    "Diagnostic/IndependentHandsAudit": "0",
+    "Diagnostic/AmmoProbe": "0",
+    "Diagnostic/GunAlign2PitchTenths": "0",
+    "Input/HipKnifeEnabled": "1",
+    "Input/TmdArmMode3": "0",
+    "Localization/NativePolishSpeech": "1",
+    "Input/CutsceneLockCamera": "0",
+    "Diagnostic/GunAnchorRight": "9",
+    "Render/GloveStumpScale": "20",
+    "Input/GunAlign2Right": "9",
+    "Input/GunAlign0Right": "8",
+    "Upscaling/Sharpness": "0.20",
+    "Diagnostic/GunSignPitch": "1",
+    "Diagnostic/GunAlign3Right": "13",
+    "Diagnostic/GunSignYaw": "1",
+    "Input/LeftHanded": "0",
+    "Render/UiElementDump": "0",
+    "Input/TmdArmMesh0": "0",
+    "Render/SteamCaptureBackbuffer": "0",
+    "Input/RecenterChord": "1",
+    "Input/CenturionRefillOnly": "1",
+    "Diagnostic/AdsPullbackUU": "10",
+    "Render/LaserSight": "1",
+    "Render/DesktopMirrorEye": "2",
+    "Input/ValkyrieManualReload": "1",
+    "Diagnostic/GunAlign3Verts": "11389",
+    "Render/Debug": "0",
+    "PSVR2/TriggerShotgun": "2,4,7",
+    "Input/TmdBoneHi0": "-1",
+    "Input/InputEnumerationCache": "1",
+    "Input/ReloadHints": "0",
+    "Input/GunAlign4Verts": "0",
+    "Input/WalkDirection": "0",
+    "Render/AdsMaskAnim": "1",
+    "Render/HudArmSticky": "0",
+    "PSVR2/TriggerSniper": "2,5,6",
+    "Render/CutsceneMenuHandoffFix": "1",
+    "Input/TmdOnOffHand": "1",
+    "Render/VfxMuzzleOrigin": "1",
+    "Input/GunAlign2PitchTenths": "0",
+    "Render/WeaponFxRideGun": "1",
+    "Render/MenuWorldScreen": "0",
+    "Diagnostic/TmdFwd": "40",
+    "Input/TmdArmTo3": "1000",
+    "Render/KnifeHandGripEnabled": "1",
+    "Input/HolsterRadius": "9",
+    "Input/HipKnifeDownCm": "55",
+    "Diagnostic/DesktopAutomation": "0",
+    "Render/VfxMuzzleOffsetMm": "150",
+    "Render/NativeMuzzleParticleStereo": "1",
+    "Input/CenturionTrackedCylinder": "1",
+    "Input/TmdBoneMesh3": "0",
+    "Diagnostic/GunAlign0Right": "8",
+    "Input/TmdArmMode0": "0",
+    "Input/TmdBoneHi3": "-1",
+    "Input/ValkyrieSingleGrip": "1",
+    "Input/AimModeParts": "3",
+    "Input/VolkManualReload": "1",
+    "Input/VolkAuthoredGrip": "1",
+    "Render/VfxScreenFlash": "0",
+    "Diagnostic/TmdBoneMesh1": "4818",
+    "Diagnostic/NativeMuzzlePSHash": "2FEC493CD52D7D78",
+    "Render/VfxHost": "0",
+    "Render/KatorgaHudEnabled": "1",
+    "Input/KasimovManualReload": "1",
+    "Render/KnifeTrackedMelee": "1",
+    "Render/VfxLook": "0",
+    "Input/CenturionVisualFollowup": "1",
+    "Render/ShowControllerArms": "0",
+    "Input/StartupPrewarm": "1",
+    "Input/TurnSign": "1",
+    "Input/TmdArmTo2": "1000",
+    "Input/TmdArmFrom0": "0",
+    "Input/TmdArmMesh2": "0",
+    "Diagnostic/NativeMuzzleStereoMode": "1",
+    "Render/MenuInsetPct": "100",
+    "Render/AutoResX": "6488",
+    "Input/GunAlign3Up": "-13",
+    "Input/CenturionClipPreview": "1",
+    "Localization/LocalizationDebug": "0",
+    "Render/GloveIsolate": "2",
+    "Input/WeaponWheelDirectSelect": "1",
+    "Input/ReloadNativeMagazine": "1",
+    "Render/StartInVr": "1",
+    "Render/MenuOverlay": "1",
+    "Render/FrontMenuScalePct": "80",
+    "Render/DesktopMirrorFill": "1",
+    "Input/TmdBoneMesh2": "0",
+    "Diagnostic/GunFollowsHeadOffset": "1",
+    "Input/GunAlign6Verts": "0",
+    "Render/StartupLoadingGate": "1",
+    "Input/ReloadShoulderDownCm": "12",
+    "Localization/PolishLanguage": "1",
+    "Render/HideCrosshair": "1",
+    "Input/TmdBoneHi2": "-1",
+    "Diagnostic/GunAlign1PitchTenths": "0",
+    "Input/GunAlign1Right": "10",
+    "Diagnostic/TmdBoneLo1": "7",
+    "Diagnostic/NativeMuzzlePSBytes": "336",
+    "Input/GunAlign0Fwd": "26",
+    "Input/HolsterTrimFwdCm": "0",
+    "Diagnostic/MenuAssetWitness": "0",
+    "Render/CineMenuLoadClear": "1",
+    "Diagnostic/TmdUp": "-14",
+    "Render/IndependentHandsPrototype": "1",
+    "Input/TmdArmStep": "50",
+    "Diagnostic/GunAnchorFwd": "30",
+    "Diagnostic/GunSignRoll": "1",
+    "Input/GunAlign3Verts": "11389",
+    "Render/CutsceneMenuPairFix": "0",
+    "Input/TmdArmFrom3": "0",
+    "Input/ReloadShoulderLeftCm": "-22",
+    "Diagnostic/GunSignPosZ": "-1",
+    "Render/DropExtraTarget": "0",
+    "Render/VrMenuDistanceMm": "950",
+    "Render/CutsceneScreenDistanceMm": "2000",
+    "Diagnostic/GunAnchorUp": "-13",
+    "Input/CenturionManualReload": "1",
+    "Render/ArmIKMode": "0",
+    "Render/DesktopMirrorWindow": "1",
+    "Diagnostic/GunAlign2Right": "9",
+    "Render/DropPrimCount": "0",
+    "Input/HolsterTrimRightCm": "0",
+    "Diagnostic/VrSettingsSessionOnly": "1",
+    "Render/NoTmdPaletteFix": "1",
+    "Render/GloveFaceFilter": "0",
+    "Diagnostic/DesktopCapture": "0",
+    "Render/ShadowWorldReceiverFix": "1",
+    "Input/GunAlign0Verts": "11387",
+    "Input/TurnMode": "2",
+    "Input/ReloadPalmGrip": "1",
+    "Input/ReloadSocketRadiusCm": "16",
+    "Render/VrShadows": "1",
+    "Render/AutoResY": "3308",
+    "Diagnostic/GunSignCombo": "2",
+    "Input/CutsceneStickTurn": "2",
+    "Input/HipKnifeRadiusCm": "18",
+    "Render/FrontMenuCleanBackdrop": "1",
+    "Input/GunAlign1PitchTenths": "0",
+    "Diagnostic/GunAlign3PitchTenths": "0",
+    "Diagnostic/NativeMuzzleVSBytes": "2908",
+    "Render/NoteInsetPct": "40",
+    "Render/KnifeSceneLighting": "1",
+    "Diagnostic/NativeMuzzleVSHash": "4FAEF2389750DBFC",
+    "Input/GunAlign3Right": "13",
+    "Input/TmdBoneMode": "0",
+    "Diagnostic/TmdRight": "-9",
+    "Render/AdsFreezeHi": "-1",
+    "Localization/PolishStoryAudioPath": "audio/polish/story",
+    "Render/CutsceneWorldScreen": "1",
+    "Input/TmdYawTenths": "0",
+    "Diagnostic/GunAlign0YawTenths": "30",
+    "Diagnostic/GunAlign2Verts": "5799",
+    "Input/SwapSticks": "0",
+    "Localization/PolishFallbackToEnglish": "1",
+    "Diagnostic/GunAlign2YawTenths": "10",
+    "Render/NoTmdWristAnchorFix": "1",
+    "Input/TmdArmFrom1": "0",
+    "Diagnostic/TmdArmFrom0": "36",
+    "Diagnostic/GunAlign5Verts": "0",
+    "Render/AdsMaskHi": "22",
+    "Input/GunAlign2YawTenths": "10",
+    "Render/ScopeQuadDump": "0",
+    "Input/GunAlign3Fwd": "30",
+    "Diagnostic/TmdBoneLo0": "13",
+    "Diagnostic/GunAlign3YawTenths": "43",
+    "Render/ShadowForegroundClearFix": "1",
+    "Render/FrontMenuDistanceMm": "1800",
+    "Diagnostic/GunAlign0Up": "-13",
+    "Input/GunAlign0YawTenths": "30",
+    "Input/TmdBoneLo3": "-1",
+    "Input/TmdArmFrom2": "0",
+    "Render/OcclusionQueryMode": "2",
+    "Input/WeaponWheelObservedSelection": "1",
+    "Input/TmdBoneLo0": "-1",
+    "Diagnostic/GunAlign1Verts": "8297",
+    "Diagnostic/TmdArmTo0": "90",
+    "Render/WorldScalePct": "80",
+    "Input/GunAlign2Fwd": "30",
+    "Input/CenturionReloadMarkers": "0",
+    "Render/GloveRendererEnabled": "1",
+    "Diagnostic/GunAlign1Right": "10",
+    "Diagnostic/GunAlign0Fwd": "26",
+    "Input/ReloadRefillOnly": "1",
+    "Input/TurnSpeed": "120",
+    "Input/TmdUp": "-13",
+    "Input/TmdBoneMesh1": "0",
+    "Input/GunScalePct": "75",
+    "Input/GunAlign3PitchTenths": "0",
+    "Input/CenturionNativeReloadGuard": "2",
+    "Render/VrPromptTokens": "1",
+    "Input/TmdFwd": "30",
+    "Input/TmdBoneMesh0": "0",
+    "Render/HolsterMarkerStyle": "1",
+    "Render/ExtraCamReg": "-1",
+    "Input/HolsterRight": "14",
+    "Input/GunAlign1Fwd": "30",
+    "PSVR2/TriggerPistol": "1,5,8",
+    "PSVR2/TriggerRifle": "3,5,5",
+    "PSVR2/AdaptiveTriggers": "1",
+    "Diagnostic/TmdBoneHi1": "8",
+    "Input/TmdArmMesh3": "0",
+    "Render/AmmoPlateEnabled": "1",
+    "Render/AdsFreezeLo": "-1",
+    "Diagnostic/TmdBoneMesh0": "0",
+    "Input/CenturionReloadProbe": "1",
+    "Render/ShadowMode": "3",
+    "Render/AdsMaskTailMs": "400",
+    "Diagnostic/GunFollowPosition": "1",
+    "Localization/PolishAudioFallback": "1",
+    "Input/CenturionShellEjection": "1",
+    "Input/TmdArmMode2": "0",
+    "Render/VideoStereo": "0",
+    "Render/VrCameraShakeSuppression": "1",
+    "Input/ReloadControlLayout": "1",
+    "Input/TurnAngle": "30",
+    "Input/WeaponWheelRound": "1",
+    "Diagnostic/ForceDesktopVr": "0",
+    "Diagnostic/TmdArmMode0": "1",
+    "Input/GunAlign1Up": "-13",
+    "Upscaling/OutputScale": "1.00",
+    "Render/HealthPlateEnabled": "1",
+    "Render/TextureBridgeOwned": "1",
+    "Render/CutsceneCinemaMask": "1",
+    "Input/TmdRollTenths": "0",
+    "Input/HipKnifeGrabWindowMs": "800",
+    "Input/ReloadShoulderBackCm": "18",
+    "Diagnostic/GunAlign3Fwd": "30",
+    "Diagnostic/GunAlign4Verts": "0",
+    "Input/KasimovAuthoredGrip": "1",
+    "Input/SniperNearEyeScope": "1",
+    "Diagnostic/NativeMuzzleProbeGunVerts": "11387",
+    "Render/SniperPictureInPicture": "1",
+    "Diagnostic/NativeRifleMuzzleOrigin": "3",
+    "Diagnostic/NativeRifleTracerOrigin": "1",
+    "Input/WeaponSteady": "1",
+    "Render/ScopeOpticalCalibration": "1",
+    "Input/SniperOpticalSlowTime": "1",
+    "Input/WeaponMeasuredAim": "1",
+    "Render/ScopeMeasuredPose": "1",
+    "Input/SniperOpticalAccuracy": "1",
+    "Input/WeaponSteadyPrecision": "2",
+    "Gameplay/GoreDismemberment": "1",
+    "Gameplay/GoreChancePct": "100",
+    "Input/WeaponNativeAxis": "1",
+    "Render/CinematicHandsOwnership": "1",
+    "Render/CinematicEventBridge": "0",
+    "Render/NativeCinematicState": "1",
+    "Render/NativeRestraintHands": "1",
+    "Render/ScriptedCameraFlat": "1",
+    "Render/StationMenuScalePct": "50",
+    "Render/StationMenuDistanceMm": "1400"
+  },
+  "ignoredIniKeys": [
+    "Render/AutoResX",
+    "Render/AutoResY"
+  ],
+  "files": [
+    {
+      "path": "Binaries/d3d9.dll",
+      "sha256": "FFE1CFFFAD8EA951182DAA3A4393FDEB24F41814E4F35A52BF25320D529D732F"
+    },
+    {
+      "path": "Binaries/dinput8_orig.dll",
+      "sha256": "2A746CCF3922AECCED0387F3C6E21E55C6DF786DF8164C482F2A2E6165EDD395"
+    },
+    {
+      "path": "Binaries/dinput8.dll",
+      "sha256": "5B948DDBDE07F16AE779C274CEBA133F7F24A218ABD9FFF2D4133FCADF729D59"
+    },
+    {
+      "path": "Binaries/texture_override.ini",
+      "sha256": "85D4FC00A616D1C191AE802E3FA47E9455BD595C251574BF79E34A14D34F4A56"
+    },
+    {
+      "path": "Binaries/texture-override-remaster/revert_d2.dds",
+      "sha256": "FBD534954FAC8DC07D2419842D90E7538A9015FD91AAE3727989B7573D367325"
+    },
+    {
+      "path": "Binaries/texture-override-remaster/revert_n2.dds",
+      "sha256": "4672D1F1E335E257C579410720E92FD280055EF8110E56F49EAA4D4A10C0D0E7"
+    },
+    {
+      "path": "Binaries/vr-assets/audio/polish/story/0428ed980cc42392.wav",
+      "sha256": "FFBA99B4464EFA561787F00DF40D8C7EABDDE7BBF62CBD2E8FBE241ADFAAE727"
+    },
+    {
+      "path": "Binaries/vr-assets/hud/katorga/glove-animation/hand_thumb.svnt",
+      "sha256": "E841FF6F5F482D6D687F0461EDBC7E2DD4F0F45703911FD8F39D1DA78F304A3F"
+    },
+    {
+      "path": "Binaries/vr-assets/hud/katorga/glove-animation/native_cuffs.svnc",
+      "sha256": "1C9E5F618B8C3688A619BC866F47F2C7F853CEBCA7C6F8DDA425C3F13942259B"
+    },
+    {
+      "path": "Binaries/vr-assets/hud/katorga/glove-animation/native_hands.svni",
+      "sha256": "B4564A69AF904DDE7BE9077EBBC96677D93B42E104DEDD93F94B6BF8ACE46C04"
+    },
+    {
+      "path": "Binaries/vr-assets/knife/knife_hand.svng",
+      "sha256": "891D8243843A72FBD2F0180CB1703DB33ACF1995C820FE2B538070173C974E9C"
+    },
+    {
+      "path": "Binaries/vr-assets/knife/knife_normal.svrt",
+      "sha256": "B711D8EC97744080F7A742782F8867043F5D19E6A4D02BBAD535309E1B9C99C1"
+    },
+    {
+      "path": "Binaries/vr-assets/knife/knife_specular.svrt",
+      "sha256": "BDC06EB79C91CC18FC8D9272A817C47E82380E33766588C0D46DAECE05822802"
+    },
+    {
+      "path": "Binaries/vr-assets/knife/knife.svnl",
+      "sha256": "DD2EDF6C661C6F03D71AAD57C68D5FA20A53774086180E38404642A01BE898D6"
+    },
+    {
+      "path": "Binaries/vr-assets/knife/knife.svrk",
+      "sha256": "1FDA9130A3DA3A2CBCCE3F1EC5F9CE45C0C7DD0948E5A46B8D2FD6126EF0F0AC"
+    },
+    {
+      "path": "Binaries/vr-assets/knife/knife.svrt",
+      "sha256": "D4686DE723CD4550C6387D274A08A3C88AFFB8C6B3F039165F6E6BCAAA4494F2"
+    },
+    {
+      "path": "Binaries/vr-assets/localization/pl/polish_story_voice.jsonl",
+      "sha256": "579C82AE3C97DA76A5829E8E019FBEBBDD0454C99E0435C4B592E5159D8AF5BF"
+    },
+    {
+      "path": "Binaries/vr-assets/localization/pl/polish_text.jsonl",
+      "sha256": "7C3875BC35422896979EF3AEE97A024D92373CB54FBEEB1F9D1D20D4270D2F40"
+    },
+    {
+      "path": "Binaries/vr-assets/localization/pl/polish_voice.jsonl",
+      "sha256": "0D632BF4D02440B9F577F3ECF60E0416096D4AC4D4C49D68980FD693E03D68F2"
+    },
+    {
+      "path": "Binaries/vr-assets/reload/kasimov/kasimov_clip.svrk",
+      "sha256": "B9387A88E9BB50D898EF28A1FFBA1C9E4E59E474CA92F90120F252CF931191D1"
+    },
+    {
+      "path": "Binaries/vr-assets/reload/kasimov/kasimov_clip.svrt",
+      "sha256": "99A9935447D0ECDF47E2A6211F4405CB445F8E768901A522D21F11D04918EF50"
+    },
+    {
+      "path": "Binaries/vr-assets/reload/kasimov/kasimov_reload.svwa",
+      "sha256": "112CEABEFE13A203094847DCB4FDD441EDAAD774F0BEF28EB6091B09E065E47F"
+    },
+    {
+      "path": "Binaries/vr-assets/reload/valkyrie/valkyrie_clip.svrk",
+      "sha256": "C6420D9A1C96E09C73C23EC4FB86CB45F4F91C51FD37533F6B365DEA2D5756D0"
+    },
+    {
+      "path": "Binaries/vr-assets/reload/valkyrie/valkyrie_clip.svrt",
+      "sha256": "248760B3A25DD51B02B0BC132DFF711315B44144BEA6A9D07629A0B5BD321155"
+    },
+    {
+      "path": "Binaries/vr-assets/reload/valkyrie/valkyrie_reload.svwa",
+      "sha256": "97DE1B7B37C733DCB35A8B15EA5AE6FF778A1FB1917305ACF70322C32C30E9DD"
+    },
+    {
+      "path": "Binaries/vr-assets/reload/volk/volk_clip.svrk",
+      "sha256": "9029FDA62D9179CDDC9D2DDA8C16F882FE69D03C43D2C016BE797FF854EBDAE6"
+    },
+    {
+      "path": "Binaries/vr-assets/reload/volk/volk_clip.svrt",
+      "sha256": "87C6418A4D491A19BF00FBA2053194EA78D2AFCE3ECB768A8AAB8063D8211708"
+    },
+    {
+      "path": "Binaries/vr-assets/reload/volk/volk_reload.svwa",
+      "sha256": "CDB998651DEA731CC552CB9C59836C0804A9678FCE2F20C18DAF792551D4D750"
+    },
+    {
+      "path": "RvGame/CookedPC/RvGame.xxx",
+      "sha256": "4153C4889C90635069ED226D918CDB76BE618F46B1BAEA152AC10CFFDF59E9EF"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_bt_a_zone01_LOC_INT.xxx",
+      "sha256": "28AA75DC8171EDFD4066983097E6232930CB5ED541BFC6C6EC419F85E9E1DF11"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_freight_s_captain_LOC_INT.xxx",
+      "sha256": "C8235EC5B1CE78AF4B1C9F604A2651BA78961D44489F71482A79F281FDA4F9BA"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_freight_s_streamdock_LOC_INT.xxx",
+      "sha256": "F5907A3B135CA67586A1940B580229A23CD03598AE1AE7276089B7CC286AE4DB"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_freight_script_1950dock_LOC_INT.xxx",
+      "sha256": "F1C16480E4980F447C3FF37B8F3C742CE6C5F008B5A7D3D8ECB580D10709D1DA"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_freight_script_bridge2_LOC_INT.xxx",
+      "sha256": "63D204A7E4C01D367C42F506E0414EC062FBAF59187CC9054B8A53A1EA72CE4E"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_freight_script_cargo1_LOC_INT.xxx",
+      "sha256": "D241D7AC4226D7BE3AA9E44E9CD9C80E1219225D8177CF0B87C634EDB4503679"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_freight_script_cargo1b_LOC_INT.xxx",
+      "sha256": "2B8B8B0801D5096CC296CC1189F4D76E8A6918B217B03754FAC5C6778A8ECCC1"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_freight_script_cargo2_LOC_INT.xxx",
+      "sha256": "DDA76ADE373E30DFC562E33503CE2F648BAF3326EF144BF17F84CABDA381C17C"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_freight_script_cin_bink_LOC_INT.xxx",
+      "sha256": "5FE39779AFFB09173640532008517445786E447A19962F0B464A5A94A0661219"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_freight_script_deck1_LOC_INT.xxx",
+      "sha256": "F77CCF2FB89FFD3C6828AE486E2D1000659F58699BC1DA0459F99726B0518A26"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_freight_script_dock_subroom_LOC_INT.xxx",
+      "sha256": "4B90557438446982E737FD2A77C3D476DBF638B2C8D26D634DC17E9C6DFBF79E"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_freight_script_end_LOC_INT.xxx",
+      "sha256": "D0395326A1EA529FCE19153A84B6FEC90625B999349BA8C41B7787C3927ACA38"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_freight_script_streambridge_LOC_INT.xxx",
+      "sha256": "1548DE0F09E0419EB1133A3D029B01CCF32AB82E9C5C9188E52A0592B3528D10"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_freight_script_streamcargo2_LOC_INT.xxx",
+      "sha256": "F3B425FB16858EE98DC6A9C61EBC7EE27608448FAD2A98690F729AAD6589D185"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_freight_script_train_intro_LOC_INT.xxx",
+      "sha256": "7DC0885AC5FC50239FE9A630324786E6291411E9F6945912E29875E9635D26B4"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_rl1_kismet01_LOC_INT.xxx",
+      "sha256": "7B011887B631FC88977D0671A35A3F327614CBC2446947F4FDC4C55BDD1DA0CF"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_rl1_kismet02_LOC_INT.xxx",
+      "sha256": "24CE277DB1D9BFD81C484DA07F2F30D45B22DAEFD625707A2E8FDB8E159B67C7"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_rl1_kismet03_LOC_INT.xxx",
+      "sha256": "41C0E6BD894AD9CF8A1366EC6486A884852142B7F550E445F23CA3545D1138A9"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_rl2_kismet_riftlab_LOC_INT.xxx",
+      "sha256": "9F81A9DBAFB5E53C54EA1C89B7FB19D66ECBD3772D06D322D6CC7EEC1031CA13"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_rl2_kismet01_LOC_INT.xxx",
+      "sha256": "E51B03190F5143A2C0EBF359F74A947EC820B220C6D6EF63DF41492186AE9301"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_rl2_kismet02_1950_LOC_INT.xxx",
+      "sha256": "A0CA5667163C87A6BF9C595808A064FC4A9030410C0159F674D267E15115D0A5"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_rl2_kismet02_LOC_INT.xxx",
+      "sha256": "34229AE81D35065A5C447ACFAC94512C85612CC7871A2F55BB7A7A4F1A4E42EC"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_rl2_kismet03_LOC_INT.xxx",
+      "sha256": "2D53F26615373441C3311EC3AABCEA4E2E08565AA559ADD807ECFD926278AD1E"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_rl2_kismet04_LOC_INT.xxx",
+      "sha256": "F8506546FD0A863D7765662DEEA8DA1A4004B2BD4DC09D0491FEE67020793340"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_rl2_kismet05_1950_LOC_INT.xxx",
+      "sha256": "31FBABA6011334CF914E4BDD5DFB0CD7BD16259B8A32FF5D4F48FE06F5B2B041"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_rl2_secret_door_LOC_INT.xxx",
+      "sha256": "AC9BC4CE952AC92EE130436899A18A2EE50DD948FCC26E16A85E0F2779D0E5A3"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_rl3_kismet01_1950_LOC_INT.xxx",
+      "sha256": "C5A51A63303D38F6F2C59AF9A283D50C406B80445AD12564E9FF8670712FC3F6"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_rl3_kismet03_LOC_INT.xxx",
+      "sha256": "DFCE5800568C10CDE2835E145C4657209D22BDCAB28D799C2ECFEEDB4DFF7761"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_rl4_kismet01_LOC_INT.xxx",
+      "sha256": "88202D200EA079E3A7C2C3711DFB1E14A70F305B37CCB62D1E7E9DE3C7DF010B"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_rl4_kismet03_LOC_INT.xxx",
+      "sha256": "D477CA8DC24065F5C24D1DB73BC90EB9C1AB82DAC2A3B0C7CD50A896361CE5BF"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_rl5_audio01_LOC_INT.xxx",
+      "sha256": "B04E39673F8F3ED26383613FBF6F34E4AFE5455EEB768EE07124F1CDF54E7DBC"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_rl5_kismet01_LOC_INT.xxx",
+      "sha256": "5BA720B68F5DEB8C178C4758431B0C967B689C9530664CD7599DF53EC6C21B25"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_rl5_kismet02_LOC_INT.xxx",
+      "sha256": "7F52E48876C3C7AF1A4F8E51BAD338288B35E2DB3B28492FDA68AAC81C278A64"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_rl5_kismet03_LOC_INT.xxx",
+      "sha256": "0981C128974010C21D8C78767FFD65B4CCA4E619445496B3DE3932FCF7C02614"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_rl6_katya_LOC_INT.xxx",
+      "sha256": "A69743BF88C83314ED2EDBA642457214C2125A98EB78435803C816A3777AED6C"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_rl6_kismet01_LOC_INT.xxx",
+      "sha256": "9027728121B644557CC1C19281F0DBF4E518837B9CEBEB1CA2619A3DE2F35373"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_rl6_kismet02_LOC_INT.xxx",
+      "sha256": "21D9C912AF5BFA82CC9AE4BB0806072F579C454343C0B843CD9A420AE37F440B"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_rt1_intro_LOC_INT.xxx",
+      "sha256": "547BC3852B6159E6C0B7A2BB28110714D096DE3EC7F7A5CB93861C2FAB937691"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_rt1_kismet_LOC_INT.xxx",
+      "sha256": "E75A7B91C63012B076FBCAEEE9FE81639BE3943734B70D5B217D316DAEFB8F26"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_rt1_kismet0_LOC_INT.xxx",
+      "sha256": "4F25BB4D5B06C7294F0E664D744C2FBDF7FD51ABCF8B10CF34BA55582333E372"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_rt1_zone0_bt_LOC_INT.xxx",
+      "sha256": "17C9B8FAFCA61A548F0422EE2B081221317FB7AF89A3720EB04B450AEA2D0BF9"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_rt2_kismet01_LOC_INT.xxx",
+      "sha256": "0FFCAC161A08C9CDAE44FF954CE671E9A1BC6E71352B25F5E77AC265EE17F18E"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_rt2_kismet02_LOC_INT.xxx",
+      "sha256": "750EA10769D96DDBE9DCE73C6906818C9395DA4E4B47AA17137A302E5BE46A56"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_rt2_zone03_LOC_INT.xxx",
+      "sha256": "BBEC55EC7D32D0C6510DED3F0BA3BD546E26CCF43C49B461EC570D19A6DC7A1A"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_rt3_cistern_LOC_INT.xxx",
+      "sha256": "3912D3E03AF5BC8C0CAD45FB85066431653BA6AA513390123BB0229CEF6E6F78"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_rt3_katya_LOC_INT.xxx",
+      "sha256": "D7CF9EB7776EB5F1310E8ED2CA766093C524F01CF5482D4A4F09059841B0BC85"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_rt3_kismet01_LOC_INT.xxx",
+      "sha256": "FC52A8C868C54DDF05C79D0EFA91614987C6DDDCE7AB0A97987C418E5B8B9FFB"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_rt3_vignette_LOC_INT.xxx",
+      "sha256": "CC547BCB1044BA8CD70532AB3BC87A1A693934AB66A6B42A29862EAEEBBBB59F"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_rt3_zone02_LOC_INT.xxx",
+      "sha256": "FA90BEAADC62161460D1BDB2B82180DA8ED2037F34CE76B88EFB0D38EA494EA3"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_rt3_zone04_LOC_INT.xxx",
+      "sha256": "53135574168AC494ABAC9AD01A18F4E25299E7CCAA618811BF1DAA56EB898F6B"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_rt3_zone08_LOC_INT.xxx",
+      "sha256": "27CD7D44F1382F46833AC351669F3FA869C8E6354215DFED8A6B986558A078FA"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_rt4_kismet01_LOC_INT.xxx",
+      "sha256": "74A261901B5B1AA3B02F6A4464C5C7E8D3D379C49ED10544F40D842089C94F20"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_rt4_kismet02_LOC_INT.xxx",
+      "sha256": "6C5981D4DD13216B2C1DF2D6A15C88DEA5F257A47E42B04927CF39983C395CED"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_rt4_kismet03_LOC_INT.xxx",
+      "sha256": "4350F916DBEFC613226E76531AD4FD255B3D6BBE83BA6BE1DF5F6304D6C7DE62"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_rt5_kismet01_LOC_INT.xxx",
+      "sha256": "054C8D8140DE46A291AF57CA78E80EE0131D942A0422998BC0983AE064FC4CE1"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_rt5_zone04_LOC_INT.xxx",
+      "sha256": "8075E30D44AA97EB0BAE2870FCC9DB34C54C3A49A2491857426AF4F38539B3AB"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_rt6_kismet01_LOC_INT.xxx",
+      "sha256": "66F223BC9F954A803343C2A2C7331D8147C6C6E62A23A62127BCD3C2332E2018"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_vi_2010a_echo_event_LOC_INT.xxx",
+      "sha256": "5116B6357A2607B6CD1E407F53F647F8E19933F151EDAAA7EF013C522E0AC17D"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_vi_intro_kismet_LOC_INT.xxx",
+      "sha256": "E0BEC259B54F20E594CB712B3D34F1FE1ABAE2CDED10CA55C5F3E09BBB58194F"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_vi2_kismet01_a_LOC_INT.xxx",
+      "sha256": "82F3636AF087CACD8E7E47D11909F092B524243AC3C0FDE1059EAA1E4A2DB999"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_vi2_kismet01_b_LOC_INT.xxx",
+      "sha256": "9852E235B543A2FA55DD40DC0AED81176355AA9A2BF3F30FB5D1067B7CB0E750"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_vi2_kismet01_LOC_INT.xxx",
+      "sha256": "5FDB0A196CA2B6D2381407C1111AB91E7E13051A225D573FB8493419FAD75FF0"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_vi2_kismet02_LOC_INT.xxx",
+      "sha256": "303D64D95E487EF7F96C48772AF0B3EEA651491F1D47E9B274A4C2987CFEF978"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_vi2_kismet03_LOC_INT.xxx",
+      "sha256": "2E8249B5ADD197F84C080D18B15057E1897FD7C707FC4834E4A4F06DE3DD65CA"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_vi2_kismet04_LOC_INT.xxx",
+      "sha256": "7D500B02F6BF47F2CCFF4A8ECD08CD70D919DAB208A1ADCEFD2B10F864F94694"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_vi2_zone02a_2010_LOC_INT.xxx",
+      "sha256": "DE5837A3AD1699AE055ED22F85A7EA58A90AEDBCE5840317F1050BE22DB9BDD2"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_vi2_zone02a_LOC_INT.xxx",
+      "sha256": "D148B36EBA5B95CE1C41DF2A2A8E4668AF629C526EB512B9C51F4AFB4E5954B2"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_vi2_zone03_LOC_INT.xxx",
+      "sha256": "9379FA07F5AF2CC380327F3151ACFB42AD46B89E381787A34E32184878B6128B"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_vi3_ghost_courtyard_LOC_INT.xxx",
+      "sha256": "84AE187A8D6E5BF1F0D2B0E8586E990DE50E17044DBBE60976E5C9E2DCFE9B3B"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_vi3_kismet01_LOC_INT.xxx",
+      "sha256": "585CB37FA8BBC28929F3D6503329ECAE11C8F173178AA5B7A9112C943BF002B4"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_vi3_kismet02_b_LOC_INT.xxx",
+      "sha256": "798BC3C3BC26E906BAAFB402D53786F993DB9243508209B22566B3D2C60E129A"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_vi3_kismet02_c_LOC_INT.xxx",
+      "sha256": "A2262AF546BB62F3E8C8A595915C5F84F1FC8BAAC276D4FB689F7EED0C23B3E1"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_vi3_kismet03_a_LOC_INT.xxx",
+      "sha256": "53E722EABDDB993B37CD03949AD35772EFED13ECFB3C826722AE15028E9C3710"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_vi3_kismet03_LOC_INT.xxx",
+      "sha256": "B1AC1DD5B16A500EEDBDCC9B33B74B4705C2EC3A4C7C616AEAA9868A04437DD0"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_vi3_zone01_LOC_INT.xxx",
+      "sha256": "B65D36BECE80A1281AE7A5E97BFA8F35A7568BBF676F1E450376BCA63C3FC80F"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_vi3_zone01b_d1_LOC_INT.xxx",
+      "sha256": "9C14263B32250CD69D9CD4003739D5CAE18B97E11133A953903771924C3B6137"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_vi3_zone02b_d1_LOC_INT.xxx",
+      "sha256": "C3F6D7522B774D46E6820E8A7D6C726EAB82734C19469063AE4DA855089EE9BD"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_vi3_zone02b_d2_LOC_INT.xxx",
+      "sha256": "93096FDA79F3F5DD80FEBDA8F6C1D52E0CAEF5FD8F3F3D1BA5DD7BFCCD3AE023"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_vi3_zone03_LOC_INT.xxx",
+      "sha256": "CDD5947FE1B100855F0328A13BD4C9C88CCFEDC83CA4CEAF39DE6F896D620734"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_vi3_zone05_d2_LOC_INT.xxx",
+      "sha256": "258D0C569A9BAFA04A257403EF745A543A3EABD0D5465F1BF2541C7E4209BBFA"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_vi4_kismet01_a_LOC_INT.xxx",
+      "sha256": "3F247463C84A7DE395F101CB60F2DCC1483D80811B70C2F318EBC93A0042325E"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_vi4_kismet01_b_LOC_INT.xxx",
+      "sha256": "AF91B5A73B97DD28F6DDDADBB0ECC3C5E997D08DA384DF245103C28AEBDF8E57"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_vi4_kismet01_c_LOC_INT.xxx",
+      "sha256": "87F37635553276ABC067E70C94E6578BB7D2DA820295DD465E0E4A9931A5572C"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_vi4_kismet01_LOC_INT.xxx",
+      "sha256": "C1A2163F146A72DE2E784C80A16B27FD38E3486E04B63EB00D71902D328E082C"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_vi5_kismet01_LOC_INT.xxx",
+      "sha256": "77B8D0047CEACAB513AA5BFD31A55DA30A01A6AA300D5BBA437595468CCFA657"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_vi5_kismet02_LOC_INT.xxx",
+      "sha256": "FE9DDF248FEB2F1D2DD59DEE4AB262C33CB3DA21860927B441BB5B9C00977A54"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_vi5_kismet03_LOC_INT.xxx",
+      "sha256": "3DD33CDF2D924F7E6D5D704C6BE3E2E676ABA155677CE5B63CA60D4B3BFB7A3B"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_vi6_kismet01_LOC_INT.xxx",
+      "sha256": "B554B252E4133560B933281B5D44A8D5AA321EAB1023484E22E65C73F0717730"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_vi6_kismet02_LOC_INT.xxx",
+      "sha256": "52D4A24267F050FE088A1B9617C466A70B479C0C8EF428D57F3736BF00B66162"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_vi6_kismet04_LOC_INT.xxx",
+      "sha256": "3A46F93159F47CF159E2DBC7F4ABE52A9830D5ABDC69844765689E43E8E3D51E"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_vi6_kismet05_LOC_INT.xxx",
+      "sha256": "BD58BB29EF657A3F94F82E7BFCE000EA9189950B3E14BC229AB544A29A5FC55E"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_wl1_kismet01_LOC_INT.xxx",
+      "sha256": "C04B7D3ACABA23CBCAF000CF5065FF88BFF247867122914765D87806A0B14104"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_wl1_kismet03_LOC_INT.xxx",
+      "sha256": "0965E6F682C289BE2EC0DA95A45C77BFFF005917CE11E888EFC38258D37B50D8"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_wl1_kismet04_LOC_INT.xxx",
+      "sha256": "CFE966CA6EC984E5A09A45A11B96790313CBCCA9CD190691E614E86017CFB9B4"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_wl1_zone01_LOC_INT.xxx",
+      "sha256": "078DA5F87D934FA99DB3B9B9AB7BB487DDC020015BF0B7619FA2CD4A5E2C41F2"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_wl2_kismet01_LOC_INT.xxx",
+      "sha256": "2ABD14BA50A108079AE1C8A2B93B5CC5BE4057B29A51223F34FA37159C3209B0"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_wl2_kismet03_LOC_INT.xxx",
+      "sha256": "4466AC8E192C92C2D6B6C468ED528FAA894D698CCF7BF58BBDF0F8C29037385E"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_wl2_kismet05_LOC_INT.xxx",
+      "sha256": "7DEA8BC79E859CE131C5DCE8205BF920539DFF958DCA9F53F0517E36E7B41616"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_wl2_zone03_LOC_INT.xxx",
+      "sha256": "866045903F721E5482A2EF98582B2BB8771F94AEC459EDC1AAE7CB4ABD31EF23"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_wl3_kismet_p_LOC_INT.xxx",
+      "sha256": "D1E7C97BF7E17EEDBFDD03290785167951E4D73DB84387096D94B77B91CCDE42"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_wl3_kismet03_LOC_INT.xxx",
+      "sha256": "E1213E06034488DF50B89984B2313693BB81A89632C31B47DA2FEBDB92C71E34"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_wl4_kismet03_LOC_INT.xxx",
+      "sha256": "4F36A87AF327BA7D9B3096814A4300A8CA42ED3964BBE41581776DA82CF43660"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_wl4_kismet04_LOC_INT.xxx",
+      "sha256": "E4D98C4BA488952080C4DE5568B9DF54C5EFC5E4C9D34E87D56C45E173F2B89B"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_wl4_kismet05_LOC_INT.xxx",
+      "sha256": "81AEA06D3689B0B38CE1B835448AF8C4035E79413B73ADF528718E92DD26B073"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_wl4_kismet06_LOC_INT.xxx",
+      "sha256": "B3B9AF537A0ED3D4538D4D52308C556E21A9B61D63976DFC254BB02D69F7C92C"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_wl4_kismet07_LOC_INT.xxx",
+      "sha256": "98A175177E52BD27C1711AB5BC068B834AC153F2A8084D329EA5FEAB4BC427D0"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_wl4_kismet08_LOC_INT.xxx",
+      "sha256": "49846CD81342A886D14D9E0711C50BB972D7B4A948BC36ADD601A9AE40C3028F"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_wl4_kismet09_LOC_INT.xxx",
+      "sha256": "725C64DBF484CF3DFF82BEA0F7978038BF22966B40AE663DF52ED450945D1649"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_wl4_kismet10_LOC_INT.xxx",
+      "sha256": "8B8522A33A430CE614953E910EAA46976D5450E4CC48C530289A65BCA84DC79E"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_wl5_kismet01_LOC_INT.xxx",
+      "sha256": "A08920A78281680587CE288F6070C5DB48DC5E78DD6C866B74EAC4F89788756D"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_wl5_kismet03_LOC_INT.xxx",
+      "sha256": "C91D88FFE154862C5DBEC569E62BCE5FC9D5D32DF057FE8BEF916CD9D57578FC"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_wl6_kismet_1950_LOC_INT.xxx",
+      "sha256": "8AE31513B4C0A2C91B7E910EAEAB039B4654BC1F719D5C9490D0F54F817B9687"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_wl6_kismet1_a_LOC_INT.xxx",
+      "sha256": "807B052D5E425390144C1F6A93A08E69A02A0265BCADA77A76073A1F97937235"
+    },
+    {
+      "path": "RvGame/CookedPC/sp_wl6_zone1_2010_d1_LOC_INT.xxx",
+      "sha256": "02F6C01675671651D5CC0F3596C80E990024ECA107B79523A39B8CF42C7E4614"
+    },
+    {
+      "path": "RvGame/CookedPC/ui_GFx_fonts.xxx",
+      "sha256": "60E7287185300CAA2A8E64FBE14B741475D4D959944B6B0E51F84547841E8DB8"
+    },
+    {
+      "path": "RvGame/CookedPC/UI_SinglePlayer_SF.xxx",
+      "sha256": "51CDAB5C892A7B682D89319721330AA3E78C7013D1C60E1476A0115431F01A1A"
+    }
+  ],
+  "transitionSource": {
+    "profileSha256": "44404A5E8259CAD5D811077B683B600AB07B83C6FF600FA8ED9391C9A710EDAE",
+    "priorPlanSha256": "308AE2081941D40900C71523B69B9778ECE1A02D7981BA5EA4E8581872A979C2",
+    "initialMenuPlanSha256": "3A4240347260D0136BD89D43E65C7BCABCE1803D3A6099E39E73DA10E783A417"
+  }
+}

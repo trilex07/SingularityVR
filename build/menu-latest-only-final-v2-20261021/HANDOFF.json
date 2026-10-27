@@ -1,0 +1,12 @@
+{
+  "candidateSha256": "DF7A7FF2CB60C4133A075552E65DB15BAC3EAD5B43895A665D611E7B0DBC90F7",
+  "sourceCommit": "0d978cd04e85dce997d974b3ce009b74e1e0aefc",
+  "branch": "codex/menu-latest-only-20261021",
+  "menuTests": "6 x86 /O2 executables PASS",
+  "latestSourcePreserved": "all inherited source except four menu/source-test files",
+  "installedSha256": "FFE1CFFFAD8EA951182DAA3A4393FDEB24F41814E4F35A52BF25320D529D732F",
+  "deployment": "FINAL DLL NOT YET INSTALLED: running PID34116, normal game closure requested",
+  "runtimeEvidence": "initial candidate real Steam/OpenXR start plus nativeOn -> SPIIS Start/Quit conflict observed; no submitted-eye evidence while HMD inactive",
+  "physicalAcceptance": "OPEN",
+  "gitPush": "auto-review rejected: no explicit user authorization for code publication to GitHub; do not retry without approval"
+}

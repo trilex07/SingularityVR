@@ -1,0 +1,51 @@
+{
+  "schema": "singularityvr-change-plan-v1",
+  "profileSha256": "99BFF50213FF6C0F9C2BF2237D28EA03DA019EBEF574599FD0828A1E2AED9D1F",
+  "reason": "User-requested full newest source with frontend-only repair; keep current assets/calibration and restore six newest non-frontend feature settings from verified AD4 backup",
+  "files": [
+    {
+      "path": "Binaries/d3d9.dll",
+      "before": "D00D04F202D51B520F29A03EED0C9E92A24ECBDC4AE9C6E6A1E6EC84E89A5883",
+      "after": "FFE1CFFFAD8EA951182DAA3A4393FDEB24F41814E4F35A52BF25320D529D732F",
+      "reason": "Newest inherited source plus isolated frontend menu ownership/inset/FOV repair"
+    }
+  ],
+  "ini": [
+    {
+      "key": "Render/CinematicEventBridge",
+      "before": null,
+      "after": "0",
+      "reason": "Retain exact latest AD4 feature setting; menu-only repair does not drop these functions"
+    },
+    {
+      "key": "Render/NativeCinematicState",
+      "before": null,
+      "after": "1",
+      "reason": "Retain exact latest AD4 feature setting; menu-only repair does not drop these functions"
+    },
+    {
+      "key": "Render/NativeRestraintHands",
+      "before": null,
+      "after": "1",
+      "reason": "Retain exact latest AD4 feature setting; menu-only repair does not drop these functions"
+    },
+    {
+      "key": "Render/ScriptedCameraFlat",
+      "before": null,
+      "after": "1",
+      "reason": "Retain exact latest AD4 feature setting; menu-only repair does not drop these functions"
+    },
+    {
+      "key": "Render/StationMenuScalePct",
+      "before": null,
+      "after": "50",
+      "reason": "Retain exact latest AD4 feature setting; menu-only repair does not drop these functions"
+    },
+    {
+      "key": "Render/StationMenuDistanceMm",
+      "before": null,
+      "after": "1400",
+      "reason": "Retain exact latest AD4 feature setting; menu-only repair does not drop these functions"
+    }
+  ]
+}

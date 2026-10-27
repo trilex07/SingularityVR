@@ -1,0 +1,14 @@
+{
+  "schema": "singularityvr-change-plan-v1",
+  "profileSha256": "151438BF6054D97C089D2738044440E3F6ECBFAEF6E8C27F6DAD92AB98E1544C",
+  "reason": "Complete menu-only repair on newest source: observed SPIIS Start/Quit frontend must own presentation despite native cinematic bit; latest feature config and all assets unchanged",
+  "files": [
+    {
+      "path": "Binaries/d3d9.dll",
+      "before": "FFE1CFFFAD8EA951182DAA3A4393FDEB24F41814E4F35A52BF25320D529D732F",
+      "after": "DF7A7FF2CB60C4133A075552E65DB15BAC3EAD5B43895A665D611E7B0DBC90F7",
+      "reason": "Exact class1 nativeOn -> focused SPIIS presentation fix; full newest source retained"
+    }
+  ],
+  "ini": []
+}
