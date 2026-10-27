@@ -1,0 +1,20 @@
+{
+  "boot_wordmark_ref": {
+    "file": "boot-wordmark-ref.png",
+    "sha256": "807C0F31C4B20DEDC9800DC3ADA4478CDFA026732C6D321E16B7BF9525242533",
+    "source": "Cursor chat attachment image-d13bbced-14b0-4a37-94ef-bc2f6133663e.png",
+    "role": "Chrome SINGULARITY + icy cyan VR on black (boot card hold)"
+  },
+  "loading_full_ref": {
+    "file": "loading-full-ref.jpg",
+    "sha256": "6F24B96E24B72182C2653BA8FD834445D6B9985C47B3016542697E3C6F9615CE",
+    "source": "Cursor chat attachment Singularity_VR_4K_3840x2160-5a9f072c-808e-4afb-8334-96083b98ca86.jpg",
+    "role": "Flat orange SINGULARITY + cyan VR title row (1024x576); hand from stock Bink only"
+  },
+  "loading_full_ref_4k": {
+    "file": "loading-full-ref-4k.png",
+    "sha256": "34490CB40F932C566DA898D66B78635F704C902645A4D48630B0C5145BFC3269",
+    "source": "C:\\Users\\Trilex\\Downloads\\Singularity_VR_4K_3840x2160.png",
+    "role": "Same art at 3840x2160 backup; pipeline uses loading-full-ref.jpg"
+  }
+}

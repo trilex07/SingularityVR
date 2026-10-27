@@ -2,9 +2,11 @@
   "asset": "loading_screen_vr.bik",
   "install_as": "RvGame/Movies/loading_screen.bik",
   "stock_sha256": "764E701B5049F182968D2DFFF4EE9ACCD13443B0D68B66B3FD1C0FB2F059E27D",
-  "candidate_bik_sha256": "BE5BBE18F9A42D3D7C1B510B4F43785C5FB48107A0BECBD290757BA41490401C",
-  "suffix": "cyan Latin VR on the orange wordmark; hand/TMD not repainted",
+  "candidate_bik_sha256": "FE6010A1902A323C6DBB0E5E68D2DA00EAA4367DC963E57EC4E17AF8A1B4AFD7",
+  "reference_still": "offline-deliverables/reference-assets/loading-full-ref.jpg",
+  "reference_still_sha256": "6F24B96E24B72182C2653BA8FD834445D6B9985C47B3016542697E3C6F9615CE",
   "video": { "width": 1280, "height": 720, "duration_s": 2.0, "fps": "24/1", "frames": 48, "audio": false },
+  "patch": "paste cyan VR suffix cropped from user reference; stock SINGULARITY + hand unchanged",
   "content_summary": "docs/loading-screen-evidence.md",
   "validate_video": "PASS",
   "proof_png_from_bik_only": "proof-from-bik/proof-manifest.json"

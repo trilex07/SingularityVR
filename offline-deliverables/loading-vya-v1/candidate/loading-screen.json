@@ -8,12 +8,16 @@
     "frames": 48
   },
   "candidate": {
-    "bik": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-boot-logo-vr\\offline-deliverables\\loading-vya-v3\\candidate\\loading_screen_vr.bik",
-    "bik_sha256": "2C9E197E3383844E64EE4D68915232B6A6BBFC2A7BCF34A05A54836E00B4904E",
+    "bik": "C:\\Users\\Trilex\\AppData\\Local\\Temp\\sng-load-ref-v4\\loading_screen_vr.bik",
+    "bik_sha256": "FE6010A1902A323C6DBB0E5E68D2DA00EAA4367DC963E57EC4E17AF8A1B4AFD7",
     "encode": {
       "status": "BIK_CANDIDATE_WRITTEN",
-      "sha256": "2C9E197E3383844E64EE4D68915232B6A6BBFC2A7BCF34A05A54836E00B4904E"
+      "sha256": "FE6010A1902A323C6DBB0E5E68D2DA00EAA4367DC963E57EC4E17AF8A1B4AFD7"
     }
   },
-  "patch": "stamp V+Ya on the letter row only; hand/TMD not repainted"
+  "reference_image": {
+    "path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-boot-logo-vr\\offline-deliverables\\reference-assets\\loading-full-ref.jpg",
+    "sha256": "6F24B96E24B72182C2653BA8FD834445D6B9985C47B3016542697E3C6F9615CE"
+  },
+  "patch": "paste cyan VR suffix from user reference still; stock SINGULARITY + hand unchanged"
 }

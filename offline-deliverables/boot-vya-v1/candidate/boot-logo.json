@@ -9,15 +9,20 @@
     "frames": 330
   },
   "candidate": {
-    "intermediate_mkv": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-boot-logo-vr\\offline-deliverables\\boot-vya-v1\\candidate\\SNG_logo_vr.intermediate.mkv",
-    "intermediate_sha256": "F15F3D93089A587D091B41949B48F4AE0CBEFC8E0467303E1B8276C1797CBE03",
-    "bik": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-boot-logo-vr\\offline-deliverables\\boot-vya-v1\\candidate\\SNG_logo_vr.bik",
+    "intermediate_mkv": "C:\\Users\\Trilex\\AppData\\Local\\Temp\\sng-boot-ref-v3\\SNG_logo_vr.intermediate.mkv",
+    "intermediate_sha256": "472DE58EA4A356D02724844EE60F7D91B71FA15D28163E1D7ECCC9EEA6EA889B",
+    "bik": "C:\\Users\\Trilex\\AppData\\Local\\Temp\\sng-boot-ref-v3\\SNG_logo_vr.bik",
     "encode": {
       "status": "BIK_CANDIDATE_WRITTEN",
-      "sha256": "91A8F9816C964EC45A7F9B196DB2B556A7C45EA45CB4B29110BCC30FBDE4D131"
+      "sha256": "C02DFC8A95FC8ED6CC576FA1DFC24FB5C3465911C8170FED51C5AF8C55709E7D"
     }
   },
   "reference_frame": "frame_00181.png",
-  "template_preview_sha256": "B101F197BF5780A165C408BA21C239321128F83FB50D19869C220F752224AD24",
+  "reference_image": {
+    "path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-boot-logo-vr\\offline-deliverables\\reference-assets\\boot-wordmark-ref.png",
+    "sha256": "807C0F31C4B20DEDC9800DC3ADA4478CDFA026732C6D321E16B7BF9525242533"
+  },
+  "patch": "compose full wordmark+VR from user reference still",
+  "template_preview_sha256": "13BED0AD76E00CACAC2915D63415B5593FB22D5E98EA7BD73811C17B0D55F1D8",
   "scope": "Boot card only; does not modify iis char 10 / SPMenus char 166 / DLL / INI"
 }

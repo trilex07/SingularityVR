@@ -12,8 +12,10 @@ $ff = Join-Path $FfmpegBin 'ffmpeg.exe'
 $fp = Join-Path $FfmpegBin 'ffprobe.exe'
 New-Item -ItemType Directory -Path $OutRoot | Out-Null
 $candidate = Join-Path $OutRoot 'candidate'
+$bootRef = Join-Path $RepoRoot 'offline-deliverables/reference-assets/boot-wordmark-ref.png'
 python (Join-Path $RepoRoot 'tools/title/prepare_boot_logo_bink.py') `
     --source (Join-Path $GameMovies 'SNG_logo.bik') `
+    --reference-image $bootRef `
     --out $candidate --ffmpeg $ff --ffprobe $fp --binkenc $binkenc
 $vrBik = Join-Path $candidate 'SNG_logo_vr.bik'
 python (Join-Path $RepoRoot 'tools/title/remux_bink_stock_audio.py') `
