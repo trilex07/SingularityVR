@@ -1,0 +1,13 @@
+﻿{
+    "evidenceDir":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR\\deployment\\agent-verify-20261010\\evidence\\dish-style-20261024-194705",
+    "dllSha256":  "36C14F258D5E87C626BD390B1520B19C8CB81C15D50BE46573362F8D36B9EAB9",
+    "gamePid":  24592,
+    "xrsimDir":  "C:\\Users\\Trilex\\AppData\\Local\\SingularityVR\\xrsim-steam-20261024-194705",
+    "shots":  [
+                  {
+                      "Left":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR\\deployment\\agent-verify-20261010\\evidence\\dish-style-20261024-194705\\steam-gameplay-hands-shadows_left.png",
+                      "Right":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR\\deployment\\agent-verify-20261010\\evidence\\dish-style-20261024-194705\\steam-gameplay-hands-shadows_right.png",
+                      "Sbs":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR\\deployment\\agent-verify-20261010\\evidence\\dish-style-20261024-194705\\steam-gameplay-hands-shadows_sbs.png"
+                  }
+              ]
+}
