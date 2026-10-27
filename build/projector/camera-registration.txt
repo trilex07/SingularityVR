@@ -1,0 +1,33 @@
+NAME DoJumpBob
+string 0x195fc4c
+NAME DoLandingBob
+string 0x196c0e0
+NAME UpdateCamera
+string 0x1846fd0
+string 0x186e2c0
+xref 0x914ce4
+0x914ce3 push 0x186e2c0
+0x914ce8 lea ecx, [ebp - 0xaf8]
+0x914cee mov dword ptr [0x1cf4fc8], edx
+0x914cf4 call 0x4affd0
+0x914cf9 mov ecx, dword ptr [eax]
+0x914cfb push 1
+0x914cfd mov dword ptr [0x1cf4fcc], ecx
+0x914d03 mov edx, dword ptr [eax + 4]
+0x914d06 push 1
+0x914d08 push 0x186e2dc
+0x914d0d lea ecx, [ebp - 0xb08]
+0x914d13 mov dword ptr [0x1cf4fd0], edx
+0x914d19 call 0x4affd0
+0x914d1e mov ecx, dword ptr [eax]
+0x914d20 push 1
+0x914d22 mov dword ptr [0x1cf4fd4], ecx
+0x914d28 mov edx, dword ptr [eax + 4]
+0x914d2b push 1
+0x914d2d push 0x186e304
+0x914d32 lea ecx, [ebp - 0xb18]
+0x914d38 mov dword ptr [0x1cf4fd8], edx
+0x914d3e call 0x4affd0
+0x914d43 mov ecx, dword ptr [eax]
+0x914d45 push 1
+NAME GetCameraShake

@@ -1,0 +1,16 @@
+{
+  "builtAt": "2026-10-18T00:24:36.0105252+02:00",
+  "repository": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-projector-main",
+  "branch": "fix/projector-world-stereo",
+  "commit": "b9ea9aed136d52210d222b4bad57114433171998",
+  "workingTreeStatus": [
+    "?? build/",
+    "?? deployment/shadow-probe/"
+  ],
+  "optimization": "/O2",
+  "performanceInstrumentation": true,
+  "architecture": "x86 PE32",
+  "machine": "0x014C",
+  "optionalHeaderMagic": "0x010B",
+  "sha256": "755DDD731E7E12E45C246CA3655BA1A79F58EBE56C12B816C05F78C9FAE9E26B"
+}

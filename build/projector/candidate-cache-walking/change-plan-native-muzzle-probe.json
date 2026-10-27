@@ -1,0 +1,45 @@
+{
+  "schema": "singularityvr-change-plan-v1",
+  "profileSha256": "2D9FA6A89A65E089C444B5E6DBC3B989272DF8404636F4D24ED90658E1D02E1B",
+  "reason": "Preserve accepted projector and muzzle correction; optimize projector shader cache using PID5860 eviction evidence and enable existing bounded pawn/POV walking stabilization. Automatic menu diagnostics disabled. FPS and walking comfort require physical verification.",
+  "files": [
+    {
+      "path": "Binaries/d3d9.dll",
+      "before": "789749E5D4DB8FC6C603DF599A38A4FB1EC00DE374E4E2FDD469B09B9C5F361B",
+      "after": "E5A10A43E5E92E7CEFCDDF4D0DAEBF4A2309EABC6F099489ACCBB52EAC715FA1",
+      "reason": "MAIN x86 build with bounded native-FX diagnostics and explicit exact-pair control; no unrelated renderer or gameplay change."
+    }
+  ],
+  "ini": [
+    {
+      "key": "Render/NativeMuzzleParticleStereo",
+      "before": null,
+      "after": "1",
+      "reason": "Route all three audited original particle pairs through VP stereo, preserve LocalToWorld; bypass accepted drop only inside validated corrected draw scope."
+    },
+    {
+      "key": "Render/ProjectorWorldStereo",
+      "before": null,
+      "after": "1",
+      "reason": "Exact captured light-function pair: per-eye ScreenToLight reconstruction; retained accepted native particle stereo."
+    },
+    {
+      "key": "Diagnostic/MenuDrawTrace",
+      "before": null,
+      "after": "0",
+      "reason": "Exclude automatic menu census and full-resolution proof readbacks from projector/performance test; aggregate timing remains."
+    },
+    {
+      "key": "Diagnostic/MenuProofCapture",
+      "before": null,
+      "after": "0",
+      "reason": "Exclude automatic menu census and full-resolution proof readbacks from projector/performance test; aggregate timing remains."
+    },
+    {
+      "key": "Render/VrTranslationStabilization",
+      "before": "0",
+      "after": "1",
+      "reason": "User requested removal of walking bob; retain physical HMD translation and pawn locomotion."
+    }
+  ]
+}

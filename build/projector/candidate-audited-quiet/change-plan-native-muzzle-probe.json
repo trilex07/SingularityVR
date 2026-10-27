@@ -1,0 +1,39 @@
+{
+  "schema": "singularityvr-change-plan-v1",
+  "profileSha256": "2D9FA6A89A65E089C444B5E6DBC3B989272DF8404636F4D24ED90658E1D02E1B",
+  "reason": "MAIN projector test: preserve accepted muzzle fix and change only the exact projector reconstruction versus preceding projector capture session. No performance changes. Automatic menu census and proof screenshots disabled to reduce diagnostic contamination; performance causality still requires runtime measurement.",
+  "files": [
+    {
+      "path": "Binaries/d3d9.dll",
+      "before": "789749E5D4DB8FC6C603DF599A38A4FB1EC00DE374E4E2FDD469B09B9C5F361B",
+      "after": "F53E9E2A799970F0B7F43B17C45D21D4686837BFDB166149E0B5DD5B6F1B0215",
+      "reason": "MAIN x86 build with bounded native-FX diagnostics and explicit exact-pair control; no unrelated renderer or gameplay change."
+    }
+  ],
+  "ini": [
+    {
+      "key": "Render/NativeMuzzleParticleStereo",
+      "before": null,
+      "after": "1",
+      "reason": "Route all three audited original particle pairs through VP stereo, preserve LocalToWorld; bypass accepted drop only inside validated corrected draw scope."
+    },
+    {
+      "key": "Render/ProjectorWorldStereo",
+      "before": null,
+      "after": "1",
+      "reason": "Exact captured light-function pair: per-eye ScreenToLight reconstruction; retained accepted native particle stereo."
+    },
+    {
+      "key": "Diagnostic/MenuDrawTrace",
+      "before": null,
+      "after": "0",
+      "reason": "Exclude automatic menu census and full-resolution proof readbacks from projector/performance test; aggregate timing remains."
+    },
+    {
+      "key": "Diagnostic/MenuProofCapture",
+      "before": null,
+      "after": "0",
+      "reason": "Exclude automatic menu census and full-resolution proof readbacks from projector/performance test; aggregate timing remains."
+    }
+  ]
+}

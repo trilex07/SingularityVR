@@ -1,0 +1,62 @@
+{
+  "acceptedProfile": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-startup-readiness\\deployment\\accepted-profile.json",
+  "acceptedProfileSha256": "2D9FA6A89A65E089C444B5E6DBC3B989272DF8404636F4D24ED90658E1D02E1B",
+  "installedIniSha256": "8B0B0B4CF2DB78514A44B72CF3E79CC1C48C74E5632CDA34A468CA61702CCFAF",
+  "candidateIniSha256": "823AA9AA382F1A2E1453ACAEBBCCB35C98BFED80356E5E3DFDF37FFD74F7AA13",
+  "installedD3d9Sha256": "789749E5D4DB8FC6C603DF599A38A4FB1EC00DE374E4E2FDD469B09B9C5F361B",
+  "candidateD3d9Sha256": "D6D1284F858CEF36605903772773E005033899B18B26F16C6C180EB6D2B0B0E8",
+  "installedDinput8Sha256": "5B948DDBDE07F16AE779C274CEBA133F7F24A218ABD9FFF2D4133FCADF729D59",
+  "candidateDinput8Sha256": "5B948DDBDE07F16AE779C274CEBA133F7F24A218ABD9FFF2D4133FCADF729D59",
+  "iniChanges": [
+    {
+      "key": "Render/NativeMuzzleParticleStereo",
+      "before": null,
+      "after": "1",
+      "reason": "Route all three audited original particle pairs through VP stereo, preserve LocalToWorld; bypass accepted drop only inside validated corrected draw scope."
+    },
+    {
+      "key": "Render/ProjectorWorldStereo",
+      "before": null,
+      "after": "1",
+      "reason": "Exact captured light-function pair: per-eye ScreenToLight reconstruction; retained accepted native particle stereo."
+    },
+    {
+      "key": "Diagnostic/MenuDrawTrace",
+      "before": null,
+      "after": "0",
+      "reason": "Exclude automatic menu census and full-resolution proof readbacks from projector/performance test; aggregate timing remains."
+    },
+    {
+      "key": "Diagnostic/MenuProofCapture",
+      "before": null,
+      "after": "0",
+      "reason": "Exclude automatic menu census and full-resolution proof readbacks from projector/performance test; aggregate timing remains."
+    },
+    {
+      "key": "Render/NativeCameraComfort",
+      "before": null,
+      "after": "1",
+      "reason": "Verified native camera-output seam: stabilize first-person origin before stereo, not shader-space offsets."
+    },
+    {
+      "key": "Render/TextureBindDeduplicate",
+      "before": null,
+      "after": "1",
+      "reason": "Collapse test: remove repeated per-bind shadow texture classification and collect bounded asynchronous scene GPU timeline; no quality or gameplay changes."
+    },
+    {
+      "key": "Diagnostic/FrameGpuProbe",
+      "before": null,
+      "after": "1",
+      "reason": "Collapse test: remove repeated per-bind shadow texture classification and collect bounded asynchronous scene GPU timeline; no quality or gameplay changes."
+    },
+    {
+      "key": "Diagnostic/FrameGpuPassProbe",
+      "before": null,
+      "after": "1",
+      "reason": "Partition every bounded sampled frame into actual RT phases and UP/non-UP draw counts; preserve image and all gameplay behavior."
+    }
+  ],
+  "steamWritten": false,
+  "changePlan": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-projector-main\\build\\projector\\candidate-collapse-pass-cost\\change-plan-native-muzzle-probe.json"
+}
