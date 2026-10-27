@@ -1,0 +1,53 @@
+﻿script hook: NOT installed at startup. 0x01308A10 was disproven in run 92 (Tick seen 0 times in 48,811 calls) and its `ret 0xC` does not match ProcessInternal's `ret 8`. The real one is found through UFunction::Func when aim mode 6 or 7 is selected.
+OpenXR ready
+session running
+    script hook: 0 calls named this window (0 unnamed), CINE OFF   <-- ZERO: the watch is DEAD, not quiet. CINE means nothing.
+    script hook: 0 calls named this window (0 unnamed), CINE OFF   <-- ZERO: the watch is DEAD, not quiet. CINE means nothing.
+    script hook: 0 calls named this window (0 unnamed), CINE OFF   <-- ZERO: the watch is DEAD, not quiet. CINE means nothing.
+    script hook: 0 calls named this window (0 unnamed), CINE OFF   <-- ZERO: the watch is DEAD, not quiet. CINE means nothing.
+    script hook: 0 calls named this window (0 unnamed), CINE OFF   <-- ZERO: the watch is DEAD, not quiet. CINE means nothing.
+    script hook: 0 calls named this window (0 unnamed), CINE OFF   <-- ZERO: the watch is DEAD, not quiet. CINE means nothing.
+    script hook: 0 calls named this window (0 unnamed), CINE OFF   <-- ZERO: the watch is DEAD, not quiet. CINE means nothing.
+FFrame::Node vote over 300 calls:
+  -> FFrame::Node is at +0x10 (300 of 300). Aim modes 6 and 7 are live from here.
+    script hook: 2214 calls named this window (301 unnamed), CINE OFF
+    script hook: 6060 calls named this window (0 unnamed), CINE OFF
+    script hook: 6012 calls named this window (0 unnamed), CINE OFF
+    script hook: 6005 calls named this window (0 unnamed), CINE OFF
+    script hook: 6008 calls named this window (0 unnamed), CINE OFF
+    script hook: 6012 calls named this window (0 unnamed), CINE OFF
+    script hook: 5957 calls named this window (0 unnamed), CINE OFF
+    script hook: 6057 calls named this window (0 unnamed), CINE OFF
+    script hook: 5995 calls named this window (0 unnamed), CINE OFF
+    script hook: 6022 calls named this window (0 unnamed), CINE OFF
+    script hook: 6007 calls named this window (0 unnamed), CINE OFF
+    script hook: 6012 calls named this window (0 unnamed), CINE OFF
+    script hook: 6005 calls named this window (0 unnamed), CINE OFF
+    script hook: 6007 calls named this window (0 unnamed), CINE OFF
+    script hook: 6012 calls named this window (0 unnamed), CINE OFF
+    script hook: 6005 calls named this window (0 unnamed), CINE OFF
+    script hook: 6007 calls named this window (0 unnamed), CINE OFF
+    script hook: 6010 calls named this window (0 unnamed), CINE OFF
+    script hook: 6007 calls named this window (0 unnamed), CINE OFF
+    script hook: 6007 calls named this window (0 unnamed), CINE OFF
+    script hook: 6010 calls named this window (0 unnamed), CINE OFF
+    script hook: 6007 calls named this window (0 unnamed), CINE OFF
+    script hook: 5994 calls named this window (0 unnamed), CINE OFF
+    script hook: 6023 calls named this window (0 unnamed), CINE OFF
+    script hook: 6007 calls named this window (0 unnamed), CINE OFF
+    script hook: 6007 calls named this window (0 unnamed), CINE OFF
+    script hook: 6010 calls named this window (0 unnamed), CINE OFF
+    script hook: 6005 calls named this window (0 unnamed), CINE OFF
+    script hook: 6009 calls named this window (0 unnamed), CINE OFF
+    script hook: 6010 calls named this window (0 unnamed), CINE OFF
+    script hook: 6007 calls named this window (0 unnamed), CINE OFF
+    script hook: 6007 calls named this window (0 unnamed), CINE OFF
+    script hook: 6010 calls named this window (0 unnamed), CINE OFF
+    script hook: 6007 calls named this window (0 unnamed), CINE OFF
+    script hook: 6007 calls named this window (0 unnamed), CINE OFF
+    script hook: 6010 calls named this window (0 unnamed), CINE OFF
+    script hook: 6007 calls named this window (0 unnamed), CINE OFF
+    script hook: 6007 calls named this window (0 unnamed), CINE OFF
+    script hook: 6010 calls named this window (0 unnamed), CINE OFF
+    script hook: 5995 calls named this window (0 unnamed), CINE OFF
+    script hook: 6019 calls named this window (0 unnamed), CINE OFF

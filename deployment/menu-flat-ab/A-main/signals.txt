@@ -1,0 +1,53 @@
+﻿script hook: NOT installed at startup. 0x01308A10 was disproven in run 92 (Tick seen 0 times in 48,811 calls) and its `ret 0xC` does not match ProcessInternal's `ret 8`. The real one is found through UFunction::Func when aim mode 6 or 7 is selected.
+OpenXR ready
+session running
+    script hook: 0 calls named this window (0 unnamed), CINE OFF   <-- ZERO: the watch is DEAD, not quiet. CINE means nothing.
+    script hook: 0 calls named this window (0 unnamed), CINE OFF   <-- ZERO: the watch is DEAD, not quiet. CINE means nothing.
+    script hook: 0 calls named this window (0 unnamed), CINE OFF   <-- ZERO: the watch is DEAD, not quiet. CINE means nothing.
+    script hook: 0 calls named this window (0 unnamed), CINE OFF   <-- ZERO: the watch is DEAD, not quiet. CINE means nothing.
+    script hook: 0 calls named this window (0 unnamed), CINE OFF   <-- ZERO: the watch is DEAD, not quiet. CINE means nothing.
+    script hook: 0 calls named this window (0 unnamed), CINE OFF   <-- ZERO: the watch is DEAD, not quiet. CINE means nothing.
+    script hook: 0 calls named this window (0 unnamed), CINE OFF   <-- ZERO: the watch is DEAD, not quiet. CINE means nothing.
+FFrame::Node vote over 300 calls:
+  -> FFrame::Node is at +0x10 (300 of 300). Aim modes 6 and 7 are live from here.
+    script hook: 2064 calls named this window (301 unnamed), CINE OFF
+    script hook: 6060 calls named this window (0 unnamed), CINE OFF
+    script hook: 6012 calls named this window (0 unnamed), CINE OFF
+    script hook: 6007 calls named this window (0 unnamed), CINE OFF
+    script hook: 6006 calls named this window (0 unnamed), CINE OFF
+    script hook: 6012 calls named this window (0 unnamed), CINE OFF
+    script hook: 6007 calls named this window (0 unnamed), CINE OFF
+    script hook: 6007 calls named this window (0 unnamed), CINE OFF
+    script hook: 6012 calls named this window (0 unnamed), CINE OFF
+    script hook: 6007 calls named this window (0 unnamed), CINE OFF
+    script hook: 6005 calls named this window (0 unnamed), CINE OFF
+    script hook: 6012 calls named this window (0 unnamed), CINE OFF
+    script hook: 6007 calls named this window (0 unnamed), CINE OFF
+    script hook: 6005 calls named this window (0 unnamed), CINE OFF
+    script hook: 6012 calls named this window (0 unnamed), CINE OFF
+    script hook: 6007 calls named this window (0 unnamed), CINE OFF
+    script hook: 5955 calls named this window (0 unnamed), CINE OFF
+    script hook: 6185 calls named this window (0 unnamed), CINE OFF
+menu mono: class=2 one draw into the diegetic target
+    script hook: 6010 calls named this window (0 unnamed), CINE OFF
+    script hook: 6005 calls named this window (0 unnamed), CINE OFF
+    script hook: 10082 calls named this window (0 unnamed), CINE OFF
+    script hook: 7596 calls named this window (0 unnamed), CINE OFF
+    script hook: 7136 calls named this window (0 unnamed), CINE OFF
+    script hook: 8326 calls named this window (0 unnamed), CINE OFF
+    script hook: 7270 calls named this window (0 unnamed), CINE OFF
+    script hook: 7613 calls named this window (0 unnamed), CINE OFF
+    script hook: 7226 calls named this window (0 unnamed), CINE OFF
+    script hook: 6998 calls named this window (0 unnamed), CINE OFF
+    script hook: 6999 calls named this window (0 unnamed), CINE OFF
+    script hook: 7525 calls named this window (0 unnamed), CINE OFF
+    script hook: 7652 calls named this window (0 unnamed), CINE OFF
+    script hook: 6987 calls named this window (0 unnamed), CINE OFF
+    script hook: 7083 calls named this window (0 unnamed), CINE OFF
+menu mono: class=3 one draw into the diegetic target
+    script hook: 6422 calls named this window (0 unnamed), CINE OFF
+    script hook: 3993 calls named this window (0 unnamed), CINE OFF
+    script hook: 6144 calls named this window (0 unnamed), CINE OFF
+    script hook: 4643 calls named this window (0 unnamed), CINE OFF
+    script hook: 3960 calls named this window (0 unnamed), CINE OFF
+    script hook: 3960 calls named this window (0 unnamed), CINE OFF

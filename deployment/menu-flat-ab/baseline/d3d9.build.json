@@ -1,0 +1,17 @@
+﻿{
+    "builtAt":  "2026-10-11T19:22:18.4357648+02:00",
+    "repository":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-menu-flat",
+    "branch":  "fix/vr-menu-flat-submission",
+    "commit":  "345456bfac5b8cf15567393e6d2b182c564a2451",
+    "workingTreeStatus":  [
+                              "?? deployment/install-backups/",
+                              "?? deployment/install-reports/",
+                              "?? deployment/smoke-pr4-preserve/"
+                          ],
+    "optimization":  "/O2",
+    "performanceInstrumentation":  false,
+    "architecture":  "x86 PE32",
+    "machine":  "0x014C",
+    "optionalHeaderMagic":  "0x010B",
+    "sha256":  "F54A67284B1850F1454A7945D4BE47021A7E4F767421FA07B3085AB6FE3FE40C"
+}
