@@ -1,0 +1,14 @@
+﻿{
+    "pr":  7,
+    "commit":  "3d5d14d6d4473692c580f9fd52967a57c6b14ae3",
+    "dllSha256":  "5515D9225AD46D25B93200A0BED75AC64744902E333FC30A67DD833FBA8040EB",
+    "logSha256":  "3B6201E018EA5D895E30F14FB59D3F08FD242945B056E2799809BA72650793FB",
+    "backup":  "deployment/install-backups/20261011-224622",
+    "evidence":  {
+                     "pauseRowV":  "0.60-0.70",
+                     "shouldRender1":  true,
+                     "openedFromPauseRow":  true,
+                     "mainRowV":  "0.70-0.80"
+                 },
+    "nativePausePlacement":  "UNRESOLVED"
+}
