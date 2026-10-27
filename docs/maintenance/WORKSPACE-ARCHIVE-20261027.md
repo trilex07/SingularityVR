@@ -55,3 +55,13 @@ Private archive receipts:
 - `primary-checkout-before-update.zip`: 114473332 bytes; SHA256 `d2586a5bff989e5ec6f07958adc2e559964d68378311a6928b6409d555fde277`.
 
 Measured volume free-space gain at final verification: 11.624 GB including archive costs. Concurrent disk activity can affect this figure. Shared Git storage, current reconstruction inputs and compact recovery archives remain intentionally local.
+
+## Final root cleanup follow-up
+
+Nine additional historical root build/test directories were removed after verification of `retired-root-builds.zip` (SHA256 `a776e8618f8b0f5f6ac84b28cd877e024801e13e19e5be3a7b86eaf9b260223d`). Raw historical root reports/configurations were not published: 3399 files were preserved in a verified local `historical-root-information-private.zip`. Automated publication review rejected that broad raw collection because configurations/logs were not fully reviewed for sensitive content. The temporary uncommitted report copy was removed from the Git index and workspace after private archival.
+
+`test-games` was retained because it contains reparse points; reference repositories, tool dependencies and recovery archives remain local. These are separate from retired linked worktrees.
+
+Final checks again passed all 361 current release/resource SHA256 pins, all 11 installer module input checks, and one existing SingularityVR worktree. No Steam deployment or game launch occurred.
+
+Final measured free-space gain since this cleanup's archives started: 12.719 GB, including all added archive overhead. Concurrent disk activity can affect this measurement.
