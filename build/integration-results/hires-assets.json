@@ -1,0 +1,51 @@
+{
+  "AR_E99Rifle_alt_d": {
+    "sha256": "a0cdc3dd8528f6b278ef814c77c8f81e7efa708a12c6d32a30c69b7dc3b59ee9",
+    "width": 4096,
+    "height": 2048,
+    "fourcc": "DXT5",
+    "mip_count": 13
+  },
+  "AR_E99Rifle_n": {
+    "sha256": "54d47f3b7f15ee63410f321b945acb310dbc95d94346cc006ffd2d7460d06fee",
+    "width": 4096,
+    "height": 2048,
+    "fourcc": "DXT1",
+    "mip_count": 13
+  },
+  "AR_shotgun_d": {
+    "sha256": "d6a98ef03ec588a31fefdb7393757738b19b86b9e9381029e47e5c26c0506237",
+    "width": 2048,
+    "height": 2048,
+    "fourcc": "DXT5",
+    "mip_count": 12
+  },
+  "AR_shotgun_n": {
+    "sha256": "83f64bfce085107a4ec80f14d236eb1409a402b8d879bcf8691667c3f92cd798",
+    "width": 2048,
+    "height": 2048,
+    "fourcc": "DXT1",
+    "mip_count": 12
+  },
+  "inview_glove_d": {
+    "sha256": "d76d05b122a6c81b24b3560e88cf181167fab3ee64a967a7017d21770f3d4754",
+    "width": 2048,
+    "height": 2048,
+    "fourcc": "DXT1",
+    "mip_count": 12
+  },
+  "inview_glove_n": {
+    "sha256": "5f0a8e9e4c65763a58bc5e88cafeee238ef715935730065336cdff2ca3d8e049",
+    "width": 2048,
+    "height": 2048,
+    "fourcc": "DXT1",
+    "mip_count": 12
+  },
+  "ar_sniper_rifle_n": {
+    "sha256": "37ea2c1a3c368e1a2b7428490d5a36d9673ab0244dfc5af013ac604c17daed77",
+    "width": 4096,
+    "height": 2048,
+    "fourcc": "DXT1",
+    "mip_count": 13
+  }
+}
