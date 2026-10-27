@@ -1,0 +1,22 @@
+{
+  "createdAt": "2026-10-12T17:41:44.1668218+02:00",
+  "candidate": "C:\\Users\\Trilex\\vr-mods\\pause-re-lab\\native-rtt-dedicated-v1\\UI_SinglePlayer_SF.xxx",
+  "candidateSha256": "5B2EA469A3EE06FF154AC78BD58604E8034970D4837F289E5C22503C6A673CDE",
+  "files": [
+    {
+      "name": "UI_SinglePlayer_SF.xxx",
+      "sourcePath": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\RvGame\\CookedPC\\UI_SinglePlayer_SF.xxx",
+      "sha256": "C8CDB2E193B53781D7634EEE88F2DC90FD168B5DCC639098441A2B489386984F"
+    },
+    {
+      "name": "d3d9.dll",
+      "sourcePath": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\d3d9.dll",
+      "sha256": "2FE5011C20DFEAAEDFFFFE58CD39E92A9570867F344649B00C0038AD97B39A47"
+    },
+    {
+      "name": "SingularityVR.ini",
+      "sourcePath": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\SingularityVR.ini",
+      "sha256": "61AEC56CF0F961C3D771DE186ADF469E39A978900DE8F8609086A965B4FE378B"
+    }
+  ]
+}
