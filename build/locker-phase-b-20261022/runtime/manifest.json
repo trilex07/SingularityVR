@@ -1,0 +1,14 @@
+﻿{
+    "timestamp":  "2026-10-22T09:57:48.6950098+02:00",
+    "purpose":  "Locker virtual Phase B (read-only logs)",
+    "backupPath":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-title-menu-fix\\deployment\\install-backups\\20261022-095748",
+    "artifactDir":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-title-menu-fix\\build\\locker-phase-b-20261022\\runtime",
+    "before":  {
+                   "ini":  "D42402712A526A5D0A356758482B04885D5437C1D55518AEE65D7074325E5FFB",
+                   "d3d9":  "C166579025A9321EB53FE8FF5870F1F1CE9F57A89CA5944B162F4E4093C675FF"
+               },
+    "after":  {
+                  "ini":  "372B306262741305DAD7D4CD03905F49A439A41EF98766D3163B07528FDB1E51",
+                  "d3d9":  "1551C9F42CB66F0428DC97D69F670A3D89F6F71CE4A05E14206CF56E865267E9"
+              }
+}
