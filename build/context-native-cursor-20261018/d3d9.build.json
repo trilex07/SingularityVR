@@ -1,0 +1,28 @@
+﻿{
+    "builtAt":  "2026-10-18T17:08:37.5811919+02:00",
+    "repository":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-main-projector-integration",
+    "branch":  "fix/menu-pointer-hud-polish",
+    "commit":  "064f66f6ffe2f42dab093c8d25dcb2482ebb0066",
+    "workingTreeStatus":  [
+                              " M docs/contextual-cursor.md",
+                              " M spikes/view_matrix/SingularityVR.ini",
+                              " M spikes/view_matrix/d3d9.cpp",
+                              " M spikes/view_matrix/native_ui_input.h",
+                              " M spikes/view_matrix/tests/test-context-cursor-gate.cpp",
+                              " M spikes/view_matrix/tests/test-menu-polish.cpp",
+                              " M spikes/view_matrix/ui_pointer.h",
+                              " M spikes/view_matrix/vr_menu_overlay.h",
+                              " M tools/tests/test-context-cursor.ps1",
+                              " M tools/title/prepare_context_cursor_ini.ps1",
+                              "?? build/",
+                              "?? spikes/view_matrix/context_cursor_policy.h",
+                              "?? spikes/view_matrix/native_context_cursor.h",
+                              "?? tools/title/inspect_cursor_actions.py"
+                          ],
+    "optimization":  "/O2",
+    "performanceInstrumentation":  false,
+    "architecture":  "x86 PE32",
+    "machine":  "0x014C",
+    "optionalHeaderMagic":  "0x010B",
+    "sha256":  "5478D2A3BF530D3E9D067B9FE63FF909404E8F0B84C3320863EEB233724677D7"
+}

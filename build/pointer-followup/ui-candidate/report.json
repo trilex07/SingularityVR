@@ -1,0 +1,37 @@
+{
+  "profile": "single-player",
+  "input": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\RvGame\\CookedPC\\UI_SinglePlayer_SF.xxx",
+  "original_sha256": "51cdab5c892a7b682d89319721330aa3e78c7013d1c60e1476a0115431f01a1a",
+  "candidate": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-main-projector-integration\\build\\pointer-followup\\ui-candidate\\UI_SinglePlayer_SF.xxx",
+  "candidate_sha256": "ad2029b8bf3dd77254ec5c33bd606da193d35c46b009393e9c6bf75dd07c8cac",
+  "changes": [
+    {
+      "sprite": 2,
+      "leaf": 1,
+      "offset": 53,
+      "size": 248,
+      "old_shape_sha256": "9d2e494f1fcc2626560a0920ae7633e5be3167b1ea04dac29ae67fd0f5c8d95b",
+      "new_shape_sha256": "3c4260357575dd6a107da9598b4f6c0237a682c39c67feaf5a998b0efadc0237",
+      "movie": "iis",
+      "original_fnv64": "978D81A0A2F0D401",
+      "candidate_fnv64": "4702ABDCD6B1834D",
+      "package_offset": 14025
+    },
+    {
+      "sprite": 92,
+      "leaf": 91,
+      "offset": 26401,
+      "size": 248,
+      "old_shape_sha256": "26eaf41db0332a18f6ea8f4de28b8657bde579e0077eac5bf96bb995a7bf1ac1",
+      "new_shape_sha256": "13aaf5dced752522303561795e648f93e9e9769b9efc05e936fbf6636e3fbb97",
+      "movie": "SPMenus",
+      "original_fnv64": "D2E964C936CCE902",
+      "candidate_fnv64": "A1D3588E5F06F952",
+      "package_offset": 71619
+    }
+  ],
+  "logical_size_unchanged": true,
+  "unrelated_bytes_unchanged": true,
+  "native_decoder_roundtrip": true,
+  "status": "OFFLINE_PASS_PHYSICAL_PENDING"
+}

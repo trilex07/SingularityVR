@@ -1,0 +1,14 @@
+{
+  "schema": "singularityvr-change-plan-v1",
+  "profileSha256": "2D9FA6A89A65E089C444B5E6DBC3B989272DF8404636F4D24ED90658E1D02E1B",
+  "reason": "PSVR2 contextual cursor follow-up with accepted save-dialog separation preserved",
+  "files": [
+    {"path": "Binaries/d3d9.dll", "before": "789749E5D4DB8FC6C603DF599A38A4FB1EC00DE374E4E2FDD469B09B9C5F361B", "after": "282946F060E1A4DCA6DB387353ACF9C8779C68A0462B0D372B8176EC7FD16196", "reason": "Exact direct-GFx canvas projection shared with pointer plane"}
+  ],
+  "ini": [
+    {"key": "Render/FrontMenuScalePct", "before": "80", "after": "72", "reason": "Preserve previous menu test scale"},
+    {"key": "Render/ModalUiProbe", "before": null, "after": "1", "reason": "Bounded direct-canvas identity evidence"},
+    {"key": "Diagnostic/MenuAssetWitness", "before": "0", "after": "1", "reason": "Confirm patched native Mouse source fingerprints"},
+    {"key": "Render/ContextPointerProjection", "before": null, "after": "1", "reason": "Enable only reflected direct GFx panel projection"}
+  ]
+}

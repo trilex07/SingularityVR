@@ -1,0 +1,17 @@
+{
+  "Kind": "SingularityVR contextual cursor delta v8",
+  "Files": [
+    {
+      "RelativePath": "RvGame\\CookedPC\\UI_SinglePlayer_SF.xxx",
+      "Source": "source\\ui-baseline\\UI_SinglePlayer_SF.xxx",
+      "BaselineSha256": "51CDAB5C892A7B682D89319721330AA3E78C7013D1C60E1476A0115431F01A1A",
+      "CandidateSha256": "51CDAB5C892A7B682D89319721330AA3E78C7013D1C60E1476A0115431F01A1A"
+    },
+    {
+      "RelativePath": "RvGame\\CookedPC\\RvGame.xxx",
+      "Source": "source\\dialog-repacked\\RvGame.xxx",
+      "BaselineSha256": "4153C4889C90635069ED226D918CDB76BE618F46B1BAEA152AC10CFFDF59E9EF",
+      "CandidateSha256": "DA06F09F3EB253134BE5CD5FA5493F90CAB19453AD192BC998A33D887C7BC293"
+    }
+  ]
+}

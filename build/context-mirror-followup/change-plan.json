@@ -1,0 +1,14 @@
+{
+  "schema": "singularityvr-change-plan-v1",
+  "profileSha256": "2D9FA6A89A65E089C444B5E6DBC3B989272DF8404636F4D24ED90658E1D02E1B",
+  "reason": "Contextual comfort depth and aspect-fit right-eye mirror; native arrow unresolved, no asset mutation",
+  "files": [{"path":"Binaries/d3d9.dll","before":"789749E5D4DB8FC6C603DF599A38A4FB1EC00DE374E4E2FDD469B09B9C5F361B","after":"4E89E48085A2198E6698AB566FAA9962BEE988EFFC03639AD4254CD9BE69D722","reason":"Optimized x86 renderer; contextual plane inherits frontend depth; falsified suppression disabled"}],
+  "ini": [
+    {"key":"Render/ContextPointerProjection","before":null,"after":"1","reason":"Shared projection and ray plane"},
+    {"key":"Render/ContextCursorSuppress","before":null,"after":"0","reason":"Falsified identity must remain disabled"},
+    {"key":"Render/DesktopMirrorEye","before":"2","after":"2","reason":"Right eye"},
+    {"key":"Render/DesktopMirrorFill","before":"1","after":"0","reason":"Preserve eye aspect ratio"},
+    {"key":"Render/DesktopMirrorWindow","before":"0","after":"1","reason":"Fit visible client area without resizing UE3 window"},
+    {"key":"Render/SteamCaptureBackbuffer","before":"0","after":"1","reason":"Completed mirror pixel stamp; actual Steam screenshots require verification"}
+  ]
+}

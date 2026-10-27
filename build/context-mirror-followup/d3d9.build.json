@@ -1,0 +1,15 @@
+﻿{
+    "builtAt":  "2026-10-18T16:50:23.5326326+02:00",
+    "repository":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-main-projector-integration",
+    "branch":  "fix/menu-pointer-hud-polish",
+    "commit":  "064f66f6ffe2f42dab093c8d25dcb2482ebb0066",
+    "workingTreeStatus":  [
+                              "?? build/"
+                          ],
+    "optimization":  "/O2",
+    "performanceInstrumentation":  false,
+    "architecture":  "x86 PE32",
+    "machine":  "0x014C",
+    "optionalHeaderMagic":  "0x010B",
+    "sha256":  "4E89E48085A2198E6698AB566FAA9962BEE988EFFC03639AD4254CD9BE69D722"
+}

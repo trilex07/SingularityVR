@@ -1,0 +1,14 @@
+{
+  "schema": "singularityvr-change-plan-v1",
+  "profileSha256": "2D9FA6A89A65E089C444B5E6DBC3B989272DF8404636F4D24ED90658E1D02E1B",
+  "reason": "Verified native cursor ABI experiment, shared laser coordinates and right-eye mirror; no package mutation",
+  "files": [{"path":"Binaries/d3d9.dll","before":"789749E5D4DB8FC6C603DF599A38A4FB1EC00DE374E4E2FDD469B09B9C5F361B","after":"5478D2A3BF530D3E9D067B9FE63FF909404E8F0B84C3320863EEB233724677D7","reason":"Optimized x86 cursor/laser/mirror candidate; physical verification pending"}],
+  "ini": [
+    {"key":"Render/ContextPointerProjection","before":null,"after":"1","reason":"Shared projection and ray plane"},
+    {"key":"Render/ContextCursorSuppress","before":null,"after":"0","reason":"Falsified draw suppression remains disabled"},
+    {"key":"Render/ContextCursorNative","before":null,"after":"1","reason":"Audited native visibility path with ownership and readback"},
+    {"key":"Render/DesktopMirrorFill","before":"1","after":"0","reason":"Preserve right-eye aspect ratio"},
+    {"key":"Render/DesktopMirrorWindow","before":"0","after":"1","reason":"Fit visible client without resizing UE3 viewport"},
+    {"key":"Render/SteamCaptureBackbuffer","before":"0","after":"1","reason":"Completed mirror pixel stamp; actual F12 image pending"}
+  ]
+}

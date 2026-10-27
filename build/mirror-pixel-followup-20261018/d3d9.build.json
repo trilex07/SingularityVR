@@ -1,0 +1,19 @@
+﻿{
+    "builtAt":  "2026-10-18T17:26:14.8384523+02:00",
+    "repository":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-main-projector-integration",
+    "branch":  "fix/menu-pointer-hud-polish",
+    "commit":  "31b2c89f6dc26bd7087f8c299e3ad51a7c9c9410",
+    "workingTreeStatus":  [
+                              " M docs/right-eye-mirror-capture.md",
+                              " M spikes/view_matrix/d3d9.cpp",
+                              " M spikes/view_matrix/tests/test-desktop-mirror-pixels.cpp",
+                              "?? build/",
+                              "?? spikes/view_matrix/mirror_pixel_probe.h"
+                          ],
+    "optimization":  "/O2",
+    "performanceInstrumentation":  false,
+    "architecture":  "x86 PE32",
+    "machine":  "0x014C",
+    "optionalHeaderMagic":  "0x010B",
+    "sha256":  "EFC115DF57002A67116F26FF76CAB5D6CF2D51EF91092BB134D369F4D428771D"
+}

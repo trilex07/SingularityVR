@@ -1,0 +1,25 @@
+{
+  "profile": "dialogs",
+  "input": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\RvGame\\CookedPC\\RvGame.xxx",
+  "original_sha256": "4153c4889c90635069ed226d918cdb76be618f46b1baea152ac10cffdf59e9ef",
+  "candidate": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-main-projector-integration\\build\\pointer-followup\\dialog-candidate\\RvGame.xxx",
+  "candidate_sha256": "64a9bda32877259bc9d07bd4040467d53e927b9b5c44b508bc84603c51bdc272",
+  "changes": [
+    {
+      "sprite": 3,
+      "leaf": 2,
+      "offset": 298,
+      "size": 32,
+      "old_shape_sha256": "24a53290ed8d438ddaeda371eee0af88039286cc2e2d3f55eb18553d6441e9ff",
+      "new_shape_sha256": "4a88a62a55a9cca6d6e66bdb095abf030ab85c0751172c266895a02177ca5de3",
+      "movie": "Dialogs",
+      "original_fnv64": "28B71A137B55BB7A",
+      "candidate_fnv64": "B588D697F7455F34",
+      "package_offset": 5561056
+    }
+  ],
+  "logical_size_unchanged": true,
+  "unrelated_bytes_unchanged": true,
+  "native_decoder_roundtrip": true,
+  "status": "OFFLINE_PASS_PHYSICAL_PENDING"
+}

@@ -1,0 +1,27 @@
+{
+  "schema": "singularityvr-change-plan-v1",
+  "profileSha256": "2D9FA6A89A65E089C444B5E6DBC3B989272DF8404636F4D24ED90658E1D02E1B",
+  "reason": "PSVR2 contextual cursor test: suppress only the measured modal GFx arrow and project direct canvas to the shared laser/reticle plane",
+  "files": [
+    {
+      "path": "Binaries/d3d9.dll",
+      "before": "789749E5D4DB8FC6C603DF599A38A4FB1EC00DE374E4E2FDD469B09B9C5F361B",
+      "after": "722FDF33C560C6956A14AB450F69453519F10521F16BD01411E30AAD23D60BDE",
+      "reason": "x86 /O2 renderer with a default-OFF, exact-signature modal-cursor suppression gate"
+    }
+  ],
+  "ini": [
+    {
+      "key": "Render/ContextPointerProjection",
+      "before": null,
+      "after": "1",
+      "reason": "Draw the direct GFx modal canvas on the same head-anchored plane hit by the controller laser"
+    },
+    {
+      "key": "Render/ContextCursorSuppress",
+      "before": null,
+      "after": "1",
+      "reason": "A/B test suppression of only the measured class-4 indexed UP cursor primitive"
+    }
+  ]
+}

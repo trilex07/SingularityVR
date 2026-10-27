@@ -1,0 +1,18 @@
+﻿{
+    "builtAt":  "2026-10-18T18:16:03.3350138+02:00",
+    "repository":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-main-projector-integration",
+    "branch":  "fix/menu-pointer-hud-polish",
+    "commit":  "2a56307bd75925619f6871b1f9629ed86bf6922a",
+    "workingTreeStatus":  [
+                              " M spikes/view_matrix/d3d9.cpp",
+                              " M spikes/view_matrix/health_gesture.h",
+                              " M spikes/view_matrix/tests/test-health-gesture.cpp",
+                              "?? build/"
+                          ],
+    "optimization":  "/O2",
+    "performanceInstrumentation":  false,
+    "architecture":  "x86 PE32",
+    "machine":  "0x014C",
+    "optionalHeaderMagic":  "0x010B",
+    "sha256":  "7A17E3ED79EE7A96A4C4EAFDCD0FF0B11EF697DD9D34F8EEE6B441C68255BF5C"
+}

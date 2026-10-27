@@ -1,0 +1,75 @@
+{
+  "schema": "singularityvr-change-plan-v1",
+  "profileSha256": "2D9FA6A89A65E089C444B5E6DBC3B989272DF8404636F4D24ED90658E1D02E1B",
+  "reason": "Correct missing accepted VFX flag; verify opaque VR screenshots and investigate right-hand native melee motion",
+  "files": [
+    {
+      "path": "Binaries/d3d9.dll",
+      "before": "789749E5D4DB8FC6C603DF599A38A4FB1EC00DE374E4E2FDD469B09B9C5F361B",
+      "after": "A9E2B49B2FD71502295B8A57ED7415F931641CB84093948A643E6C80A09AE7D2",
+      "reason": "Menu and health changes retained; opaque XR capture experiment and read-only knife pose probe"
+    }
+  ],
+  "ini": [
+    {
+      "key": "Render/ContextPointerProjection",
+      "before": null,
+      "after": "1",
+      "reason": "Retain contextual candidate"
+    },
+    {
+      "key": "Render/ContextCursorSuppress",
+      "before": null,
+      "after": "0",
+      "reason": "Retain disabled falsified heuristic"
+    },
+    {
+      "key": "Render/ContextCursorNative",
+      "before": null,
+      "after": "1",
+      "reason": "Native cursor visibility candidate"
+    },
+    {
+      "key": "Render/DesktopMirrorFill",
+      "before": "1",
+      "after": "0",
+      "reason": "Retain aspect-fit candidate"
+    },
+    {
+      "key": "Render/DesktopMirrorWindow",
+      "before": "0",
+      "after": "1",
+      "reason": "Retain visible-client fit candidate"
+    },
+    {
+      "key": "Render/SteamCaptureBackbuffer",
+      "before": "0",
+      "after": "1",
+      "reason": "Retain D3D capture path for comparison"
+    },
+    {
+      "key": "Diagnostic/MirrorPixelProbe",
+      "before": null,
+      "after": "1",
+      "reason": "Two bounded groups of512x256 thumbnails; source content and consumer comparison"
+    },
+    {
+      "key": "Render/NativeMuzzleParticleStereo",
+      "before": null,
+      "after": "1",
+      "reason": "Preserve accepted VFX / isolated opaque XR capture / bounded read-only knife pose evidence"
+    },
+    {
+      "key": "Render/XrCaptureOpaqueAlpha",
+      "before": null,
+      "after": "1",
+      "reason": "Preserve accepted VFX / isolated opaque XR capture / bounded read-only knife pose evidence"
+    },
+    {
+      "key": "Diagnostic/KnifeMeleePoseProbe",
+      "before": null,
+      "after": "1",
+      "reason": "Preserve accepted VFX / isolated opaque XR capture / bounded read-only knife pose evidence"
+    }
+  ]
+}

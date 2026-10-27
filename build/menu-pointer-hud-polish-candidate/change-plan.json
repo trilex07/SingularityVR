@@ -1,0 +1,33 @@
+{
+  "schema": "singularityvr-change-plan-v1",
+  "profileSha256": "2D9FA6A89A65E089C444B5E6DBC3B989272DF8404636F4D24ED90658E1D02E1B",
+  "reason": "Controlled PSVR2 test: front-menu scale, exact modal RTT capture, VR pointer alignment, and hand HUD visibility/comfort",
+  "files": [
+    {
+      "path": "Binaries/d3d9.dll",
+      "before": "789749E5D4DB8FC6C603DF599A38A4FB1EC00DE374E4E2FDD469B09B9C5F361B",
+      "after": "5032B353AB00D961908E78DE40FB903C04F9497AFB9CD43FF23ED7E69C2E08C1",
+      "reason": "preserve exact save-slot source through the measured direct-dialog focus transition"
+    }
+  ],
+  "ini": [
+    {
+      "key": "Render/FrontMenuScalePct",
+      "before": "80",
+      "after": "72",
+      "reason": "Reduce front-menu presentation by 10% from the accepted 80% size"
+    },
+    {
+      "key": "Render/ModalUiProbe",
+      "before": null,
+      "after": "1",
+      "reason": "Bounded exact source identity log for Slots to Dialog transition"
+    },
+    {
+      "key": "Diagnostic/MenuAssetWitness",
+      "before": "0",
+      "after": "1",
+      "reason": "Bounded read-only cursor and GFx source witness for this test"
+    }
+  ]
+}
