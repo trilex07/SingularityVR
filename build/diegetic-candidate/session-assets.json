@@ -1,0 +1,21 @@
+{
+  "schema": "singularityvr-session-assets-delta-v1",
+  "reason": "Diegetic HUD milestone 1: Centurion 06/24 counter runtime atlas (1024x512 PNG, no GLB or model is loaded at runtime). DLL/INI are protected and unchanged by this delta.",
+  "files": [
+    {
+      "path": "Binaries/vr-assets/hud/diegetic/diegetic_hud_atlas.png",
+      "before": null,
+      "after": "9ed4a5c365e5521c12effc7e3e7c9df7833eac2b4b71d45fcab18add4b8d81f9"
+    }
+  ],
+  "protected": [
+    {
+      "path": "Binaries/d3d9.dll",
+      "sha256": "e304f22559c6eef2d8055b73b48518870f1b24199c8bdd2753ccb5a9798e63c6"
+    },
+    {
+      "path": "Binaries/SingularityVR.ini",
+      "sha256": "da63a2a90821fc4167ee3f77f57f7184203998d930864fe83f9f039650f69fbc"
+    }
+  ]
+}
