@@ -1,5 +1,64 @@
 # STATUS — session handoff
 
+## 2026-10-24 — DIEGETIC HUD milestone 2: PHYSICAL FAIL (not visible) — root-caused and corrected in this integration
+
+- User graded the deployed Valkyrie/Spikeshot milestone-2 candidate
+  (dll `B5F2A2AD…`): "I cannot see the new weapon HUD, only the old one."
+  Archived `docs/evidence/failed-hud-session-20261024/` (7856 lines,
+  12:09:40 run): `diegetic hud: atlas unavailable; diegetic counter hidden`
+  (once), then the legacy plates continued (`drew plate=2 clip=6 bin=59`).
+  State: **PHYSICAL FAIL — NOT VISIBLE**.
+- Root cause (code-receipt proven): `LoadAmmoPng` resolved the diegetic
+  atlas against the legacy plates root `vr-assets/hud/katorga/ammo`
+  (L30969), where the file does not exist — the deployed asset lives in
+  `vr-assets/hud/diegetic/`. The `atlas unavailable` sticky state then left
+  `g_diegeticArtState=0`, and the plate back-off keyed on atlas readiness
+  (not on an actual render) kept the accepted plates visible.
+- Correction on `integration/diegetic-hud-centurion-20261024` @ `39f3a6f2`
+  (merged here as `ecbfb435`): per-loader asset roots
+  (`g_diegeticAssetRoot` vs `g_ammoAssetRoot`), receipts with the resolved
+  path + atlas dimensions, per-frame per-plate `g_diegeticDrew[3]` latch
+  (both eye halves must actually submit before DrawAmmoPlate backs off;
+  diegetic now runs before the plates in `CopyBackbufferToD3D11`), per-weapon
+  draw receipts (`drew %s plate=%d clip=%d bin=%d … eyes=LR`). Full battery
+  + bridge suites PASS; dll `9500DE1E…` @ integration `09887b1849c8` is the
+  deployed candidate.  **Still NOT physically verified** — the corrected
+  path has never been exercised in a real session; first physical evidence
+  = `atlas ready %ux%u from vr-assets/hud/diegetic` + `drew … eyes=LR`
+  receipts, and the counters visible on both weapons.
+
+## 2026-10-24 — Integrated SOL candidate deployed (diegetic fix + icons + accuracy + gameplay text + remaster Mode 1; independently rollable)
+
+- Branch `integration/main-sol-20261024` from origin/main `551c64d7`
+  (pushed): merges `ecbfb435` (diegetic milestones + P0 fix), `6aa6cf8f`
+  (PR #56 icons @ `3223b241`, asset-only), `e6eff520` (accuracy @ `eade95a`
+  incl. the two-hand scope fix; opt-in keys default 100), `09887b18`
+  (PR #57 @ `5cc9150` D3D9Ex bridge, single slot-65 owner preserved).
+- Deployed (game closed, 2026-10-24 12:40): session-assets delta first
+  (wheel atlas `E4DC0E7D…`→`3EF1782696B4…` per the PR-specified hash +
+  `texture_override.ini` `895523B4…`→`C43E3EA1…` adding ONLY
+  `priority_material_mode=1`; manifest `4AC73F5B…` copy in the acceptance
+  dir; assets backup `build/next-weapon-reload/icons-atlas-backup` verified),
+  then the guarded candidate run (profile `54153870…`, plan `0F35F172…`):
+  dll `B5F2A2AD…`→`9500DE1E…` (PE32 0x014C) + INI `257F9DFB…`→`366BEA6E…`
+  (359→365 keys: `VrGameplayTextSafeArea=1`, `TwoHandSpreadPercent=100`
+  pinned, `VrValkyrie*` 70/50, `VrVolk*` 85/50); report copy + backup
+  `deployment/install-backups/20261024-124057` = the milestone-2 pair.
+- Gate states: diegetic `DiegeticWeaponHud=1` (armed), icons atlas active
+  (asset-only), accuracy opt-in values active (code defaults 100 = off
+  unchanged), gameplay-text safe-area ON for grading (rollback 0), remaster
+  **MODE 1 ONLY** (log-only classification; zero substitutions; the four
+  private DDS are NOT installed; keep 107 overrides + remaster_apply=1 +
+  effects_remaster=1 + 8K tier byte-identical). Audio/dubbing: excluded.
+- Regressions on the integrated tree: full fixture battery (incl. gameplay
+  text probe/safe-area + reseat 203), haptics-native py, dual-weapon wiring
+  py, dual-weapon-TMD 39 groups, HUD-live, short-gauntlet, gun-scale,
+  `test-texture-bridge-main.ps1` 13/13 PASS. No failed gates.
+- Rollback surface (independent): `DiegeticWeaponHud=0` / `VrGameplayText
+  SafeArea=0` / accuracy keys→100 / `priority_material_mode=0` (each one
+  INI edit); files: backup `20261024-124057` (dll+INI) and
+  `icons-atlas-backup` (atlas+texture config).
+
 ## 2026-10-24 — SIDE first-four material remaster bridge (L2_PASS; physical gate open)
 
 On `feature/side-material-remaster-d3d9ex`, a separate, default-OFF

@@ -1,0 +1,51 @@
+{
+  "schema": "singularityvr-change-plan-v1",
+  "profileSha256": "541538704161E8FF04DD25A53838433A4586644CC7D12C2444E28C28BF7DC55B",
+  "reason": "Integrated SOL candidate renderer upgrade (READY_FOR_PHYSICAL_ACCEPTANCE, independently rollable per feature): d3d9.dll 9500DE1E18FF @ 09887b18 = diegetic P0 visibility fix + accuracy correction (eade95a) + PR57 D3D9Ex bridge (single slot-65 owner) + PR56-icon-compatible wheel runtime. INI gates the candidate features; wheel atlas + texture_override.ini Mode-1 already installed by the separate session-assets delta of the same guard sequence.",
+  "files": [
+    {
+      "path": "Binaries/d3d9.dll",
+      "before": "B5F2A2AD4ADB53BBA4DEC5369CD5F2A5FD1EA06373C6F1E1E58E374633B58613",
+      "after": "9500DE1E18FF95D2CA685F248E1FD2421808B1D018F9F0ACD4120E29B5FDE31C",
+      "reason": " diegetic asset-root+atomic back-off fix; accuracy; D3D9Ex bridge"
+    }
+  ],
+  "ini": [
+    {
+      "key": "Render/VrGameplayTextSafeArea",
+      "before": null,
+      "after": "1",
+      "reason": " gameplay LocationTextDisplay safe-area reposition for candidate grading (rollback: 0)"
+    },
+    {
+      "key": "Input/TwoHandSpreadPercent",
+      "before": null,
+      "after": "100",
+      "reason": " accepted global two-hand policy pinned (native dispersion unchanged)"
+    },
+    {
+      "key": "Input/VrValkyrieSpreadPercent",
+      "before": null,
+      "after": "70",
+      "reason": " opt-in Valkyrie random-delta scaling (one hand; 35% with two-hand support)"
+    },
+    {
+      "key": "Input/VrValkyrieTwoHandPercent",
+      "before": null,
+      "after": "50",
+      "reason": " opt-in Valkyrie two-hand support factor"
+    },
+    {
+      "key": "Input/VrVolkSpreadPercent",
+      "before": null,
+      "after": "85",
+      "reason": " opt-in Volk random-delta scaling (one hand; ~43% with two-hand support)"
+    },
+    {
+      "key": "Input/VrVolkTwoHandPercent",
+      "before": null,
+      "after": "50",
+      "reason": " opt-in Volk two-hand support factor"
+    }
+  ]
+}

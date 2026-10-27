@@ -1,0 +1,30 @@
+{
+  "schema": "singularityvr-session-assets-delta-v1",
+  "reason": "PR #56 detailed weapon wheel icons: only the neutral wheel atlas is replaced (3EF17826...); wheel geometry/controls, sprite UV rects, PL/EN localized atlases and M09 haptics are untouched; no renderer change. Same guarded delta adds texture_override.ini priority_material_mode=1 (remaster Mode 1: log-only classification of AR_shotgun_d/n + inview_glove_d/n; every existing texture key byte-identical).",
+  "files": [
+    {
+      "path": "Binaries/vr-assets/ui/remaster/ui_atlas_neutral.png",
+      "before": "e4dc0e7d209bddf23816f101177c8a8b02aa24ed766c55c446877956cac4f23b",
+      "after": "3ef1782696b4a5e1e9d93f409c5b0f6ff014b78cc42fab06ec29110661981818"
+    },
+    {
+      "path": "Binaries/texture_override.ini",
+      "before": "895523b4986f584f6bf336f36321ee446beed63966b3ecced6c64b62a9228185",
+      "after": "c43e3ea1e8dbce7e64b375dca8b8201a44a37443e91590a6a4ea9d396baeab25"
+    }
+  ],
+  "protected": [
+    {
+      "path": "Binaries/d3d9.dll",
+      "sha256": "b5f2a2ad4adb53bba4dec5369cd5f2a5fd1ea06373c6f1e1e58e374633b58613"
+    },
+    {
+      "path": "Binaries/SingularityVR.ini",
+      "sha256": "257f9dfb14a4483aa81a0cb99eeb74ec1fc45a23192067aee29355b129741301"
+    },
+    {
+      "path": "Binaries/vr-assets/hud/diegetic/diegetic_hud_atlas.png",
+      "sha256": "9ed4a5c365e5521c12effc7e3e7c9df7833eac2b4b71d45fcab18add4b8d81f9"
+    }
+  ]
+}
