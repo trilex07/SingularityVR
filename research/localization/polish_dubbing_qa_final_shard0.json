@@ -1,0 +1,2058 @@
+{
+  "generated_at": "2026-10-08",
+  "model": "Systran/faster-whisper-base",
+  "expected_language": "pl",
+  "total_lines": 38,
+  "counts": {
+    "FAIL_GIBBERISH": 3,
+    "PASS": 30,
+    "REVIEW_REQUIRED": 5
+  },
+  "speaker_counts": {
+    "narrator_user": 38
+  },
+  "results": [
+    {
+      "id": "..\\RvGame\\Localization\\INT\\Hackery.int|GameMessage|OvertimeMessage",
+      "record": "..\\RvGame\\Localization\\INT\\Hackery.int",
+      "section": "GameMessage",
+      "key": "OvertimeMessage",
+      "category": "hud",
+      "en": "Score tied at the end of regulation. Sudden Death Overtime!!!",
+      "pl": "Wynik jest remisowy po regulaminowym czasie. Dogrywka do nagłej śmierci!",
+      "tts_text": "Wynik jest remisowy po regulaminowym czasie. Dogrywka do nagłej śmierci!",
+      "profile": "narrator_user",
+      "file": "0011_43166fba7ce1.wav",
+      "sample_rate": 24000,
+      "peak_dbfs": -3.0,
+      "qa_correction": "remaining_mixed_language_20261008",
+      "pack": "full_localization",
+      "manifest_line": 11,
+      "audio_path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\full_voicepack\\0011_43166fba7ce1.wav",
+      "line_id": "..\\RvGame\\Localization\\INT\\Hackery.int|GameMessage|OvertimeMessage",
+      "expected_pl": "Wynik jest remisowy po regulaminowym czasie. Dogrywka do nagłej śmierci!",
+      "translation_status": "draft_without_explicit_review",
+      "generation_attempt": 1,
+      "audio": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "duration_s": 4.11,
+        "rms": 0.100918,
+        "peak": 1.0,
+        "clipping_fraction": 1e-05,
+        "silence_fraction": 0.179827,
+        "audio_format_status": "PASS"
+      },
+      "asr": {
+        "language": "pl",
+        "language_probability": 0.9995,
+        "text": "Wyniek jest tremisowy po regulaminowym czasie, do grywka do nagłej śmierci.",
+        "segments": [
+          {
+            "start": 0.0,
+            "end": 4.0,
+            "text": "Wyniek jest tremisowy po regulaminowym czasie, do grywka do nagłej śmierci."
+          }
+        ]
+      },
+      "notes": [],
+      "qa_status": "PASS",
+      "text_similarity": {
+        "token_sequence": 0.6667,
+        "wer": 0.4
+      },
+      "translation_quality_status": "AUTOMATED_SANITY_OK",
+      "speech_rate_expected_words_per_s": 2.433
+    },
+    {
+      "id": "..\\RvGame\\Localization\\INT\\RvGame.int|General|LevelIntroProcessing",
+      "record": "..\\RvGame\\Localization\\INT\\RvGame.int",
+      "section": "General",
+      "key": "LevelIntroProcessing",
+      "category": "other",
+      "en": "E99 Processing Complex, Katorga-12\nOctober 27th, 2010",
+      "pl": "Kompleks przetwarzania E99, Katorga-12\n27 października 2010 roku.",
+      "tts_text": "Kompleks przetwarzania E dziewięćdziesiąt dziewięć, Katorga dwanaście 27 października 2010 roku.",
+      "profile": "narrator_user",
+      "file": "0069_da72bdf8ca31.wav",
+      "sample_rate": 24000,
+      "peak_dbfs": -3.0,
+      "qa_correction": "remaining_mixed_language_20261008",
+      "pack": "full_localization",
+      "manifest_line": 69,
+      "audio_path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\full_voicepack\\0069_da72bdf8ca31.wav",
+      "line_id": "..\\RvGame\\Localization\\INT\\RvGame.int|General|LevelIntroProcessing",
+      "expected_pl": "Kompleks przetwarzania E dziewięćdziesiąt dziewięć, Katorga dwanaście 27 października 2010 roku.",
+      "translation_status": "draft_without_explicit_review",
+      "generation_attempt": 1,
+      "audio": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "duration_s": 5.968,
+        "rms": 0.090772,
+        "peak": 0.998199,
+        "clipping_fraction": 0.0,
+        "silence_fraction": 0.134121,
+        "audio_format_status": "PASS"
+      },
+      "asr": {
+        "language": "pl",
+        "language_probability": 0.996,
+        "text": "Komplek z przetwarzania 99, Katorga 1227 października 2010 roku.",
+        "segments": [
+          {
+            "start": 0.0,
+            "end": 6.0,
+            "text": "Komplek z przetwarzania 99, Katorga 1227 października 2010 roku."
+          }
+        ]
+      },
+      "notes": [
+        "REVIEW_REQUIRED"
+      ],
+      "qa_status": "REVIEW_REQUIRED",
+      "text_similarity": {
+        "token_sequence": 0.5,
+        "wer": 0.6364
+      },
+      "translation_quality_status": "AUTOMATED_SANITY_OK",
+      "speech_rate_expected_words_per_s": 1.843
+    },
+    {
+      "id": "..\\RvGame\\Localization\\INT\\RvGame.int|ActionVolume|NeedCode",
+      "record": "..\\RvGame\\Localization\\INT\\RvGame.int",
+      "section": "ActionVolume",
+      "key": "NeedCode",
+      "category": "other",
+      "en": "Activation Code Required To Charge E99 Bomb",
+      "pl": "Do naładowania bomby E99 wymagany jest kod aktywacyjny.",
+      "tts_text": "Do naładowania bomby E dziewięćdziesiąt dziewięć wymagany jest kod aktywacyjny.",
+      "profile": "narrator_user",
+      "file": "0102_da8e7a134316.wav",
+      "sample_rate": 24000,
+      "peak_dbfs": -3.0,
+      "qa_correction": "remaining_mixed_language_20261008",
+      "pack": "full_localization",
+      "manifest_line": 102,
+      "audio_path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\full_voicepack\\0102_da8e7a134316.wav",
+      "line_id": "..\\RvGame\\Localization\\INT\\RvGame.int|ActionVolume|NeedCode",
+      "expected_pl": "Do naładowania bomby E dziewięćdziesiąt dziewięć wymagany jest kod aktywacyjny.",
+      "translation_status": "draft_without_explicit_review",
+      "generation_attempt": 1,
+      "audio": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "duration_s": 3.913,
+        "rms": 0.108101,
+        "peak": 1.0,
+        "clipping_fraction": 1.1e-05,
+        "silence_fraction": 0.096729,
+        "audio_format_status": "PASS"
+      },
+      "asr": {
+        "language": "pl",
+        "language_probability": 0.9897,
+        "text": "Naładowania bomby E9-9 wymagany jest kontaktywacyjny.",
+        "segments": [
+          {
+            "start": 0.0,
+            "end": 3.92,
+            "text": "Naładowania bomby E9-9 wymagany jest kontaktywacyjny."
+          }
+        ]
+      },
+      "notes": [
+        "REVIEW_REQUIRED"
+      ],
+      "qa_status": "REVIEW_REQUIRED",
+      "text_similarity": {
+        "token_sequence": 0.4706,
+        "wer": 0.6
+      },
+      "translation_quality_status": "AUTOMATED_SANITY_OK",
+      "speech_rate_expected_words_per_s": 2.556
+    },
+    {
+      "id": "..\\RvGame\\Localization\\INT\\RvGame.int|Tutorial|Sniper",
+      "record": "..\\RvGame\\Localization\\INT\\RvGame.int",
+      "section": "Tutorial",
+      "key": "Sniper",
+      "category": "tutorial",
+      "en": "Press [switchwpn] twice to equip the sniper rifle.",
+      "pl": "Naciśnij dwukrotnie [switchwpn], aby wyposażyć karabin snajperski.",
+      "tts_text": "Naciśnij dwukrotnie zmiany broni, aby wyposażyć karabin snajperski.",
+      "profile": "narrator_user",
+      "file": "0150_ad5a292483bf.wav",
+      "sample_rate": 24000,
+      "peak_dbfs": -3.0,
+      "qa_correction": "remaining_mixed_language_20261008",
+      "pack": "full_localization",
+      "manifest_line": 150,
+      "audio_path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\full_voicepack\\0150_ad5a292483bf.wav",
+      "line_id": "..\\RvGame\\Localization\\INT\\RvGame.int|Tutorial|Sniper",
+      "expected_pl": "Naciśnij dwukrotnie zmiany broni, aby wyposażyć karabin snajperski.",
+      "translation_status": "draft_without_explicit_review",
+      "generation_attempt": 1,
+      "audio": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "duration_s": 3.727,
+        "rms": 0.097522,
+        "peak": 1.0,
+        "clipping_fraction": 1.1e-05,
+        "silence_fraction": 0.178726,
+        "audio_format_status": "PASS"
+      },
+      "asr": {
+        "language": "pl",
+        "language_probability": 0.9993,
+        "text": "Naciśni dwukrotnie zmiany broni, aby wyposażyć karabinsnej perski.",
+        "segments": [
+          {
+            "start": 0.0,
+            "end": 3.68,
+            "text": "Naciśni dwukrotnie zmiany broni, aby wyposażyć karabinsnej perski."
+          }
+        ]
+      },
+      "notes": [],
+      "qa_status": "PASS",
+      "text_similarity": {
+        "token_sequence": 0.625,
+        "wer": 0.375
+      },
+      "translation_quality_status": "AUTOMATED_SANITY_OK",
+      "speech_rate_expected_words_per_s": 2.146
+    },
+    {
+      "id": "..\\RvGame\\Localization\\INT\\RvGame.int|Tutorial|Vault",
+      "record": "..\\RvGame\\Localization\\INT\\RvGame.int",
+      "section": "Tutorial",
+      "key": "Vault",
+      "category": "tutorial",
+      "en": "Press and hold [jump] to vault.",
+      "pl": "Naciśnij i przytrzymaj [jump], aby przeskoczyć przeszkodę.",
+      "tts_text": "Naciśnij i przytrzymaj skoku, aby przeskoczyć przeszkodę.",
+      "profile": "narrator_user",
+      "file": "0155_8580b0d2785e.wav",
+      "sample_rate": 24000,
+      "peak_dbfs": -3.0,
+      "qa_correction": "remaining_mixed_language_20261008",
+      "pack": "full_localization",
+      "manifest_line": 155,
+      "audio_path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\full_voicepack\\0155_8580b0d2785e.wav",
+      "line_id": "..\\RvGame\\Localization\\INT\\RvGame.int|Tutorial|Vault",
+      "expected_pl": "Naciśnij i przytrzymaj skoku, aby przeskoczyć przeszkodę.",
+      "translation_status": "draft_without_explicit_review",
+      "generation_attempt": 1,
+      "audio": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "duration_s": 3.181,
+        "rms": 0.082518,
+        "peak": 0.992462,
+        "clipping_fraction": 0.0,
+        "silence_fraction": 0.235396,
+        "audio_format_status": "PASS"
+      },
+      "asr": {
+        "language": "pl",
+        "language_probability": 0.9989,
+        "text": "nacisznie i przytrzymaj skoku, aby przeskoczyć przeszkodę.",
+        "segments": [
+          {
+            "start": 0.0,
+            "end": 3.0,
+            "text": "nacisznie i przytrzymaj skoku, aby przeskoczyć przeszkodę."
+          }
+        ]
+      },
+      "notes": [],
+      "qa_status": "PASS",
+      "text_similarity": {
+        "token_sequence": 0.8571,
+        "wer": 0.1429
+      },
+      "translation_quality_status": "AUTOMATED_SANITY_OK",
+      "speech_rate_expected_words_per_s": 2.201
+    },
+    {
+      "id": "..\\RvGame\\Localization\\INT\\RvGame.int|Tutorial|TMDobjects",
+      "record": "..\\RvGame\\Localization\\INT\\RvGame.int",
+      "section": "Tutorial",
+      "key": "TMDobjects",
+      "category": "tutorial",
+      "en": "Search the environment for objects to manipulate.",
+      "pl": "Przeszukuj otoczenie w poszukiwaniu obiektów, którymi można manipulować.",
+      "tts_text": "Przeszukuj otoczenie w poszukiwaniu obiektów, którymi można manipulować.",
+      "profile": "narrator_user",
+      "file": "0166_3e94a19343e1.wav",
+      "sample_rate": 24000,
+      "peak_dbfs": -3.0,
+      "qa_correction": "remaining_mixed_language_20261008",
+      "pack": "full_localization",
+      "manifest_line": 166,
+      "audio_path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\full_voicepack\\0166_3e94a19343e1.wav",
+      "line_id": "..\\RvGame\\Localization\\INT\\RvGame.int|Tutorial|TMDobjects",
+      "expected_pl": "Przeszukuj otoczenie w poszukiwaniu obiektów, którymi można manipulować.",
+      "translation_status": "draft_without_explicit_review",
+      "generation_attempt": 1,
+      "audio": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "duration_s": 4.064,
+        "rms": 0.086569,
+        "peak": 1.0,
+        "clipping_fraction": 1e-05,
+        "silence_fraction": 0.25283,
+        "audio_format_status": "PASS"
+      },
+      "asr": {
+        "language": "pl",
+        "language_probability": 0.9993,
+        "text": "Przeszukuj otoczany w poszukiwaniu obiektów, którymi można manipulować.",
+        "segments": [
+          {
+            "start": 0.0,
+            "end": 4.0,
+            "text": "Przeszukuj otoczany w poszukiwaniu obiektów, którymi można manipulować."
+          }
+        ]
+      },
+      "notes": [],
+      "qa_status": "PASS",
+      "text_similarity": {
+        "token_sequence": 0.875,
+        "wer": 0.125
+      },
+      "translation_quality_status": "AUTOMATED_SANITY_OK",
+      "speech_rate_expected_words_per_s": 1.969
+    },
+    {
+      "id": "..\\RvGame\\Localization\\INT\\RvGame.int|Tutorial|AgeMutants",
+      "record": "..\\RvGame\\Localization\\INT\\RvGame.int",
+      "section": "Tutorial",
+      "key": "AgeMutants",
+      "category": "tutorial",
+      "en": "Press [age] to decay Mutants. This costs E99 Energy",
+      "pl": "Naciśnij [age], aby rozłożyć mutanty. To kosztuje energię E99.",
+      "tts_text": "Naciśnij postarzania, aby rozłożyć mutanty. To kosztuje energię E dziewięćdziesiąt dziewięć.",
+      "profile": "narrator_user",
+      "file": "0171_e58a6aacfe65.wav",
+      "sample_rate": 24000,
+      "peak_dbfs": -3.0,
+      "qa_correction": "remaining_mixed_language_20261008",
+      "pack": "full_localization",
+      "manifest_line": 171,
+      "audio_path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\full_voicepack\\0171_e58a6aacfe65.wav",
+      "line_id": "..\\RvGame\\Localization\\INT\\RvGame.int|Tutorial|AgeMutants",
+      "expected_pl": "Naciśnij postarzania, aby rozłożyć mutanty. To kosztuje energię E dziewięćdziesiąt dziewięć.",
+      "translation_status": "draft_without_explicit_review",
+      "generation_attempt": 1,
+      "audio": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "duration_s": 5.039,
+        "rms": 0.111459,
+        "peak": 1.0,
+        "clipping_fraction": 8e-06,
+        "silence_fraction": 0.162069,
+        "audio_format_status": "PASS"
+      },
+      "asr": {
+        "language": "pl",
+        "language_probability": 0.9977,
+        "text": "Na ciśni postarzania, aby rozłożyć mutanty, to kosztuje energię 99.",
+        "segments": [
+          {
+            "start": 0.0,
+            "end": 5.0,
+            "text": "Na ciśni postarzania, aby rozłożyć mutanty, to kosztuje energię 99."
+          }
+        ]
+      },
+      "notes": [],
+      "qa_status": "PASS",
+      "text_similarity": {
+        "token_sequence": 0.6667,
+        "wer": 0.4545
+      },
+      "translation_quality_status": "AUTOMATED_SANITY_OK",
+      "speech_rate_expected_words_per_s": 2.183
+    },
+    {
+      "id": "..\\RvGame\\Localization\\INT\\RvGame.int|Tutorial|TickTip",
+      "record": "..\\RvGame\\Localization\\INT\\RvGame.int",
+      "section": "Tutorial",
+      "key": "TickTip",
+      "category": "tutorial",
+      "en": "Aging [age] or Impulsing [impulse] Phase Ticks is a very effective strategy.",
+      "pl": "Postarzanie Fazowych Kleszczy za pomocą [age] lub użycie [impulse] to bardzo skuteczna strategia.",
+      "tts_text": "Postarzanie Fazowych Kleszczy za pomocą postarzania lub użycie impulsu to bardzo skuteczna strategia.",
+      "profile": "narrator_user",
+      "file": "0174_e63b02880451.wav",
+      "sample_rate": 24000,
+      "peak_dbfs": -3.0,
+      "qa_correction": "remaining_mixed_language_20261008",
+      "pack": "full_localization",
+      "manifest_line": 174,
+      "audio_path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\full_voicepack\\0174_e63b02880451.wav",
+      "line_id": "..\\RvGame\\Localization\\INT\\RvGame.int|Tutorial|TickTip",
+      "expected_pl": "Postarzanie Fazowych Kleszczy za pomocą postarzania lub użycie impulsu to bardzo skuteczna strategia.",
+      "translation_status": "draft_without_explicit_review",
+      "generation_attempt": 1,
+      "audio": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "duration_s": 4.946,
+        "rms": 0.121251,
+        "peak": 1.0,
+        "clipping_fraction": 1.7e-05,
+        "silence_fraction": 0.101524,
+        "audio_format_status": "PASS"
+      },
+      "asr": {
+        "language": "pl",
+        "language_probability": 0.9997,
+        "text": "Postarzanie fazowych kleszczy za pomocą postarzania lub użycie impulsu to bardzo skuteczna strategia.",
+        "segments": [
+          {
+            "start": 0.0,
+            "end": 4.86,
+            "text": "Postarzanie fazowych kleszczy za pomocą postarzania lub użycie impulsu to bardzo skuteczna strategia."
+          }
+        ]
+      },
+      "notes": [],
+      "qa_status": "PASS",
+      "text_similarity": {
+        "token_sequence": 1.0,
+        "wer": 0.0
+      },
+      "translation_quality_status": "AUTOMATED_SANITY_OK",
+      "speech_rate_expected_words_per_s": 2.628
+    },
+    {
+      "id": "..\\RvGame\\Localization\\INT\\RvGame.int|Tutorial|Ammo",
+      "record": "..\\RvGame\\Localization\\INT\\RvGame.int",
+      "section": "Tutorial",
+      "key": "Ammo",
+      "category": "tutorial",
+      "en": "Pick up additional ammo by running over dropped weapons or ammo pickups.",
+      "pl": "Podnoś dodatkową amunicję, przechodząc po upuszczonej broni lub paczkach z amunicją.",
+      "tts_text": "Podnoś dodatkową amunicję, przechodząc po upuszczonej broni lub paczkach z amunicją.",
+      "profile": "narrator_user",
+      "file": "0176_8775dc4ee866.wav",
+      "sample_rate": 24000,
+      "peak_dbfs": -3.0,
+      "qa_correction": "remaining_mixed_language_20261008",
+      "pack": "full_localization",
+      "manifest_line": 176,
+      "audio_path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\full_voicepack\\0176_8775dc4ee866.wav",
+      "line_id": "..\\RvGame\\Localization\\INT\\RvGame.int|Tutorial|Ammo",
+      "expected_pl": "Podnoś dodatkową amunicję, przechodząc po upuszczonej broni lub paczkach z amunicją.",
+      "translation_status": "draft_without_explicit_review",
+      "generation_attempt": 1,
+      "audio": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "duration_s": 4.284,
+        "rms": 0.122072,
+        "peak": 1.0,
+        "clipping_fraction": 1e-05,
+        "silence_fraction": 0.160721,
+        "audio_format_status": "PASS"
+      },
+      "asr": {
+        "language": "pl",
+        "language_probability": 0.9997,
+        "text": "Pod nasz dodatkową amonicję przechodząc po upuszczonej bromie lub paczkach zamonicją.",
+        "segments": [
+          {
+            "start": 0.0,
+            "end": 4.4,
+            "text": "Pod nasz dodatkową amonicję przechodząc po upuszczonej bromie lub paczkach zamonicją."
+          }
+        ]
+      },
+      "notes": [
+        "REVIEW_REQUIRED"
+      ],
+      "qa_status": "REVIEW_REQUIRED",
+      "text_similarity": {
+        "token_sequence": 0.5455,
+        "wer": 0.5455
+      },
+      "translation_quality_status": "AUTOMATED_SANITY_OK",
+      "speech_rate_expected_words_per_s": 2.568
+    },
+    {
+      "id": "..\\RvGame\\Localization\\INT\\RvGame.int|Tutorial|Medkit",
+      "record": "..\\RvGame\\Localization\\INT\\RvGame.int",
+      "section": "Tutorial",
+      "key": "Medkit",
+      "category": "tutorial",
+      "en": "Press [age] to renew medkits and retrieve the health packs inside.",
+      "pl": "Naciśnij [age], aby odnowić apteczki i odzyskać znajdujące się w nich pakiety zdrowia.",
+      "tts_text": "Naciśnij postarzania, aby odnowić apteczki i odzyskać znajdujące się w nich pakiety zdrowia.",
+      "profile": "narrator_user",
+      "file": "0178_674ff92ad51e.wav",
+      "sample_rate": 24000,
+      "peak_dbfs": -3.0,
+      "qa_correction": "remaining_mixed_language_20261008",
+      "pack": "full_localization",
+      "manifest_line": 178,
+      "audio_path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\full_voicepack\\0178_674ff92ad51e.wav",
+      "line_id": "..\\RvGame\\Localization\\INT\\RvGame.int|Tutorial|Medkit",
+      "expected_pl": "Naciśnij postarzania, aby odnowić apteczki i odzyskać znajdujące się w nich pakiety zdrowia.",
+      "translation_status": "draft_without_explicit_review",
+      "generation_attempt": 1,
+      "audio": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "duration_s": 5.201,
+        "rms": 0.06805,
+        "peak": 1.0,
+        "clipping_fraction": 8e-06,
+        "silence_fraction": 0.214875,
+        "audio_format_status": "PASS"
+      },
+      "asr": {
+        "language": "pl",
+        "language_probability": 0.9994,
+        "text": "Na ciśnie postarzania, aby odnowić akteczki i odzyskać zajedujący się w nich pakiety zdrowia.",
+        "segments": [
+          {
+            "start": 0.0,
+            "end": 5.0,
+            "text": "Na ciśnie postarzania, aby odnowić akteczki i odzyskać zajedujący się w nich pakiety zdrowia."
+          }
+        ]
+      },
+      "notes": [],
+      "qa_status": "PASS",
+      "text_similarity": {
+        "token_sequence": 0.7407,
+        "wer": 0.3077
+      },
+      "translation_quality_status": "AUTOMATED_SANITY_OK",
+      "speech_rate_expected_words_per_s": 2.5
+    },
+    {
+      "id": "..\\RvGame\\Localization\\INT\\RvGame.int|Tutorial|deadlockenemies",
+      "record": "..\\RvGame\\Localization\\INT\\RvGame.int",
+      "section": "Tutorial",
+      "key": "deadlockenemies",
+      "category": "tutorial",
+      "en": "Press and Hold [grab] to charge a deadlock and slow the time around enemies",
+      "pl": "Naciśnij i przytrzymaj [grab], aby naładować blokadę i spowolnić czas wokół wrogów.",
+      "tts_text": "Naciśnij i przytrzymaj chwytania, aby naładować blokadę i spowolnić czas wokół wrogów.",
+      "profile": "narrator_user",
+      "file": "0181_6f088a2dbaa7.wav",
+      "sample_rate": 24000,
+      "peak_dbfs": -3.0,
+      "qa_correction": "remaining_mixed_language_20261008",
+      "pack": "full_localization",
+      "manifest_line": 181,
+      "audio_path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\full_voicepack\\0181_6f088a2dbaa7.wav",
+      "line_id": "..\\RvGame\\Localization\\INT\\RvGame.int|Tutorial|deadlockenemies",
+      "expected_pl": "Naciśnij i przytrzymaj chwytania, aby naładować blokadę i spowolnić czas wokół wrogów.",
+      "translation_status": "draft_without_explicit_review",
+      "generation_attempt": 1,
+      "audio": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "duration_s": 4.458,
+        "rms": 0.097193,
+        "peak": 0.999023,
+        "clipping_fraction": 9e-06,
+        "silence_fraction": 0.131619,
+        "audio_format_status": "PASS"
+      },
+      "asr": {
+        "language": "pl",
+        "language_probability": 0.9998,
+        "text": "Naciśnij przytrzymaj chwytania, aby naładować blokadę i spowolnić czas wokół wrogów.",
+        "segments": [
+          {
+            "start": 0.0,
+            "end": 4.4,
+            "text": "Naciśnij przytrzymaj chwytania, aby naładować blokadę i spowolnić czas wokół wrogów."
+          }
+        ]
+      },
+      "notes": [],
+      "qa_status": "PASS",
+      "text_similarity": {
+        "token_sequence": 0.9565,
+        "wer": 0.0833
+      },
+      "translation_quality_status": "AUTOMATED_SANITY_OK",
+      "speech_rate_expected_words_per_s": 2.692
+    },
+    {
+      "id": "..\\RvGame\\Localization\\INT\\RvGame.int|Tutorial|phasedenemies",
+      "record": "..\\RvGame\\Localization\\INT\\RvGame.int",
+      "section": "Tutorial",
+      "key": "phasedenemies",
+      "category": "tutorial",
+      "en": "When phased out, enemies are invulnerable to damage.",
+      "pl": "Gdy wrogowie są poza fazą, są niewrażliwi na obrażenia.",
+      "tts_text": "Gdy wrogowie są poza fazą, są niewrażliwi na obrażenia.",
+      "profile": "narrator_user",
+      "file": "0186_c53fea8fb9e2.wav",
+      "sample_rate": 24000,
+      "peak_dbfs": -3.0,
+      "qa_correction": "remaining_mixed_language_20261008",
+      "pack": "full_localization",
+      "manifest_line": 186,
+      "audio_path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\full_voicepack\\0186_c53fea8fb9e2.wav",
+      "line_id": "..\\RvGame\\Localization\\INT\\RvGame.int|Tutorial|phasedenemies",
+      "expected_pl": "Gdy wrogowie są poza fazą, są niewrażliwi na obrażenia.",
+      "translation_status": "draft_without_explicit_review",
+      "generation_attempt": 1,
+      "audio": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "duration_s": 3.32,
+        "rms": 0.087339,
+        "peak": 0.993866,
+        "clipping_fraction": 0.0,
+        "silence_fraction": 0.205017,
+        "audio_format_status": "PASS"
+      },
+      "asr": {
+        "language": "pl",
+        "language_probability": 0.9944,
+        "text": "gdy wrogowie są poza fazą, są niewrażliwina obrażenia.",
+        "segments": [
+          {
+            "start": 0.0,
+            "end": 3.3000000000000003,
+            "text": "gdy wrogowie są poza fazą, są niewrażliwina obrażenia."
+          }
+        ]
+      },
+      "notes": [],
+      "qa_status": "PASS",
+      "text_similarity": {
+        "token_sequence": 0.8235,
+        "wer": 0.2222
+      },
+      "translation_quality_status": "AUTOMATED_SANITY_OK",
+      "speech_rate_expected_words_per_s": 2.711
+    },
+    {
+      "id": "..\\RvGame\\Localization\\INT\\RvGame.int|Tutorial|Beam",
+      "record": "..\\RvGame\\Localization\\INT\\RvGame.int",
+      "section": "Tutorial",
+      "key": "Beam",
+      "category": "tutorial",
+      "en": "Press [switchwpn] twice to equip the E99 Beam Rifle.",
+      "pl": "Naciśnij dwukrotnie [switchwpn], aby wyposażyć karabin wiązkowy E99.",
+      "tts_text": "Naciśnij dwukrotnie zmiany broni, aby wyposażyć karabin wiązkowy E dziewięćdziesiąt dziewięć.",
+      "profile": "narrator_user",
+      "file": "0196_73649bcdd6ee.wav",
+      "sample_rate": 24000,
+      "peak_dbfs": -3.0,
+      "qa_correction": "remaining_mixed_language_20261008",
+      "pack": "full_localization",
+      "manifest_line": 196,
+      "audio_path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\full_voicepack\\0196_73649bcdd6ee.wav",
+      "line_id": "..\\RvGame\\Localization\\INT\\RvGame.int|Tutorial|Beam",
+      "expected_pl": "Naciśnij dwukrotnie zmiany broni, aby wyposażyć karabin wiązkowy E dziewięćdziesiąt dziewięć.",
+      "translation_status": "draft_without_explicit_review",
+      "generation_attempt": 1,
+      "audio": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "duration_s": 4.853,
+        "rms": 0.091458,
+        "peak": 0.996582,
+        "clipping_fraction": 0.0,
+        "silence_fraction": 0.146636,
+        "audio_format_status": "PASS"
+      },
+      "asr": {
+        "language": "pl",
+        "language_probability": 0.9993,
+        "text": "Naciśni dwukrotnie zmiany broni, aby wyposażyć karabin wiązkowe 99.",
+        "segments": [
+          {
+            "start": 0.0,
+            "end": 4.8,
+            "text": "Naciśni dwukrotnie zmiany broni, aby wyposażyć karabin wiązkowe 99."
+          }
+        ]
+      },
+      "notes": [],
+      "qa_status": "PASS",
+      "text_similarity": {
+        "token_sequence": 0.6,
+        "wer": 0.4545
+      },
+      "translation_quality_status": "AUTOMATED_SANITY_OK",
+      "speech_rate_expected_words_per_s": 2.267
+    },
+    {
+      "id": "..\\RvGame\\Localization\\INT\\RvGame.int|Tutorial|ARSteerableHint",
+      "record": "..\\RvGame\\Localization\\INT\\RvGame.int",
+      "section": "Tutorial",
+      "key": "ARSteerableHint",
+      "category": "tutorial",
+      "en": "Hold [aim] and then press [fire] to steer a charged E99 bullet into your enemies.",
+      "pl": "Przytrzymaj [aim], a następnie naciśnij [fire], aby pokierować naładowanym pociskiem E99 w stronę wrogów.",
+      "tts_text": "Przytrzymaj celowania, a następnie naciśnij strzał, aby pokierować naładowanym pociskiem E dziewięćdziesiąt dziewięć w stronę wrogów.",
+      "profile": "narrator_user",
+      "file": "0206_09cde47361f9.wav",
+      "sample_rate": 24000,
+      "peak_dbfs": -3.0,
+      "qa_correction": "remaining_mixed_language_20261008",
+      "pack": "full_localization",
+      "manifest_line": 206,
+      "audio_path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\full_voicepack\\0206_09cde47361f9.wav",
+      "line_id": "..\\RvGame\\Localization\\INT\\RvGame.int|Tutorial|ARSteerableHint",
+      "expected_pl": "Przytrzymaj celowania, a następnie naciśnij strzał, aby pokierować naładowanym pociskiem E dziewięćdziesiąt dziewięć w stronę wrogów.",
+      "translation_status": "draft_without_explicit_review",
+      "generation_attempt": 1,
+      "audio": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "duration_s": 6.362,
+        "rms": 0.06937,
+        "peak": 1.0,
+        "clipping_fraction": 7e-06,
+        "silence_fraction": 0.1369,
+        "audio_format_status": "PASS"
+      },
+      "asr": {
+        "language": "pl",
+        "language_probability": 0.9996,
+        "text": "Przuczymaj celowania, a następnie nacisz niej strzał, aby pokierować naładowanym pociskiem E-99 w stronę wrogów.",
+        "segments": [
+          {
+            "start": 0.0,
+            "end": 6.42,
+            "text": "Przuczymaj celowania, a następnie nacisz niej strzał, aby pokierować naładowanym pociskiem E-99 w stronę wrogów."
+          }
+        ]
+      },
+      "notes": [],
+      "qa_status": "PASS",
+      "text_similarity": {
+        "token_sequence": 0.75,
+        "wer": 0.3125
+      },
+      "translation_quality_status": "AUTOMATED_SANITY_OK",
+      "speech_rate_expected_words_per_s": 2.515
+    },
+    {
+      "id": "..\\RvGame\\Localization\\INT\\RvGame.int|Tutorial|MAIBeam",
+      "record": "..\\RvGame\\Localization\\INT\\RvGame.int",
+      "section": "Tutorial",
+      "key": "MAIBeam",
+      "category": "tutorial",
+      "en": "Press [jump] to jump up on to the fallen beam.",
+      "pl": "Naciśnij [jump], aby wskoczyć na powaloną belkę.",
+      "tts_text": "Naciśnij skoku, aby wskoczyć na powaloną belkę.",
+      "profile": "narrator_user",
+      "file": "0210_4c5ca124d131.wav",
+      "sample_rate": 24000,
+      "peak_dbfs": -3.0,
+      "qa_correction": "remaining_mixed_language_20261008",
+      "pack": "full_localization",
+      "manifest_line": 210,
+      "audio_path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\full_voicepack\\0210_4c5ca124d131.wav",
+      "line_id": "..\\RvGame\\Localization\\INT\\RvGame.int|Tutorial|MAIBeam",
+      "expected_pl": "Naciśnij skoku, aby wskoczyć na powaloną belkę.",
+      "translation_status": "draft_without_explicit_review",
+      "generation_attempt": 1,
+      "audio": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "duration_s": 2.775,
+        "rms": 0.107906,
+        "peak": 1.0,
+        "clipping_fraction": 1.5e-05,
+        "silence_fraction": 0.160988,
+        "audio_format_status": "PASS"
+      },
+      "asr": {
+        "language": "pl",
+        "language_probability": 0.9989,
+        "text": "Na ciśnij skoku, aby wskoczyć na powoloną belkę.",
+        "segments": [
+          {
+            "start": 0.0,
+            "end": 2.72,
+            "text": "Na ciśnij skoku, aby wskoczyć na powoloną belkę."
+          }
+        ]
+      },
+      "notes": [],
+      "qa_status": "PASS",
+      "text_similarity": {
+        "token_sequence": 0.6667,
+        "wer": 0.4286
+      },
+      "translation_quality_status": "AUTOMATED_SANITY_OK",
+      "speech_rate_expected_words_per_s": 2.523
+    },
+    {
+      "id": "..\\RvGame\\Localization\\INT\\RvGame.int|Tutorial|MAImpulsePath",
+      "record": "..\\RvGame\\Localization\\INT\\RvGame.int",
+      "section": "Tutorial",
+      "key": "MAImpulsePath",
+      "category": "tutorial",
+      "en": "Press [impulse] to clear the blocked path.",
+      "pl": "Naciśnij [impulse], aby oczyścić zablokowane przejście.",
+      "tts_text": "Naciśnij impulsu, aby oczyścić zablokowane przejście.",
+      "profile": "narrator_user",
+      "file": "0212_1acadf9c7f91.wav",
+      "sample_rate": 24000,
+      "peak_dbfs": -3.0,
+      "qa_correction": "remaining_mixed_language_20261008",
+      "pack": "full_localization",
+      "manifest_line": 212,
+      "audio_path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\full_voicepack\\0212_1acadf9c7f91.wav",
+      "line_id": "..\\RvGame\\Localization\\INT\\RvGame.int|Tutorial|MAImpulsePath",
+      "expected_pl": "Naciśnij impulsu, aby oczyścić zablokowane przejście.",
+      "translation_status": "draft_without_explicit_review",
+      "generation_attempt": 1,
+      "audio": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "duration_s": 3.251,
+        "rms": 0.103839,
+        "peak": 1.0,
+        "clipping_fraction": 1.3e-05,
+        "silence_fraction": 0.195335,
+        "audio_format_status": "PASS"
+      },
+      "asr": {
+        "language": "pl",
+        "language_probability": 0.999,
+        "text": "na ciślinim pulsu albo oczyścić zabokowane przejście.",
+        "segments": [
+          {
+            "start": 0.0,
+            "end": 3.16,
+            "text": "na ciślinim pulsu albo oczyścić zabokowane przejście."
+          }
+        ]
+      },
+      "notes": [
+        "FAIL_GIBBERISH"
+      ],
+      "qa_status": "FAIL_GIBBERISH",
+      "text_similarity": {
+        "token_sequence": 0.3077,
+        "wer": 0.8333
+      },
+      "translation_quality_status": "AUTOMATED_SANITY_OK",
+      "speech_rate_expected_words_per_s": 1.846
+    },
+    {
+      "id": "..\\RvGame\\Localization\\INT\\RvGame.int|Tutorial|GasMaskOxygen",
+      "record": "..\\RvGame\\Localization\\INT\\RvGame.int",
+      "section": "Tutorial",
+      "key": "GasMaskOxygen",
+      "category": "tutorial",
+      "en": "[use] Use Oxygen tanks to replenish your air supply.",
+      "pl": "Użyj [use], aby wykorzystać zbiorniki tlenu i uzupełnić zapas powietrza.",
+      "tts_text": "Użyj użycia, aby wykorzystać zbiorniki tlenu i uzupełnić zapas powietrza.",
+      "profile": "narrator_user",
+      "file": "0219_7d1f246b99c6.wav",
+      "sample_rate": 24000,
+      "peak_dbfs": -3.0,
+      "qa_correction": "remaining_mixed_language_20261008",
+      "pack": "full_localization",
+      "manifest_line": 219,
+      "audio_path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\full_voicepack\\0219_7d1f246b99c6.wav",
+      "line_id": "..\\RvGame\\Localization\\INT\\RvGame.int|Tutorial|GasMaskOxygen",
+      "expected_pl": "Użyj użycia, aby wykorzystać zbiorniki tlenu i uzupełnić zapas powietrza.",
+      "translation_status": "draft_without_explicit_review",
+      "generation_attempt": 1,
+      "audio": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "duration_s": 4.551,
+        "rms": 0.084194,
+        "peak": 1.0,
+        "clipping_fraction": 9e-06,
+        "silence_fraction": 0.243795,
+        "audio_format_status": "PASS"
+      },
+      "asr": {
+        "language": "pl",
+        "language_probability": 0.9988,
+        "text": "Użyj użycia, aby wykorzystać zbiorniki pieno i uzupełnić zapas powietrze.",
+        "segments": [
+          {
+            "start": 0.0,
+            "end": 5.0,
+            "text": "Użyj użycia, aby wykorzystać zbiorniki pieno i uzupełnić zapas powietrze."
+          }
+        ]
+      },
+      "notes": [],
+      "qa_status": "PASS",
+      "text_similarity": {
+        "token_sequence": 0.8,
+        "wer": 0.2
+      },
+      "translation_quality_status": "AUTOMATED_SANITY_OK",
+      "speech_rate_expected_words_per_s": 2.197
+    },
+    {
+      "id": "..\\RvGame\\Localization\\INT\\RvGame.int|TCR|ConfirmQuit",
+      "record": "..\\RvGame\\Localization\\INT\\RvGame.int",
+      "section": "TCR",
+      "key": "ConfirmQuit",
+      "category": "ui",
+      "en": "Leaving the match now will cause you to lose all XP earned during the match. Are you sure you want to quit?",
+      "pl": "Opuszczenie meczu spowoduje utratę całego doświadczenia zdobytego podczas rozgrywki. Czy na pewno chcesz wyjść?",
+      "tts_text": "Opuszczenie meczu spowoduje utratę całego doświadczenia zdobytego podczas rozgrywki. Czy na pewno chcesz wyjść?",
+      "profile": "narrator_user",
+      "file": "0258_42fe45b0cb4a.wav",
+      "sample_rate": 24000,
+      "peak_dbfs": -3.0,
+      "qa_correction": "remaining_mixed_language_20261008",
+      "pack": "full_localization",
+      "manifest_line": 258,
+      "audio_path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\full_voicepack\\0258_42fe45b0cb4a.wav",
+      "line_id": "..\\RvGame\\Localization\\INT\\RvGame.int|TCR|ConfirmQuit",
+      "expected_pl": "Opuszczenie meczu spowoduje utratę całego doświadczenia zdobytego podczas rozgrywki. Czy na pewno chcesz wyjść?",
+      "translation_status": "draft_without_explicit_review",
+      "generation_attempt": 1,
+      "audio": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "duration_s": 6.072,
+        "rms": 0.102218,
+        "peak": 1.0,
+        "clipping_fraction": 1.4e-05,
+        "silence_fraction": 0.209327,
+        "audio_format_status": "PASS"
+      },
+      "asr": {
+        "language": "pl",
+        "language_probability": 0.9968,
+        "text": "Opuszczenie meczu spowoduje utratę całego doświadczenia zdobytego podczas rozgrywki. Czy na pewno też wyjść?",
+        "segments": [
+          {
+            "start": 0.0,
+            "end": 6.0,
+            "text": "Opuszczenie meczu spowoduje utratę całego doświadczenia zdobytego podczas rozgrywki. Czy na pewno też wyjść?"
+          }
+        ]
+      },
+      "notes": [],
+      "qa_status": "PASS",
+      "text_similarity": {
+        "token_sequence": 0.9286,
+        "wer": 0.0714
+      },
+      "translation_quality_status": "AUTOMATED_SANITY_OK",
+      "speech_rate_expected_words_per_s": 2.306
+    },
+    {
+      "id": "..\\RvGame\\Localization\\INT\\RvGame.int|Achievements|complete_village_DESC",
+      "record": "..\\RvGame\\Localization\\INT\\RvGame.int",
+      "section": "Achievements",
+      "key": "complete_village_DESC",
+      "category": "objective",
+      "en": "Completed the Workers' District Mission",
+      "pl": "Ukończ misję Dzielnica robotnicza.",
+      "tts_text": "Ukończ misję Dzielnica robotnicza.",
+      "profile": "narrator_user",
+      "file": "0297_d75fcb2aad82.wav",
+      "sample_rate": 24000,
+      "peak_dbfs": -3.0,
+      "qa_correction": "remaining_mixed_language_20261008",
+      "pack": "full_localization",
+      "manifest_line": 297,
+      "audio_path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\full_voicepack\\0297_d75fcb2aad82.wav",
+      "line_id": "..\\RvGame\\Localization\\INT\\RvGame.int|Achievements|complete_village_DESC",
+      "expected_pl": "Ukończ misję Dzielnica robotnicza.",
+      "translation_status": "draft_without_explicit_review",
+      "generation_attempt": 1,
+      "audio": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "duration_s": 1.776,
+        "rms": 0.14468,
+        "peak": 1.0,
+        "clipping_fraction": 2.3e-05,
+        "silence_fraction": 0.121857,
+        "audio_format_status": "PASS"
+      },
+      "asr": {
+        "language": "pl",
+        "language_probability": 0.764,
+        "text": "Ukończ mi się dziewięć na robotnicza.",
+        "segments": [
+          {
+            "start": 0.0,
+            "end": 1.7,
+            "text": "Ukończ mi się dziewięć na robotnicza."
+          }
+        ]
+      },
+      "notes": [
+        "REVIEW_REQUIRED"
+      ],
+      "qa_status": "REVIEW_REQUIRED",
+      "text_similarity": {
+        "token_sequence": 0.4,
+        "wer": 1.0
+      },
+      "translation_quality_status": "AUTOMATED_SANITY_OK",
+      "speech_rate_expected_words_per_s": 2.252
+    },
+    {
+      "id": "..\\RvGame\\Localization\\INT\\RvGame.int|Achievements|complete_railtrench_DESC",
+      "record": "..\\RvGame\\Localization\\INT\\RvGame.int",
+      "section": "Achievements",
+      "key": "complete_railtrench_DESC",
+      "category": "objective",
+      "en": "Completed the Rail Line Mission",
+      "pl": "Ukończ misję Linia kolejowa.",
+      "tts_text": "Ukończ misję Linia kolejowa.",
+      "profile": "narrator_user",
+      "file": "0299_6dfa55b31003.wav",
+      "sample_rate": 24000,
+      "peak_dbfs": -3.0,
+      "qa_correction": "remaining_mixed_language_20261008",
+      "pack": "full_localization",
+      "manifest_line": 299,
+      "audio_path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\full_voicepack\\0299_6dfa55b31003.wav",
+      "line_id": "..\\RvGame\\Localization\\INT\\RvGame.int|Achievements|complete_railtrench_DESC",
+      "expected_pl": "Ukończ misję Linia kolejowa.",
+      "translation_status": "draft_without_explicit_review",
+      "generation_attempt": 1,
+      "audio": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "duration_s": 1.858,
+        "rms": 0.160589,
+        "peak": 1.0,
+        "clipping_fraction": 2.2e-05,
+        "silence_fraction": 0.26131,
+        "audio_format_status": "PASS"
+      },
+      "asr": {
+        "language": "pl",
+        "language_probability": 0.9862,
+        "text": "Ukończ misele linia kolejowa.",
+        "segments": [
+          {
+            "start": 0.0,
+            "end": 2.0,
+            "text": "Ukończ misele linia kolejowa."
+          }
+        ]
+      },
+      "notes": [],
+      "qa_status": "PASS",
+      "text_similarity": {
+        "token_sequence": 0.75,
+        "wer": 0.25
+      },
+      "translation_quality_status": "AUTOMATED_SANITY_OK",
+      "speech_rate_expected_words_per_s": 2.153
+    },
+    {
+      "id": "..\\RvGame\\Localization\\INT\\RvGame.int|Achievements|complete_wasteland_DESC",
+      "record": "..\\RvGame\\Localization\\INT\\RvGame.int",
+      "section": "Achievements",
+      "key": "complete_wasteland_DESC",
+      "category": "objective",
+      "en": "Completed the E99 Processing Complex Mission",
+      "pl": "Ukończ misję Kompleks przetwarzania E99.",
+      "tts_text": "Ukończ misję Kompleks przetwarzania E dziewięćdziesiąt dziewięć.",
+      "profile": "narrator_user",
+      "file": "0301_897df3ae076e.wav",
+      "sample_rate": 24000,
+      "peak_dbfs": -3.0,
+      "qa_correction": "remaining_mixed_language_20261008",
+      "pack": "full_localization",
+      "manifest_line": 301,
+      "audio_path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\full_voicepack\\0301_897df3ae076e.wav",
+      "line_id": "..\\RvGame\\Localization\\INT\\RvGame.int|Achievements|complete_wasteland_DESC",
+      "expected_pl": "Ukończ misję Kompleks przetwarzania E dziewięćdziesiąt dziewięć.",
+      "translation_status": "draft_without_explicit_review",
+      "generation_attempt": 1,
+      "audio": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "duration_s": 2.984,
+        "rms": 0.117702,
+        "peak": 1.0,
+        "clipping_fraction": 2.8e-05,
+        "silence_fraction": 0.0993,
+        "audio_format_status": "PASS"
+      },
+      "asr": {
+        "language": "pl",
+        "language_probability": 0.9995,
+        "text": "ukończy mi się komplek z przetwarzania 99.",
+        "segments": [
+          {
+            "start": 0.0,
+            "end": 2.98,
+            "text": "ukończy mi się komplek z przetwarzania 99."
+          }
+        ]
+      },
+      "notes": [
+        "FAIL_GIBBERISH"
+      ],
+      "qa_status": "FAIL_GIBBERISH",
+      "text_similarity": {
+        "token_sequence": 0.1429,
+        "wer": 1.0
+      },
+      "translation_quality_status": "AUTOMATED_SANITY_OK",
+      "speech_rate_expected_words_per_s": 2.346
+    },
+    {
+      "id": "..\\RvGame\\Localization\\INT\\RvGame.int|Achievements|hero_upgrades_DESC",
+      "record": "..\\RvGame\\Localization\\INT\\RvGame.int",
+      "section": "Achievements",
+      "key": "hero_upgrades_DESC",
+      "category": "other",
+      "en": "Purchased 10 different Hero Upgrades in single player campaign",
+      "pl": "Kup 10 różnych ulepszeń bohatera w kampanii dla jednego gracza.",
+      "tts_text": "Kup 10 różnych ulepszeń bohatera w kampanii dla jednego gracza.",
+      "profile": "narrator_user",
+      "file": "0310_718b1beea117.wav",
+      "sample_rate": 24000,
+      "peak_dbfs": -3.0,
+      "qa_correction": "remaining_mixed_language_20261008",
+      "pack": "full_localization",
+      "manifest_line": 310,
+      "audio_path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\full_voicepack\\0310_718b1beea117.wav",
+      "line_id": "..\\RvGame\\Localization\\INT\\RvGame.int|Achievements|hero_upgrades_DESC",
+      "expected_pl": "Kup 10 różnych ulepszeń bohatera w kampanii dla jednego gracza.",
+      "translation_status": "draft_without_explicit_review",
+      "generation_attempt": 1,
+      "audio": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "duration_s": 3.541,
+        "rms": 0.091629,
+        "peak": 1.0,
+        "clipping_fraction": 1.2e-05,
+        "silence_fraction": 0.157591,
+        "audio_format_status": "PASS"
+      },
+      "asr": {
+        "language": "pl",
+        "language_probability": 0.9996,
+        "text": "Koby dziesięć różnych ulepszeń bohatera w kampanii dla jedynego gracza.",
+        "segments": [
+          {
+            "start": 0.0,
+            "end": 3.48,
+            "text": "Koby dziesięć różnych ulepszeń bohatera w kampanii dla jedynego gracza."
+          }
+        ]
+      },
+      "notes": [],
+      "qa_status": "PASS",
+      "text_similarity": {
+        "token_sequence": 0.7,
+        "wer": 0.3
+      },
+      "translation_quality_status": "AUTOMATED_SANITY_OK",
+      "speech_rate_expected_words_per_s": 2.824
+    },
+    {
+      "id": "..\\RvGame\\Localization\\INT\\RvGame.int|Achievements|mp_killcreatures_impulse_DESC",
+      "record": "..\\RvGame\\Localization\\INT\\RvGame.int",
+      "section": "Achievements",
+      "key": "mp_killcreatures_impulse_DESC",
+      "category": "tutorial",
+      "en": "Kill 25 creatures with the Bruiser's Impulse Power (public match)",
+      "pl": "Zabij 25 stworzeń mocą Impulsu Bruisera w meczu publicznym.",
+      "tts_text": "Zabij 25 stworzeń mocą Impulsu Bruisera w meczu publicznym.",
+      "profile": "narrator_user",
+      "file": "0313_ef773f899147.wav",
+      "sample_rate": 24000,
+      "peak_dbfs": -3.0,
+      "qa_correction": "remaining_mixed_language_20261008",
+      "pack": "full_localization",
+      "manifest_line": 313,
+      "audio_path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\full_voicepack\\0313_ef773f899147.wav",
+      "line_id": "..\\RvGame\\Localization\\INT\\RvGame.int|Achievements|mp_killcreatures_impulse_DESC",
+      "expected_pl": "Zabij 25 stworzeń mocą Impulsu Bruisera w meczu publicznym.",
+      "translation_status": "draft_without_explicit_review",
+      "generation_attempt": 1,
+      "audio": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "duration_s": 4.087,
+        "rms": 0.082178,
+        "peak": 1.0,
+        "clipping_fraction": 1e-05,
+        "silence_fraction": 0.157633,
+        "audio_format_status": "PASS"
+      },
+      "asr": {
+        "language": "pl",
+        "language_probability": 0.9986,
+        "text": "Zabi 25 stworzeń mocą impulsu brój sera w meczu publicznym.",
+        "segments": [
+          {
+            "start": 0.0,
+            "end": 4.0,
+            "text": "Zabi 25 stworzeń mocą impulsu brój sera w meczu publicznym."
+          }
+        ]
+      },
+      "notes": [],
+      "qa_status": "PASS",
+      "text_similarity": {
+        "token_sequence": 0.7368,
+        "wer": 0.3333
+      },
+      "translation_quality_status": "AUTOMATED_SANITY_OK",
+      "speech_rate_expected_words_per_s": 2.202
+    },
+    {
+      "id": "..\\RvGame\\Localization\\INT\\RvGame.int|RvUI3D|ConsoleControls_MP_Soldiers",
+      "record": "..\\RvGame\\Localization\\INT\\RvGame.int",
+      "section": "RvUI3D",
+      "key": "ConsoleControls_MP_Soldiers",
+      "category": "tutorial",
+      "en": "[fire] Fire\n[use] Reload\n[impulse] TMD Power\n[grab] Grab\n[age] Age\n[switchwpn] Switch Weapon\n[crouch] Crouch\n[aim] Aim\n[dash] Sprint\n[jump] Jump",
+      "pl": "[fire] Strzał\n[use] Przeładuj\n[impulse] Moc TMD\n[grab] Chwyt\n[age] Postarzanie\n[switchwpn] Zmień broń\n[crouch] Kucanie\n[aim] Celowanie\n[dash] Sprint\n[jump] Skok",
+      "tts_text": "strzał Strzał użycia Przeładuj impulsu Moc te em de chwytania Chwyt postarzania Postarzanie zmiany broni Zmień broń kucania Kucanie celowania Celowanie biegu Sprint skoku Skok",
+      "profile": "narrator_user",
+      "file": "0411_350352d22c1e.wav",
+      "sample_rate": 24000,
+      "peak_dbfs": -3.0,
+      "qa_correction": "remaining_mixed_language_20261008",
+      "pack": "full_localization",
+      "manifest_line": 411,
+      "audio_path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\full_voicepack\\0411_350352d22c1e.wav",
+      "line_id": "..\\RvGame\\Localization\\INT\\RvGame.int|RvUI3D|ConsoleControls_MP_Soldiers",
+      "expected_pl": "strzał Strzał użycia Przeładuj impulsu Moc te em de chwytania Chwyt postarzania Postarzanie zmiany broni Zmień broń kucania Kucanie celowania Celowanie biegu Sprint skoku Skok",
+      "translation_status": "draft_without_explicit_review",
+      "generation_attempt": 1,
+      "audio": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "duration_s": 8.208,
+        "rms": 0.10191,
+        "peak": 0.999908,
+        "clipping_fraction": 5e-06,
+        "silence_fraction": 0.114148,
+        "audio_format_status": "PASS"
+      },
+      "asr": {
+        "language": "pl",
+        "language_probability": 0.9995,
+        "text": "Z całą strzał użycia przeładu impulsu moc te md chwytania, chwyt postarzenia, postarzenie z męny broni, zmień bronku, cania kucania celowania, celowanie biegu splinckoku skok.",
+        "segments": [
+          {
+            "start": 0.0,
+            "end": 8.2,
+            "text": "Z całą strzał użycia przeładu impulsu moc te md chwytania, chwyt postarzenia, postarzenie z męny broni, zmień bronku, cania kucania celowania, celowanie biegu splinckoku skok."
+          }
+        ]
+      },
+      "notes": [
+        "REVIEW_REQUIRED"
+      ],
+      "qa_status": "REVIEW_REQUIRED",
+      "text_similarity": {
+        "token_sequence": 0.56,
+        "wer": 0.56
+      },
+      "translation_quality_status": "AUTOMATED_SANITY_OK",
+      "speech_rate_expected_words_per_s": 3.046
+    },
+    {
+      "id": "..\\RvGame\\Localization\\INT\\RvGame.int|RvUI|OACS_InvalidUserName",
+      "record": "..\\RvGame\\Localization\\INT\\RvGame.int",
+      "section": "RvUI",
+      "key": "OACS_InvalidUserName",
+      "category": "ui",
+      "en": "Invalid user name.  Names must be 6-16 characters long, only letters (a-z), numbers (0-9), and periods (.) are allowed.",
+      "pl": "Nieprawidłowa nazwa użytkownika. Nazwa musi mieć od 6 do 16 znaków i może zawierać wyłącznie litery (a-z), cyfry (0-9) oraz kropki.",
+      "tts_text": "Nieprawidłowa nazwa użytkownika. Nazwa musi mieć od 6 do 16 znaków i może zawierać wyłącznie litery (a-z), cyfry (0-9) oraz kropki.",
+      "profile": "narrator_user",
+      "file": "0487_4e30574d98b2.wav",
+      "sample_rate": 24000,
+      "peak_dbfs": -3.0,
+      "qa_correction": "remaining_mixed_language_20261008",
+      "pack": "full_localization",
+      "manifest_line": 487,
+      "audio_path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\full_voicepack\\0487_4e30574d98b2.wav",
+      "line_id": "..\\RvGame\\Localization\\INT\\RvGame.int|RvUI|OACS_InvalidUserName",
+      "expected_pl": "Nieprawidłowa nazwa użytkownika. Nazwa musi mieć od 6 do 16 znaków i może zawierać wyłącznie litery (a-z), cyfry (0-9) oraz kropki.",
+      "translation_status": "draft_without_explicit_review",
+      "generation_attempt": 1,
+      "audio": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "duration_s": 7.744,
+        "rms": 0.087394,
+        "peak": 0.999908,
+        "clipping_fraction": 1.1e-05,
+        "silence_fraction": 0.152497,
+        "audio_format_status": "PASS"
+      },
+      "asr": {
+        "language": "pl",
+        "language_probability": 0.9988,
+        "text": "Nieprawidłowa nazwa użytkownika, nazwa musi mieć od 6 do 16 znaków i może zawierać wyłącznie literę, a z syfy 0,9 oraz kropki.",
+        "segments": [
+          {
+            "start": 0.0,
+            "end": 7.8,
+            "text": "Nieprawidłowa nazwa użytkownika, nazwa musi mieć od 6 do 16 znaków i może zawierać wyłącznie literę, a z syfy 0,9 oraz kropki."
+          }
+        ]
+      },
+      "notes": [],
+      "qa_status": "PASS",
+      "text_similarity": {
+        "token_sequence": 0.913,
+        "wer": 0.087
+      },
+      "translation_quality_status": "AUTOMATED_SANITY_OK",
+      "speech_rate_expected_words_per_s": 2.97
+    },
+    {
+      "id": "..\\RvGame\\Localization\\INT\\RvGame.int|RvUI|MT_QuickmatchHint360",
+      "record": "..\\RvGame\\Localization\\INT\\RvGame.int",
+      "section": "RvUI",
+      "key": "MT_QuickmatchHint360",
+      "category": "tutorial",
+      "en": "Find a game on Xbox LIVE using default settings",
+      "pl": "Znajdź grę w usłudze Xbox LIVE przy użyciu ustawień domyślnych.",
+      "tts_text": "Znajdź grę w usłudze Xbox LIVE przy użyciu ustawień domyślnych.",
+      "profile": "narrator_user",
+      "file": "0507_4ea3eb8014b5.wav",
+      "sample_rate": 24000,
+      "peak_dbfs": -3.0,
+      "qa_correction": "remaining_mixed_language_20261008",
+      "pack": "full_localization",
+      "manifest_line": 507,
+      "audio_path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\full_voicepack\\0507_4ea3eb8014b5.wav",
+      "line_id": "..\\RvGame\\Localization\\INT\\RvGame.int|RvUI|MT_QuickmatchHint360",
+      "expected_pl": "Znajdź grę w usłudze Xbox LIVE przy użyciu ustawień domyślnych.",
+      "translation_status": "draft_without_explicit_review",
+      "generation_attempt": 1,
+      "audio": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "duration_s": 3.518,
+        "rms": 0.106331,
+        "peak": 0.993286,
+        "clipping_fraction": 0.0,
+        "silence_fraction": 0.136756,
+        "audio_format_status": "PASS"
+      },
+      "asr": {
+        "language": "pl",
+        "language_probability": 0.9985,
+        "text": "Znać gra w usłudziek z boksliwe przy użyciu ustawien do myślnych.",
+        "segments": [
+          {
+            "start": 0.0,
+            "end": 3.5,
+            "text": "Znać gra w usłudziek z boksliwe przy użyciu ustawien do myślnych."
+          }
+        ]
+      },
+      "notes": [
+        "FAIL_GIBBERISH"
+      ],
+      "qa_status": "FAIL_GIBBERISH",
+      "text_similarity": {
+        "token_sequence": 0.2857,
+        "wer": 0.8
+      },
+      "translation_quality_status": "AUTOMATED_SANITY_OK",
+      "speech_rate_expected_words_per_s": 2.843
+    },
+    {
+      "id": "..\\RvGame\\Localization\\INT\\RvGame.int|RvUI|MT_PrivateHint360",
+      "record": "..\\RvGame\\Localization\\INT\\RvGame.int",
+      "section": "RvUI",
+      "key": "MT_PrivateHint360",
+      "category": "tutorial",
+      "en": "Host a private Xbox LIVE match that only your friends can join",
+      "pl": "Utwórz prywatny mecz Xbox LIVE, do którego mogą dołączyć tylko twoi znajomi.",
+      "tts_text": "Utwórz prywatny mecz Xbox LIVE, do którego mogą dołączyć tylko twoi znajomi.",
+      "profile": "narrator_user",
+      "file": "0511_505cfd08f5e4.wav",
+      "sample_rate": 24000,
+      "peak_dbfs": -3.0,
+      "qa_correction": "remaining_mixed_language_20261008",
+      "pack": "full_localization",
+      "manifest_line": 511,
+      "audio_path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\full_voicepack\\0511_505cfd08f5e4.wav",
+      "line_id": "..\\RvGame\\Localization\\INT\\RvGame.int|RvUI|MT_PrivateHint360",
+      "expected_pl": "Utwórz prywatny mecz Xbox LIVE, do którego mogą dołączyć tylko twoi znajomi.",
+      "translation_status": "draft_without_explicit_review",
+      "generation_attempt": 1,
+      "audio": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "duration_s": 4.145,
+        "rms": 0.094562,
+        "peak": 0.996368,
+        "clipping_fraction": 0.0,
+        "silence_fraction": 0.139744,
+        "audio_format_status": "PASS"
+      },
+      "asr": {
+        "language": "pl",
+        "language_probability": 0.9967,
+        "text": "Utwórz prywatny mecz wzboksyliwe, do którego mogą dołączyć tylko twoi znajomi.",
+        "segments": [
+          {
+            "start": 0.0,
+            "end": 4.0600000000000005,
+            "text": "Utwórz prywatny mecz wzboksyliwe, do którego mogą dołączyć tylko twoi znajomi."
+          }
+        ]
+      },
+      "notes": [],
+      "qa_status": "PASS",
+      "text_similarity": {
+        "token_sequence": 0.8696,
+        "wer": 0.1667
+      },
+      "translation_quality_status": "AUTOMATED_SANITY_OK",
+      "speech_rate_expected_words_per_s": 2.895
+    },
+    {
+      "id": "..\\RvGame\\Localization\\INT\\RvGame.int|RvUI|EditFriendInviteHint",
+      "record": "..\\RvGame\\Localization\\INT\\RvGame.int",
+      "section": "RvUI",
+      "key": "EditFriendInviteHint",
+      "category": "tutorial",
+      "en": "Invite this friend to join your game",
+      "pl": "Zaproś tego znajomego do swojej gry.",
+      "tts_text": "Zaproś tego znajomego do swojej gry.",
+      "profile": "narrator_user",
+      "file": "0529_2d40fe23733c.wav",
+      "sample_rate": 24000,
+      "peak_dbfs": -3.0,
+      "qa_correction": "remaining_mixed_language_20261008",
+      "pack": "full_localization",
+      "manifest_line": 529,
+      "audio_path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\full_voicepack\\0529_2d40fe23733c.wav",
+      "line_id": "..\\RvGame\\Localization\\INT\\RvGame.int|RvUI|EditFriendInviteHint",
+      "expected_pl": "Zaproś tego znajomego do swojej gry.",
+      "translation_status": "draft_without_explicit_review",
+      "generation_attempt": 1,
+      "audio": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "duration_s": 1.939,
+        "rms": 0.108,
+        "peak": 0.998321,
+        "clipping_fraction": 0.0,
+        "silence_fraction": 0.14076,
+        "audio_format_status": "PASS"
+      },
+      "asr": {
+        "language": "pl",
+        "language_probability": 0.9922,
+        "text": "Zaprosz tego znajomego do swojej gry.",
+        "segments": [
+          {
+            "start": 0.0,
+            "end": 2.0,
+            "text": "Zaprosz tego znajomego do swojej gry."
+          }
+        ]
+      },
+      "notes": [],
+      "qa_status": "PASS",
+      "text_similarity": {
+        "token_sequence": 0.8333,
+        "wer": 0.1667
+      },
+      "translation_quality_status": "AUTOMATED_SANITY_OK",
+      "speech_rate_expected_words_per_s": 3.094
+    },
+    {
+      "id": "..\\RvGame\\Localization\\INT\\RvGame.int|RvUI|EditFriendRemoveHint",
+      "record": "..\\RvGame\\Localization\\INT\\RvGame.int",
+      "section": "RvUI",
+      "key": "EditFriendRemoveHint",
+      "category": "tutorial",
+      "en": "Remove this friend from your friends list.  You will be removed from their friend list also.",
+      "pl": "Usuń tego znajomego z listy znajomych. Ty również zostaniesz usunięty z jego listy.",
+      "tts_text": "Usuń tego znajomego z listy znajomych. Ty również zostaniesz usunięty z jego listy.",
+      "profile": "narrator_user",
+      "file": "0532_9f4f1ab86c32.wav",
+      "sample_rate": 24000,
+      "peak_dbfs": -3.0,
+      "qa_correction": "remaining_mixed_language_20261008",
+      "pack": "full_localization",
+      "manifest_line": 532,
+      "audio_path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\full_voicepack\\0532_9f4f1ab86c32.wav",
+      "line_id": "..\\RvGame\\Localization\\INT\\RvGame.int|RvUI|EditFriendRemoveHint",
+      "expected_pl": "Usuń tego znajomego z listy znajomych. Ty również zostaniesz usunięty z jego listy.",
+      "translation_status": "draft_without_explicit_review",
+      "generation_attempt": 1,
+      "audio": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "duration_s": 4.888,
+        "rms": 0.1437,
+        "peak": 1.0,
+        "clipping_fraction": 9e-06,
+        "silence_fraction": 0.18962,
+        "audio_format_status": "PASS"
+      },
+      "asr": {
+        "language": "pl",
+        "language_probability": 0.9985,
+        "text": "8 znajomego z listy znajomych, ty również zostaniesz usunięty z jego listy.",
+        "segments": [
+          {
+            "start": 0.0,
+            "end": 2.36,
+            "text": "8 znajomego z listy znajomych,"
+          },
+          {
+            "start": 2.36,
+            "end": 4.96,
+            "text": "ty również zostaniesz usunięty z jego listy."
+          }
+        ]
+      },
+      "notes": [],
+      "qa_status": "PASS",
+      "text_similarity": {
+        "token_sequence": 0.88,
+        "wer": 0.1538
+      },
+      "translation_quality_status": "AUTOMATED_SANITY_OK",
+      "speech_rate_expected_words_per_s": 2.66
+    },
+    {
+      "id": "..\\RvGame\\Localization\\INT\\RvGame.int|RvUI|FSRevertMessage",
+      "record": "..\\RvGame\\Localization\\INT\\RvGame.int",
+      "section": "RvUI",
+      "key": "FSRevertMessage",
+      "category": "ui",
+      "en": "The fullscreen setting will revert in 15 seconds if you do not select Ok.",
+      "pl": "Ustawienie pełnego ekranu zostanie przywrócone po 15 sekundach, jeśli nie wybierzesz opcji OK.",
+      "tts_text": "Ustawienie pełnego ekranu zostanie przywrócone po 15 sekundach, jeśli nie wybierzesz opcji OK.",
+      "profile": "narrator_user",
+      "file": "0590_28f65eda3cf0.wav",
+      "sample_rate": 24000,
+      "peak_dbfs": -3.0,
+      "qa_correction": "remaining_mixed_language_20261008",
+      "pack": "full_localization",
+      "manifest_line": 590,
+      "audio_path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\full_voicepack\\0590_28f65eda3cf0.wav",
+      "line_id": "..\\RvGame\\Localization\\INT\\RvGame.int|RvUI|FSRevertMessage",
+      "expected_pl": "Ustawienie pełnego ekranu zostanie przywrócone po 15 sekundach, jeśli nie wybierzesz opcji OK.",
+      "translation_status": "draft_without_explicit_review",
+      "generation_attempt": 1,
+      "audio": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "duration_s": 5.457,
+        "rms": 0.099875,
+        "peak": 1.0,
+        "clipping_fraction": 8e-06,
+        "silence_fraction": 0.15765,
+        "audio_format_status": "PASS"
+      },
+      "asr": {
+        "language": "pl",
+        "language_probability": 0.9977,
+        "text": "Ustawienie pełnego ekranu zostanie przywrócone po 15 sekundach, jeśli nie wybierzesz opcji OK.",
+        "segments": [
+          {
+            "start": 0.0,
+            "end": 5.44,
+            "text": "Ustawienie pełnego ekranu zostanie przywrócone po 15 sekundach, jeśli nie wybierzesz opcji OK."
+          }
+        ]
+      },
+      "notes": [],
+      "qa_status": "PASS",
+      "text_similarity": {
+        "token_sequence": 1.0,
+        "wer": 0.0
+      },
+      "translation_quality_status": "AUTOMATED_SANITY_OK",
+      "speech_rate_expected_words_per_s": 2.382
+    },
+    {
+      "id": "..\\RvGame\\Localization\\INT\\RvGame.int|RvUI|AC_MP_KILLSOLDIERS_BARREL",
+      "record": "..\\RvGame\\Localization\\INT\\RvGame.int",
+      "section": "RvUI",
+      "key": "AC_MP_KILLSOLDIERS_BARREL",
+      "category": "ui",
+      "en": "Zek Barrel Direct Hit Kills",
+      "pl": "Bezpośrednie trafienie beczką Zeka — zabójstwa.",
+      "tts_text": "Bezpośrednie trafienie beczką Zeka — zabójstwa.",
+      "profile": "narrator_user",
+      "file": "0629_352577584ffe.wav",
+      "sample_rate": 24000,
+      "peak_dbfs": -3.0,
+      "qa_correction": "remaining_mixed_language_20261008",
+      "pack": "full_localization",
+      "manifest_line": 629,
+      "audio_path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\full_voicepack\\0629_352577584ffe.wav",
+      "line_id": "..\\RvGame\\Localization\\INT\\RvGame.int|RvUI|AC_MP_KILLSOLDIERS_BARREL",
+      "expected_pl": "Bezpośrednie trafienie beczką Zeka — zabójstwa.",
+      "translation_status": "draft_without_explicit_review",
+      "generation_attempt": 1,
+      "audio": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "duration_s": 3.03,
+        "rms": 0.104399,
+        "peak": 1.0,
+        "clipping_fraction": 1.4e-05,
+        "silence_fraction": 0.213352,
+        "audio_format_status": "PASS"
+      },
+      "asr": {
+        "language": "pl",
+        "language_probability": 0.9997,
+        "text": "bezpośrednie trafienie beczką zaka, zabójstwa.",
+        "segments": [
+          {
+            "start": 0.0,
+            "end": 3.0,
+            "text": "bezpośrednie trafienie beczką zaka, zabójstwa."
+          }
+        ]
+      },
+      "notes": [],
+      "qa_status": "PASS",
+      "text_similarity": {
+        "token_sequence": 0.8,
+        "wer": 0.2
+      },
+      "translation_quality_status": "AUTOMATED_SANITY_OK",
+      "speech_rate_expected_words_per_s": 1.65
+    },
+    {
+      "id": "..\\RvGame\\Localization\\INT\\RvGame.int|RvUI|ARGatlingGunDesc",
+      "record": "..\\RvGame\\Localization\\INT\\RvGame.int",
+      "section": "RvUI",
+      "key": "ARGatlingGunDesc",
+      "category": "tutorial",
+      "en": "Heavy cannon that uses an automatic load system coupled with a high capacity 100 round clip. Unmatched rate of fire for extended combat engagements.",
+      "pl": "Ciężkie działko z automatycznym systemem ładowania i magazynkiem na 100 nabojów. Niezrównana szybkostrzelność podczas długich starć.",
+      "tts_text": "Ciężkie działko z automatycznym systemem ładowania i magazynkiem na 100 nabojów. Niezrównana szybkostrzelność podczas długich starć.",
+      "profile": "narrator_user",
+      "file": "0682_52c9c1f4aa61.wav",
+      "sample_rate": 24000,
+      "peak_dbfs": -3.0,
+      "qa_correction": "remaining_mixed_language_20261008",
+      "pack": "full_localization",
+      "manifest_line": 682,
+      "audio_path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\full_voicepack\\0682_52c9c1f4aa61.wav",
+      "line_id": "..\\RvGame\\Localization\\INT\\RvGame.int|RvUI|ARGatlingGunDesc",
+      "expected_pl": "Ciężkie działko z automatycznym systemem ładowania i magazynkiem na 100 nabojów. Niezrównana szybkostrzelność podczas długich starć.",
+      "translation_status": "draft_without_explicit_review",
+      "generation_attempt": 1,
+      "audio": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "duration_s": 6.85,
+        "rms": 0.093277,
+        "peak": 0.990905,
+        "clipping_fraction": 0.0,
+        "silence_fraction": 0.159309,
+        "audio_format_status": "PASS"
+      },
+      "asr": {
+        "language": "pl",
+        "language_probability": 0.9946,
+        "text": "Ciężkie działko z automatycznym systemem odowania i magazynkiem na stona bojów nie zrównano szybko strzelność podczas długich starci.",
+        "segments": [
+          {
+            "start": 0.0,
+            "end": 6.8,
+            "text": "Ciężkie działko z automatycznym systemem odowania i magazynkiem na stona bojów nie zrównano szybko strzelność podczas długich starci."
+          }
+        ]
+      },
+      "notes": [],
+      "qa_status": "PASS",
+      "text_similarity": {
+        "token_sequence": 0.5882,
+        "wer": 0.5
+      },
+      "translation_quality_status": "AUTOMATED_SANITY_OK",
+      "speech_rate_expected_words_per_s": 2.336
+    },
+    {
+      "id": "..\\RvGame\\Localization\\INT\\RvGame.int|RvUI|SciencePaneDesc",
+      "record": "..\\RvGame\\Localization\\INT\\RvGame.int",
+      "section": "RvUI",
+      "key": "SciencePaneDesc",
+      "category": "ui",
+      "en": "Purchase ScienceTech Equipment and Upgrades",
+      "pl": "Kup wyposażenie i ulepszenia technologii naukowej.",
+      "tts_text": "Kup wyposażenie i ulepszenia technologii naukowej.",
+      "profile": "narrator_user",
+      "file": "0715_1dff9c7b7d6f.wav",
+      "sample_rate": 24000,
+      "peak_dbfs": -3.0,
+      "qa_correction": "remaining_mixed_language_20261008",
+      "pack": "full_localization",
+      "manifest_line": 715,
+      "audio_path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\full_voicepack\\0715_1dff9c7b7d6f.wav",
+      "line_id": "..\\RvGame\\Localization\\INT\\RvGame.int|RvUI|SciencePaneDesc",
+      "expected_pl": "Kup wyposażenie i ulepszenia technologii naukowej.",
+      "translation_status": "draft_without_explicit_review",
+      "generation_attempt": 1,
+      "audio": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "duration_s": 2.937,
+        "rms": 0.100983,
+        "peak": 0.999573,
+        "clipping_fraction": 1.4e-05,
+        "silence_fraction": 0.166336,
+        "audio_format_status": "PASS"
+      },
+      "asr": {
+        "language": "pl",
+        "language_probability": 0.9998,
+        "text": "Kubu wyposażenie i ulepszenia technologii naukowej.",
+        "segments": [
+          {
+            "start": 0.0,
+            "end": 3.0,
+            "text": "Kubu wyposażenie i ulepszenia technologii naukowej."
+          }
+        ]
+      },
+      "notes": [],
+      "qa_status": "PASS",
+      "text_similarity": {
+        "token_sequence": 0.8333,
+        "wer": 0.1667
+      },
+      "translation_quality_status": "AUTOMATED_SANITY_OK",
+      "speech_rate_expected_words_per_s": 2.043
+    },
+    {
+      "id": "..\\RvGame\\Localization\\INT\\RvGame.int|RvUI|ScienceToWeaponAnnounce",
+      "record": "..\\RvGame\\Localization\\INT\\RvGame.int",
+      "section": "RvUI",
+      "key": "ScienceToWeaponAnnounce",
+      "category": "ui",
+      "en": "Converted 10,000 E99 Tech into 2 Weapon Upgrade Widgets",
+      "pl": "Wymieniono 10 000 jednostek technologii E99 na 2 moduły ulepszenia broni.",
+      "tts_text": "Wymieniono 10 000 jednostek technologii E dziewięćdziesiąt dziewięć na 2 moduły ulepszenia broni.",
+      "profile": "narrator_user",
+      "file": "0717_5b5ab30374d3.wav",
+      "sample_rate": 24000,
+      "peak_dbfs": -3.0,
+      "qa_correction": "remaining_mixed_language_20261008",
+      "pack": "full_localization",
+      "manifest_line": 717,
+      "audio_path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\full_voicepack\\0717_5b5ab30374d3.wav",
+      "line_id": "..\\RvGame\\Localization\\INT\\RvGame.int|RvUI|ScienceToWeaponAnnounce",
+      "expected_pl": "Wymieniono 10 000 jednostek technologii E dziewięćdziesiąt dziewięć na 2 moduły ulepszenia broni.",
+      "translation_status": "draft_without_explicit_review",
+      "generation_attempt": 1,
+      "audio": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "duration_s": 4.992,
+        "rms": 0.114863,
+        "peak": 1.0,
+        "clipping_fraction": 8e-06,
+        "silence_fraction": 0.106389,
+        "audio_format_status": "PASS"
+      },
+      "asr": {
+        "language": "pl",
+        "language_probability": 0.9993,
+        "text": "wymieniono 10 000 jednostek technologia 99x2 moduły ulepszenia broni.",
+        "segments": [
+          {
+            "start": 0.0,
+            "end": 5.0,
+            "text": "wymieniono 10 000 jednostek technologia 99x2 moduły ulepszenia broni."
+          }
+        ]
+      },
+      "notes": [],
+      "qa_status": "PASS",
+      "text_similarity": {
+        "token_sequence": 0.6364,
+        "wer": 0.4615
+      },
+      "translation_quality_status": "AUTOMATED_SANITY_OK",
+      "speech_rate_expected_words_per_s": 2.604
+    },
+    {
+      "id": "..\\RvGame\\Localization\\INT\\RvGame.int|Perk|Perk_Bruiser_Desc",
+      "record": "..\\RvGame\\Localization\\INT\\RvGame.int",
+      "section": "Perk",
+      "key": "Perk_Bruiser_Desc",
+      "category": "tutorial",
+      "en": "TMD power: Impulse.\nThe Bruiser's Impulse is the ultimate close range power. Made to deal with melee creatures, it pushes them away while at the same time inflicting significant damage.\n\n[impulse] to fire Impulse.\n[age] (hold) to regenerate Spawner Units and Beacon.",
+      "pl": "Moc TMD: Impuls.\nImpuls Bruisera to potężna moc do walki na bliskim dystansie. Odpycha stworzenia i zadaje im znaczne obrażenia.\n\n[impulse] — użyj Impulsu.\n[age] (przytrzymaj) — regeneruj jednostki Spawnera i Nadajnik.",
+      "tts_text": "Moc te em de: Impuls. Impuls Bruisera to potężna moc do walki na bliskim dystansie. Odpycha stworzenia i zadaje im znaczne obrażenia. impulsu — użyj Impulsu. postarzania (przytrzymaj) — regeneruj jednostki Spawnera i Nadajnik.",
+      "profile": "narrator_user",
+      "file": "0791_d83f3e2ed666.wav",
+      "sample_rate": 24000,
+      "peak_dbfs": -3.0,
+      "qa_correction": "remaining_mixed_language_20261008",
+      "pack": "full_localization",
+      "manifest_line": 791,
+      "audio_path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\full_voicepack\\0791_d83f3e2ed666.wav",
+      "line_id": "..\\RvGame\\Localization\\INT\\RvGame.int|Perk|Perk_Bruiser_Desc",
+      "expected_pl": "Moc te em de: Impuls. Impuls Bruisera to potężna moc do walki na bliskim dystansie. Odpycha stworzenia i zadaje im znaczne obrażenia. impulsu — użyj Impulsu. postarzania (przytrzymaj) — regeneruj jednostki Spawnera i Nadajnik.",
+      "translation_status": "draft_without_explicit_review",
+      "generation_attempt": 1,
+      "audio": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "duration_s": 12.678,
+        "rms": 0.089473,
+        "peak": 1.0,
+        "clipping_fraction": 7e-06,
+        "silence_fraction": 0.167214,
+        "audio_format_status": "PASS"
+      },
+      "asr": {
+        "language": "pl",
+        "language_probability": 0.9992,
+        "text": "Modstę MD Impulse. Impulse brusera to potężna moc do walki na bliskim dystansie. Odpycha stworzenia i zadaje im znaczne obrażenia impulsu. Uży impulsu postarzenia przytrzymaj. Regeneruj jednostki spawnera i nadajnik.",
+        "segments": [
+          {
+            "start": 0.0,
+            "end": 5.0,
+            "text": "Modstę MD Impulse. Impulse brusera to potężna moc do walki na bliskim dystansie."
+          },
+          {
+            "start": 5.0,
+            "end": 8.3,
+            "text": "Odpycha stworzenia i zadaje im znaczne obrażenia impulsu."
+          },
+          {
+            "start": 8.3,
+            "end": 12.8,
+            "text": "Uży impulsu postarzenia przytrzymaj. Regeneruj jednostki spawnera i nadajnik."
+          }
+        ]
+      },
+      "notes": [],
+      "qa_status": "PASS",
+      "text_similarity": {
+        "token_sequence": 0.7419,
+        "wer": 0.2812
+      },
+      "translation_quality_status": "AUTOMATED_SANITY_OK",
+      "speech_rate_expected_words_per_s": 2.524
+    },
+    {
+      "id": "..\\RvGame\\Localization\\INT\\RvGame.int|Perk|Perk_PhaseTick_Desc",
+      "record": "..\\RvGame\\Localization\\INT\\RvGame.int",
+      "section": "Perk",
+      "key": "Perk_PhaseTick_Desc",
+      "category": "tutorial",
+      "en": "Phase Ticks may be small, but they possess powerful attributes.\nTheir ability to climb on most surfaces, coupled with the power to possess soldiers, makes the Tick a valuable sneak attacker.\n\n[impulse] (hold) to explode the Tick Sac.\n[fire] to perform the Tick Leap.\n[aim] (hold) for leap aim mode.",
+      "pl": "Fazowe Kleszcze są małe, ale mają potężne właściwości.\nPotrafią wspinać się po większości powierzchni i przejmować żołnierzy, dzięki czemu świetnie nadają się do skrytych ataków.\n\n[impulse] (przytrzymaj) — wysadź worek Kleszcza.\n[fire] — wykonaj skok Kleszcza.\n[aim] (przytrzymaj) — tryb celowania skokiem.",
+      "tts_text": "Fazowe Kleszcze są małe, ale mają potężne właściwości. Potrafią wspinać się po większości powierzchni i przejmować żołnierzy, dzięki czemu świetnie nadają się do skrytych ataków. impulsu (przytrzymaj) — wysadź worek Kleszcza. strzał — wykonaj skok Kleszcza. celowania (przytrzymaj) — tryb celowania skokiem.",
+      "profile": "narrator_user",
+      "file": "0796_dec0edf23c2c.wav",
+      "sample_rate": 24000,
+      "peak_dbfs": -3.0,
+      "qa_correction": "remaining_mixed_language_20261008",
+      "pack": "full_localization",
+      "manifest_line": 796,
+      "audio_path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\full_voicepack\\0796_dec0edf23c2c.wav",
+      "line_id": "..\\RvGame\\Localization\\INT\\RvGame.int|Perk|Perk_PhaseTick_Desc",
+      "expected_pl": "Fazowe Kleszcze są małe, ale mają potężne właściwości. Potrafią wspinać się po większości powierzchni i przejmować żołnierzy, dzięki czemu świetnie nadają się do skrytych ataków. impulsu (przytrzymaj) — wysadź worek Kleszcza. strzał — wykonaj skok Kleszcza. celowania (przytrzymaj) — tryb celowania skokiem.",
+      "translation_status": "draft_without_explicit_review",
+      "generation_attempt": 1,
+      "audio": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "duration_s": 15.337,
+        "rms": 0.094888,
+        "peak": 0.997375,
+        "clipping_fraction": 0.0,
+        "silence_fraction": 0.175113,
+        "audio_format_status": "PASS"
+      },
+      "asr": {
+        "language": "pl",
+        "language_probability": 0.9997,
+        "text": "Fazowe kleszcze są małe, ale mają potężne właściwości. Potrafią wspinać się powiększości powierzchni i przejmować żołnierzy. Dzięki czemu świetnie nadają się do skrytych ataków impulsu przytrzymaj. Wyszedł worek kleszcza strzał, wykonaj skok kleszcze celowania przytrzymaj, tryk celowania z kokiem.",
+        "segments": [
+          {
+            "start": 0.0,
+            "end": 3.4,
+            "text": "Fazowe kleszcze są małe, ale mają potężne właściwości."
+          },
+          {
+            "start": 3.4,
+            "end": 6.66,
+            "text": "Potrafią wspinać się powiększości powierzchni i przejmować żołnierzy."
+          },
+          {
+            "start": 6.66,
+            "end": 10.08,
+            "text": "Dzięki czemu świetnie nadają się do skrytych ataków impulsu przytrzymaj."
+          },
+          {
+            "start": 10.08,
+            "end": 15.32,
+            "text": "Wyszedł worek kleszcza strzał, wykonaj skok kleszcze celowania przytrzymaj, tryk celowania z kokiem."
+          }
+        ]
+      },
+      "notes": [],
+      "qa_status": "PASS",
+      "text_similarity": {
+        "token_sequence": 0.8462,
+        "wer": 0.1795
+      },
+      "translation_quality_status": "AUTOMATED_SANITY_OK",
+      "speech_rate_expected_words_per_s": 2.543
+    },
+    {
+      "id": "..\\RvGame\\Localization\\INT\\RvGame.int|Perk|Perk_Revert_Desc",
+      "record": "..\\RvGame\\Localization\\INT\\RvGame.int",
+      "section": "Perk",
+      "key": "Perk_Revert_Desc",
+      "category": "tutorial",
+      "en": "Reverts are slow but extremely powerful.\nTheir unique ability to heal teammates, along with their powerful Proximity Mines, make the Revert a great defensive creature.\n\n[impulse] to conjure a Proximity Mine.\n[fire] (hold) to spew Revert Puke.\n[age] or [reload] to Melee.",
+      "pl": "Reverci są powolni, ale niezwykle potężni.\nPotrafią leczyć towarzyszy, a ich miny zbliżeniowe czynią z nich świetne stworzenia obronne.\n\n[impulse] — przywołaj minę zbliżeniową.\n[fire] (przytrzymaj) — wypluj wymiociny Revertu.\n[age] lub [przeładować] — atak wręcz.",
+      "tts_text": "Reverci są powolni, ale niezwykle potężni. Potrafią leczyć towarzyszy, a ich miny zbliżeniowe czynią z nich świetne stworzenia obronne. impulsu — przywołaj minę zbliżeniową. strzał (przytrzymaj) — wypluj wymiociny Revertu. postarzania lub przeładować — atak wręcz.",
+      "profile": "narrator_user",
+      "file": "0798_c8b4cca0ea10.wav",
+      "sample_rate": 24000,
+      "peak_dbfs": -3.0,
+      "qa_correction": "remaining_mixed_language_20261008",
+      "pack": "full_localization",
+      "manifest_line": 798,
+      "audio_path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\full_voicepack\\0798_c8b4cca0ea10.wav",
+      "line_id": "..\\RvGame\\Localization\\INT\\RvGame.int|Perk|Perk_Revert_Desc",
+      "expected_pl": "Reverci są powolni, ale niezwykle potężni. Potrafią leczyć towarzyszy, a ich miny zbliżeniowe czynią z nich świetne stworzenia obronne. impulsu — przywołaj minę zbliżeniową. strzał (przytrzymaj) — wypluj wymiociny Revertu. postarzania lub przeładować — atak wręcz.",
+      "translation_status": "draft_without_explicit_review",
+      "generation_attempt": 1,
+      "audio": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "duration_s": 14.002,
+        "rms": 0.078162,
+        "peak": 1.0,
+        "clipping_fraction": 6e-06,
+        "silence_fraction": 0.183901,
+        "audio_format_status": "PASS"
+      },
+      "asr": {
+        "language": "pl",
+        "language_probability": 0.9997,
+        "text": "Rewerci są powolni, ale niezwykle potężni. Potrafią leczyć towarzyszy, a ich minę zbliżeniowe czy no z nich świetne stworzenia obronne impulsu. Przywołaje minę zbliżeniową strzał przytrzymaj. Wypluj wymieci na rewertu postarzania lub przeładować, a tak wręcz.",
+        "segments": [
+          {
+            "start": 0.0,
+            "end": 2.86,
+            "text": "Rewerci są powolni, ale niezwykle potężni."
+          },
+          {
+            "start": 2.86,
+            "end": 8.0,
+            "text": "Potrafią leczyć towarzyszy, a ich minę zbliżeniowe czy no z nich świetne stworzenia obronne impulsu."
+          },
+          {
+            "start": 8.0,
+            "end": 10.24,
+            "text": "Przywołaje minę zbliżeniową strzał przytrzymaj."
+          },
+          {
+            "start": 10.24,
+            "end": 14.0,
+            "text": "Wypluj wymieci na rewertu postarzania lub przeładować, a tak wręcz."
+          }
+        ]
+      },
+      "notes": [],
+      "qa_status": "PASS",
+      "text_similarity": {
+        "token_sequence": 0.7536,
+        "wer": 0.303
+      },
+      "translation_quality_status": "AUTOMATED_SANITY_OK",
+      "speech_rate_expected_words_per_s": 2.357
+    },
+    {
+      "id": "..\\RvGame\\Localization\\INT\\RvGame.int|GameDialogs|TimeRiftsDesc",
+      "record": "..\\RvGame\\Localization\\INT\\RvGame.int",
+      "section": "GameDialogs",
+      "key": "TimeRiftsDesc",
+      "category": "ui",
+      "en": "<font color='#FF9900'>Time Rifts</font> combined with the TMD allow you to travel back in time. <font color='#FF9900'>Rifts</font> are small openings in the Time-Space continuum, created using large quantities of E99.",
+      "pl": "<font color='#FF9900'>Szczeliny czasowe</font> w połączeniu z TMD pozwalają podróżować w czasie. <font color='#FF9900'>Szczeliny</font> to niewielkie otwarcia w kontinuum czasoprzestrzeni, tworzone z dużych ilości E99.",
+      "tts_text": "Szczeliny czasowe w połączeniu z te em de pozwalają podróżować w czasie. Szczeliny to niewielkie otwarcia w kontinuum czasoprzestrzeni, tworzone z dużych ilości E dziewięćdziesiąt dziewięć.",
+      "profile": "narrator_user",
+      "file": "0821_4ce2265e236b.wav",
+      "sample_rate": 24000,
+      "peak_dbfs": -3.0,
+      "qa_correction": "remaining_mixed_language_20261008",
+      "pack": "full_localization",
+      "manifest_line": 821,
+      "audio_path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\full_voicepack\\0821_4ce2265e236b.wav",
+      "line_id": "..\\RvGame\\Localization\\INT\\RvGame.int|GameDialogs|TimeRiftsDesc",
+      "expected_pl": "Szczeliny czasowe w połączeniu z te em de pozwalają podróżować w czasie. Szczeliny to niewielkie otwarcia w kontinuum czasoprzestrzeni, tworzone z dużych ilości E dziewięćdziesiąt dziewięć.",
+      "translation_status": "draft_without_explicit_review",
+      "generation_attempt": 1,
+      "audio": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "duration_s": 9.184,
+        "rms": 0.098452,
+        "peak": 1.0,
+        "clipping_fraction": 9e-06,
+        "silence_fraction": 0.165097,
+        "audio_format_status": "PASS"
+      },
+      "asr": {
+        "language": "pl",
+        "language_probability": 0.999,
+        "text": "Szczeliny czasowe w połączeniu stępne pozwalają podróżować w czasie. Szczeliny to niewielkie otwarcia w kontinułą czasoprzestrzeni, tworzone z dużych ilości 99.",
+        "segments": [
+          {
+            "start": 0.0,
+            "end": 3.6,
+            "text": "Szczeliny czasowe w połączeniu stępne pozwalają podróżować w czasie."
+          },
+          {
+            "start": 3.6,
+            "end": 9.200000000000001,
+            "text": "Szczeliny to niewielkie otwarcia w kontinułą czasoprzestrzeni, tworzone z dużych ilości 99."
+          }
+        ]
+      },
+      "notes": [],
+      "qa_status": "PASS",
+      "text_similarity": {
+        "token_sequence": 0.766,
+        "wer": 0.3077
+      },
+      "translation_quality_status": "AUTOMATED_SANITY_OK",
+      "speech_rate_expected_words_per_s": 2.831
+    }
+  ]
+}

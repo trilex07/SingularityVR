@@ -1,0 +1,110 @@
+[
+  {
+    "file": "01_renko_neutral.wav",
+    "speaker": "Renko",
+    "reference": "polish/user_reference/spokoj_reference.wav",
+    "text": "Musimy działać szybko. Sprawdźmy, co dzieje się w laboratorium.",
+    "engine": "Pocket-TTS Polish 6L",
+    "temperature": 0.55,
+    "peak_dbfs": -3.0
+  },
+  {
+    "file": "02_renko_tense.wav",
+    "speaker": "Renko",
+    "reference": "polish/user_reference/agresja_reference.wav",
+    "text": "Słyszycie to? Wszyscy na stanowiska, natychmiast!",
+    "engine": "Pocket-TTS Polish 6L",
+    "temperature": 0.55,
+    "peak_dbfs": -3.0
+  },
+  {
+    "file": "03_barisov_command.wav",
+    "speaker": "Barisov",
+    "reference": "polish/accent_reference/ru_dmitri_reference.wav",
+    "text": "Stać! Odłożyć broń i wykonywać moje rozkazy.",
+    "engine": "Pocket-TTS Polish 6L",
+    "temperature": 0.55,
+    "peak_dbfs": -3.0
+  },
+  {
+    "file": "04_barisov_briefing.wav",
+    "speaker": "Barisov",
+    "reference": "polish/accent_reference/ru_dmitri_reference.wav",
+    "text": "Sektor jest zabezpieczony. Przechodzimy do następnego punktu.",
+    "engine": "Pocket-TTS Polish 6L",
+    "temperature": 0.55,
+    "peak_dbfs": -3.0
+  },
+  {
+    "file": "05_barisov_angry.wav",
+    "speaker": "Barisov",
+    "reference": "polish/accent_reference/ru_dmitri_reference.wav",
+    "text": "Nie będę powtarzał tego drugi raz!",
+    "engine": "Pocket-TTS Polish 6L",
+    "temperature": 0.55,
+    "peak_dbfs": -3.0
+  },
+  {
+    "file": "06_demichev_cold.wav",
+    "speaker": "Demichev",
+    "reference": "polish/accent_reference/ru_ruslan_reference.wav",
+    "text": "Nie ma już odwrotu. Procedura zostanie uruchomiona.",
+    "engine": "Pocket-TTS Polish 6L",
+    "temperature": 0.55,
+    "peak_dbfs": -3.0
+  },
+  {
+    "file": "07_demichev_technical.wav",
+    "speaker": "Demichev",
+    "reference": "polish/accent_reference/ru_ruslan_reference.wav",
+    "text": "Rdzeń temporalny osiągnął niestabilność. Odłączcie zasilanie.",
+    "engine": "Pocket-TTS Polish 6L",
+    "temperature": 0.55,
+    "peak_dbfs": -3.0
+  },
+  {
+    "file": "08_demichev_threat.wav",
+    "speaker": "Demichev",
+    "reference": "polish/accent_reference/ru_ruslan_reference.wav",
+    "text": "Twoje działania tylko pogarszają sytuację.",
+    "engine": "Pocket-TTS Polish 6L",
+    "temperature": 0.55,
+    "peak_dbfs": -3.0
+  },
+  {
+    "file": "09_kathryn_scientific.wav",
+    "speaker": "Kathryn",
+    "reference": "polish/accent_reference/uk_tetiana_reference.wav",
+    "text": "Potrzebuję jeszcze chwili. Dane są prawie kompletne.",
+    "engine": "Pocket-TTS Polish 6L",
+    "temperature": 0.55,
+    "peak_dbfs": -3.0
+  },
+  {
+    "file": "10_kathryn_urgent.wav",
+    "speaker": "Kathryn",
+    "reference": "polish/accent_reference/uk_tetiana_reference.wav",
+    "text": "Zatrzymajcie reaktor, zanim będzie za późno!",
+    "engine": "Pocket-TTS Polish 6L",
+    "temperature": 0.55,
+    "peak_dbfs": -3.0
+  },
+  {
+    "file": "11_devlin_restrained.wav",
+    "speaker": "Devlin",
+    "reference": "polish/accent_reference/uk_mykyta_reference.wav",
+    "text": "Droga jest czysta. Możemy ruszać dalej.",
+    "engine": "Pocket-TTS Polish 6L",
+    "temperature": 0.55,
+    "peak_dbfs": -3.0
+  },
+  {
+    "file": "12_devlin_urgent.wav",
+    "speaker": "Devlin",
+    "reference": "polish/accent_reference/uk_mykyta_reference.wav",
+    "text": "Renko, za tobą! Uważaj!",
+    "engine": "Pocket-TTS Polish 6L",
+    "temperature": 0.55,
+    "peak_dbfs": -3.0
+  }
+]

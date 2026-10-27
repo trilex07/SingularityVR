@@ -1,0 +1,30 @@
+user_voice files:
+  M1.m4a
+  M2.m4a
+  Napięty.m4a
+  Spokój.m4a
+  Stanowczy.m4a
+internet_candidates:
+  commons_adrian_wisniewski.mp3
+  commons_anna_bugajska.mp3
+  librivox_piotr_nater_odsiecz_wiednia_64kb.mp3
+  mc_speech_sample1.wav
+  mc_speech_sample2.wav
+soldier copy: M1.m4a -> zolnierz_szeregowy_A.m4a
+soldier copy: M2.m4a -> zolnierz_szeregowy_B.m4a
+soldier copy: Napięty.m4a -> zolnierz_walka_okrzyki.m4a
+soldier copy: Spokój.m4a -> zolnierz_patrol_meldunki.m4a
+soldier copy: Stanowczy.m4a -> zolnierz_dowodca_rozkazy.m4a
+barisov alt copy: mc_speech_sample1.wav
+barisov alt copy: mc_speech_sample2.wav
+kathryn alt copy: piper_gosia_reference.wav
+kathryn alt copy: rhvoice_magda_reference.wav
+kathryn alt copy: rhvoice_magda_demo_short.wav
+kathryn alt copy: pocket kathryn_magda_ref.wav
+demichev alt copy: piper_darkman_reference.wav
+demichev alt copy: pocket demichev_darkman_ref.wav
+lektor alt copy: lektor_natan_ref.wav
+lektor alt copy: lektor_magda_ref.wav
+lektor alt copy: lektor_cml_ref.wav
+lektor alt copy: lektor_mc_ref.wav
+DONE

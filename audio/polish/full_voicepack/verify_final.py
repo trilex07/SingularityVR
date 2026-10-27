@@ -1,0 +1,29 @@
+import whisper
+
+model = whisper.load_model('small')
+
+files = [
+    ('0011_43166fba7ce1.wav', 'Wynik remisowy po regulaminowym czasie. Dogrywka do nagłej śmierci!!!'),
+    ('0018_1e4d181c0a7a.wav', 'Wyeliminuj wrogi gatunek. Wygrywa drużyna z największą liczbą zabójstw.'),
+    ('0102_da8e7a134316.wav', 'Wymagany Kod Aktywacyjny Do Naładowania Bomby E 99'),
+    ('0171_e58a6aacfe65.wav', 'Naciśnij [age], aby rozstroić Zeki w czasie. To kosztuje energię E 99.'),
+    ('0172_0005fcf47156.wav', 'Naciśnij [age], aby postarzyć Revertów, przyspieszyć ich rozpad i doprowadzić do wybuchu. To kosztuje energię E 99.'),
+    ('0174_e63b02880451.wav', 'Postarzanie [age] lub Impulsowanie [impulse] Fazowych Kleszczy to bardzo skuteczna strategia.'),
+    ('0175_a8ea3b99ffff.wav', 'Naciśnij [age], aby rozstroić Zeki w czasie. To kosztuje energię E 99.'),
+    ('0176_8775dc4ee866.wav', 'Podnieś dodatkową amunicję, biegnąc nad upuszczone broń lub paki z amunicją.'),
+    ('0177_498900210f5f.wav', 'Naciśnij [age], aby odnowić skrzynie z amunicją. W środku znajdziesz duży zapas amunicji do wszystkich broni.'),
+    ('0178_674ff92ad51e.wav', 'Naciśnij [age], aby odnowić apteczki i odzyskać znajdujące się w nich pakiety zdrowia.'),
+    ('0180_646e1432951a.wav', 'Użyj zbiorników Cryo, aby zamrozić wrogów na krótki czas.'),
+    ('0181_6f088a2dbaa7.wav', 'Naciśnij i przytrzymaj [grab], aby naładować deadlock i spowolnić czas wokół wrogów.'),
+    ('0182_e2c3a7f502e0.wav', 'Grawitacyjny chwyt [grab] pozwala łapać beczki rzucone w twoją stronę.'),
+    ('0186_c53fea8fb9e2.wav', 'Gdy wrogowie są poza fazą, są niewrażliwi na obrażenia.'),
+    ('0190_0fbab60ac913.wav', 'Przejdź po upuszczonej broni, aby zdobyć do niej amunicję.'),
+]
+
+for f, expected in files:
+    result = model.transcribe(f, language='pl', fp16=False)
+    lang = result.get('language')
+    text = result.get('text')
+    print(f + ': [' + lang + '] ' + text)
+    print('  Expected: ' + expected)
+    print()

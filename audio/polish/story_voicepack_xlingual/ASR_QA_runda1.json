@@ -1,0 +1,194 @@
+[
+ {
+  "file": "0a61180090e23d1a.wav",
+  "asr": " To nie jest moment, co doda, doda, doda.  To daje nigdy, nigdy, nigdy, nigdy, nigdy, nigdy, nigdy.",
+  "recall": 0.03,
+  "expected": "Kiedy nastąpiła katastrofa, wynajęliśmy z Eliną bezpieczeństwo tych tuneli, dotarliśmy w odpowiednim czasie, ale moja no"
+ },
+ {
+  "file": "14b741662999699a.wav",
+  "asr": " wynalazłem tmarę swe.  Demichei we wciałku  żadym odejmowotem.  Ale kiedy odmówiłem mnie  i wszystkich innych, którzy nie chcieli współpracować.",
+  "recall": 0.41,
+  "expected": "Od momentu, w którym wynalazłem TMD, Demichev chciał go, żądał, żebym oddał go do jego badań, ale kiedy odmówiłem, mnie "
+ },
+ {
+  "file": "1b52b3ab80034682.wav",
+  "asr": " Mnie odwiedził kogdany proces reportacji.  Ateriatizuje się znikąd.",
+  "recall": 0.2,
+  "expected": "Wczoraj ponownie mnie odwiedził, poddany Alpha z eksperymentu teleportacji, po raz czwarty w ciągu ostatnich dwóch tygod"
+ },
+ {
+  "file": "1f71c047ef2edb87.wav",
+  "asr": " I oczywiście są ważne eksperymenty, które robimy z E.  Jest naszym przyjacielem, ale czasami musimy być ostrożni wokół niego.",
+  "recall": 1.0,
+  "expected": "I oczywiście, są ważne eksperymenty, które robimy z E99. Jest naszym przyjacielem, ale czasami musimy być ostrożni wokół"
+ },
+ {
+  "file": "3221532a45bdbd2a.wav",
+  "asr": " Ostrzegam Cię.  Późdź mnie.",
+  "recall": 0.75,
+  "expected": "Ostrzegam cię, puść mnie!"
+ },
+ {
+  "file": "351649e5ff2f58dc.wav",
+  "asr": " Skontaktujmy się z Titanem Dubku.",
+  "recall": 0.44,
+  "expected": "Skontaktujmy się z Titanem 1 i wyjdźmy z tego kręgu, dupku."
+ },
+ {
+  "file": "38f168ed9f807bf5.wav",
+  "asr": " Według dziennika w tym budynku jest ukryty wejście prowadzące do sejfu.",
+  "recall": 1.0,
+  "expected": "Według dziennika 12, w tym budynku jest ukryty wejście prowadzące do sejfu."
+ },
+ {
+  "file": "3f5b1ae6838679f3.wav",
+  "asr": " i możliwościami singularity, ale ty, singularity eksplotem.",
+  "recall": 0.17,
+  "expected": "Demichew był opętany siłą i możliwościami Singularity, ale kilka miesięcy po tym, jak pojawiła się w sieci, nastąpił str"
+ },
+ {
+  "file": "5339b0068ab0840e.wav",
+  "asr": " Laboratowiadawcze są miejscem, którym prowadzone są badania naukowe dotyczące potencjalnych zastosowań E.",
+  "recall": 0.77,
+  "expected": "Laboratoria badawcze są miejscem, w którym prowadzone są badania naukowe dotyczące potencjalnych zastosowań E99."
+ },
+ {
+  "file": "5f28785c2235a178.wav",
+  "asr": " Jeszcze raz doktoryje, gdy będziemy mówić o bezpieczeństwie.",
+  "recall": 0.58,
+  "expected": "Jeszcze raz, doktor E99 pomoże nam dzisiaj, gdy będziemy mówić o bezpieczeństwie."
+ },
+ {
+  "file": "6064fd461d16dd5c.wav",
+  "asr": " po zebraniu E  które usuwają niepożądane osiedle aż pozostaje tylko surowe",
+  "recall": 0.59,
+  "expected": "Po zebraniu E99 jest wysyłany do kilku maszyn czyszczących, które usuwają niepożądane osiedle, aż pozostaje tylko surowy"
+ },
+ {
+  "file": "62b644f558505f1e.wav",
+  "asr": " Zabawale  Ale zanieno  No, no, no, no",
+  "recall": 0.06,
+  "expected": "Kiedy zaatakowano nas, prowadziłem grupę cywilów do bezpiecznego miejsca, ale przeraziłem stworzenie, ale nie zanim dost"
+ },
+ {
+  "file": "645b6de719763bc4.wav",
+  "asr": " Jestem uwięziany tutaj od ponad dwóch dni za każdym razem.  Gdy próbuję zrobić ruch, stworzenie czeka na mnie.",
+  "recall": 0.94,
+  "expected": "Jestem uwięziony tutaj od ponad dwóch dni, za każdym razem, gdy próbuję zrobić ruch, stworzenie czeka na mnie."
+ },
+ {
+  "file": "64f99c874ecc2128.wav",
+  "asr": " Powinniśmy iść.  Kończy nam się czas!",
+  "recall": 1.0,
+  "expected": "Powinniśmy iść, kończy nam się czas!"
+ },
+ {
+  "file": "667dff226f5b38eb.wav",
+  "asr": " Skontaktujmy się z Titanem Dubku.",
+  "recall": 0.44,
+  "expected": "Skontaktujmy się z Titanem 1 i wyjdźmy z tego kręgu, dupku."
+ },
+ {
+  "file": "691d44b2b46e8adc.wav",
+  "asr": " Jest to prototyp broni, e, ale powinien pomóc nam zmienić szansę.",
+  "recall": 0.71,
+  "expected": "Jest to prototyp broni E99, może być niestabilny, ale powinien pomóc nam zmienić szanse."
+ },
+ {
+  "file": "6ba243d8f3f9a7f9.wav",
+  "asr": " Zgłosy produce'owych może zostać nowym szefem Katorga, ale myślałem duże zaufanie.",
+  "recall": 0.47,
+  "expected": "Zgłoszyły się plotki, że dr Barisov może zostać nowym szefem Katorga-12, ale myślałem, że Moskwa ma w nim duże zaufanie."
+ },
+ {
+  "file": "6cff99694a523753.wav",
+  "asr": " Lecz to co się dzieje?  O, bo ty umarłeś je.",
+  "recall": 0.08,
+  "expected": "/Pobieg osobisty, 22 listopada 1955 r., /zajęliśmy coś, co dr Demichev nazywa bombą E99. /Nie czuję się komfortowo, że m"
+ },
+ {
+  "file": "6d2d54ee3297204e.wav",
+  "asr": " Przeprowadzę od prowryki, że był sierze w ziemię.  Aj!",
+  "recall": 0.08,
+  "expected": "Przykro mi poinformować, że próbowałem powstrzymać Kathryn w doku, ale nie posłuchała mnie, chciała wyciągnąć strzały żo"
+ },
+ {
+  "file": "7bc07a5eedf72165.wav",
+  "asr": " Jeszcze chwilę na granie, proszę, dzieci ubywają się w pokoju na szczycie tych schodów.",
+  "recall": 0.33,
+  "expected": "Jeśli ktoś znajdzie ten nagranie, proszę, nasze dzieci ukrywają się w pokoju na szczycie tych schodów, mają ograniczoną "
+ },
+ {
+  "file": "7c2914f970a04038.wav",
+  "asr": " Ludzie chwali jego rozbity los na katorga.  Doba za nas jest zjednoczone i udało się przetrwać.",
+  "recall": 0.75,
+  "expected": "Ludzie chwalili jego rozbity los na Katorga-12, grupa z nas jest zjednoczona i udało się przetrwać."
+ },
+ {
+  "file": "825b608f491f738b.wav",
+  "asr": " Chodź, chodź, chodź, chodź, chodź  Chodź, chodź",
+  "recall": 0.0,
+  "expected": "Pomóż mi z sireny, a potem eksplodowała, a pani Barisov krzyknęła i uciekła z klasy."
+ },
+ {
+  "file": "83e8a49cd92a4d9b.wav",
+  "asr": " Dr. Barisow, udało nam się wejść do ogrodzenia.",
+  "recall": 0.88,
+  "expected": "Dr Barisov, udało nam się wejść do ogrodzenia."
+ },
+ {
+  "file": "8863317732273346.wav",
+  "asr": " xD",
+  "recall": 0.0,
+  "expected": "W dniu 22 listopada 1955 roku Roman przyszedł do mnie wieczorem w panice Nerf. twierdził, że kontener bomby E99 świeci, "
+ },
+ {
+  "file": "8af8ac6f4328569e.wav",
+  "asr": " Musisz go wykorzystać, aby odwrócić się do...",
+  "recall": 0.5,
+  "expected": "Musisz go wykorzystać, aby odwrócić się do 1955 roku i powstrzymać Demicchowa przed zabiciem Barisowa."
+ },
+ {
+  "file": "8fb9966094b18a77.wav",
+  "asr": " Satellita macie około kmna południe od wieży radiowej.",
+  "recall": 0.5,
+  "expected": "Satelita ma cię około 30 km na południe od wieży radiowej."
+ },
+ {
+  "file": "a6badd299a337015.wav",
+  "asr": " Cześć, noc, dziewczyn, zadań, domy, noc, noc, noc  Następnie musimy poloszać się w powoli",
+  "recall": 0.1,
+  "expected": "/Musimy znaleźć wyjście z tych cholernego kanalizacji /i dostać się do koleje /tam powinniśmy znaleźć silnik /i zabrać g"
+ },
+ {
+  "file": "abed1099af8c27cc.wav",
+  "asr": " Wydział na...",
+  "recall": 0.0,
+  "expected": "Od czasu wizyty dr. Demiczewa w Moskwie, przypływ nowych naukowców i techników do Katorga-12 wzrósł dziesięciokrotnie. J"
+ },
+ {
+  "file": "cb7c2e225e18f45e.wav",
+  "asr": " Życie Ci wszystkiego najlepszego!  Przyjacielo!",
+  "recall": 0.6,
+  "expected": "Życzę ci wszystkiego najlepszego, przyjacielu."
+ },
+ {
+  "file": "d51c5eb73b496acd.wav",
+  "asr": " Dzień dobry!  Dzień dobry!",
+  "recall": 0.0,
+  "expected": "Wreszcie E99 zostaje wysłany do kalutronu lub pieczywni, gdzie jest oczyszczany i wzbogacony."
+ },
+ {
+  "file": "db5a9bb47d436a5a.wav",
+  "asr": " Jak?  Tak, bo ten on...  Zabezgładę się, no.",
+  "recall": 0.05,
+  "expected": "Jak wiele jeszcze mogę znieść? Singularność wybuchła dwa dni temu, a od tego czasu nie odpoczywałam. Kilku pracowników m"
+ },
+ {
+  "file": "f1e4518cef6740f1.wav",
+  "asr": " Nie jesteś pierwszym, którego przesłuchałem lub złamałem.",
+  "recall": 0.78,
+  "expected": "Nie jesteś pierwszym 12-tym agentem, którego przesłuchałem lub złamałem."
+ }
+]

@@ -1,0 +1,45 @@
+{
+  "source_owner": "user",
+  "consent": "explicit_user_authorized_voice_use",
+  "engine": "Pocket-TTS Polish 6L",
+  "sample_rate_hz": 24000,
+  "normalization": "-3 dBFS peak for generated demos",
+  "profiles": {
+    "protagonist_user": {
+      "role": "main_character",
+      "reference": "spokoj_reference.wav",
+      "demo": "main_user_neutral.wav",
+      "style": "natural, calm, direct",
+      "source": "user_recording"
+    },
+    "side_authoritative": {
+      "role": "side_character_commanding",
+      "reference": "agresja_reference.wav",
+      "demo": "side_user_command.wav",
+      "style": "stronger attack and command delivery",
+      "source": "user_recording_pocket_tts_variant"
+    },
+    "side_cold": {
+      "role": "side_character_cold",
+      "reference": "spokoj_reference.wav",
+      "demo": "side_user_cold.wav",
+      "style": "cold, restrained delivery with higher sampling temperature",
+      "source": "user_recording_pocket_tts_variant"
+    },
+    "side_agitated": {
+      "role": "side_character_agitated",
+      "reference": "agresja_reference.wav",
+      "demo": "side_user_shifted.wav",
+      "style": "agitated delivery",
+      "source": "user_recording_pocket_tts_variant"
+    }
+  },
+  "game_assignment": {
+    "Renko_or_main_player_voice": "protagonist_user",
+    "Barisov": "side_authoritative",
+    "Demichev": "side_cold",
+    "Kathryn": "side_agitated",
+    "Devlin": "side_cold"
+  },
+  "integration_status": "demo_profiles_ready_audio_redirect_not_packed_into_game"
+}

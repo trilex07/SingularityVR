@@ -1,0 +1,436 @@
+[
+  {
+    "pack": "story_nllb",
+    "line_id": "SP_RL5_kismet02_LOC_INT/SoundNodeWave/RL99_2208_KKN.ogg",
+    "expected": "Nic mi nie jest.",
+    "heard": "Ни сменяясь.",
+    "path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\story_voicepack_nllb\\f83609dee6b876f2.wav"
+  },
+  {
+    "pack": "story_nllb",
+    "line_id": "sp_rt3_katya_LOC_INT/SoundNodeWave/RT3_7807_KAT.ogg",
+    "expected": "- Dziękuję. - Dziękuję.",
+    "heard": "Dziękuję. Dziękuję.",
+    "path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\story_voicepack_nllb\\41a3ab59579cabcd.wav"
+  },
+  {
+    "pack": "story_nllb",
+    "line_id": "SP_RT4_kismet02_LOC_INT/SoundNodeWave/RT4_5010_KAT.ogg",
+    "expected": "- Ja! - Nie!",
+    "heard": "鸟 鸟",
+    "path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\story_voicepack_nllb\\db6c30d6a0ba83f3.wav"
+  },
+  {
+    "pack": "story_nllb",
+    "line_id": "SP_VI2_kismet01_a_LOC_INT/SoundNodeWave/VI99_0111_ANN.ogg",
+    "expected": "Twoja rodzina będzie dobrze żyć na wyspie, a twoje dzieci będą chodzić do szkół oferujących najlepszą rosyjską edukację.",
+    "heard": "wtedy dzieci na wyspie, a twoje dzieci do szkodzić.",
+    "path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\story_voicepack_nllb\\78392e57b8a77252.wav"
+  },
+  {
+    "pack": "story_nllb",
+    "line_id": "SP_VI2_kismet01_b_LOC_INT/SoundNodeWave/VI99_0110_ANN.ogg",
+    "expected": "Świetne sposoby na wspieranie wysiłków Matki Rosji tutaj na Katorga-12.",
+    "heard": "Śpieranie wysiłków, matki na danaście.",
+    "path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\story_voicepack_nllb\\113445162e665f64.wav"
+  },
+  {
+    "pack": "story_nllb",
+    "line_id": "SP_VI3_Ghost_Courtyard_LOC_INT/SoundNodeWave/VI3_6705_GST.ogg",
+    "expected": "Nie widziałem czegoś takiego, czy Rosjanie je stworzyli?",
+    "heard": "nie widziałem czegoś ja.",
+    "path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\story_voicepack_nllb\\ff3340a7d9ac6c4b.wav"
+  },
+  {
+    "pack": "story_nllb",
+    "line_id": "SP_VI3_zone05_d2_LOC_INT/SoundNodeWave/VI1_5005_BER.ogg",
+    "expected": "Jest poranek, czas odwiedzić przyjaciela!",
+    "heard": "Jest poranek.",
+    "path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\story_voicepack_nllb\\5c7a09bf10a71f27.wav"
+  },
+  {
+    "pack": "story_nllb",
+    "line_id": "SP_VI4_kismet01_b_LOC_INT/SoundNodeWave/VI4_1505_GST.ogg",
+    "expected": "Uniforma jest nieco inna od tego, co widziałem, ale to zdecydowanie rosyjski żołnierz.",
+    "heard": "nieco inna od tego, co dodzwodowanie.",
+    "path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\story_voicepack_nllb\\0e7a33b9395ed3af.wav"
+  },
+  {
+    "pack": "story_nllb",
+    "line_id": "SP_VI5_kismet02_LOC_INT/SoundNodeWave/VI5_4018_GST.ogg",
+    "expected": "- Kto to jest?",
+    "heard": "Kto to?",
+    "path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\story_voicepack_nllb\\c75610013532157e.wav"
+  },
+  {
+    "pack": "story_nllb",
+    "line_id": "SP_VI6_kismet01_LOC_INT/SoundNodeWave/VI6_0513_DEM.ogg",
+    "expected": "Jak to możliwe, że w ciągu 50 lat nie stałeś się starzejszy?",
+    "heard": "Jak to możliwe, że w ciągu?",
+    "path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\story_voicepack_nllb\\7aee62edb68d2bbf.wav"
+  },
+  {
+    "pack": "story_nllb",
+    "line_id": "SP_WL4_kismet06_LOC_INT/SoundNodeWave/WL4_2405_SPT1.ogg",
+    "expected": "- Tak! - Nie!",
+    "heard": "Tak, nie.",
+    "path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\story_voicepack_nllb\\34c64884915ad566.wav"
+  },
+  {
+    "pack": "story_nllb",
+    "line_id": "SP_RL2_kismet01_LOC_INT/SoundNodeWave/RL1_2007_WRK1.ogg",
+    "expected": "- Przepraszam! - Przepraszam!",
+    "heard": "Przepraszam!",
+    "path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\story_voicepack_nllb\\dbd344655e7bb6a3.wav"
+  },
+  {
+    "pack": "story_nllb",
+    "line_id": "SP_RL2_kismet02_LOC_INT/SoundNodeWave/RL99_0105_SPT1.ogg",
+    "expected": "Wiesz, gdzie to jest, powiedz mi!",
+    "heard": "Wiesz, powiedz mi.",
+    "path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\story_voicepack_nllb\\b5fbf375a564de52.wav"
+  },
+  {
+    "pack": "story_nllb",
+    "line_id": "SP_RT3_Vignette_LOC_INT/SoundNodeWave/RT99_0107_SC1.ogg",
+    "expected": "Ale tam jest zbyt niebezpieczne!",
+    "heard": "Ale tam...",
+    "path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\story_voicepack_nllb\\2c5855d61539d753.wav"
+  },
+  {
+    "pack": "story_nllb",
+    "line_id": "SP_RT4_kismet01_LOC_INT/SoundNodeWave/RT4_5010_KAT.ogg",
+    "expected": "- Ja! - Nie!",
+    "heard": "Ja... Mię.",
+    "path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\story_voicepack_nllb\\6dadcb68299c16f0.wav"
+  },
+  {
+    "pack": "story_nllb",
+    "line_id": "SP_RT4_kismet03_LOC_INT/SoundNodeWave/RT4B_3009_KAT.ogg",
+    "expected": "- Dziękuję. - Dziękuję.",
+    "heard": "Dziękuję. Dziękuję.",
+    "path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\story_voicepack_nllb\\b01e73f826ea2699.wav"
+  },
+  {
+    "pack": "story_nllb",
+    "line_id": "SP_VI2_zone02a_2010_LOC_INT/SoundNodeWave/VI1_1510_ANN.ogg",
+    "expected": "W okolicy wsi znajdują się cywilne doky, w których nie przybywa żaden personel po raz pierwszy na Katorga-12.",
+    "heard": "Znajdują się cywilne doky, w których nie p-",
+    "path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\story_voicepack_nllb\\0b9b2aa057b88921.wav"
+  },
+  {
+    "pack": "story_nllb",
+    "line_id": "SP_VI2_zone02a_LOC_INT/SoundNodeWave/VI1_1512_ANN.ogg",
+    "expected": "E99 jest miejscem przewozu ogromnych ilości surowców i materiałów badawczych na wyspie.",
+    "heard": "Jest miejscem przewozuł ogromnych ilości słów.",
+    "path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\story_voicepack_nllb\\085a5c1a778826e8.wav"
+  },
+  {
+    "pack": "story_nllb",
+    "line_id": "SP_VI4_kismet01_a_LOC_INT/SoundNodeWave/VI4_3015_GST.ogg",
+    "expected": "- Co to jest?",
+    "heard": "ちょっとです。",
+    "path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\story_voicepack_nllb\\f545c03d2e8d0961.wav"
+  },
+  {
+    "pack": "story_nllb",
+    "line_id": "SP_vi4_kismet01_c_LOC_INT/SoundNodeWave/VI99_0716_ANN.ogg",
+    "expected": "I oczywiście, najważniejsza rzecz do zapamiętania, coś, czego nigdy nie powinniśmy zapominać!",
+    "heard": "i ważecz do zapamiętania.",
+    "path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\story_voicepack_nllb\\be3756f1cd38e8b5.wav"
+  },
+  {
+    "pack": "story_nllb",
+    "line_id": "SP_VI4_kismet01_LOC_INT/SoundNodeWave/VI3_6805_GST.ogg",
+    "expected": "Mogłem to przegapić, ale jestem całkiem pewny, że ogromny filar strzelania energii do nieba nie został wspomniany w briefingu misji.",
+    "heard": "Ale jestem pewny, że nie bał grynie.",
+    "path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\story_voicepack_nllb\\e5ee2df12ac831ab.wav"
+  },
+  {
+    "pack": "story_nllb",
+    "line_id": "SP_VI5_kismet01_LOC_INT/SoundNodeWave/VI4_2010_GST.ogg",
+    "expected": "Zabierz tę strzelbę i wyprowadzimy się.",
+    "heard": "Zabierz się.",
+    "path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\story_voicepack_nllb\\30fe1280c07e2cbc.wav"
+  },
+  {
+    "pack": "story_nllb",
+    "line_id": "SP_VI5_kismet03_LOC_INT/SoundNodeWave/VI5_2005_GST.ogg",
+    "expected": "Cholera, więcej takich rzeczy.",
+    "heard": "cholera więcej.",
+    "path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\story_voicepack_nllb\\6d7ed3fc2945a00a.wav"
+  },
+  {
+    "pack": "story_nllb",
+    "line_id": "SP_Freight_Script_StreamCargo2_LOC_INT/SoundNodeWave/RL1_2007_WRK1.ogg",
+    "expected": "- Przepraszam! - Przepraszam!",
+    "heard": "Przepraszam!",
+    "path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\story_voicepack_nllb\\a93055d810ac3b42.wav"
+  },
+  {
+    "pack": "story_nllb",
+    "line_id": "SP_RT1_zone0_BT_LOC_INT/SoundNodeWave/VI1_5005_BER.ogg",
+    "expected": "Jest poranek, czas odwiedzić przyjaciela!",
+    "heard": "Jest poranek.",
+    "path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\story_voicepack_nllb\\6fa554d56c707613.wav"
+  },
+  {
+    "pack": "story_nllb",
+    "line_id": "sp_rt3_katya_LOC_INT/SoundNodeWave/RT4B_3009_KAT.ogg",
+    "expected": "- Dziękuję. - Dziękuję.",
+    "heard": "Dziękuję. Dziękuję.",
+    "path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\story_voicepack_nllb\\c833dcbfa7d87364.wav"
+  },
+  {
+    "pack": "story_nllb",
+    "line_id": "SP_VI2_kismet01_b_LOC_INT/SoundNodeWave/VI99_0107_ANN.ogg",
+    "expected": "Sowieccy naukowcy odkryli odpowiedź na nasze nadzieje i marzenia, element E99.",
+    "heard": "Odkryli na nasze nadzieje.",
+    "path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\story_voicepack_nllb\\377a08d31730027e.wav"
+  },
+  {
+    "pack": "story_nllb",
+    "line_id": "SP_VI3_kismet01_LOC_INT/SoundNodeWave/VI2_7506_GST.ogg",
+    "expected": "Powtórz i powiedz mi, że wszystko wygląda trochę niezwykle normalnie, bo oficjalnie szaleję!",
+    "heard": "Wygląda trochę niezwykle normalna.",
+    "path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\story_voicepack_nllb\\57f97e5e84cef52f.wav"
+  },
+  {
+    "pack": "story_nllb",
+    "line_id": "SP_WL4_kismet08_LOC_INT/SoundNodeWave/WL4_4405_SPT2.ogg",
+    "expected": "Jestem właścicielem Stanów Zjednoczonych i jestem właścicielem Stanów Zjednoczonych.",
+    "heard": "Jestem właścicielem. Jestem właścicie.",
+    "path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\story_voicepack_nllb\\cd708ea9e746c370.wav"
+  },
+  {
+    "pack": "story_nllb",
+    "line_id": "SP_RL2_kismet02_LOC_INT/SoundNodeWave/RL99_0091_SC1.ogg",
+    "expected": "Hej, dr Demichew, wiesz, że dr Barisov nie będzie się bronił.",
+    "heard": "Wiesz, szybrodzi znowu nie będzie.",
+    "path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\story_voicepack_nllb\\cd910581a9165757.wav"
+  },
+  {
+    "pack": "story_nllb",
+    "line_id": "SP_RL2_kismet03_LOC_INT/SoundNodeWave/RL2_6006_KAT.ogg",
+    "expected": "Musisz go wykorzystać, aby odwrócić się do 1955 roku i powstrzymać Demicchowa przed zabiciem Barisowa.",
+    "heard": "Musisz go wykorzystać aby odwrócić się do?",
+    "path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\story_voicepack_nllb\\8af8ac6f4328569e.wav"
+  },
+  {
+    "pack": "story_nllb",
+    "line_id": "SP_RT1_kismet_LOC_INT/SoundNodeWave/RT99_0206_SPT4.ogg",
+    "expected": "Przyjrzę się temu szybko, ale nie zostanę dłużej niż trzeba.",
+    "heard": "szybko zostanę boże niż trzeba.",
+    "path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\story_voicepack_nllb\\c8dece151e0cc19f.wav"
+  },
+  {
+    "pack": "story_nllb",
+    "line_id": "SP_RT5_kismet01_LOC_INT/SoundNodeWave/RT4_5010_KAT.ogg",
+    "expected": "- Ja! - Nie!",
+    "heard": "Ja... Nie...",
+    "path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\story_voicepack_nllb\\c3e7e37e2ac15f5d.wav"
+  },
+  {
+    "pack": "story_nllb",
+    "line_id": "SP_VI2_kismet01_LOC_INT/SoundNodeWave/VI1_0506_GST.ogg",
+    "expected": "Devlin 4-1! Zostaliśmy uderzeni!",
+    "heard": "Zostaliśmy uderzeni.",
+    "path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\story_voicepack_nllb\\2a89cbec0c963f54.wav"
+  },
+  {
+    "pack": "story_nllb",
+    "line_id": "SP_VI2_kismet01_LOC_INT/SoundNodeWave/VI1_0513_NIM.ogg",
+    "expected": "Zabierz swój zespół, kapitanie.",
+    "heard": "Zabierz...",
+    "path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\story_voicepack_nllb\\3cd6e3c06e3aca61.wav"
+  },
+  {
+    "pack": "story_nllb",
+    "line_id": "SP_VI2_kismet03_LOC_INT/SoundNodeWave/FR8_4405_GRD2.ogg",
+    "expected": "Pomóżcie mi, dla miłości Boga, proszę, wypuśćcie mnie!",
+    "heard": "Miłość Boga, proszę.",
+    "path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\story_voicepack_nllb\\d8901bf1b70573b4.wav"
+  },
+  {
+    "pack": "story_nllb",
+    "line_id": "SP_VI4_kismet01_b_LOC_INT/SoundNodeWave/VI4_3015_GST.ogg",
+    "expected": "- Co to jest?",
+    "heard": "Czoto jest.",
+    "path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\story_voicepack_nllb\\8ee68ca6b2d6167f.wav"
+  },
+  {
+    "pack": "story_nllb",
+    "line_id": "SP_VI5_kismet02_LOC_INT/SoundNodeWave/VI5_3505_GST.ogg",
+    "expected": "Sprawdź więcej tych stworzeń.",
+    "heard": "stworzeń.",
+    "path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\story_voicepack_nllb\\fdbc40ce212b5058.wav"
+  },
+  {
+    "pack": "story_nllb",
+    "line_id": "SP_VI5_kismet03_LOC_INT/SoundNodeWave/VI5_1505_GST.ogg",
+    "expected": "Idź sprawdzić posterunek straży, może jest inny przełącznik.",
+    "heard": "Sprawdzić posterunek.",
+    "path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\story_voicepack_nllb\\4fa0f0deff1c1704.wav"
+  },
+  {
+    "pack": "story_nllb",
+    "line_id": "SP_VI5_kismet03_LOC_INT/SoundNodeWave/VI99_2205_SC1.ogg",
+    "expected": "Wiele osób zginęło, większość uciekła głębiej na wyspę.",
+    "heard": "Wiele większość meci.",
+    "path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\story_voicepack_nllb\\bc90f78323ed8b2a.wav"
+  },
+  {
+    "pack": "story_nllb",
+    "line_id": "SP_WL4_kismet08_LOC_INT/SoundNodeWave/WL4_4406_SPT1.ogg",
+    "expected": "Nie jestem początkującym, ale nie jestem początkującym.",
+    "heard": "Nie jestem początkującym.",
+    "path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\story_voicepack_nllb\\a85fe6b868ceb8ca.wav"
+  },
+  {
+    "pack": "full_localization",
+    "line_id": "..\\RvGame\\Localization\\INT\\RvGame.int|ActionVolume|UseCode",
+    "expected": "użycia Use Kod aktywacyjny",
+    "heard": "Użycia.",
+    "path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\full_voicepack\\qa_attempts\\attempt2\\0104_1709ca740030.wav"
+  },
+  {
+    "pack": "full_localization",
+    "line_id": "..\\RvGame\\Localization\\INT\\RvGame.int|Tutorial|combat",
+    "expected": "Naciśnij strzału, aby strzelić z broni",
+    "heard": "nacisczał aby strzelić.",
+    "path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\full_voicepack\\qa_attempts\\attempt2\\0138_819b5d9437a8.wav"
+  },
+  {
+    "pack": "full_localization",
+    "line_id": "..\\RvGame\\Localization\\INT\\RvGame.int|Tutorial|Impulse",
+    "expected": "Naciśnij impulsu, aby odpychać wrogów i obiekty",
+    "heard": "impulsu, aby odpękać.",
+    "path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\full_voicepack\\qa_attempts\\attempt2\\0145_4e8bb73e285d.wav"
+  },
+  {
+    "pack": "full_localization",
+    "line_id": "..\\RvGame\\Localization\\INT\\RvGame.int|Tutorial|Melee",
+    "expected": "Naciśnij impulsu, aby zaatakować wręcz wrogów i obiekty",
+    "heard": "aby zaatakować na...",
+    "path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\full_voicepack\\qa_attempts\\attempt2\\0148_fefc49d62a66.wav"
+  },
+  {
+    "pack": "full_localization",
+    "line_id": "..\\RvGame\\Localization\\INT\\RvGame.int|Tutorial|ThrowBarrels",
+    "expected": "Naciśnij chwytania, aby podnieść beczki. Naciśnij strzału, aby nimi rzucić.",
+    "heard": "aby podnieść beczki.",
+    "path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\full_voicepack\\qa_attempts\\attempt2\\0169_d16bbade6bf9.wav"
+  },
+  {
+    "pack": "full_localization",
+    "line_id": "..\\RvGame\\Localization\\INT\\RvGame.int|Tutorial|AK74",
+    "expected": "Naciśnij raz zmiany broni, aby przełączyć się na karabin maszynowy.",
+    "heard": "Nie raz zmiany broni.",
+    "path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\full_voicepack\\qa_attempts\\attempt2\\0193_ac7cb5e60daa.wav"
+  },
+  {
+    "pack": "full_localization",
+    "line_id": "..\\RvGame\\Localization\\INT\\RvGame.int|Tutorial|MAImpulseDoor",
+    "expected": "Naciśnij impulsu, aby impuls open the blocked doors.",
+    "heard": "Aby impuls opente.",
+    "path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\full_voicepack\\0213_fd07fe47b2e9.wav"
+  },
+  {
+    "pack": "full_localization",
+    "line_id": "..\\RvGame\\Localization\\INT\\RvGame.int|Tutorial|e99tip",
+    "expected": "Steer your bullet using iron sights when you shoot.",
+    "heard": "Stairior-Bullet-USINT-Iran-Sixth-Henjo-Shot",
+    "path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\full_voicepack\\0216_8c3fdb68b8e4.wav"
+  },
+  {
+    "pack": "full_localization",
+    "line_id": "..\\RvGame\\Localization\\INT\\RvGame.int|TCR|DataLossDemo",
+    "expected": "Cały postęp zostanie utracony. Czy na pewno chcesz kontynuować?",
+    "heard": "Postęp zostanie utracony.",
+    "path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\full_voicepack\\0236_cbbd6d107f02.wav"
+  },
+  {
+    "pack": "full_localization",
+    "line_id": "..\\RvGame\\Localization\\INT\\RvGame.int|TCR|PS3CorruptStartup",
+    "expected": "Dane zapisu są uszkodzone i zostaną nadpisane.",
+    "heard": "Są uszkodzone.",
+    "path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\full_voicepack\\qa_attempts\\attempt2\\0248_a8f7e7e2cfd7.wav"
+  },
+  {
+    "pack": "full_localization",
+    "line_id": "..\\RvGame\\Localization\\INT\\RvGame.int|Achievements|kills_shotgun_DESC",
+    "expected": "30 Volk S4 kills in single player campaign",
+    "heard": "Kills in Shingle.",
+    "path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\full_voicepack\\0304_56d0b0beb22f.wav"
+  },
+  {
+    "pack": "full_localization",
+    "line_id": "..\\RvGame\\Localization\\INT\\RvGame.int|Achievements|weapon_upgraded_DESC",
+    "expected": "W pełni ulepsz jedną broń w kampanii dla jednego gracza",
+    "heard": "pełni uznębrąc kampanii dla te.",
+    "path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\full_voicepack\\0309_1faf184000ae.wav"
+  },
+  {
+    "pack": "full_localization",
+    "line_id": "..\\RvGame\\Localization\\INT\\RvGame.int|RvUI3D|WeaponLabels",
+    "expected": "Celność Obrażenia Range Amunicja",
+    "heard": "obrażenia.",
+    "path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\full_voicepack\\qa_attempts\\attempt2\\0387_38125f5bac08.wav"
+  },
+  {
+    "pack": "full_localization",
+    "line_id": "..\\RvGame\\Localization\\INT\\RvGame.int|RvUI|ProfileLogin",
+    "expected": "Zaloguj się do profilu",
+    "heard": "Zaloguj się!",
+    "path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\full_voicepack\\0468_5c1396599855.wav"
+  },
+  {
+    "pack": "full_localization",
+    "line_id": "..\\RvGame\\Localization\\INT\\RvGame.int|RvUI|InviteParty360",
+    "expected": "Invite Impreza Xbox LIVE",
+    "heard": "Invite!",
+    "path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\full_voicepack\\qa_attempts\\attempt2\\0528_57c3fe99db25.wav"
+  },
+  {
+    "pack": "full_localization",
+    "line_id": "..\\RvGame\\Localization\\INT\\RvGame.int|RvUI|AC_MP_KILLS_AS_TICK",
+    "expected": "Zabójstwa as Phase Tick",
+    "heard": "Забульство асфасетийцк.",
+    "path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\full_voicepack\\0640_578ad277ca27.wav"
+  },
+  {
+    "pack": "full_localization",
+    "line_id": "..\\RvGame\\Localization\\INT\\RvGame.int|RvUI|SlotIntstructions",
+    "expected": "Select the Wyposażment to equipt in the slot.",
+    "heard": "Zajtowicie wypoścujmy do eklipli.",
+    "path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\full_voicepack\\0718_dff75ad33336.wav"
+  },
+  {
+    "pack": "full_localization",
+    "line_id": "..\\RvGame\\Localization\\INT\\RvGame.int|GameDialogs|WeaponLockerDesc",
+    "expected": "Używaj szaf z bronią , aby ulepszać broń i zmieniać wyposażenie. Większość broni znalezionych w świecie zostanie automatycznie dodana do szafy z bronią .",
+    "heard": "aby ulepszać bronie znalezionych w świecie zostania autodana do towie.",
+    "path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\full_voicepack\\0815_d74c852d27d7.wav"
+  },
+  {
+    "pack": "full_localization",
+    "line_id": "..\\RvGame\\Localization\\INT\\Subtitles.int|Subtitles|Tip_014",
+    "expected": "Technologia E99 pozwala zdobywać ulepszenia TMD.",
+    "heard": "pozwala zdobywać.",
+    "path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\full_voicepack\\0850_5ab65b990edf.wav"
+  },
+  {
+    "pack": "full_localization",
+    "line_id": "..\\RvGame\\Localization\\INT\\Subtitles.int|Subtitles|Tip_019",
+    "expected": "Projekty i formuły zawierają notatki badawcze odblokowujące nowe ulepszenia.",
+    "heard": "Formuły zawierają notatki batawcze.",
+    "path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\full_voicepack\\0855_ab3da88b8a6a.wav"
+  },
+  {
+    "pack": "full_localization",
+    "line_id": "..\\RvGame\\Localization\\INT\\Subtitles.int|Subtitles|TipMP_027",
+    "expected": "W meczach publicznych osoby z twojej listy znajomych częściej trafiają do tej samej drużyny co ty.",
+    "heard": "publicznych osoby znajomych częściej trafieny.",
+    "path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\full_voicepack\\qa_attempts\\attempt2\\0893_0a3e1527d8b6.wav"
+  }
+]

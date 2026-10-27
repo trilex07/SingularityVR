@@ -1,0 +1,13 @@
+B-fix demo: obciety oddech/cisza z poczatku + 15ms fade-in
+26cceb41a8dca9a4.wav | ciecie=160ms | ..\Engine\Localization\INT\Engine.int|Progress|Loading
+f11416ceebedbeb7.wav | ciecie=60ms | ..\Engine\Localization\INT\Engine.int|Progress|Saving
+eeedbb827cb9ce8e.wav | ciecie=220ms | ..\RvGame\Localization\INT\Subtitles.int|Subtitles|Loading
+a41829512789c1f1.wav | ciecie=90ms | ..\RvGame\Localization\INT\RvGame.int|General|LevelIntroProcessing
+ce77b83654063356.wav | ciecie=290ms | ..\RvGame\Localization\INT\RvGame.int|RvUI3D|ConsoleControls
+d0a9d5889d366785.wav | ciecie=110ms | ..\RvGame\Localization\INT\RvGame.int|Achievements|kills_impulse_DESC
+d31c1bc2ea5ab2a1.wav | ciecie=260ms | ..\RvGame\Localization\INT\MP.int|General|PlayOnline
+27282b5bafc80deb.wav | ciecie=80ms | ..\RvGame\Localization\INT\MP.int|MPPreGame|GameOptions
+43869a68b03ce5a1.wav | ciecie=440ms | ..\Engine\Localization\INT\Core.int|General|Yes
+a4927d0bb0ebf80f.wav | ciecie=120ms | ..\Engine\Localization\INT\Core.int|General|No
+120e9ee25db967ab.wav | ciecie=10ms | ..\RvGame\Localization\INT\RvGame.int|RvUI|MPHitSound
+a8f7e1db8f3d374c.wav | ciecie=20ms | ..\RvGame\Localization\INT\RvGame.int|RvUI|ScienceToWeaponAnnounce

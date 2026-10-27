@@ -1,0 +1,75 @@
+FILE: 0011_43166fba7ce1.wav
+EXPECTED: Wynik remisowy po regulaminowym czasie. Dogrywka do nagłej śmierci!!!
+ASR:  Wynik remisowy po regulaminowym czasie. Dogrywka do nagłej śmierci.
+LANG: pl
+
+FILE: 0018_1e4d181c0a7a.wav
+EXPECTED: Wyeliminuj wrogi gatunek. Wygrywa drużyna z największą liczbą zabójstw.
+ASR:  Wyeliminuj wrogi gatunek. Wygrywa drużyna z największą liczbą zabójstw.
+LANG: pl
+
+FILE: 0102_da8e7a134316.wav
+EXPECTED: Wymagany Kod Aktywacyjny Do Naładowania Bomby E 99
+ASR:  Wymagany kod aktywacyjny do naładowania bomby E99.
+LANG: pl
+
+FILE: 0171_e58a6aacfe65.wav
+EXPECTED: Naciśnij klucz wiek, aby rozstroić Zeki w czasie. To kosztuje energię E 99.
+ASR:  Naciśnij klucz wiek, aby rozstroić zeki w czasie. To kosztuje energię E99.
+LANG: pl
+
+FILE: 0172_0005fcf47156.wav
+EXPECTED: Naciśnij klucz wiek, aby postarzyć Rewertów, przyspieszyć ich rozpad i doprowadzić do wybuchu. To kosztuje energię E 99.
+ASR:  Naciśnij klucz wiek, aby postarzyć rewertów, przyspieszyć ich rozpad i doprowadzić do wybuchu. To kosztuje energię E99.
+LANG: pl
+
+FILE: 0174_e63b02880451.wav
+EXPECTED: Postarzanie klucz wiek lub impulsowanie klucz impuls fazowych kleszczy to bardzo skuteczna strategia.
+ASR:  Postarzanie klucz wiek lub impulsowanie klucz impuls fazowych kleszczy to bardzo skuteczna strategia.
+LANG: pl
+
+FILE: 0175_a8ea3b99ffff.wav
+EXPECTED: Naciśnij klucz wiek, aby rozstroić Zeki w czasie. To kosztuje energię E 99.
+ASR:  Naciśnij klucz wiek, aby rozstroić zeki w czasie. To kosztuje energię E99.
+LANG: pl
+
+FILE: 0176_8775dc4ee866.wav
+EXPECTED: Podnieś dodatkową amunicję, przechodząc po upuszczonej broni lub pakach z amunicją.
+ASR:  Podnieś dodatkową amunicję, przechodząc po upuszczonej broni lub pakach z amunicją.
+LANG: pl
+
+FILE: 0177_498900210f5f.wav
+EXPECTED: Naciśnij klucz wiek, aby odnowić skrzynie z amunicją. W środku znajdziesz duży zapas amunicji do wszystkich broni.
+ASR:  Naciśnij klucz wiek, aby oskrzynie z amunicją. W środku znajdziesz duży zapas amunicji do wszystkich broni.
+LANG: pl
+
+FILE: 0178_674ff92ad51e.wav
+EXPECTED: Naciśnij klucz wiek, aby odnowić apteczki i odzyskać znajdujące się w nich pakiety zdrowia.
+ASR:  Naciśnij klucz wiek, aby apteczki i odzyskać znajdujące się w nich pakiety zdrowia.
+LANG: pl
+
+FILE: 0180_646e1432951a.wav
+EXPECTED: Użyj zbiorników kriogenicznych, aby zamrozić wrogów na krótki czas.
+ASR:  Użyj zbiorników kryogenicznych, aby zamrozić wrogów na krótki czas.
+LANG: pl
+
+FILE: 0181_6f088a2dbaa7.wav
+EXPECTED: Naciśnij i przytrzymaj klucz chwyt, aby naładować dedlok i spowolnić czas wokół wrogów.
+ASR:  Naciśnij i przytrzymaj klucz chwyt, aby naładować DD-Lock i spowolnić czas wokół wrogów.
+LANG: pl
+
+FILE: 0182_e2c3a7f502e0.wav
+EXPECTED: Grawitacyjny chwyt klucz chwyt pozwala łapać beczki rzucone w twoją stronę.
+ASR:  Grawitacyjny chwyt klucz chwyt pozwala łapać beczki rzucone w twoją stronę.
+LANG: pl
+
+FILE: 0186_c53fea8fb9e2.wav
+EXPECTED: Gdy wrogowie są poza fazą, są niewrażliwi na obrażenia.
+ASR:  Gdy wrogowie są poza fazą, są niewrażliwi na obrażenia.
+LANG: pl
+
+FILE: 0190_0fbab60ac913.wav
+EXPECTED: Przejdź po upuszczonej broni, aby zdobyć do niej amunicję.
+ASR:  Przejdź po upuszczonej broni, aby zdobyć do niej amunicję.
+LANG: pl
+

@@ -1,0 +1,2069 @@
+{
+  "generated_at": "2026-10-08",
+  "model": "Systran/faster-whisper-base",
+  "expected_language": "pl",
+  "total_lines": 38,
+  "counts": {
+    "FAIL_GIBBERISH": 2,
+    "PASS": 27,
+    "REVIEW_REQUIRED": 9
+  },
+  "speaker_counts": {
+    "narrator_user": 38
+  },
+  "results": [
+    {
+      "id": "..\\RvGame\\Localization\\INT\\MP.int|General|CVSTDMObjectives",
+      "record": "..\\RvGame\\Localization\\INT\\MP.int",
+      "section": "General",
+      "key": "CVSTDMObjectives",
+      "category": "objective",
+      "en": "- Eliminate the opposing species.\n- Win goes to the team with highest number of kills.",
+      "pl": "- Wyeliminuj wrogi gatunek.\n- Wygrywa drużyna z największą liczbą zabójstw.",
+      "tts_text": "- Wyeliminuj wrogi gatunek. - Wygrywa drużyna z największą liczbą zabójstw.",
+      "profile": "narrator_user",
+      "file": "0018_1e4d181c0a7a.wav",
+      "sample_rate": 24000,
+      "peak_dbfs": -3.0,
+      "qa_correction": "remaining_mixed_language_20261008",
+      "pack": "full_localization",
+      "manifest_line": 18,
+      "audio_path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\full_voicepack\\0018_1e4d181c0a7a.wav",
+      "line_id": "..\\RvGame\\Localization\\INT\\MP.int|General|CVSTDMObjectives",
+      "expected_pl": "- Wyeliminuj wrogi gatunek. - Wygrywa drużyna z największą liczbą zabójstw.",
+      "translation_status": "draft_without_explicit_review",
+      "generation_attempt": 1,
+      "audio": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "duration_s": 4.551,
+        "rms": 0.115827,
+        "peak": 1.0,
+        "clipping_fraction": 2.7e-05,
+        "silence_fraction": 0.189092,
+        "audio_format_status": "PASS"
+      },
+      "asr": {
+        "language": "pl",
+        "language_probability": 0.9973,
+        "text": "W eliminy wrogi gatunek wygrywa drużyna z największą liczbą zabójstw.",
+        "segments": [
+          {
+            "start": 0.0,
+            "end": 5.0,
+            "text": "W eliminy wrogi gatunek wygrywa drużyna z największą liczbą zabójstw."
+          }
+        ]
+      },
+      "notes": [],
+      "qa_status": "PASS",
+      "text_similarity": {
+        "token_sequence": 0.8421,
+        "wer": 0.2222
+      },
+      "translation_quality_status": "AUTOMATED_SANITY_OK",
+      "speech_rate_expected_words_per_s": 1.978
+    },
+    {
+      "id": "..\\RvGame\\Localization\\INT\\RvGame.int|ActionVolume|TMDslomo",
+      "record": "..\\RvGame\\Localization\\INT\\RvGame.int",
+      "section": "ActionVolume",
+      "key": "TMDslomo",
+      "category": "tutorial",
+      "en": "Press [impulse] and [age] at the same time to toggle Slo-mo",
+      "pl": "Naciśnij [impulse] i [age] jednocześnie, aby włączyć spowolnienie czasu.",
+      "tts_text": "Naciśnij impulsu i postarzania jednocześnie, aby włączyć spowolnienie czasu.",
+      "profile": "narrator_user",
+      "file": "0099_6df2df3bb444.wav",
+      "sample_rate": 24000,
+      "peak_dbfs": -3.0,
+      "qa_correction": "remaining_mixed_language_20261008",
+      "pack": "full_localization",
+      "manifest_line": 99,
+      "audio_path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\full_voicepack\\0099_6df2df3bb444.wav",
+      "line_id": "..\\RvGame\\Localization\\INT\\RvGame.int|ActionVolume|TMDslomo",
+      "expected_pl": "Naciśnij impulsu i postarzania jednocześnie, aby włączyć spowolnienie czasu.",
+      "translation_status": "draft_without_explicit_review",
+      "generation_attempt": 1,
+      "audio": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "duration_s": 4.307,
+        "rms": 0.119291,
+        "peak": 1.0,
+        "clipping_fraction": 1e-05,
+        "silence_fraction": 0.157803,
+        "audio_format_status": "PASS"
+      },
+      "asr": {
+        "language": "pl",
+        "language_probability": 0.9996,
+        "text": "Na ciśni impulsu i postarzenia jednocześnie, aby włączyć spowolnienie czasu.",
+        "segments": [
+          {
+            "start": 0.0,
+            "end": 4.2,
+            "text": "Na ciśni impulsu i postarzenia jednocześnie, aby włączyć spowolnienie czasu."
+          }
+        ]
+      },
+      "notes": [],
+      "qa_status": "PASS",
+      "text_similarity": {
+        "token_sequence": 0.7368,
+        "wer": 0.3333
+      },
+      "translation_quality_status": "AUTOMATED_SANITY_OK",
+      "speech_rate_expected_words_per_s": 2.09
+    },
+    {
+      "id": "..\\RvGame\\Localization\\INT\\RvGame.int|Pickup|impulsePickUp",
+      "record": "..\\RvGame\\Localization\\INT\\RvGame.int",
+      "section": "Pickup",
+      "key": "impulsePickUp",
+      "category": "tutorial",
+      "en": "Pick up the Impulse upgrade.",
+      "pl": "Podnieś ulepszenie Impulsu.",
+      "tts_text": "Podnieś ulepszenie Impulsu.",
+      "profile": "narrator_user",
+      "file": "0110_cbae3c7ae605.wav",
+      "sample_rate": 24000,
+      "peak_dbfs": -3.0,
+      "qa_correction": "remaining_mixed_language_20261008",
+      "pack": "full_localization",
+      "manifest_line": 110,
+      "audio_path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\full_voicepack\\0110_cbae3c7ae605.wav",
+      "line_id": "..\\RvGame\\Localization\\INT\\RvGame.int|Pickup|impulsePickUp",
+      "expected_pl": "Podnieś ulepszenie Impulsu.",
+      "translation_status": "draft_without_explicit_review",
+      "generation_attempt": 1,
+      "audio": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "duration_s": 1.811,
+        "rms": 0.113422,
+        "peak": 0.998657,
+        "clipping_fraction": 0.0,
+        "silence_fraction": 0.254854,
+        "audio_format_status": "PASS"
+      },
+      "asr": {
+        "language": "pl",
+        "language_probability": 0.9975,
+        "text": "Podnieś ulepszenie im polsu.",
+        "segments": [
+          {
+            "start": 0.0,
+            "end": 2.0,
+            "text": "Podnieś ulepszenie im polsu."
+          }
+        ]
+      },
+      "notes": [
+        "REVIEW_REQUIRED"
+      ],
+      "qa_status": "REVIEW_REQUIRED",
+      "text_similarity": {
+        "token_sequence": 0.5714,
+        "wer": 0.6667
+      },
+      "translation_quality_status": "AUTOMATED_SANITY_OK",
+      "speech_rate_expected_words_per_s": 1.657
+    },
+    {
+      "id": "..\\RvGame\\Localization\\INT\\RvGame.int|Tutorial|ping",
+      "record": "..\\RvGame\\Localization\\INT\\RvGame.int",
+      "section": "Tutorial",
+      "key": "ping",
+      "category": "tutorial",
+      "en": "Press [flashlight] to activate the TMD's ping function.  The revealed footprints help you find your way through Katorga 12.",
+      "pl": "Naciśnij [flashlight], aby włączyć funkcję impulsu TMD. Odkryte ślady pomogą ci przejść przez Katorgę-12.",
+      "tts_text": "Naciśnij latarki, aby włączyć funkcję impulsu te em de. Odkryte ślady pomogą ci przejść przez Katorgę-12.",
+      "profile": "narrator_user",
+      "file": "0151_30a74c2ded9c.wav",
+      "sample_rate": 24000,
+      "peak_dbfs": -3.0,
+      "qa_correction": "remaining_mixed_language_20261008",
+      "pack": "full_localization",
+      "manifest_line": 151,
+      "audio_path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\full_voicepack\\0151_30a74c2ded9c.wav",
+      "line_id": "..\\RvGame\\Localization\\INT\\RvGame.int|Tutorial|ping",
+      "expected_pl": "Naciśnij latarki, aby włączyć funkcję impulsu te em de. Odkryte ślady pomogą ci przejść przez Katorgę-12.",
+      "translation_status": "draft_without_explicit_review",
+      "generation_attempt": 1,
+      "audio": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "duration_s": 6.118,
+        "rms": 0.085436,
+        "peak": 1.0,
+        "clipping_fraction": 7e-06,
+        "silence_fraction": 0.183495,
+        "audio_format_status": "PASS"
+      },
+      "asr": {
+        "language": "pl",
+        "language_probability": 0.9996,
+        "text": "Na ciśnij latarki, aby włączyć funkcję impulsu TMD. Odkryte ślady pomogą ci przejść przez kator G12.",
+        "segments": [
+          {
+            "start": 0.0,
+            "end": 3.2600000000000002,
+            "text": "Na ciśnij latarki, aby włączyć funkcję impulsu TMD."
+          },
+          {
+            "start": 3.2600000000000002,
+            "end": 6.0600000000000005,
+            "text": "Odkryte ślady pomogą ci przejść przez kator G12."
+          }
+        ]
+      },
+      "notes": [],
+      "qa_status": "PASS",
+      "text_similarity": {
+        "token_sequence": 0.6667,
+        "wer": 0.4118
+      },
+      "translation_quality_status": "AUTOMATED_SANITY_OK",
+      "speech_rate_expected_words_per_s": 2.779
+    },
+    {
+      "id": "..\\RvGame\\Localization\\INT\\RvGame.int|Tutorial|throwHint",
+      "record": "..\\RvGame\\Localization\\INT\\RvGame.int",
+      "section": "Tutorial",
+      "key": "throwHint",
+      "category": "tutorial",
+      "en": "Press [fire] to throw a held object.",
+      "pl": "Naciśnij [fire], aby rzucić trzymanym przedmiotem.",
+      "tts_text": "Naciśnij strzał, aby rzucić trzymanym przedmiotem.",
+      "profile": "narrator_user",
+      "file": "0160_1e89195b3cbf.wav",
+      "sample_rate": 24000,
+      "peak_dbfs": -3.0,
+      "qa_correction": "remaining_mixed_language_20261008",
+      "pack": "full_localization",
+      "manifest_line": 160,
+      "audio_path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\full_voicepack\\0160_1e89195b3cbf.wav",
+      "line_id": "..\\RvGame\\Localization\\INT\\RvGame.int|Tutorial|throwHint",
+      "expected_pl": "Naciśnij strzał, aby rzucić trzymanym przedmiotem.",
+      "translation_status": "draft_without_explicit_review",
+      "generation_attempt": 1,
+      "audio": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "duration_s": 2.728,
+        "rms": 0.091585,
+        "peak": 1.0,
+        "clipping_fraction": 1.5e-05,
+        "silence_fraction": 0.199493,
+        "audio_format_status": "PASS"
+      },
+      "asr": {
+        "language": "pl",
+        "language_probability": 0.9986,
+        "text": "Na ciś nie strzał, aby rzucić trzymanym przedmiotem.",
+        "segments": [
+          {
+            "start": 0.0,
+            "end": 2.8000000000000003,
+            "text": "Na ciś nie strzał, aby rzucić trzymanym przedmiotem."
+          }
+        ]
+      },
+      "notes": [],
+      "qa_status": "PASS",
+      "text_similarity": {
+        "token_sequence": 0.7143,
+        "wer": 0.5
+      },
+      "translation_quality_status": "AUTOMATED_SANITY_OK",
+      "speech_rate_expected_words_per_s": 2.199
+    },
+    {
+      "id": "..\\RvGame\\Localization\\INT\\RvGame.int|Tutorial|RLAgeSoldiers",
+      "record": "..\\RvGame\\Localization\\INT\\RvGame.int",
+      "section": "Tutorial",
+      "key": "RLAgeSoldiers",
+      "category": "tutorial",
+      "en": "Press [age] to age soldiers to dust. This uses considerable E99 energy",
+      "pl": "Naciśnij [age], aby postarzyć żołnierzy i zamienić ich w pył. Zużywa to dużo energii E99.",
+      "tts_text": "Naciśnij postarzania, aby postarzyć żołnierzy i zamienić ich w pył. Zużywa to dużo energii E dziewięćdziesiąt dziewięć.",
+      "profile": "narrator_user",
+      "file": "0167_6226d7ee5d6d.wav",
+      "sample_rate": 24000,
+      "peak_dbfs": -3.0,
+      "qa_correction": "remaining_mixed_language_20261008",
+      "pack": "full_localization",
+      "manifest_line": 167,
+      "audio_path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\full_voicepack\\0167_6226d7ee5d6d.wav",
+      "line_id": "..\\RvGame\\Localization\\INT\\RvGame.int|Tutorial|RLAgeSoldiers",
+      "expected_pl": "Naciśnij postarzania, aby postarzyć żołnierzy i zamienić ich w pył. Zużywa to dużo energii E dziewięćdziesiąt dziewięć.",
+      "translation_status": "draft_without_explicit_review",
+      "generation_attempt": 1,
+      "audio": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "duration_s": 5.84,
+        "rms": 0.107342,
+        "peak": 0.994873,
+        "clipping_fraction": 0.0,
+        "silence_fraction": 0.10001,
+        "audio_format_status": "PASS"
+      },
+      "asr": {
+        "language": "pl",
+        "language_probability": 0.9987,
+        "text": "Na ciśni postarzania, aby postarzyć żołnierze i zamienić ich spływ. Z używa to dużo energii 99.",
+        "segments": [
+          {
+            "start": 0.0,
+            "end": 3.4,
+            "text": "Na ciśni postarzania, aby postarzyć żołnierze i zamienić ich spływ."
+          },
+          {
+            "start": 3.4,
+            "end": 5.8,
+            "text": "Z używa to dużo energii 99."
+          }
+        ]
+      },
+      "notes": [
+        "REVIEW_REQUIRED"
+      ],
+      "qa_status": "REVIEW_REQUIRED",
+      "text_similarity": {
+        "token_sequence": 0.5455,
+        "wer": 0.5294
+      },
+      "translation_quality_status": "AUTOMATED_SANITY_OK",
+      "speech_rate_expected_words_per_s": 2.911
+    },
+    {
+      "id": "..\\RvGame\\Localization\\INT\\RvGame.int|Tutorial|AgeReverts",
+      "record": "..\\RvGame\\Localization\\INT\\RvGame.int",
+      "section": "Tutorial",
+      "key": "AgeReverts",
+      "category": "tutorial",
+      "en": "Press [age] to age Reverts, forcing them to decay rapidly and explode.  This costs E99 energy",
+      "pl": "Naciśnij [age], aby postarzyć Revertów, przyspieszyć ich rozpad i doprowadzić do wybuchu. To kosztuje energię E99.",
+      "tts_text": "Naciśnij postarzania, aby postarzyć Revertów, przyspieszyć ich rozpad i doprowadzić do wybuchu. To kosztuje energię E dziewięćdziesiąt dziewięć.",
+      "profile": "narrator_user",
+      "file": "0172_0005fcf47156.wav",
+      "sample_rate": 24000,
+      "peak_dbfs": -3.0,
+      "qa_correction": "remaining_mixed_language_20261008",
+      "pack": "full_localization",
+      "manifest_line": 172,
+      "audio_path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\full_voicepack\\0172_0005fcf47156.wav",
+      "line_id": "..\\RvGame\\Localization\\INT\\RvGame.int|Tutorial|AgeReverts",
+      "expected_pl": "Naciśnij postarzania, aby postarzyć Revertów, przyspieszyć ich rozpad i doprowadzić do wybuchu. To kosztuje energię E dziewięćdziesiąt dziewięć.",
+      "translation_status": "draft_without_explicit_review",
+      "generation_attempt": 1,
+      "audio": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "duration_s": 6.978,
+        "rms": 0.094318,
+        "peak": 1.0,
+        "clipping_fraction": 1.2e-05,
+        "silence_fraction": 0.144175,
+        "audio_format_status": "PASS"
+      },
+      "asr": {
+        "language": "pl",
+        "language_probability": 0.9986,
+        "text": "Na ciśni postarzania, aby postarzyć rewertów, przyspieszyć ich rozpad i doprowadzić do wybuchu. To kosztuje energię 99.",
+        "segments": [
+          {
+            "start": 0.0,
+            "end": 4.76,
+            "text": "Na ciśni postarzania, aby postarzyć rewertów, przyspieszyć ich rozpad i doprowadzić do wybuchu."
+          },
+          {
+            "start": 4.76,
+            "end": 6.94,
+            "text": "To kosztuje energię 99."
+          }
+        ]
+      },
+      "notes": [],
+      "qa_status": "PASS",
+      "text_similarity": {
+        "token_sequence": 0.7429,
+        "wer": 0.3333
+      },
+      "translation_quality_status": "AUTOMATED_SANITY_OK",
+      "speech_rate_expected_words_per_s": 2.58
+    },
+    {
+      "id": "..\\RvGame\\Localization\\INT\\RvGame.int|Tutorial|AgeZeks",
+      "record": "..\\RvGame\\Localization\\INT\\RvGame.int",
+      "section": "Tutorial",
+      "key": "AgeZeks",
+      "category": "tutorial",
+      "en": "Press [age] to age Zeks, forcing them out of sync with time. This costs E99 energy.",
+      "pl": "Naciśnij [age], aby rozstroić Zeki w czasie. To kosztuje energię E99.",
+      "tts_text": "Naciśnij postarzania, aby rozstroić Zeki w czasie. To kosztuje energię E dziewięćdziesiąt dziewięć.",
+      "profile": "narrator_user",
+      "file": "0175_a8ea3b99ffff.wav",
+      "sample_rate": 24000,
+      "peak_dbfs": -3.0,
+      "qa_correction": "remaining_mixed_language_20261008",
+      "pack": "full_localization",
+      "manifest_line": 175,
+      "audio_path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\full_voicepack\\0175_a8ea3b99ffff.wav",
+      "line_id": "..\\RvGame\\Localization\\INT\\RvGame.int|Tutorial|AgeZeks",
+      "expected_pl": "Naciśnij postarzania, aby rozstroić Zeki w czasie. To kosztuje energię E dziewięćdziesiąt dziewięć.",
+      "translation_status": "draft_without_explicit_review",
+      "generation_attempt": 1,
+      "audio": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "duration_s": 5.41,
+        "rms": 0.108579,
+        "peak": 0.998108,
+        "clipping_fraction": 0.0,
+        "silence_fraction": 0.198404,
+        "audio_format_status": "PASS"
+      },
+      "asr": {
+        "language": "pl",
+        "language_probability": 0.9986,
+        "text": "Na ciśni postarzenia, aby rozstroić w zeki w czasie. To kosztuje energia i 99.",
+        "segments": [
+          {
+            "start": 0.0,
+            "end": 2.88,
+            "text": "Na ciśni postarzenia, aby rozstroić w zeki w czasie."
+          },
+          {
+            "start": 2.88,
+            "end": 5.38,
+            "text": "To kosztuje energia i 99."
+          }
+        ]
+      },
+      "notes": [
+        "REVIEW_REQUIRED"
+      ],
+      "qa_status": "REVIEW_REQUIRED",
+      "text_similarity": {
+        "token_sequence": 0.5185,
+        "wer": 0.6154
+      },
+      "translation_quality_status": "AUTOMATED_SANITY_OK",
+      "speech_rate_expected_words_per_s": 2.403
+    },
+    {
+      "id": "..\\RvGame\\Localization\\INT\\RvGame.int|Tutorial|Ammocrate",
+      "record": "..\\RvGame\\Localization\\INT\\RvGame.int",
+      "section": "Tutorial",
+      "key": "Ammocrate",
+      "category": "tutorial",
+      "en": "Press [age] to renew ammo crates. Inside you'll find a large ammo stash for all weapons.",
+      "pl": "Naciśnij [age], aby odnowić skrzynie z amunicją. W środku znajdziesz duży zapas amunicji do każdej broni.",
+      "tts_text": "Naciśnij postarzania, aby odnowić skrzynie z amunicją. W środku znajdziesz duży zapas amunicji do każdej broni.",
+      "profile": "narrator_user",
+      "file": "0177_498900210f5f.wav",
+      "sample_rate": 24000,
+      "peak_dbfs": -3.0,
+      "qa_correction": "remaining_mixed_language_20261008",
+      "pack": "full_localization",
+      "manifest_line": 177,
+      "audio_path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\full_voicepack\\0177_498900210f5f.wav",
+      "line_id": "..\\RvGame\\Localization\\INT\\RvGame.int|Tutorial|Ammocrate",
+      "expected_pl": "Naciśnij postarzania, aby odnowić skrzynie z amunicją. W środku znajdziesz duży zapas amunicji do każdej broni.",
+      "translation_status": "draft_without_explicit_review",
+      "generation_attempt": 1,
+      "audio": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "duration_s": 5.875,
+        "rms": 0.109412,
+        "peak": 1.0,
+        "clipping_fraction": 7e-06,
+        "silence_fraction": 0.123929,
+        "audio_format_status": "PASS"
+      },
+      "asr": {
+        "language": "pl",
+        "language_probability": 0.9987,
+        "text": "Na ciśni postarzania, aby odnowić skrzynie za municą, w środku znajdziesz duże zapasa municji do każdej broni.",
+        "segments": [
+          {
+            "start": 0.0,
+            "end": 5.92,
+            "text": "Na ciśni postarzania, aby odnowić skrzynie za municą, w środku znajdziesz duże zapasa municji do każdej broni."
+          }
+        ]
+      },
+      "notes": [],
+      "qa_status": "PASS",
+      "text_similarity": {
+        "token_sequence": 0.6061,
+        "wer": 0.4375
+      },
+      "translation_quality_status": "AUTOMATED_SANITY_OK",
+      "speech_rate_expected_words_per_s": 2.723
+    },
+    {
+      "id": "..\\RvGame\\Localization\\INT\\RvGame.int|Tutorial|cryoenemies",
+      "record": "..\\RvGame\\Localization\\INT\\RvGame.int",
+      "section": "Tutorial",
+      "key": "cryoenemies",
+      "category": "tutorial",
+      "en": "Use Cryo-Tanks to freeze enemies for a short time.",
+      "pl": "Używaj zbiorników kriogenicznych, aby na krótko zamrażać wrogów.",
+      "tts_text": "Używaj zbiorników kriogenicznych, aby na krótko zamrażać wrogów.",
+      "profile": "narrator_user",
+      "file": "0180_646e1432951a.wav",
+      "sample_rate": 24000,
+      "peak_dbfs": -3.0,
+      "qa_correction": "remaining_mixed_language_20261008",
+      "pack": "full_localization",
+      "manifest_line": 180,
+      "audio_path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\full_voicepack\\0180_646e1432951a.wav",
+      "line_id": "..\\RvGame\\Localization\\INT\\RvGame.int|Tutorial|cryoenemies",
+      "expected_pl": "Używaj zbiorników kriogenicznych, aby na krótko zamrażać wrogów.",
+      "translation_status": "draft_without_explicit_review",
+      "generation_attempt": 1,
+      "audio": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "duration_s": 3.402,
+        "rms": 0.102104,
+        "peak": 1.0,
+        "clipping_fraction": 1.2e-05,
+        "silence_fraction": 0.128684,
+        "audio_format_status": "PASS"
+      },
+      "asr": {
+        "language": "pl",
+        "language_probability": 0.9991,
+        "text": "Używaj z berników kriogenicznych, aby na krótko zamrażać wrogów.",
+        "segments": [
+          {
+            "start": 0.0,
+            "end": 3.4,
+            "text": "Używaj z berników kriogenicznych, aby na krótko zamrażać wrogów."
+          }
+        ]
+      },
+      "notes": [],
+      "qa_status": "PASS",
+      "text_similarity": {
+        "token_sequence": 0.8235,
+        "wer": 0.25
+      },
+      "translation_quality_status": "AUTOMATED_SANITY_OK",
+      "speech_rate_expected_words_per_s": 2.352
+    },
+    {
+      "id": "..\\RvGame\\Localization\\INT\\RvGame.int|Tutorial|RL_ZekBossHint1",
+      "record": "..\\RvGame\\Localization\\INT\\RvGame.int",
+      "section": "Tutorial",
+      "key": "RL_ZekBossHint1",
+      "category": "tutorial",
+      "en": "Anti-gravity [grab] can be used to grab barrels thrown at you",
+      "pl": "Grawitacyjny chwyt [grab] pozwala łapać beczki rzucone w twoją stronę.",
+      "tts_text": "Grawitacyjny chwyt chwytania pozwala łapać beczki rzucone w twoją stronę.",
+      "profile": "narrator_user",
+      "file": "0182_e2c3a7f502e0.wav",
+      "sample_rate": 24000,
+      "peak_dbfs": -3.0,
+      "qa_correction": "remaining_mixed_language_20261008",
+      "pack": "full_localization",
+      "manifest_line": 182,
+      "audio_path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\full_voicepack\\0182_e2c3a7f502e0.wav",
+      "line_id": "..\\RvGame\\Localization\\INT\\RvGame.int|Tutorial|RL_ZekBossHint1",
+      "expected_pl": "Grawitacyjny chwyt chwytania pozwala łapać beczki rzucone w twoją stronę.",
+      "translation_status": "draft_without_explicit_review",
+      "generation_attempt": 1,
+      "audio": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "duration_s": 4.133,
+        "rms": 0.090648,
+        "peak": 0.998138,
+        "clipping_fraction": 0.0,
+        "silence_fraction": 0.181328,
+        "audio_format_status": "PASS"
+      },
+      "asr": {
+        "language": "pl",
+        "language_probability": 0.9983,
+        "text": "Gravitacyjny chwyt, chwytania pozwala łapać beczki rzucone w twoją stronę.",
+        "segments": [
+          {
+            "start": 0.0,
+            "end": 4.0,
+            "text": "Gravitacyjny chwyt, chwytania pozwala łapać beczki rzucone w twoją stronę."
+          }
+        ]
+      },
+      "notes": [],
+      "qa_status": "PASS",
+      "text_similarity": {
+        "token_sequence": 0.9,
+        "wer": 0.1
+      },
+      "translation_quality_status": "AUTOMATED_SANITY_OK",
+      "speech_rate_expected_words_per_s": 2.42
+    },
+    {
+      "id": "..\\RvGame\\Localization\\INT\\RvGame.int|Tutorial|weaponammo",
+      "record": "..\\RvGame\\Localization\\INT\\RvGame.int",
+      "section": "Tutorial",
+      "key": "weaponammo",
+      "category": "tutorial",
+      "en": "Walk over dropped weapons to acquire its ammo.",
+      "pl": "Przejdź po upuszczonej broni, aby zdobyć do niej amunicję.",
+      "tts_text": "Przejdź po upuszczonej broni, aby zdobyć do niej amunicję.",
+      "profile": "narrator_user",
+      "file": "0190_0fbab60ac913.wav",
+      "sample_rate": 24000,
+      "peak_dbfs": -3.0,
+      "qa_correction": "remaining_mixed_language_20261008",
+      "pack": "full_localization",
+      "manifest_line": 190,
+      "audio_path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\full_voicepack\\0190_0fbab60ac913.wav",
+      "line_id": "..\\RvGame\\Localization\\INT\\RvGame.int|Tutorial|weaponammo",
+      "expected_pl": "Przejdź po upuszczonej broni, aby zdobyć do niej amunicję.",
+      "translation_status": "draft_without_explicit_review",
+      "generation_attempt": 1,
+      "audio": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "duration_s": 2.879,
+        "rms": 0.098311,
+        "peak": 1.0,
+        "clipping_fraction": 1.4e-05,
+        "silence_fraction": 0.188574,
+        "audio_format_status": "PASS"
+      },
+      "asr": {
+        "language": "pl",
+        "language_probability": 0.9899,
+        "text": "Przeć po opuszczonej broni, aby zdobyć leśnienie amunicji.",
+        "segments": [
+          {
+            "start": 0.0,
+            "end": 2.8000000000000003,
+            "text": "Przeć po opuszczonej broni, aby zdobyć leśnienie amunicji."
+          }
+        ]
+      },
+      "notes": [
+        "REVIEW_REQUIRED"
+      ],
+      "qa_status": "REVIEW_REQUIRED",
+      "text_similarity": {
+        "token_sequence": 0.4706,
+        "wer": 0.5556
+      },
+      "translation_quality_status": "AUTOMATED_SANITY_OK",
+      "speech_rate_expected_words_per_s": 3.126
+    },
+    {
+      "id": "..\\RvGame\\Localization\\INT\\RvGame.int|Tutorial|titleTMD2",
+      "record": "..\\RvGame\\Localization\\INT\\RvGame.int",
+      "section": "Tutorial",
+      "key": "titleTMD2",
+      "category": "tutorial",
+      "en": "Time Manipulation Device v2.0",
+      "pl": "Urządzenie manipulacji czasem, wersja 2.0.",
+      "tts_text": "Urządzenie manipulacji czasem, wersja 2.0.",
+      "profile": "narrator_user",
+      "file": "0205_7e3889c14d68.wav",
+      "sample_rate": 24000,
+      "peak_dbfs": -3.0,
+      "qa_correction": "remaining_mixed_language_20261008",
+      "pack": "full_localization",
+      "manifest_line": 205,
+      "audio_path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\full_voicepack\\0205_7e3889c14d68.wav",
+      "line_id": "..\\RvGame\\Localization\\INT\\RvGame.int|Tutorial|titleTMD2",
+      "expected_pl": "Urządzenie manipulacji czasem, wersja 2.0.",
+      "translation_status": "draft_without_explicit_review",
+      "generation_attempt": 1,
+      "audio": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "duration_s": 2.937,
+        "rms": 0.106321,
+        "peak": 1.0,
+        "clipping_fraction": 1.4e-05,
+        "silence_fraction": 0.211969,
+        "audio_format_status": "PASS"
+      },
+      "asr": {
+        "language": "pl",
+        "language_probability": 0.9994,
+        "text": "Urządzenie manipulacji czasem, wersja 2.0.",
+        "segments": [
+          {
+            "start": 0.0,
+            "end": 3.0,
+            "text": "Urządzenie manipulacji czasem, wersja 2.0."
+          }
+        ]
+      },
+      "notes": [],
+      "qa_status": "PASS",
+      "text_similarity": {
+        "token_sequence": 1.0,
+        "wer": 0.0
+      },
+      "translation_quality_status": "AUTOMATED_SANITY_OK",
+      "speech_rate_expected_words_per_s": 2.043
+    },
+    {
+      "id": "..\\RvGame\\Localization\\INT\\RvGame.int|Tutorial|combatage",
+      "record": "..\\RvGame\\Localization\\INT\\RvGame.int",
+      "section": "Tutorial",
+      "key": "combatage",
+      "category": "tutorial",
+      "en": "Press [age] to age pillars and crush your enemies!",
+      "pl": "Naciśnij [age], aby postarzyć filary i zmiażdżyć wrogów!",
+      "tts_text": "Naciśnij postarzania, aby postarzyć filary i zmiażdżyć wrogów!",
+      "profile": "narrator_user",
+      "file": "0209_2c487a141c9c.wav",
+      "sample_rate": 24000,
+      "peak_dbfs": -3.0,
+      "qa_correction": "remaining_mixed_language_20261008",
+      "pack": "full_localization",
+      "manifest_line": 209,
+      "audio_path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\full_voicepack\\0209_2c487a141c9c.wav",
+      "line_id": "..\\RvGame\\Localization\\INT\\RvGame.int|Tutorial|combatage",
+      "expected_pl": "Naciśnij postarzania, aby postarzyć filary i zmiażdżyć wrogów!",
+      "translation_status": "draft_without_explicit_review",
+      "generation_attempt": 1,
+      "audio": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "duration_s": 3.088,
+        "rms": 0.087681,
+        "peak": 1.0,
+        "clipping_fraction": 1.3e-05,
+        "silence_fraction": 0.128955,
+        "audio_format_status": "PASS"
+      },
+      "asr": {
+        "language": "pl",
+        "language_probability": 0.9986,
+        "text": "Na ciśni postarzenia, aby postarzyć filare i znieżdzić wrogów.",
+        "segments": [
+          {
+            "start": 0.0,
+            "end": 3.0,
+            "text": "Na ciśni postarzenia, aby postarzyć filare i znieżdzić wrogów."
+          }
+        ]
+      },
+      "notes": [
+        "REVIEW_REQUIRED"
+      ],
+      "qa_status": "REVIEW_REQUIRED",
+      "text_similarity": {
+        "token_sequence": 0.4706,
+        "wer": 0.625
+      },
+      "translation_quality_status": "AUTOMATED_SANITY_OK",
+      "speech_rate_expected_words_per_s": 2.591
+    },
+    {
+      "id": "..\\RvGame\\Localization\\INT\\RvGame.int|Tutorial|blindRevert",
+      "record": "..\\RvGame\\Localization\\INT\\RvGame.int",
+      "section": "Tutorial",
+      "key": "blindRevert",
+      "category": "tutorial",
+      "en": "Reverts are blind and only react to noise. Move slowly.",
+      "pl": "Reverci są ślepi i reagują wyłącznie na hałas. Poruszaj się powoli.",
+      "tts_text": "Reverci są ślepi i reagują wyłącznie na hałas. Poruszaj się powoli.",
+      "profile": "narrator_user",
+      "file": "0211_46144a5531d4.wav",
+      "sample_rate": 24000,
+      "peak_dbfs": -3.0,
+      "qa_correction": "remaining_mixed_language_20261008",
+      "pack": "full_localization",
+      "manifest_line": 211,
+      "audio_path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\full_voicepack\\0211_46144a5531d4.wav",
+      "line_id": "..\\RvGame\\Localization\\INT\\RvGame.int|Tutorial|blindRevert",
+      "expected_pl": "Reverci są ślepi i reagują wyłącznie na hałas. Poruszaj się powoli.",
+      "translation_status": "draft_without_explicit_review",
+      "generation_attempt": 1,
+      "audio": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "duration_s": 4.11,
+        "rms": 0.109947,
+        "peak": 1.0,
+        "clipping_fraction": 2e-05,
+        "silence_fraction": 0.201644,
+        "audio_format_status": "PASS"
+      },
+      "asr": {
+        "language": "pl",
+        "language_probability": 0.9984,
+        "text": "Rewerci są ślepiej ragują wyłącznie na hałas, poruszaj się powoli.",
+        "segments": [
+          {
+            "start": 0.0,
+            "end": 4.0,
+            "text": "Rewerci są ślepiej ragują wyłącznie na hałas, poruszaj się powoli."
+          }
+        ]
+      },
+      "notes": [],
+      "qa_status": "PASS",
+      "text_similarity": {
+        "token_sequence": 0.6667,
+        "wer": 0.3636
+      },
+      "translation_quality_status": "AUTOMATED_SANITY_OK",
+      "speech_rate_expected_words_per_s": 2.676
+    },
+    {
+      "id": "..\\RvGame\\Localization\\INT\\RvGame.int|Tutorial|MAChronoCloud",
+      "record": "..\\RvGame\\Localization\\INT\\RvGame.int",
+      "section": "Tutorial",
+      "key": "MAChronoCloud",
+      "category": "tutorial",
+      "en": "Blue clouds indicate out of phase objects. If they don't disappear when pulling the object out, that means you can pull another one out to replace the first.",
+      "pl": "Niebieskie chmury wskazują obiekty poza fazą. Jeśli nie znikną po wyciągnięciu obiektu, możesz wyciągnąć kolejny i zastąpić nim pierwszy.",
+      "tts_text": "Niebieskie chmury wskazują obiekty poza fazą. Jeśli nie znikną po wyciągnięciu obiektu, możesz wyciągnąć kolejny i zastąpić nim pierwszy.",
+      "profile": "narrator_user",
+      "file": "0214_8d5a66551906.wav",
+      "sample_rate": 24000,
+      "peak_dbfs": -3.0,
+      "qa_correction": "remaining_mixed_language_20261008",
+      "pack": "full_localization",
+      "manifest_line": 214,
+      "audio_path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\full_voicepack\\0214_8d5a66551906.wav",
+      "line_id": "..\\RvGame\\Localization\\INT\\RvGame.int|Tutorial|MAChronoCloud",
+      "expected_pl": "Niebieskie chmury wskazują obiekty poza fazą. Jeśli nie znikną po wyciągnięciu obiektu, możesz wyciągnąć kolejny i zastąpić nim pierwszy.",
+      "translation_status": "draft_without_explicit_review",
+      "generation_attempt": 1,
+      "audio": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "duration_s": 7.814,
+        "rms": 0.105087,
+        "peak": 1.0,
+        "clipping_fraction": 5e-06,
+        "silence_fraction": 0.210655,
+        "audio_format_status": "PASS"
+      },
+      "asr": {
+        "language": "pl",
+        "language_probability": 0.9997,
+        "text": "Niebieskie chmury wskazują obiekty po zafazom. Jeśli nie znikną po wyciągnięciu obiektu możesz wyciągnąć kolejny i zastąpić nim pierwszy.",
+        "segments": [
+          {
+            "start": 0.0,
+            "end": 2.6,
+            "text": "Niebieskie chmury wskazują obiekty po zafazom."
+          },
+          {
+            "start": 2.6,
+            "end": 7.84,
+            "text": "Jeśli nie znikną po wyciągnięciu obiektu możesz wyciągnąć kolejny i zastąpić nim pierwszy."
+          }
+        ]
+      },
+      "notes": [],
+      "qa_status": "PASS",
+      "text_similarity": {
+        "token_sequence": 0.8947,
+        "wer": 0.1053
+      },
+      "translation_quality_status": "AUTOMATED_SANITY_OK",
+      "speech_rate_expected_words_per_s": 2.432
+    },
+    {
+      "id": "..\\RvGame\\Localization\\INT\\RvGame.int|Tutorial|RevertTheFuse",
+      "record": "..\\RvGame\\Localization\\INT\\RvGame.int",
+      "section": "Tutorial",
+      "key": "RevertTheFuse",
+      "category": "tutorial",
+      "en": "Press [age] to revert the fuse and restore power to the TMD amplification platform.",
+      "pl": "Naciśnij [age], aby odwrócić bezpiecznik i przywrócić zasilanie platformy wzmacniającej TMD.",
+      "tts_text": "Naciśnij postarzania, aby odwrócić bezpiecznik i przywrócić zasilanie platformy wzmacniającej te em de.",
+      "profile": "narrator_user",
+      "file": "0220_4bfb96c228ff.wav",
+      "sample_rate": 24000,
+      "peak_dbfs": -3.0,
+      "qa_correction": "remaining_mixed_language_20261008",
+      "pack": "full_localization",
+      "manifest_line": 220,
+      "audio_path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\full_voicepack\\0220_4bfb96c228ff.wav",
+      "line_id": "..\\RvGame\\Localization\\INT\\RvGame.int|Tutorial|RevertTheFuse",
+      "expected_pl": "Naciśnij postarzania, aby odwrócić bezpiecznik i przywrócić zasilanie platformy wzmacniającej te em de.",
+      "translation_status": "draft_without_explicit_review",
+      "generation_attempt": 1,
+      "audio": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "duration_s": 5.224,
+        "rms": 0.102191,
+        "peak": 1.0,
+        "clipping_fraction": 1.6e-05,
+        "silence_fraction": 0.123401,
+        "audio_format_status": "PASS"
+      },
+      "asr": {
+        "language": "pl",
+        "language_probability": 0.9994,
+        "text": "Na cieśni postarzania, aby odwócić bezpieczni i przywrócić za silanie platformy wzmacniającej TMD.",
+        "segments": [
+          {
+            "start": 0.0,
+            "end": 5.16,
+            "text": "Na cieśni postarzania, aby odwócić bezpieczni i przywrócić za silanie platformy wzmacniającej TMD."
+          }
+        ]
+      },
+      "notes": [
+        "REVIEW_REQUIRED"
+      ],
+      "qa_status": "REVIEW_REQUIRED",
+      "text_similarity": {
+        "token_sequence": 0.4615,
+        "wer": 0.6923
+      },
+      "translation_quality_status": "AUTOMATED_SANITY_OK",
+      "speech_rate_expected_words_per_s": 2.489
+    },
+    {
+      "id": "..\\RvGame\\Localization\\INT\\RvGame.int|TCR|UnreachableOnlineServiceMessage",
+      "record": "..\\RvGame\\Localization\\INT\\RvGame.int",
+      "section": "TCR",
+      "key": "UnreachableOnlineServiceMessage",
+      "category": "ui",
+      "en": "Cannot connect to Activision's Demonware servers",
+      "pl": "Nie można połączyć się z serwerami Demonware firmy Activision.",
+      "tts_text": "Nie można połączyć się z serwerami Demonware firmy Activision.",
+      "profile": "narrator_user",
+      "file": "0273_be77b8d21fe2.wav",
+      "sample_rate": 24000,
+      "peak_dbfs": -3.0,
+      "qa_correction": "remaining_mixed_language_20261008",
+      "pack": "full_localization",
+      "manifest_line": 273,
+      "audio_path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\full_voicepack\\0273_be77b8d21fe2.wav",
+      "line_id": "..\\RvGame\\Localization\\INT\\RvGame.int|TCR|UnreachableOnlineServiceMessage",
+      "expected_pl": "Nie można połączyć się z serwerami Demonware firmy Activision.",
+      "translation_status": "draft_without_explicit_review",
+      "generation_attempt": 1,
+      "audio": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "duration_s": 3.564,
+        "rms": 0.09715,
+        "peak": 0.98941,
+        "clipping_fraction": 0.0,
+        "silence_fraction": 0.182177,
+        "audio_format_status": "PASS"
+      },
+      "asr": {
+        "language": "pl",
+        "language_probability": 0.9897,
+        "text": "Nie można połączyć się z serwerami demonware firmy atstwisią.",
+        "segments": [
+          {
+            "start": 0.0,
+            "end": 3.5,
+            "text": "Nie można połączyć się z serwerami demonware firmy atstwisią."
+          }
+        ]
+      },
+      "notes": [],
+      "qa_status": "PASS",
+      "text_similarity": {
+        "token_sequence": 0.8889,
+        "wer": 0.1111
+      },
+      "translation_quality_status": "AUTOMATED_SANITY_OK",
+      "speech_rate_expected_words_per_s": 2.525
+    },
+    {
+      "id": "..\\RvGame\\Localization\\INT\\RvGame.int|Achievements|complete_researchlabs_DESC",
+      "record": "..\\RvGame\\Localization\\INT\\RvGame.int",
+      "section": "Achievements",
+      "key": "complete_researchlabs_DESC",
+      "category": "objective",
+      "en": "Completed the Research Facility Mission",
+      "pl": "Ukończ misję Ośrodek badawczy.",
+      "tts_text": "Ukończ misję Ośrodek badawczy.",
+      "profile": "narrator_user",
+      "file": "0298_32e305cb3776.wav",
+      "sample_rate": 24000,
+      "peak_dbfs": -3.0,
+      "qa_correction": "remaining_mixed_language_20261008",
+      "pack": "full_localization",
+      "manifest_line": 298,
+      "audio_path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\full_voicepack\\0298_32e305cb3776.wav",
+      "line_id": "..\\RvGame\\Localization\\INT\\RvGame.int|Achievements|complete_researchlabs_DESC",
+      "expected_pl": "Ukończ misję Ośrodek badawczy.",
+      "translation_status": "draft_without_explicit_review",
+      "generation_attempt": 1,
+      "audio": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "duration_s": 1.974,
+        "rms": 0.087603,
+        "peak": 0.996063,
+        "clipping_fraction": 0.0,
+        "silence_fraction": 0.250121,
+        "audio_format_status": "PASS"
+      },
+      "asr": {
+        "language": "pl",
+        "language_probability": 0.9993,
+        "text": "Ukądś misję o środek badawczy.",
+        "segments": [
+          {
+            "start": 0.0,
+            "end": 2.0,
+            "text": "Ukądś misję o środek badawczy."
+          }
+        ]
+      },
+      "notes": [
+        "REVIEW_REQUIRED"
+      ],
+      "qa_status": "REVIEW_REQUIRED",
+      "text_similarity": {
+        "token_sequence": 0.4444,
+        "wer": 0.75
+      },
+      "translation_quality_status": "AUTOMATED_SANITY_OK",
+      "speech_rate_expected_words_per_s": 2.026
+    },
+    {
+      "id": "..\\RvGame\\Localization\\INT\\RvGame.int|Achievements|complete_freighter_DESC",
+      "record": "..\\RvGame\\Localization\\INT\\RvGame.int",
+      "section": "Achievements",
+      "key": "complete_freighter_DESC",
+      "category": "objective",
+      "en": "Completed the Central Docks Mission",
+      "pl": "Ukończ misję Centralne doki.",
+      "tts_text": "Ukończ misję Centralne doki.",
+      "profile": "narrator_user",
+      "file": "0300_084be710fb14.wav",
+      "sample_rate": 24000,
+      "peak_dbfs": -3.0,
+      "qa_correction": "remaining_mixed_language_20261008",
+      "pack": "full_localization",
+      "manifest_line": 300,
+      "audio_path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\full_voicepack\\0300_084be710fb14.wav",
+      "line_id": "..\\RvGame\\Localization\\INT\\RvGame.int|Achievements|complete_freighter_DESC",
+      "expected_pl": "Ukończ misję Centralne doki.",
+      "translation_status": "draft_without_explicit_review",
+      "generation_attempt": 1,
+      "audio": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "duration_s": 2.067,
+        "rms": 0.085228,
+        "peak": 1.0,
+        "clipping_fraction": 2e-05,
+        "silence_fraction": 0.347574,
+        "audio_format_status": "PASS"
+      },
+      "asr": {
+        "language": "pl",
+        "language_probability": 0.995,
+        "text": "Ukończ misecentralne doki.",
+        "segments": [
+          {
+            "start": 0.0,
+            "end": 2.0,
+            "text": "Ukończ misecentralne doki."
+          }
+        ]
+      },
+      "notes": [
+        "REVIEW_REQUIRED"
+      ],
+      "qa_status": "REVIEW_REQUIRED",
+      "text_similarity": {
+        "token_sequence": 0.5714,
+        "wer": 0.5
+      },
+      "translation_quality_status": "AUTOMATED_SANITY_OK",
+      "speech_rate_expected_words_per_s": 1.935
+    },
+    {
+      "id": "..\\RvGame\\Localization\\INT\\RvGame.int|Achievements|kills_impulse_DESC",
+      "record": "..\\RvGame\\Localization\\INT\\RvGame.int",
+      "section": "Achievements",
+      "key": "kills_impulse_DESC",
+      "category": "tutorial",
+      "en": "Kill 20 enemies with Impulse in single player campaign",
+      "pl": "Zabij 20 wrogów Impulsem w kampanii dla jednego gracza.",
+      "tts_text": "Zabij 20 wrogów Impulsem w kampanii dla jednego gracza.",
+      "profile": "narrator_user",
+      "file": "0308_897875505157.wav",
+      "sample_rate": 24000,
+      "peak_dbfs": -3.0,
+      "qa_correction": "remaining_mixed_language_20261008",
+      "pack": "full_localization",
+      "manifest_line": 308,
+      "audio_path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\full_voicepack\\0308_897875505157.wav",
+      "line_id": "..\\RvGame\\Localization\\INT\\RvGame.int|Achievements|kills_impulse_DESC",
+      "expected_pl": "Zabij 20 wrogów Impulsem w kampanii dla jednego gracza.",
+      "translation_status": "draft_without_explicit_review",
+      "generation_attempt": 1,
+      "audio": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "duration_s": 3.773,
+        "rms": 0.085548,
+        "peak": 1.0,
+        "clipping_fraction": 1.1e-05,
+        "silence_fraction": 0.199673,
+        "audio_format_status": "PASS"
+      },
+      "asr": {
+        "language": "pl",
+        "language_probability": 0.9997,
+        "text": "Zabi 20 wrogów i pójsem w kampanii dla jednego gracza.",
+        "segments": [
+          {
+            "start": 0.0,
+            "end": 3.8000000000000003,
+            "text": "Zabi 20 wrogów i pójsem w kampanii dla jednego gracza."
+          }
+        ]
+      },
+      "notes": [],
+      "qa_status": "PASS",
+      "text_similarity": {
+        "token_sequence": 0.7368,
+        "wer": 0.3333
+      },
+      "translation_quality_status": "AUTOMATED_SANITY_OK",
+      "speech_rate_expected_words_per_s": 2.385
+    },
+    {
+      "id": "..\\RvGame\\Localization\\INT\\RvGame.int|Achievements|chrono_notes_DESC",
+      "record": "..\\RvGame\\Localization\\INT\\RvGame.int",
+      "section": "Achievements",
+      "key": "chrono_notes_DESC",
+      "category": "other",
+      "en": "Used the TMD to find 15 Chrono-Notes in single player campaign",
+      "pl": "Użyj TMD, aby znaleźć 15 notatek Chrono w kampanii dla jednego gracza.",
+      "tts_text": "Użyj te em de, aby znaleźć 15 notatek Chrono w kampanii dla jednego gracza.",
+      "profile": "narrator_user",
+      "file": "0312_b3bb786120f2.wav",
+      "sample_rate": 24000,
+      "peak_dbfs": -3.0,
+      "qa_correction": "remaining_mixed_language_20261008",
+      "pack": "full_localization",
+      "manifest_line": 312,
+      "audio_path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\full_voicepack\\0312_b3bb786120f2.wav",
+      "line_id": "..\\RvGame\\Localization\\INT\\RvGame.int|Achievements|chrono_notes_DESC",
+      "expected_pl": "Użyj te em de, aby znaleźć 15 notatek Chrono w kampanii dla jednego gracza.",
+      "translation_status": "draft_without_explicit_review",
+      "generation_attempt": 1,
+      "audio": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "duration_s": 4.493,
+        "rms": 0.063433,
+        "peak": 1.0,
+        "clipping_fraction": 9e-06,
+        "silence_fraction": 0.178636,
+        "audio_format_status": "PASS"
+      },
+      "asr": {
+        "language": "pl",
+        "language_probability": 0.9997,
+        "text": "Użij te md, aby znaleźć 15 notatek chronów kampanii dla jednego gracza.",
+        "segments": [
+          {
+            "start": 0.0,
+            "end": 4.4,
+            "text": "Użij te md, aby znaleźć 15 notatek chronów kampanii dla jednego gracza."
+          }
+        ]
+      },
+      "notes": [],
+      "qa_status": "PASS",
+      "text_similarity": {
+        "token_sequence": 0.6923,
+        "wer": 0.3571
+      },
+      "translation_quality_status": "AUTOMATED_SANITY_OK",
+      "speech_rate_expected_words_per_s": 3.116
+    },
+    {
+      "id": "..\\RvGame\\Localization\\INT\\RvGame.int|RvUI3D|ConsoleControls_MP_Creatures",
+      "record": "..\\RvGame\\Localization\\INT\\RvGame.int",
+      "section": "RvUI3D",
+      "key": "ConsoleControls_MP_Creatures",
+      "category": "tutorial",
+      "en": "[fire] Primary Attack\n[use] Melee\n[impulse] Secondary Attack\n[grab] Taunt\n[age] Melee\n[crouch] Crouch\n[aim] Aim\n[dash] Sprint\n[jump] Jump",
+      "pl": "[fire] Atak podstawowy\n[use] Atak wręcz\n[impulse] Atak dodatkowy\n[grab] Prowokacja\n[age] Atak wręcz\n[crouch] Kucanie\n[aim] Celowanie\n[dash] Sprint\n[jump] Skok",
+      "tts_text": "strzał Atak podstawowy użycia Atak wręcz impulsu Atak dodatkowy chwytania Prowokacja postarzania Atak wręcz kucania Kucanie celowania Celowanie biegu Sprint skoku Skok",
+      "profile": "narrator_user",
+      "file": "0410_83650c38ec6e.wav",
+      "sample_rate": 24000,
+      "peak_dbfs": -3.0,
+      "qa_correction": "remaining_mixed_language_20261008",
+      "pack": "full_localization",
+      "manifest_line": 410,
+      "audio_path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\full_voicepack\\0410_83650c38ec6e.wav",
+      "line_id": "..\\RvGame\\Localization\\INT\\RvGame.int|RvUI3D|ConsoleControls_MP_Creatures",
+      "expected_pl": "strzał Atak podstawowy użycia Atak wręcz impulsu Atak dodatkowy chwytania Prowokacja postarzania Atak wręcz kucania Kucanie celowania Celowanie biegu Sprint skoku Skok",
+      "translation_status": "draft_without_explicit_review",
+      "generation_attempt": 1,
+      "audio": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "duration_s": 8.475,
+        "rms": 0.080308,
+        "peak": 0.996948,
+        "clipping_fraction": 0.0,
+        "silence_fraction": 0.119003,
+        "audio_format_status": "PASS"
+      },
+      "asr": {
+        "language": "pl",
+        "language_probability": 0.9983,
+        "text": "Trzał atak podstawowy użycia atak wręcz impulsu, atak dodatkowych chwytania prowokacja, postarzenia atak wręcz kucania, kucanie celowania celowania, biegu sprints kokus kok.",
+        "segments": [
+          {
+            "start": 0.0,
+            "end": 8.42,
+            "text": "Trzał atak podstawowy użycia atak wręcz impulsu, atak dodatkowych chwytania prowokacja, postarzenia atak wręcz kucania, kucanie celowania celowania, biegu sprints kokus kok."
+          }
+        ]
+      },
+      "notes": [],
+      "qa_status": "PASS",
+      "text_similarity": {
+        "token_sequence": 0.6818,
+        "wer": 0.3182
+      },
+      "translation_quality_status": "AUTOMATED_SANITY_OK",
+      "speech_rate_expected_words_per_s": 2.596
+    },
+    {
+      "id": "..\\RvGame\\Localization\\INT\\RvGame.int|RvUI|FreezeImpulse",
+      "record": "..\\RvGame\\Localization\\INT\\RvGame.int",
+      "section": "RvUI",
+      "key": "FreezeImpulse",
+      "category": "tutorial",
+      "en": "Press [impulse] to break out with Impulse",
+      "pl": "Naciśnij [impulse], aby wyrwać się z działania Impulsu.",
+      "tts_text": "Naciśnij impulsu, aby wyrwać się z działania Impulsu.",
+      "profile": "narrator_user",
+      "file": "0425_2baa9274f2cb.wav",
+      "sample_rate": 24000,
+      "peak_dbfs": -3.0,
+      "qa_correction": "remaining_mixed_language_20261008",
+      "pack": "full_localization",
+      "manifest_line": 425,
+      "audio_path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\full_voicepack\\0425_2baa9274f2cb.wav",
+      "line_id": "..\\RvGame\\Localization\\INT\\RvGame.int|RvUI|FreezeImpulse",
+      "expected_pl": "Naciśnij impulsu, aby wyrwać się z działania Impulsu.",
+      "translation_status": "draft_without_explicit_review",
+      "generation_attempt": 1,
+      "audio": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "duration_s": 3.309,
+        "rms": 0.118323,
+        "peak": 0.99649,
+        "clipping_fraction": 0.0,
+        "silence_fraction": 0.187375,
+        "audio_format_status": "PASS"
+      },
+      "asr": {
+        "language": "pl",
+        "language_probability": 0.9952,
+        "text": "Naciśnij impulsu, aby wyrwać się zdziałania impulsu.",
+        "segments": [
+          {
+            "start": 0.0,
+            "end": 4.0,
+            "text": "Naciśnij impulsu, aby wyrwać się zdziałania impulsu."
+          }
+        ]
+      },
+      "notes": [],
+      "qa_status": "PASS",
+      "text_similarity": {
+        "token_sequence": 0.8,
+        "wer": 0.25
+      },
+      "translation_quality_status": "AUTOMATED_SANITY_OK",
+      "speech_rate_expected_words_per_s": 2.418
+    },
+    {
+      "id": "..\\RvGame\\Localization\\INT\\RvGame.int|RvUI|MT_QuickmatchHint",
+      "record": "..\\RvGame\\Localization\\INT\\RvGame.int",
+      "section": "RvUI",
+      "key": "MT_QuickmatchHint",
+      "category": "tutorial",
+      "en": "Find an online game using default settings",
+      "pl": "Znajdź grę online przy użyciu ustawień domyślnych.",
+      "tts_text": "Znajdź grę online przy użyciu ustawień domyślnych.",
+      "profile": "narrator_user",
+      "file": "0505_790abd859f5a.wav",
+      "sample_rate": 24000,
+      "peak_dbfs": -3.0,
+      "qa_correction": "remaining_mixed_language_20261008",
+      "pack": "full_localization",
+      "manifest_line": 505,
+      "audio_path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\full_voicepack\\0505_790abd859f5a.wav",
+      "line_id": "..\\RvGame\\Localization\\INT\\RvGame.int|RvUI|MT_QuickmatchHint",
+      "expected_pl": "Znajdź grę online przy użyciu ustawień domyślnych.",
+      "translation_status": "draft_without_explicit_review",
+      "generation_attempt": 1,
+      "audio": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "duration_s": 2.74,
+        "rms": 0.103801,
+        "peak": 0.999542,
+        "clipping_fraction": 1.5e-05,
+        "silence_fraction": 0.144969,
+        "audio_format_status": "PASS"
+      },
+      "asr": {
+        "language": "pl",
+        "language_probability": 0.9986,
+        "text": "Znajdź grę on lina przy użyciu ustawień do myślnych.",
+        "segments": [
+          {
+            "start": 0.0,
+            "end": 2.72,
+            "text": "Znajdź grę on lina przy użyciu ustawień do myślnych."
+          }
+        ]
+      },
+      "notes": [],
+      "qa_status": "PASS",
+      "text_similarity": {
+        "token_sequence": 0.625,
+        "wer": 0.5714
+      },
+      "translation_quality_status": "AUTOMATED_SANITY_OK",
+      "speech_rate_expected_words_per_s": 2.555
+    },
+    {
+      "id": "..\\RvGame\\Localization\\INT\\RvGame.int|RvUI|MT_PrivateHint",
+      "record": "..\\RvGame\\Localization\\INT\\RvGame.int",
+      "section": "RvUI",
+      "key": "MT_PrivateHint",
+      "category": "tutorial",
+      "en": "Host a private match that only your friends can join",
+      "pl": "Utwórz prywatny mecz, do którego mogą dołączyć tylko twoi znajomi.",
+      "tts_text": "Utwórz prywatny mecz, do którego mogą dołączyć tylko twoi znajomi.",
+      "profile": "narrator_user",
+      "file": "0509_5910715648d9.wav",
+      "sample_rate": 24000,
+      "peak_dbfs": -3.0,
+      "qa_correction": "remaining_mixed_language_20261008",
+      "pack": "full_localization",
+      "manifest_line": 509,
+      "audio_path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\full_voicepack\\0509_5910715648d9.wav",
+      "line_id": "..\\RvGame\\Localization\\INT\\RvGame.int|RvUI|MT_PrivateHint",
+      "expected_pl": "Utwórz prywatny mecz, do którego mogą dołączyć tylko twoi znajomi.",
+      "translation_status": "draft_without_explicit_review",
+      "generation_attempt": 1,
+      "audio": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "duration_s": 3.669,
+        "rms": 0.093492,
+        "peak": 1.0,
+        "clipping_fraction": 1.1e-05,
+        "silence_fraction": 0.220122,
+        "audio_format_status": "PASS"
+      },
+      "asr": {
+        "language": "pl",
+        "language_probability": 0.998,
+        "text": "Utwórz prywatny mecz, do którego mogą dołączyć tylko twoje znajomi.",
+        "segments": [
+          {
+            "start": 0.0,
+            "end": 3.64,
+            "text": "Utwórz prywatny mecz, do którego mogą dołączyć tylko twoje znajomi."
+          }
+        ]
+      },
+      "notes": [],
+      "qa_status": "PASS",
+      "text_similarity": {
+        "token_sequence": 0.9,
+        "wer": 0.1
+      },
+      "translation_quality_status": "AUTOMATED_SANITY_OK",
+      "speech_rate_expected_words_per_s": 2.726
+    },
+    {
+      "id": "..\\RvGame\\Localization\\INT\\RvGame.int|RvUI|MT_PublicHint360",
+      "record": "..\\RvGame\\Localization\\INT\\RvGame.int",
+      "section": "RvUI",
+      "key": "MT_PublicHint360",
+      "category": "tutorial",
+      "en": "Play against random players on Xbox LIVE",
+      "pl": "Graj przeciwko losowym graczom w usłudze Xbox LIVE.",
+      "tts_text": "Graj przeciwko losowym graczom w usłudze Xbox LIVE.",
+      "profile": "narrator_user",
+      "file": "0515_a456b1a32ee2.wav",
+      "sample_rate": 24000,
+      "peak_dbfs": -3.0,
+      "qa_correction": "remaining_mixed_language_20261008",
+      "pack": "full_localization",
+      "manifest_line": 515,
+      "audio_path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\full_voicepack\\0515_a456b1a32ee2.wav",
+      "line_id": "..\\RvGame\\Localization\\INT\\RvGame.int|RvUI|MT_PublicHint360",
+      "expected_pl": "Graj przeciwko losowym graczom w usłudze Xbox LIVE.",
+      "translation_status": "draft_without_explicit_review",
+      "generation_attempt": 1,
+      "audio": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "duration_s": 2.833,
+        "rms": 0.096139,
+        "peak": 1.0,
+        "clipping_fraction": 1.5e-05,
+        "silence_fraction": 0.112371,
+        "audio_format_status": "PASS"
+      },
+      "asr": {
+        "language": "pl",
+        "language_probability": 0.9996,
+        "text": "Graj przeciwkolosowym graczom w usłudek z boksyliwe.",
+        "segments": [
+          {
+            "start": 0.0,
+            "end": 2.8000000000000003,
+            "text": "Graj przeciwkolosowym graczom w usłudek z boksyliwe."
+          }
+        ]
+      },
+      "notes": [
+        "REVIEW_REQUIRED"
+      ],
+      "qa_status": "REVIEW_REQUIRED",
+      "text_similarity": {
+        "token_sequence": 0.4,
+        "wer": 0.625
+      },
+      "translation_quality_status": "AUTOMATED_SANITY_OK",
+      "speech_rate_expected_words_per_s": 2.824
+    },
+    {
+      "id": "..\\RvGame\\Localization\\INT\\RvGame.int|RvUI|EditFriendJoinHint",
+      "record": "..\\RvGame\\Localization\\INT\\RvGame.int",
+      "section": "RvUI",
+      "key": "EditFriendJoinHint",
+      "category": "tutorial",
+      "en": "Attempt to join this friend's game",
+      "pl": "Spróbuj dołączyć do gry tego znajomego.",
+      "tts_text": "Spróbuj dołączyć do gry tego znajomego.",
+      "profile": "narrator_user",
+      "file": "0531_265d0a0c9445.wav",
+      "sample_rate": 24000,
+      "peak_dbfs": -3.0,
+      "qa_correction": "remaining_mixed_language_20261008",
+      "pack": "full_localization",
+      "manifest_line": 531,
+      "audio_path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\full_voicepack\\0531_265d0a0c9445.wav",
+      "line_id": "..\\RvGame\\Localization\\INT\\RvGame.int|RvUI|EditFriendJoinHint",
+      "expected_pl": "Spróbuj dołączyć do gry tego znajomego.",
+      "translation_status": "draft_without_explicit_review",
+      "generation_attempt": 1,
+      "audio": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "duration_s": 2.148,
+        "rms": 0.15259,
+        "peak": 1.0,
+        "clipping_fraction": 1.9e-05,
+        "silence_fraction": 0.16138,
+        "audio_format_status": "PASS"
+      },
+      "asr": {
+        "language": "pl",
+        "language_probability": 0.9979,
+        "text": "Spróbuj dołączyć do gry tego znajomego.",
+        "segments": [
+          {
+            "start": 0.0,
+            "end": 2.0,
+            "text": "Spróbuj dołączyć do gry tego znajomego."
+          }
+        ]
+      },
+      "notes": [],
+      "qa_status": "PASS",
+      "text_similarity": {
+        "token_sequence": 1.0,
+        "wer": 0.0
+      },
+      "translation_quality_status": "AUTOMATED_SANITY_OK",
+      "speech_rate_expected_words_per_s": 2.793
+    },
+    {
+      "id": "..\\RvGame\\Localization\\INT\\RvGame.int|RvUI|CantStartOnlineDisabledPS3",
+      "record": "..\\RvGame\\Localization\\INT\\RvGame.int",
+      "section": "RvUI",
+      "key": "CantStartOnlineDisabledPS3",
+      "category": "ui",
+      "en": "Online service is disabled on your PlayStation®Network account due to parental control restrictions.",
+      "pl": "Usługa online jest wyłączona na twoim koncie PlayStation Network z powodu ograniczeń kontroli rodzicielskiej.",
+      "tts_text": "Usługa online jest wyłączona na twoim koncie PlayStation Network z powodu ograniczeń kontroli rodzicielskiej.",
+      "profile": "narrator_user",
+      "file": "0540_812f27aaa6eb.wav",
+      "sample_rate": 24000,
+      "peak_dbfs": -3.0,
+      "qa_correction": "remaining_mixed_language_20261008",
+      "pack": "full_localization",
+      "manifest_line": 540,
+      "audio_path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\full_voicepack\\0540_812f27aaa6eb.wav",
+      "line_id": "..\\RvGame\\Localization\\INT\\RvGame.int|RvUI|CantStartOnlineDisabledPS3",
+      "expected_pl": "Usługa online jest wyłączona na twoim koncie PlayStation Network z powodu ograniczeń kontroli rodzicielskiej.",
+      "translation_status": "draft_without_explicit_review",
+      "generation_attempt": 1,
+      "audio": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "duration_s": 5.55,
+        "rms": 0.133599,
+        "peak": 1.0,
+        "clipping_fraction": 8e-06,
+        "silence_fraction": 0.072062,
+        "audio_format_status": "PASS"
+      },
+      "asr": {
+        "language": "pl",
+        "language_probability": 0.9995,
+        "text": "Usługa onylina jest wyłączona na twoim koncie playstation Network z powodu ograniczeń kontroli rodzicielskiej.",
+        "segments": [
+          {
+            "start": 0.0,
+            "end": 5.5,
+            "text": "Usługa onylina jest wyłączona na twoim koncie playstation Network z powodu ograniczeń kontroli rodzicielskiej."
+          }
+        ]
+      },
+      "notes": [],
+      "qa_status": "PASS",
+      "text_similarity": {
+        "token_sequence": 0.9286,
+        "wer": 0.0714
+      },
+      "translation_quality_status": "AUTOMATED_SANITY_OK",
+      "speech_rate_expected_words_per_s": 2.523
+    },
+    {
+      "id": "..\\RvGame\\Localization\\INT\\RvGame.int|RvUI|FSAndResolutionRevertMessage",
+      "record": "..\\RvGame\\Localization\\INT\\RvGame.int",
+      "section": "RvUI",
+      "key": "FSAndResolutionRevertMessage",
+      "category": "ui",
+      "en": "The resolution and fullscreen settings will revert in 15 seconds if you do not select Ok.",
+      "pl": "Ustawienia rozdzielczości i pełnego ekranu zostaną przywrócone po 15 sekundach, jeśli nie wybierzesz opcji OK.",
+      "tts_text": "Ustawienia rozdzielczości i pełnego ekranu zostaną przywrócone po 15 sekundach, jeśli nie wybierzesz opcji OK.",
+      "profile": "narrator_user",
+      "file": "0591_65a5d1632312.wav",
+      "sample_rate": 24000,
+      "peak_dbfs": -3.0,
+      "qa_correction": "remaining_mixed_language_20261008",
+      "pack": "full_localization",
+      "manifest_line": 591,
+      "audio_path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\full_voicepack\\0591_65a5d1632312.wav",
+      "line_id": "..\\RvGame\\Localization\\INT\\RvGame.int|RvUI|FSAndResolutionRevertMessage",
+      "expected_pl": "Ustawienia rozdzielczości i pełnego ekranu zostaną przywrócone po 15 sekundach, jeśli nie wybierzesz opcji OK.",
+      "translation_status": "draft_without_explicit_review",
+      "generation_attempt": 1,
+      "audio": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "duration_s": 6.002,
+        "rms": 0.098907,
+        "peak": 1.0,
+        "clipping_fraction": 7e-06,
+        "silence_fraction": 0.117877,
+        "audio_format_status": "PASS"
+      },
+      "asr": {
+        "language": "pl",
+        "language_probability": 0.9994,
+        "text": "Ustawienia rozdzielczości i pełnego ekranu zostaną przywrócone po 15 sekundach, jeśli nie wybierzesz opcję OK.",
+        "segments": [
+          {
+            "start": 0.0,
+            "end": 4.24,
+            "text": "Ustawienia rozdzielczości i pełnego ekranu zostaną przywrócone po 15 sekundach,"
+          },
+          {
+            "start": 4.24,
+            "end": 5.92,
+            "text": "jeśli nie wybierzesz opcję OK."
+          }
+        ]
+      },
+      "notes": [],
+      "qa_status": "PASS",
+      "text_similarity": {
+        "token_sequence": 0.9333,
+        "wer": 0.0667
+      },
+      "translation_quality_status": "AUTOMATED_SANITY_OK",
+      "speech_rate_expected_words_per_s": 2.499
+    },
+    {
+      "id": "..\\RvGame\\Localization\\INT\\RvGame.int|RvUI|1950PistolDesc",
+      "record": "..\\RvGame\\Localization\\INT\\RvGame.int",
+      "section": "RvUI",
+      "key": "1950PistolDesc",
+      "category": "ui",
+      "en": "1950 Pistol description blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah",
+      "pl": "Pistolet 1950 — niezawodna broń boczna do walki na krótkim i średnim dystansie.",
+      "tts_text": "Pistolet 1950 — niezawodna broń boczna do walki na krótkim i średnim dystansie.",
+      "profile": "narrator_user",
+      "file": "0681_34622819da12.wav",
+      "sample_rate": 24000,
+      "peak_dbfs": -3.0,
+      "qa_correction": "remaining_mixed_language_20261008",
+      "pack": "full_localization",
+      "manifest_line": 681,
+      "audio_path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\full_voicepack\\0681_34622819da12.wav",
+      "line_id": "..\\RvGame\\Localization\\INT\\RvGame.int|RvUI|1950PistolDesc",
+      "expected_pl": "Pistolet 1950 — niezawodna broń boczna do walki na krótkim i średnim dystansie.",
+      "translation_status": "draft_without_explicit_review",
+      "generation_attempt": 1,
+      "audio": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "duration_s": 5.538,
+        "rms": 0.097785,
+        "peak": 0.999298,
+        "clipping_fraction": 8e-06,
+        "silence_fraction": 0.173415,
+        "audio_format_status": "PASS"
+      },
+      "asr": {
+        "language": "pl",
+        "language_probability": 0.9997,
+        "text": "Pistolet 1950. Nie zawodna broni boczna do walki na krótkim i średnim dystansie.",
+        "segments": [
+          {
+            "start": 0.0,
+            "end": 5.5,
+            "text": "Pistolet 1950. Nie zawodna broni boczna do walki na krótkim i średnim dystansie."
+          }
+        ]
+      },
+      "notes": [],
+      "qa_status": "PASS",
+      "text_similarity": {
+        "token_sequence": 0.8,
+        "wer": 0.25
+      },
+      "translation_quality_status": "AUTOMATED_SANITY_OK",
+      "speech_rate_expected_words_per_s": 2.167
+    },
+    {
+      "id": "..\\RvGame\\Localization\\INT\\RvGame.int|RvUI|TMDEquipPaneDesc",
+      "record": "..\\RvGame\\Localization\\INT\\RvGame.int",
+      "section": "RvUI",
+      "key": "TMDEquipPaneDesc",
+      "category": "ui",
+      "en": "Use E99 Tech to make TMD Equipment. After purchasing the TMD Equipment you must equip it to gain its benefits. You start with only a single slot for TMD Equipment.",
+      "pl": "Użyj technologii E99, aby zdobywać wyposażenie TMD. Po zakupie wyposażenia TMD musisz je założyć, aby korzystać z jego zalet. Na początku masz tylko jedno miejsce na wyposażenie TMD.",
+      "tts_text": "Użyj technologii E dziewięćdziesiąt dziewięć, aby zdobywać wyposażenie te em de. Po zakupie wyposażenia te em de musisz je założyć, aby korzystać z jego zalet. Na początku masz tylko jedno miejsce na wyposażenie te em de.",
+      "profile": "narrator_user",
+      "file": "0712_b5032f02297c.wav",
+      "sample_rate": 24000,
+      "peak_dbfs": -3.0,
+      "qa_correction": "remaining_mixed_language_20261008",
+      "pack": "full_localization",
+      "manifest_line": 712,
+      "audio_path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\full_voicepack\\0712_b5032f02297c.wav",
+      "line_id": "..\\RvGame\\Localization\\INT\\RvGame.int|RvUI|TMDEquipPaneDesc",
+      "expected_pl": "Użyj technologii E dziewięćdziesiąt dziewięć, aby zdobywać wyposażenie te em de. Po zakupie wyposażenia te em de musisz je założyć, aby korzystać z jego zalet. Na początku masz tylko jedno miejsce na wyposażenie te em de.",
+      "translation_status": "draft_without_explicit_review",
+      "generation_attempt": 1,
+      "audio": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "duration_s": 11.401,
+        "rms": 0.104963,
+        "peak": 1.0,
+        "clipping_fraction": 4e-06,
+        "silence_fraction": 0.155363,
+        "audio_format_status": "PASS"
+      },
+      "asr": {
+        "language": "pl",
+        "language_probability": 0.9994,
+        "text": "Użyj technologii 99, aby zdobywać wyposażenie TMD. Po zakupie wyposażenia TMD musi się założyć, aby korzystać z jego zalet. Na początku masz tylko jedno miejsce na wyposażenie TMD.",
+        "segments": [
+          {
+            "start": 0.0,
+            "end": 4.0,
+            "text": "Użyj technologii 99, aby zdobywać wyposażenie TMD."
+          },
+          {
+            "start": 4.0,
+            "end": 8.2,
+            "text": "Po zakupie wyposażenia TMD musi się założyć, aby korzystać z jego zalet."
+          },
+          {
+            "start": 8.2,
+            "end": 11.4,
+            "text": "Na początku masz tylko jedno miejsce na wyposażenie TMD."
+          }
+        ]
+      },
+      "notes": [],
+      "qa_status": "PASS",
+      "text_similarity": {
+        "token_sequence": 0.6875,
+        "wer": 0.3889
+      },
+      "translation_quality_status": "AUTOMATED_SANITY_OK",
+      "speech_rate_expected_words_per_s": 3.158
+    },
+    {
+      "id": "..\\RvGame\\Localization\\INT\\RvGame.int|RvUI|ScienceWeaponWidgetButton",
+      "record": "..\\RvGame\\Localization\\INT\\RvGame.int",
+      "section": "RvUI",
+      "key": "ScienceWeaponWidgetButton",
+      "category": "ui",
+      "en": "Convert 10,000 E99 Tech into 2 Weapon Upgrade Widgets",
+      "pl": "Wymień 10 000 jednostek technologii E99 na 2 moduły ulepszenia broni.",
+      "tts_text": "Wymień 10 000 jednostek technologii E dziewięćdziesiąt dziewięć na 2 moduły ulepszenia broni.",
+      "profile": "narrator_user",
+      "file": "0716_c512453b91ef.wav",
+      "sample_rate": 24000,
+      "peak_dbfs": -3.0,
+      "qa_correction": "remaining_mixed_language_20261008",
+      "pack": "full_localization",
+      "manifest_line": 716,
+      "audio_path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\full_voicepack\\0716_c512453b91ef.wav",
+      "line_id": "..\\RvGame\\Localization\\INT\\RvGame.int|RvUI|ScienceWeaponWidgetButton",
+      "expected_pl": "Wymień 10 000 jednostek technologii E dziewięćdziesiąt dziewięć na 2 moduły ulepszenia broni.",
+      "translation_status": "draft_without_explicit_review",
+      "generation_attempt": 1,
+      "audio": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "duration_s": 4.923,
+        "rms": 0.109763,
+        "peak": 0.996185,
+        "clipping_fraction": 0.0,
+        "silence_fraction": 0.120243,
+        "audio_format_status": "PASS"
+      },
+      "asr": {
+        "language": "pl",
+        "language_probability": 0.9997,
+        "text": "wymien 10 tysięcy jednostek technologii 99x2 moduł u lepszenia broni.",
+        "segments": [
+          {
+            "start": 0.0,
+            "end": 5.0,
+            "text": "wymien 10 tysięcy jednostek technologii 99x2 moduł u lepszenia broni."
+          }
+        ]
+      },
+      "notes": [
+        "FAIL_GIBBERISH"
+      ],
+      "qa_status": "FAIL_GIBBERISH",
+      "text_similarity": {
+        "token_sequence": 0.3478,
+        "wer": 0.6923
+      },
+      "translation_quality_status": "AUTOMATED_SANITY_OK",
+      "speech_rate_expected_words_per_s": 2.641
+    },
+    {
+      "id": "..\\RvGame\\Localization\\INT\\RvGame.int|Perk|Perk_Shotgun_Pistol_Desc",
+      "record": "..\\RvGame\\Localization\\INT\\RvGame.int",
+      "section": "Perk",
+      "key": "Perk_Shotgun_Pistol_Desc",
+      "category": "item",
+      "en": "You spawn with the [ARShotgun] and [2007Pistol]",
+      "pl": "Rozpoczynasz z [ARShotgun] i [2007Pistol].",
+      "tts_text": "Rozpoczynasz z ARShotgun i 2007Pistol.",
+      "profile": "narrator_user",
+      "file": "0774_a516cd53c33b.wav",
+      "sample_rate": 24000,
+      "peak_dbfs": -3.0,
+      "qa_correction": "remaining_mixed_language_20261008",
+      "pack": "full_localization",
+      "manifest_line": 774,
+      "audio_path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\full_voicepack\\0774_a516cd53c33b.wav",
+      "line_id": "..\\RvGame\\Localization\\INT\\RvGame.int|Perk|Perk_Shotgun_Pistol_Desc",
+      "expected_pl": "Rozpoczynasz z ARShotgun i 2007Pistol.",
+      "translation_status": "draft_without_explicit_review",
+      "generation_attempt": 1,
+      "audio": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "duration_s": 3.042,
+        "rms": 0.081523,
+        "peak": 1.0,
+        "clipping_fraction": 1.4e-05,
+        "silence_fraction": 0.187729,
+        "audio_format_status": "PASS"
+      },
+      "asr": {
+        "language": "pl",
+        "language_probability": 0.9991,
+        "text": "Rozpoczynać z zany szodgum i 2007 pistol.",
+        "segments": [
+          {
+            "start": 0.0,
+            "end": 3.0,
+            "text": "Rozpoczynać z zany szodgum i 2007 pistol."
+          }
+        ]
+      },
+      "notes": [
+        "FAIL_GIBBERISH"
+      ],
+      "qa_status": "FAIL_GIBBERISH",
+      "text_similarity": {
+        "token_sequence": 0.3333,
+        "wer": 1.0
+      },
+      "translation_quality_status": "AUTOMATED_SANITY_OK",
+      "speech_rate_expected_words_per_s": 1.644
+    },
+    {
+      "id": "..\\RvGame\\Localization\\INT\\RvGame.int|Perk|Perk_Healer_Desc",
+      "record": "..\\RvGame\\Localization\\INT\\RvGame.int",
+      "section": "Perk",
+      "key": "Perk_Healer_Desc",
+      "category": "tutorial",
+      "en": "TMD power: Heal.\nHealers are valuable resources to their team and can often turn the tide of the battle. They also have the ability to heal themselves, but only when actively healing a teammate.\n\n[impulse] (hold) to heal nearby teammate.\n[age] (hold) to regenerate Spawner Units and Beacon.",
+      "pl": "Moc TMD: Leczenie.\nUzdrowiciele są cenni dla drużyny i często potrafią odwrócić losy bitwy. Mogą leczyć siebie, ale tylko podczas aktywnego leczenia towarzysza.\n\n[impulse] (przytrzymaj) — lecz pobliskiego towarzysza.\n[age] (przytrzymaj) — regeneruj jednostki Spawnera i Nadajnik.",
+      "tts_text": "Moc te em de: Leczenie. Uzdrowiciele są cenni dla drużyny i często potrafią odwrócić losy bitwy. Mogą leczyć siebie, ale tylko podczas aktywnego leczenia towarzysza. impulsu (przytrzymaj) — lecz pobliskiego towarzysza. postarzania (przytrzymaj) — regeneruj jednostki Spawnera i Nadajnik.",
+      "profile": "narrator_user",
+      "file": "0794_7fbd715e1bb3.wav",
+      "sample_rate": 24000,
+      "peak_dbfs": -3.0,
+      "qa_correction": "remaining_mixed_language_20261008",
+      "pack": "full_localization",
+      "manifest_line": 794,
+      "audio_path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\full_voicepack\\0794_7fbd715e1bb3.wav",
+      "line_id": "..\\RvGame\\Localization\\INT\\RvGame.int|Perk|Perk_Healer_Desc",
+      "expected_pl": "Moc te em de: Leczenie. Uzdrowiciele są cenni dla drużyny i często potrafią odwrócić losy bitwy. Mogą leczyć siebie, ale tylko podczas aktywnego leczenia towarzysza. impulsu (przytrzymaj) — lecz pobliskiego towarzysza. postarzania (przytrzymaj) — regeneruj jednostki Spawnera i Nadajnik.",
+      "translation_status": "draft_without_explicit_review",
+      "generation_attempt": 1,
+      "audio": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "duration_s": 15.047,
+        "rms": 0.089728,
+        "peak": 1.0,
+        "clipping_fraction": 3e-06,
+        "silence_fraction": 0.172371,
+        "audio_format_status": "PASS"
+      },
+      "asr": {
+        "language": "pl",
+        "language_probability": 0.9988,
+        "text": "Modster MD, leczenia. Uzdrowiciele są ceny nie dla drużyny i często potrafią odwrócić losy bitwy. Mogą leczyć siebie, ale tylko podczas aktywnego leczenia towarzysza impulsu przytrzymaj. Lecz pobliskiego towarzysza postarzenia przytrzymaj. Regeneruje jednostki spawnera i nadajnik.",
+        "segments": [
+          {
+            "start": 0.0,
+            "end": 6.0,
+            "text": "Modster MD, leczenia. Uzdrowiciele są ceny nie dla drużyny i często potrafią odwrócić losy bitwy."
+          },
+          {
+            "start": 6.0,
+            "end": 10.200000000000001,
+            "text": "Mogą leczyć siebie, ale tylko podczas aktywnego leczenia towarzysza impulsu przytrzymaj."
+          },
+          {
+            "start": 10.200000000000001,
+            "end": 15.0,
+            "text": "Lecz pobliskiego towarzysza postarzenia przytrzymaj. Regeneruje jednostki spawnera i nadajnik."
+          }
+        ]
+      },
+      "notes": [],
+      "qa_status": "PASS",
+      "text_similarity": {
+        "token_sequence": 0.7945,
+        "wer": 0.2432
+      },
+      "translation_quality_status": "AUTOMATED_SANITY_OK",
+      "speech_rate_expected_words_per_s": 2.459
+    },
+    {
+      "id": "..\\RvGame\\Localization\\INT\\RvGame.int|Perk|Perk_Radion_Desc",
+      "record": "..\\RvGame\\Localization\\INT\\RvGame.int",
+      "section": "Perk",
+      "key": "Perk_Radion_Desc",
+      "category": "tutorial",
+      "en": "The Radion is the perfect turf defender.\nWith powerful projectile attacks and a heavily armored body, Radions can be critical in providing support for the team.\n\n[impulse] to fire the Shard Attack.\n[fire] to fire the Bomb Lob.\n[age] or [reload] to Melee.",
+      "pl": "Radion doskonale broni terenu.\nPotężne pociski i silnie opancerzone ciało pozwalają Radionom skutecznie wspierać drużynę.\n\n[impulse] — wystrzel odłamek.\n[fire] — rzuć bombę.\n[age] lub [przeładować] — atak wręcz.",
+      "tts_text": "Radion doskonale broni terenu. Potężne pociski i silnie opancerzone ciało pozwalają Radionom skutecznie wspierać drużynę. impulsu — wystrzel odłamek. strzał — rzuć bombę. postarzania lub przeładować — atak wręcz.",
+      "profile": "narrator_user",
+      "file": "0797_26d4718a8786.wav",
+      "sample_rate": 24000,
+      "peak_dbfs": -3.0,
+      "qa_correction": "remaining_mixed_language_20261008",
+      "pack": "full_localization",
+      "manifest_line": 797,
+      "audio_path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\full_voicepack\\0797_26d4718a8786.wav",
+      "line_id": "..\\RvGame\\Localization\\INT\\RvGame.int|Perk|Perk_Radion_Desc",
+      "expected_pl": "Radion doskonale broni terenu. Potężne pociski i silnie opancerzone ciało pozwalają Radionom skutecznie wspierać drużynę. impulsu — wystrzel odłamek. strzał — rzuć bombę. postarzania lub przeładować — atak wręcz.",
+      "translation_status": "draft_without_explicit_review",
+      "generation_attempt": 1,
+      "audio": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "duration_s": 11.389,
+        "rms": 0.087977,
+        "peak": 0.99881,
+        "clipping_fraction": 0.0,
+        "silence_fraction": 0.163481,
+        "audio_format_status": "PASS"
+      },
+      "asr": {
+        "language": "pl",
+        "language_probability": 0.9993,
+        "text": "Pradym doskonale Broniterenu, potężne pociski i silnie opancerzone ciało pozwalają radionom skutecznie wspierać drużyne impulsu. Wystrzel odłamek strzał, rzucbąby postarzenia lub przeładować, a tak wręcz.",
+        "segments": [
+          {
+            "start": 0.0,
+            "end": 6.84,
+            "text": "Pradym doskonale Broniterenu, potężne pociski i silnie opancerzone ciało pozwalają radionom skutecznie wspierać drużyne impulsu."
+          },
+          {
+            "start": 6.84,
+            "end": 11.4,
+            "text": "Wystrzel odłamek strzał, rzucbąby postarzenia lub przeładować, a tak wręcz."
+          }
+        ]
+      },
+      "notes": [],
+      "qa_status": "PASS",
+      "text_similarity": {
+        "token_sequence": 0.7059,
+        "wer": 0.3462
+      },
+      "translation_quality_status": "AUTOMATED_SANITY_OK",
+      "speech_rate_expected_words_per_s": 2.283
+    },
+    {
+      "id": "..\\RvGame\\Localization\\INT\\RvGame.int|Perk|TMD_impulse_upgrades_Desc",
+      "record": "..\\RvGame\\Localization\\INT\\RvGame.int",
+      "section": "Perk",
+      "key": "TMD_impulse_upgrades_Desc",
+      "category": "tutorial",
+      "en": "Increases impulse damage and knockback",
+      "pl": "Zwiększa obrażenia i odrzut Impulsu.",
+      "tts_text": "Zwiększa obrażenia i odrzut Impulsu.",
+      "profile": "narrator_user",
+      "file": "0813_8f03588baa8c.wav",
+      "sample_rate": 24000,
+      "peak_dbfs": -3.0,
+      "qa_correction": "remaining_mixed_language_20261008",
+      "pack": "full_localization",
+      "manifest_line": 813,
+      "audio_path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\full_voicepack\\0813_8f03588baa8c.wav",
+      "line_id": "..\\RvGame\\Localization\\INT\\RvGame.int|Perk|TMD_impulse_upgrades_Desc",
+      "expected_pl": "Zwiększa obrażenia i odrzut Impulsu.",
+      "translation_status": "draft_without_explicit_review",
+      "generation_attempt": 1,
+      "audio": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "duration_s": 2.345,
+        "rms": 0.11384,
+        "peak": 1.0,
+        "clipping_fraction": 1.8e-05,
+        "silence_fraction": 0.159418,
+        "audio_format_status": "PASS"
+      },
+      "asr": {
+        "language": "pl",
+        "language_probability": 0.9987,
+        "text": "zwiększa obrażenia i odrzupiem pulsu.",
+        "segments": [
+          {
+            "start": 0.0,
+            "end": 2.3000000000000003,
+            "text": "zwiększa obrażenia i odrzupiem pulsu."
+          }
+        ]
+      },
+      "notes": [],
+      "qa_status": "PASS",
+      "text_similarity": {
+        "token_sequence": 0.6,
+        "wer": 0.4
+      },
+      "translation_quality_status": "AUTOMATED_SANITY_OK",
+      "speech_rate_expected_words_per_s": 2.132
+    },
+    {
+      "id": "..\\RvGame\\Localization\\INT\\Subtitles.int|Subtitles|TipMP_024",
+      "record": "..\\RvGame\\Localization\\INT\\Subtitles.int",
+      "section": "Subtitles",
+      "key": "TipMP_024",
+      "category": "subtitle",
+      "en": "Landing on top of a Phase Tick will kill it immediately.",
+      "pl": "Lądowanie na Fazowym Kleszczu zabije go natychmiast.",
+      "tts_text": "Lądowanie na Fazowym Kleszczu zabije go natychmiast.",
+      "profile": "narrator_user",
+      "file": "0890_2c480b359f6f.wav",
+      "sample_rate": 24000,
+      "peak_dbfs": -3.0,
+      "qa_correction": "remaining_mixed_language_20261008",
+      "pack": "full_localization",
+      "manifest_line": 890,
+      "audio_path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\full_voicepack\\0890_2c480b359f6f.wav",
+      "line_id": "..\\RvGame\\Localization\\INT\\Subtitles.int|Subtitles|TipMP_024",
+      "expected_pl": "Lądowanie na Fazowym Kleszczu zabije go natychmiast.",
+      "translation_status": "draft_without_explicit_review",
+      "generation_attempt": 1,
+      "audio": {
+        "sample_rate": 24000,
+        "channels": 1,
+        "duration_s": 2.798,
+        "rms": 0.107411,
+        "peak": 1.0,
+        "clipping_fraction": 1.5e-05,
+        "silence_fraction": 0.178503,
+        "audio_format_status": "PASS"
+      },
+      "asr": {
+        "language": "pl",
+        "language_probability": 0.9991,
+        "text": "Lądowanie na fazowym kresztu zabijego natychmiast.",
+        "segments": [
+          {
+            "start": 0.0,
+            "end": 3.0,
+            "text": "Lądowanie na fazowym kresztu zabijego natychmiast."
+          }
+        ]
+      },
+      "notes": [],
+      "qa_status": "PASS",
+      "text_similarity": {
+        "token_sequence": 0.6154,
+        "wer": 0.4286
+      },
+      "translation_quality_status": "AUTOMATED_SANITY_OK",
+      "speech_rate_expected_words_per_s": 2.502
+    }
+  ]
+}

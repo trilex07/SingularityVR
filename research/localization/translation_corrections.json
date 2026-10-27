@@ -1,0 +1,16 @@
+{
+  "..\\Engine\\Localization\\INT\\Engine.int|GameMessage|OvertimeMessage": "Wynik jest remisowy po regulaminowym czasie. Dogrywka do nagłej śmierci!",
+  "..\\RvGame\\Localization\\INT\\MP.int|General|PlayOnline": "Graj online",
+  "..\\RvGame\\Localization\\INT\\MP.int|General|PrivateMatch": "Mecz prywatny",
+  "..\\RvGame\\Localization\\INT\\PS3.int|General|SaveGameSubtitle": "Ustawienia i zapis",
+  "..\\RvGame\\Localization\\INT\\RvGame.int|Tutorial|aim": "Naciśnij i przytrzymaj przycisk celowania, aby przybliżyć celownik.",
+  "..\\RvGame\\Localization\\INT\\RvGame.int|Tutorial|flechette": "Naciśnij przycisk zmiany broni, aby wyposażyć flechette. Naciśnij przycisk strzału, aby wystrzelić pojedynczą rakietę. Przytrzymaj przycisk celowania, aby użyć alternatywnego trybu strzału.",
+  "..\\RvGame\\Localization\\INT\\RvGame.int|Tutorial|E99Revolver": "Naciśnij dwukrotnie przycisk zmiany broni, aby wyposażyć rewolwer E99. Naciśnij przycisk strzału, aby wystrzelić pocisk. Przytrzymaj przycisk celowania, a następnie naciśnij strzał, aby sterować pociskiem w stronę wrogów.",
+  "..\\RvGame\\Localization\\INT\\RvGame.int|TCR|ConfirmQuitHost": "Jesteś gospodarzem. Opuszczenie meczu zakończy grę dla pozostałych graczy i utracisz zdobyte PD. Czy na pewno chcesz wyjść?",
+  "..\\RvGame\\Localization\\INT\\RvGame.int|Achievements|mp_killcreatures_impulse": "Porozmawiaj z ręką",
+  "..\\RvGame\\Localization\\INT\\RvGame.int|RvUI|Online": "Tryb online",
+  "..\\RvGame\\Localization\\INT\\RvGame.int|RvUI|MT_PublicHint": "Graj z losowymi graczami przez internet.",
+  "..\\RvGame\\Localization\\INT\\RvGame.int|RvUI|MT_LanHint": "Graj z innymi graczami w sieci LAN.",
+  "..\\RvGame\\Localization\\INT\\RvGame.int|RvUI|CreateOnlineGameFailed": "Nie udało się utworzyć gry online.",
+  "..\\RvGame\\Localization\\INT\\RvGame.int|RvUI|AC_KILLS_PROPANE_CRYO": "Zabójstwa ogniem i mrozem."
+}

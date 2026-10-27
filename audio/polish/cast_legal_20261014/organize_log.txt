@@ -1,0 +1,14 @@
+user_voice:
+  M1.m4a (370390 B)
+  M2.m4a (395724 B)
+  Napięty.m4a (186736 B)
+  Spokój.m4a (358023 B)
+  Stanowczy.m4a (374273 B)
+intro_voice:
+  SNG_intro_polish_voice_FULL_123s.wav (11811918 B)
+  segment_00_6.0s-80.0s.wav (7104044 B)
+  segment_01_84.0s-86.0s.wav (192044 B)
+  segment_02_88.0s-91.0s.wav (288044 B)
+  segment_03_94.0s-99.0s.wav (480044 B)
+  segment_04_102.0s-109.0s.wav (672044 B)
+DONE

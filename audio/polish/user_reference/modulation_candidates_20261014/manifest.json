@@ -1,0 +1,177 @@
+[
+  {
+    "source_user_wav": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\user_reference\\incoming_modulations\\mod_m1.wav",
+    "reference_clip": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\user_reference\\modulation_candidates_20261014\\references\\mod_m1_reference_pcm16.wav",
+    "output": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\user_reference\\modulation_candidates_20261014\\pocket_tests\\mod_m1__ui_loading.wav",
+    "line_id": "ui_loading",
+    "text": "Wczytywanie. Proszę czekać."
+  },
+  {
+    "source_user_wav": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\user_reference\\incoming_modulations\\mod_m1.wav",
+    "reference_clip": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\user_reference\\modulation_candidates_20261014\\references\\mod_m1_reference_pcm16.wav",
+    "output": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\user_reference\\modulation_candidates_20261014\\pocket_tests\\mod_m1__ui_options.wav",
+    "line_id": "ui_options",
+    "text": "Opcje gry. Tryb wieloosobowy."
+  },
+  {
+    "source_user_wav": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\user_reference\\incoming_modulations\\mod_m1.wav",
+    "reference_clip": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\user_reference\\modulation_candidates_20261014\\references\\mod_m1_reference_pcm16.wav",
+    "output": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\user_reference\\modulation_candidates_20261014\\pocket_tests\\mod_m1__ui_quit.wav",
+    "line_id": "ui_quit",
+    "text": "Czy na pewno chcesz wyjść z meczu?"
+  },
+  {
+    "source_user_wav": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\user_reference\\incoming_modulations\\mod_m1.wav",
+    "reference_clip": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\user_reference\\modulation_candidates_20261014\\references\\mod_m1_reference_pcm16.wav",
+    "output": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\user_reference\\modulation_candidates_20261014\\pocket_tests\\mod_m1__story_calm.wav",
+    "line_id": "story_calm",
+    "text": "Musimy działać szybko. Sprawdźmy laboratorium."
+  },
+  {
+    "source_user_wav": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\user_reference\\incoming_modulations\\mod_m1.wav",
+    "reference_clip": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\user_reference\\modulation_candidates_20261014\\references\\mod_m1_reference_pcm16.wav",
+    "output": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\user_reference\\modulation_candidates_20261014\\pocket_tests\\mod_m1__story_alert.wav",
+    "line_id": "story_alert",
+    "text": "Słyszycie to? Wszyscy na stanowiska!"
+  },
+  {
+    "source_user_wav": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\user_reference\\incoming_modulations\\mod_m2.wav",
+    "reference_clip": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\user_reference\\modulation_candidates_20261014\\references\\mod_m2_reference_pcm16.wav",
+    "output": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\user_reference\\modulation_candidates_20261014\\pocket_tests\\mod_m2__ui_loading.wav",
+    "line_id": "ui_loading",
+    "text": "Wczytywanie. Proszę czekać."
+  },
+  {
+    "source_user_wav": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\user_reference\\incoming_modulations\\mod_m2.wav",
+    "reference_clip": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\user_reference\\modulation_candidates_20261014\\references\\mod_m2_reference_pcm16.wav",
+    "output": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\user_reference\\modulation_candidates_20261014\\pocket_tests\\mod_m2__ui_options.wav",
+    "line_id": "ui_options",
+    "text": "Opcje gry. Tryb wieloosobowy."
+  },
+  {
+    "source_user_wav": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\user_reference\\incoming_modulations\\mod_m2.wav",
+    "reference_clip": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\user_reference\\modulation_candidates_20261014\\references\\mod_m2_reference_pcm16.wav",
+    "output": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\user_reference\\modulation_candidates_20261014\\pocket_tests\\mod_m2__ui_quit.wav",
+    "line_id": "ui_quit",
+    "text": "Czy na pewno chcesz wyjść z meczu?"
+  },
+  {
+    "source_user_wav": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\user_reference\\incoming_modulations\\mod_m2.wav",
+    "reference_clip": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\user_reference\\modulation_candidates_20261014\\references\\mod_m2_reference_pcm16.wav",
+    "output": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\user_reference\\modulation_candidates_20261014\\pocket_tests\\mod_m2__story_calm.wav",
+    "line_id": "story_calm",
+    "text": "Musimy działać szybko. Sprawdźmy laboratorium."
+  },
+  {
+    "source_user_wav": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\user_reference\\incoming_modulations\\mod_m2.wav",
+    "reference_clip": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\user_reference\\modulation_candidates_20261014\\references\\mod_m2_reference_pcm16.wav",
+    "output": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\user_reference\\modulation_candidates_20261014\\pocket_tests\\mod_m2__story_alert.wav",
+    "line_id": "story_alert",
+    "text": "Słyszycie to? Wszyscy na stanowiska!"
+  },
+  {
+    "source_user_wav": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\user_reference\\incoming_modulations\\mod_napiety.wav",
+    "reference_clip": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\user_reference\\modulation_candidates_20261014\\references\\mod_napiety_reference_pcm16.wav",
+    "output": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\user_reference\\modulation_candidates_20261014\\pocket_tests\\mod_napiety__ui_loading.wav",
+    "line_id": "ui_loading",
+    "text": "Wczytywanie. Proszę czekać."
+  },
+  {
+    "source_user_wav": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\user_reference\\incoming_modulations\\mod_napiety.wav",
+    "reference_clip": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\user_reference\\modulation_candidates_20261014\\references\\mod_napiety_reference_pcm16.wav",
+    "output": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\user_reference\\modulation_candidates_20261014\\pocket_tests\\mod_napiety__ui_options.wav",
+    "line_id": "ui_options",
+    "text": "Opcje gry. Tryb wieloosobowy."
+  },
+  {
+    "source_user_wav": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\user_reference\\incoming_modulations\\mod_napiety.wav",
+    "reference_clip": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\user_reference\\modulation_candidates_20261014\\references\\mod_napiety_reference_pcm16.wav",
+    "output": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\user_reference\\modulation_candidates_20261014\\pocket_tests\\mod_napiety__ui_quit.wav",
+    "line_id": "ui_quit",
+    "text": "Czy na pewno chcesz wyjść z meczu?"
+  },
+  {
+    "source_user_wav": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\user_reference\\incoming_modulations\\mod_napiety.wav",
+    "reference_clip": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\user_reference\\modulation_candidates_20261014\\references\\mod_napiety_reference_pcm16.wav",
+    "output": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\user_reference\\modulation_candidates_20261014\\pocket_tests\\mod_napiety__story_calm.wav",
+    "line_id": "story_calm",
+    "text": "Musimy działać szybko. Sprawdźmy laboratorium."
+  },
+  {
+    "source_user_wav": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\user_reference\\incoming_modulations\\mod_napiety.wav",
+    "reference_clip": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\user_reference\\modulation_candidates_20261014\\references\\mod_napiety_reference_pcm16.wav",
+    "output": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\user_reference\\modulation_candidates_20261014\\pocket_tests\\mod_napiety__story_alert.wav",
+    "line_id": "story_alert",
+    "text": "Słyszycie to? Wszyscy na stanowiska!"
+  },
+  {
+    "source_user_wav": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\user_reference\\incoming_modulations\\mod_spokoj.wav",
+    "reference_clip": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\user_reference\\modulation_candidates_20261014\\references\\mod_spokoj_reference_pcm16.wav",
+    "output": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\user_reference\\modulation_candidates_20261014\\pocket_tests\\mod_spokoj__ui_loading.wav",
+    "line_id": "ui_loading",
+    "text": "Wczytywanie. Proszę czekać."
+  },
+  {
+    "source_user_wav": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\user_reference\\incoming_modulations\\mod_spokoj.wav",
+    "reference_clip": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\user_reference\\modulation_candidates_20261014\\references\\mod_spokoj_reference_pcm16.wav",
+    "output": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\user_reference\\modulation_candidates_20261014\\pocket_tests\\mod_spokoj__ui_options.wav",
+    "line_id": "ui_options",
+    "text": "Opcje gry. Tryb wieloosobowy."
+  },
+  {
+    "source_user_wav": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\user_reference\\incoming_modulations\\mod_spokoj.wav",
+    "reference_clip": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\user_reference\\modulation_candidates_20261014\\references\\mod_spokoj_reference_pcm16.wav",
+    "output": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\user_reference\\modulation_candidates_20261014\\pocket_tests\\mod_spokoj__ui_quit.wav",
+    "line_id": "ui_quit",
+    "text": "Czy na pewno chcesz wyjść z meczu?"
+  },
+  {
+    "source_user_wav": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\user_reference\\incoming_modulations\\mod_spokoj.wav",
+    "reference_clip": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\user_reference\\modulation_candidates_20261014\\references\\mod_spokoj_reference_pcm16.wav",
+    "output": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\user_reference\\modulation_candidates_20261014\\pocket_tests\\mod_spokoj__story_calm.wav",
+    "line_id": "story_calm",
+    "text": "Musimy działać szybko. Sprawdźmy laboratorium."
+  },
+  {
+    "source_user_wav": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\user_reference\\incoming_modulations\\mod_spokoj.wav",
+    "reference_clip": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\user_reference\\modulation_candidates_20261014\\references\\mod_spokoj_reference_pcm16.wav",
+    "output": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\user_reference\\modulation_candidates_20261014\\pocket_tests\\mod_spokoj__story_alert.wav",
+    "line_id": "story_alert",
+    "text": "Słyszycie to? Wszyscy na stanowiska!"
+  },
+  {
+    "source_user_wav": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\user_reference\\incoming_modulations\\mod_stanowczy.wav",
+    "reference_clip": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\user_reference\\modulation_candidates_20261014\\references\\mod_stanowczy_reference_pcm16.wav",
+    "output": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\user_reference\\modulation_candidates_20261014\\pocket_tests\\mod_stanowczy__ui_loading.wav",
+    "line_id": "ui_loading",
+    "text": "Wczytywanie. Proszę czekać."
+  },
+  {
+    "source_user_wav": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\user_reference\\incoming_modulations\\mod_stanowczy.wav",
+    "reference_clip": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\user_reference\\modulation_candidates_20261014\\references\\mod_stanowczy_reference_pcm16.wav",
+    "output": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\user_reference\\modulation_candidates_20261014\\pocket_tests\\mod_stanowczy__ui_options.wav",
+    "line_id": "ui_options",
+    "text": "Opcje gry. Tryb wieloosobowy."
+  },
+  {
+    "source_user_wav": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\user_reference\\incoming_modulations\\mod_stanowczy.wav",
+    "reference_clip": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\user_reference\\modulation_candidates_20261014\\references\\mod_stanowczy_reference_pcm16.wav",
+    "output": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\user_reference\\modulation_candidates_20261014\\pocket_tests\\mod_stanowczy__ui_quit.wav",
+    "line_id": "ui_quit",
+    "text": "Czy na pewno chcesz wyjść z meczu?"
+  },
+  {
+    "source_user_wav": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\user_reference\\incoming_modulations\\mod_stanowczy.wav",
+    "reference_clip": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\user_reference\\modulation_candidates_20261014\\references\\mod_stanowczy_reference_pcm16.wav",
+    "output": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\user_reference\\modulation_candidates_20261014\\pocket_tests\\mod_stanowczy__story_calm.wav",
+    "line_id": "story_calm",
+    "text": "Musimy działać szybko. Sprawdźmy laboratorium."
+  },
+  {
+    "source_user_wav": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\user_reference\\incoming_modulations\\mod_stanowczy.wav",
+    "reference_clip": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\user_reference\\modulation_candidates_20261014\\references\\mod_stanowczy_reference_pcm16.wav",
+    "output": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\user_reference\\modulation_candidates_20261014\\pocket_tests\\mod_stanowczy__story_alert.wav",
+    "line_id": "story_alert",
+    "text": "Słyszycie to? Wszyscy na stanowiska!"
+  }
+]

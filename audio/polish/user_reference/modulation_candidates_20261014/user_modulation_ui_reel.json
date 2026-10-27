@@ -1,0 +1,107 @@
+[
+  {
+    "mod": "mod_stanowczy",
+    "line": "ui_loading",
+    "file": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\user_reference\\modulation_candidates_20261014\\pocket_tests\\mod_stanowczy__ui_loading.wav",
+    "start_s": 0.0,
+    "end_s": 1.44
+  },
+  {
+    "mod": "mod_stanowczy",
+    "line": "ui_options",
+    "file": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\user_reference\\modulation_candidates_20261014\\pocket_tests\\mod_stanowczy__ui_options.wav",
+    "start_s": 1.99,
+    "end_s": 3.35
+  },
+  {
+    "mod": "mod_stanowczy",
+    "line": "ui_quit",
+    "file": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\user_reference\\modulation_candidates_20261014\\pocket_tests\\mod_stanowczy__ui_quit.wav",
+    "start_s": 3.9,
+    "end_s": 7.66
+  },
+  {
+    "mod": "mod_spokoj",
+    "line": "ui_loading",
+    "file": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\user_reference\\modulation_candidates_20261014\\pocket_tests\\mod_spokoj__ui_loading.wav",
+    "start_s": 8.21,
+    "end_s": 10.13
+  },
+  {
+    "mod": "mod_spokoj",
+    "line": "ui_options",
+    "file": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\user_reference\\modulation_candidates_20261014\\pocket_tests\\mod_spokoj__ui_options.wav",
+    "start_s": 10.68,
+    "end_s": 13.0
+  },
+  {
+    "mod": "mod_spokoj",
+    "line": "ui_quit",
+    "file": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\user_reference\\modulation_candidates_20261014\\pocket_tests\\mod_spokoj__ui_quit.wav",
+    "start_s": 13.55,
+    "end_s": 17.39
+  },
+  {
+    "mod": "mod_napiety",
+    "line": "ui_loading",
+    "file": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\user_reference\\modulation_candidates_20261014\\pocket_tests\\mod_napiety__ui_loading.wav",
+    "start_s": 17.94,
+    "end_s": 19.86
+  },
+  {
+    "mod": "mod_napiety",
+    "line": "ui_options",
+    "file": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\user_reference\\modulation_candidates_20261014\\pocket_tests\\mod_napiety__ui_options.wav",
+    "start_s": 20.41,
+    "end_s": 22.25
+  },
+  {
+    "mod": "mod_napiety",
+    "line": "ui_quit",
+    "file": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\user_reference\\modulation_candidates_20261014\\pocket_tests\\mod_napiety__ui_quit.wav",
+    "start_s": 22.8,
+    "end_s": 26.4
+  },
+  {
+    "mod": "mod_m1",
+    "line": "ui_loading",
+    "file": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\user_reference\\modulation_candidates_20261014\\pocket_tests\\mod_m1__ui_loading.wav",
+    "start_s": 26.95,
+    "end_s": 28.07
+  },
+  {
+    "mod": "mod_m1",
+    "line": "ui_options",
+    "file": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\user_reference\\modulation_candidates_20261014\\pocket_tests\\mod_m1__ui_options.wav",
+    "start_s": 28.62,
+    "end_s": 30.06
+  },
+  {
+    "mod": "mod_m1",
+    "line": "ui_quit",
+    "file": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\user_reference\\modulation_candidates_20261014\\pocket_tests\\mod_m1__ui_quit.wav",
+    "start_s": 30.61,
+    "end_s": 32.93
+  },
+  {
+    "mod": "mod_m2",
+    "line": "ui_loading",
+    "file": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\user_reference\\modulation_candidates_20261014\\pocket_tests\\mod_m2__ui_loading.wav",
+    "start_s": 33.48,
+    "end_s": 34.84
+  },
+  {
+    "mod": "mod_m2",
+    "line": "ui_options",
+    "file": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\user_reference\\modulation_candidates_20261014\\pocket_tests\\mod_m2__ui_options.wav",
+    "start_s": 35.39,
+    "end_s": 36.67
+  },
+  {
+    "mod": "mod_m2",
+    "line": "ui_quit",
+    "file": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene\\audio\\polish\\user_reference\\modulation_candidates_20261014\\pocket_tests\\mod_m2__ui_quit.wav",
+    "start_s": 37.22,
+    "end_s": 39.94
+  }
+]
