@@ -1,0 +1,50 @@
+|:  -> English (International)
+|:  -> 9
+|:  -> 1
+|:  -> (Nazwa=Core.HelloWorldCommandlet,Class=Class,MetaClass=Core.
+|:  -> Unknown B┼é─ůd
+|:  -> Aborted
+|:  -> B┼é─ůd eksportowanie `~: nie mo┼╝e open plik '`~'
+|:  -> B┼é─ůd eksportowanie `~: nie mo┼╝e write plik '`~'
+|:  -> Can't find file '`~'
+|:  -> Failed to find object '`~ `~.`~'
+|:  -> Can't find file for package '`~' while loading `~
+|:  -> Can't resolve package name
+|:  -> Can't convert filename '`~' to package name
+|:  -> Package '`~' is not accessible in this sandbox
+|:  -> Package '`~' version mismatch
+|:  -> Package '`~' has been saved with engine version newer than c
+|:  -> Cannot save package '`~' as current engine version is older 
+|:  -> Cannot save package '`~' as it has only been partially loade
+|:  -> Cannot save conformed package '`~' as it is incompatible wit
+|:  -> Filename '`~' is too long; this may interfere with cooking f
+|:  -> Failed to load '`~': `~
+|:  -> Can't find '`~' in configuration file section=`~ key=`~
+|:  -> `~ is not a child class of `~
+|:  -> '`~' is not a DLL package; can't find export '`~'
+|:  -> Can't find '`~' in '`~.lib'
+|:  -> Failed loading package: `~
+|:  -> Failed to load '`~ `~.`~': `~
+|:  -> Transient object imported: `~
+|:  -> Can't save `~: Graph is linked to object in external map pac
+|:  -> Can't save `~: Graph is linked to external private object.  
+|:  -> Can't save `~: Graph is linked to object `~ in external map 
+|:  -> Can't save `~: Graph is linked to external private object `~
+|:  -> Can't import private object `~ `~
+|:  -> `~ `~ not found for creation
+|:  -> Can't find `~ in file '`~'
+|:  -> B┼é─ůd zapisywanie plik '`~': `~
+|:  -> B┼é─ůd zapisywanie '`~'
+|:  -> Object is not packaged: `~ `~
+|:  -> Object `~ `~ created in `~ instead of `~
+|:  -> Can't create object `~: class `~ is abstract
+|:  -> Can't replace `~ with `~
+|:  -> Attempting to replace an object that hasn't been fully loade
+|:  -> Can't replace obiekty which need to be post-loaded while sti
+|:  -> Can't find file '`~' for import
+|:  -> Failed to read file '`~' for import
+|:  -> B┼é─ůd pozycjonowanie plik
+|:  -> B┼é─ůd otwieranie plik '`~' (`~).
+|:  -> B┼é─ůd zapisywanie to plik
+|:  -> Read beyond end of file
+|:  -> The file `~ is write protected; settings cannot be saved

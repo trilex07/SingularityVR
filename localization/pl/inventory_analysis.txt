@@ -1,0 +1,90 @@
+
+=== Category: hud ===
+  [none] Progress|Loading: Loading file: `~... -> Wczytywanie file: `~...
+  [none] Tips|Tip_00010: Got a floating object you want on the ground? Select it and press the "end" key  -> Got a floating object you want on the ground? Wybierz it and press the "end" key
+  [none] Tips|Tip_00013: Making rows of duplicate objects? Select an actor and hold "Alt" before dragging -> Making rows of duplicate obiekty? Wybierz an actor and hold "Alt" before draggin
+  [none] Tips|Tip_00021: I wish this actor lived in another sublevel! Just select the actor(s) in questio -> I wish this actor lived in another sublevel! Just select the actor(s) in questio
+  [none] Tips|Tip_00022: Want a brush already in your level to become your builder brush? Select the brus -> Want a brush already in your level to become your builder brush? Wybierz the bru
+  [none] Tips|Tip_00024: Want to sort your sublevels in the level browser?  Select a level and use the Up -> Want to sort your sublevels in the level browser?  Wybierz a level and use the U
+  [none] Tips|Tip_00026: Box select objects by holding Ctrl+Shift when you left-drag your mouse, do the s -> Box select obiekty by holding Ctrl+Shift when you left-drag your mouse, do the s
+  [narrator_user] Progress|Loading: Loading -> Wczytywanie
+  [narrator_user] GameMessage|OvertimeMessage: Score tied at the end of regulation. Sudden Death Overtime!!! -> Wynik remisowy po regulaminowym czasie. Nag┼éa ┼Ťmier─ç!!!
+  [none] UnrealEd|SplashScreen_InitialStartupProgress: Loading... -> Wczytywanie...
+
+=== Category: item ===
+  [none] AnalyzeReferencedObjectCommandlet|HelpParamDescriptions[0]: Load all child classes of the given actor. For example, if you have Weapon as pa -> Za┼éaduj wszystkie klasy potomne danego aktora. Na przyk┼éad, je┼Ťli masz Bro┼ä 
+  [none] Weapon|ItemName: Weapon -> Bro┼ä
+  [none] UnrealEd|BlockWeapons: Block Weapons -> Block Bro┼äs
+  [narrator_user] MPLoadout|Weapon: Weapon -> Bro┼ä
+  [narrator_user] MPLoadout|PrimaryWeapon: Primary Weapon -> Bro┼ä g┼é├│wna
+  [narrator_user] MPLoadout|SecondaryWeapon: Secondary Weapon -> Bro┼ä dodatkowa
+  [narrator_user] CommonText|ARGrenadeLauncher: Dethex Launcher -> Wyrzutnia Dethex
+  [narrator_user] WeaponUpgrade|Unknown: Unknown -> Nieznany
+  [narrator_user] WeaponUpgrade|Accuracy: Accuracy -> Celno┼Ť─ç
+  [narrator_user] WeaponUpgrade|ClipSize: Clip Size -> Pojemno┼Ť─ç magazynka
+
+=== Category: objective ===
+  [narrator_user] General|CVSTDMObjectives: - Eliminate the opposing species.
+- Win goes to the team with highest number of  -> - Wyeliminuj wrogi gatunek.
+- Wygrywa dru┼╝yna z najwi─Öksz─ů liczb─ů zab├│jstw.
+  [narrator_user] General|LevelIntroChopper: Katorga, Sea of Okhostk
+USMC Reconaissance Mission
+Codename:  "Spartan" -> Katorga, Morze Ochockie
+Misja rozpoznawcza USMC
+Kryptonim:  "Spartan"
+  [narrator_user] GameOver|RestartFromLastCheckpoint: Restart from last Checkpoint -> Uruchom ponownie od ostatniego punktu kontrolnego
+  [narrator_user] TCR|DataLossCheckpointDemo: All progress since last checkpoint will be lost. Are you sure you want to contin -> Ca┼éy post─Öp od ostatniego punktu kontrolnego zostanie utracony. Czy na pewno c
+  [narrator_user] TCR|CheckpointReached: Checkpoint Reached! -> Osi─ůgni─Öto punkt kontrolny!
+  [narrator_user] TCR|CheckpointReachedPC: Checkpoint Reached! Saving... -> Osi─ůgni─Öto punkt kontrolny! Zapisywanie...
+  [narrator_user] Achievements|complete_village_DESC: Completed the Workers' District Mission -> Uko┼äczono Misj─Ö Dzielnicy Robotniczej
+  [narrator_user] Achievements|complete_researchlabs_DESC: Completed the Research Facility Mission -> Completed the O┼Ťrodek badawczy Mission
+  [narrator_user] Achievements|complete_railtrench_DESC: Completed the Rail Line Mission -> Uko┼äczono Misj─Ö Linii Kolejowej
+  [narrator_user] Achievements|complete_freighter_DESC: Completed the Central Docks Mission -> Uko┼äczono Misj─Ö Centralnych Dock├│w
+
+=== Category: other ===
+  [none] Public|Object: (Name=Core.HelloWorldCommandlet,Class=Class,MetaClass=Core.Commandlet) -> (Nazwa=Core.HelloWorldCommandlet,Class=Class,MetaClass=Core.Commandlet)
+  [none] Errors|Unknown: Unknown Error -> Unknown B┼é─ůd
+  [none] Errors|ExportOpen: Error exporting `~: couldn't open file '`~' -> B┼é─ůd eksportowanie `~: nie mo┼╝e open plik '`~'
+  [none] Errors|ExportWrite: Error exporting `~: couldn't write file '`~' -> B┼é─ůd eksportowanie `~: nie mo┼╝e write plik '`~'
+  [none] Errors|FailedSaveFile: Error saving file '`~': `~ -> B┼é─ůd zapisywanie plik '`~': `~
+  [none] Errors|SaveWarning: Error saving '`~' -> B┼é─ůd zapisywanie '`~'
+  [none] Errors|ReplaceNoPostLoad_f: Can't replace objects which need to be post-loaded while still de-serializing ob -> Can't replace obiekty which need to be post-loaded while still de-serializing ob
+  [none] Errors|SeekFailed: Error seeking file -> B┼é─ůd pozycjonowanie plik
+  [none] Errors|OpenFailed: Error opening file '`~' (`~). -> B┼é─ůd otwieranie plik '`~' (`~).
+  [none] Errors|WriteFailed: Error writing to file -> B┼é─ůd zapisywanie to plik
+
+=== Category: subtitle ===
+  [narrator_user] Subtitles|Loading: loading... -> wczytywanie...
+  [narrator_user] Subtitles|Tip_001: Use your TMD to revert cover in combat. You'll live longer that way! -> U┼╝yj TMD, aby odm┼éadza─ç os┼éony podczas walki. Dzi─Öki temu d┼éu┼╝ej prze┼╝yj
+  [narrator_user] Subtitles|Tip_002: Watch for changes in the reticle to tell how you can affect an item. -> Obserwuj zmiany celownika, aby wiedzie─ç, jak mo┼╝esz wp┼éyn─ů─ç na przedmiot.
+  [narrator_user] Subtitles|Tip_003: Use the TMD's Time Stasis function to grab enemy grenades and rockets. -> U┼╝yj funkcji zamro┼╝enia czasu TMD, aby chwyta─ç granaty i rakiety wrog├│w.
+  [narrator_user] Subtitles|Tip_004: With the TMD's Time Stasis function you can use a held object as a shield. -> Dzi─Öki zamro┼╝eniu czasu TMD mo┼╝esz u┼╝y─ç trzymanego przedmiotu jako tarczy.
+  [narrator_user] Subtitles|Tip_005: Be sure to give your enemies a close up look at the TMD's impulse function. -> Poka┼╝ wrogom z bliska dzia┼éanie funkcji Impulsu TMD.
+  [narrator_user] Subtitles|Tip_006: The TMD's impulse function allows you to push back flying objects like rockets. -> Funkcja Impulsu TMD pozwala odpycha─ç lec─ůce obiekty, takie jak rakiety.
+  [narrator_user] Subtitles|Tip_007: You can sprint for short distances. -> Mo┼╝esz sprintowa─ç tylko na kr├│tkich dystansach.
+  [narrator_user] Subtitles|Tip_008: Crouching makes you harder to hit by enemy fire. -> Kucanie utrudnia trafienie ci─Ö ogniem wroga.
+  [narrator_user] Subtitles|Tip_009: E99 metal contains purified E99 which gives it unique properties. -> Metal E99 zawiera oczyszczone E99, kt├│re nadaje mu wyj─ůtkowe w┼éa┼Ťciwo┼Ťci.
+
+=== Category: tutorial ===
+  [narrator_user] TMD|Impulse: Impulse -> Impuls
+  [narrator_user] TMDUpgrade|BurstImpulse: Burst Impulse -> Burst Impuls
+  [narrator_user] TMDUpgrade|UberImpulse: Press [impulse] to Uber Impulse -> Naci┼Ťnij [impulse], aby uber Impuls
+  [narrator_user] ActionVolume|TMDpush: [impulse] Activate Super Impulse -> [impulse] Activate Super Impuls
+  [narrator_user] ActionVolume|TMDslomo: Press [impulse] and [age] at the same time to toggle Slo-mo -> Naci┼Ťnij [impulse] i [age] jednocze┼Ťnie, aby w┼é─ůczy─ç spowolnienie czasu.
+  [narrator_user] Pickup|impulsePickUp: Pick up the Impulse upgrade. -> Pick up the Impuls upgrade.
+  [narrator_user] Pickup|ImpulseUpgrade: TMD upgraded! You've gained the Impulse ability! -> TMD upgraded! You've gained the Impuls ability!
+  [narrator_user] Tutorial|Continue: [use] Continue -> [use] Kontynuuj
+  [narrator_user] Tutorial|aging: Press [age] to revert or age objects -> Naci┼Ťnij [age], aby odm┼éodzi─ç lub postarzy─ç obiekty
+  [narrator_user] Tutorial|agesoldiers: Press [age] to age soldiers -> Naci┼Ťnij [age], aby postarzy─ç ┼╝o┼énierzy
+
+=== Category: ui ===
+  [none] Tips|Tip_00009: Always swapping between browser tabs? Float it! Select a frequently used browser -> Always swapping between browser tabs? Float it! Wybierz a frequently used browse
+  [none] ExampleGameMenu|RespawnButtonText: Respawn Player -> Respawn Gracz
+  [none] ExampleGameMenu|ReloadButtonText: Reload Map -> Prze┼éaduj Map
+  [none] TestMenuStrings|PlayerIndexText: The propagated PlayerIndex is: <SceneData:PlayerIndex>. -> The propagowany indeks gracza to: <SceneData:PlayerIndex>.
+  [none] IDDIALOG_ConfigPageFirstTime|IDC_Prompt: The Unreal Engine is starting up for the first time.  If you experience any prob -> Silnik Unreal Engine uruchamia si─Ö po raz pierwszy.  Je┼Ťli wyst─ůpi─ů problemy
+  [none] IDDIALOG_ConfigPageSafeMode|IDC_Web: Visit our Web site for troubleshooting tips -> Odwied┼║ nasz─ů stron─Ö internetow─ů w poszukiwaniu porad
+  [none] General|AdvancedOptions: Advanced Options -> Advanced Opcje
+  [none] UnrealEd|PropertyWindowMenu: Property Window Options -> Property OKno Options
+  [none] UnrealEd|Options: Options -> Opcje
+  [none] UnrealEd|PreviewOptions: Preview Options -> Preview Opcje
