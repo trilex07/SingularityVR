@@ -1,0 +1,106 @@
+﻿{
+    "Action":  "Install",
+    "Timestamp":  "2026-10-12T12:01:57.6602817+02:00",
+    "GameBin":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries",
+    "BackupPath":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-hands-only\\deployment\\install-backups\\20261012-120157",
+    "Pe32":  true,
+    "DllOnly":  true,
+    "DInput8Pe32":  null,
+    "Installed":  [
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-hands-only\\spikes\\view_matrix\\d3d9.dll",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\d3d9.dll",
+                          "Sha256":  "2FE5011C20DFEAAEDFFFFE58CD39E92A9570867F344649B00C0038AD97B39A47"
+                      }
+                  ],
+    "TextureVariant":  "skipped",
+    "TextureCount":  0,
+    "PostInstall":  {
+                        "PolishLanguage":  1,
+                        "TextureInjector":  {
+                                                "Action":  "Disable",
+                                                "Changed":  true,
+                                                "DisabledPath":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\dinput8.dll.disabled-by-vr"
+                                            }
+                    },
+    "PolishAssets":  {
+                         "PolishLanguage":  1,
+                         "Manifests":  {
+                                           "polish_voice.jsonl":  {
+                                                                      "Path":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\vr-assets\\localization\\pl\\polish_voice.jsonl",
+                                                                      "Exists":  true,
+                                                                      "Sha256":  "04D49F5134EB1132FC6E5673441E0BDEF4C2814CABF277EC5AD1BCE946C9C133",
+                                                                      "Size":  403858
+                                                                  },
+                                           "polish_text.jsonl":  {
+                                                                     "Path":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\vr-assets\\localization\\pl\\polish_text.jsonl",
+                                                                     "Exists":  true,
+                                                                     "Sha256":  "D70BED5D0EE7D214CB133E2AB712F021401FA465FEA78EE4A73110303298FDBB",
+                                                                     "Size":  2969218
+                                                                 },
+                                           "polish_story_voice.jsonl":  {
+                                                                            "Path":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\vr-assets\\localization\\pl\\polish_story_voice.jsonl",
+                                                                            "Exists":  true,
+                                                                            "Sha256":  "B101467491CC52290DC0B110B3F39809CBB79173B7414079A42D91B25991DAD4",
+                                                                            "Size":  506434
+                                                                        }
+                                       },
+                         "PolishWavCount":  1886,
+                         "CoalescedInt":  {
+                                              "Path":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\RvGame\\CookedPC\\Coalesced_INT.bin",
+                                              "Exists":  true,
+                                              "Size":  1524032,
+                                              "Sha256":  "5FE12BC6C1472A3D8B9329A9D33231B1070F4B32050AD48D7AC4B4BACACB5C34",
+                                              "Pe32":  null,
+                                              "Machine":  null,
+                                              "OptionalMagic":  null
+                                          }
+                     },
+    "FinalState":  [
+                       {
+                           "Path":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\d3d9.dll",
+                           "Exists":  true,
+                           "Size":  663040,
+                           "Sha256":  "2FE5011C20DFEAAEDFFFFE58CD39E92A9570867F344649B00C0038AD97B39A47",
+                           "Pe32":  true,
+                           "Machine":  "0x014C",
+                           "OptionalMagic":  "0x010B"
+                       },
+                       {
+                           "Path":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\SingularityVR.ini",
+                           "Exists":  true,
+                           "Size":  11936,
+                           "Sha256":  "E0F8DBB62C5619A7BEE446FE88F6F5BE6AEFF0A011FAF6F7F1036BB155E0C8B5",
+                           "Pe32":  null,
+                           "Machine":  null,
+                           "OptionalMagic":  null
+                       },
+                       {
+                           "Path":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\dinput8.dll",
+                           "Exists":  false,
+                           "Size":  null,
+                           "Sha256":  null,
+                           "Pe32":  null,
+                           "Machine":  null,
+                           "OptionalMagic":  null
+                       },
+                       {
+                           "Path":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\dinput8_orig.dll",
+                           "Exists":  true,
+                           "Size":  176640,
+                           "Sha256":  "2A746CCF3922AECCED0387F3C6E21E55C6DF786DF8164C482F2A2E6165EDD395",
+                           "Pe32":  true,
+                           "Machine":  "0x014C",
+                           "OptionalMagic":  "0x010B"
+                       },
+                       {
+                           "Path":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture_override.ini",
+                           "Exists":  true,
+                           "Size":  1164,
+                           "Sha256":  "2AE24B9C322988B28FDD103362D5D9121C54956009512123D12C0DFA01929D4B",
+                           "Pe32":  null,
+                           "Machine":  null,
+                           "OptionalMagic":  null
+                       }
+                   ]
+}

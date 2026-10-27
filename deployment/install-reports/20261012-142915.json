@@ -1,0 +1,65 @@
+﻿{
+    "Action":  "Install",
+    "Timestamp":  "2026-10-12T14:29:15.9375111+02:00",
+    "GameBin":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries",
+    "BackupPath":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-hands-only\\deployment\\install-backups\\20261012-142915",
+    "Pe32":  true,
+    "DllOnly":  true,
+    "DInput8Pe32":  null,
+    "Installed":  [
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-hands-only\\deployment\\candidate-input-jump-diag-20261012\\d3d9.dll",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\d3d9.dll",
+                          "Sha256":  "C9DDE4545FF0CB2AFC1F4638EC8CF01E3E7DDC0F2946B6C9F06F7F0FEB752AA9"
+                      }
+                  ],
+    "TextureVariant":  "skipped",
+    "TextureCount":  0,
+    "FinalState":  [
+                       {
+                           "Path":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\d3d9.dll",
+                           "Exists":  true,
+                           "Size":  663040,
+                           "Sha256":  "C9DDE4545FF0CB2AFC1F4638EC8CF01E3E7DDC0F2946B6C9F06F7F0FEB752AA9",
+                           "Pe32":  true,
+                           "Machine":  "0x014C",
+                           "OptionalMagic":  "0x010B"
+                       },
+                       {
+                           "Path":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\SingularityVR.ini",
+                           "Exists":  true,
+                           "Size":  13225,
+                           "Sha256":  "879F61170767CE4C8EFA4387008AF154F2650EE5BE4667F72DD0EDB894F7BE2A",
+                           "Pe32":  null,
+                           "Machine":  null,
+                           "OptionalMagic":  null
+                       },
+                       {
+                           "Path":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\dinput8.dll",
+                           "Exists":  false,
+                           "Size":  null,
+                           "Sha256":  null,
+                           "Pe32":  null,
+                           "Machine":  null,
+                           "OptionalMagic":  null
+                       },
+                       {
+                           "Path":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\dinput8_orig.dll",
+                           "Exists":  true,
+                           "Size":  176640,
+                           "Sha256":  "2A746CCF3922AECCED0387F3C6E21E55C6DF786DF8164C482F2A2E6165EDD395",
+                           "Pe32":  true,
+                           "Machine":  "0x014C",
+                           "OptionalMagic":  "0x010B"
+                       },
+                       {
+                           "Path":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture_override.ini",
+                           "Exists":  true,
+                           "Size":  1164,
+                           "Sha256":  "2AE24B9C322988B28FDD103362D5D9121C54956009512123D12C0DFA01929D4B",
+                           "Pe32":  null,
+                           "Machine":  null,
+                           "OptionalMagic":  null
+                       }
+                   ]
+}

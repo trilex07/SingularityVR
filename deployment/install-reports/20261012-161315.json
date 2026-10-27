@@ -1,0 +1,620 @@
+﻿{
+    "Action":  "Install",
+    "Timestamp":  "2026-10-12T16:13:15.2504135+02:00",
+    "GameBin":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries",
+    "BackupPath":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-hands-only\\deployment\\install-backups\\20261012-161312",
+    "Pe32":  true,
+    "DllOnly":  false,
+    "DInput8Pe32":  true,
+    "Installed":  [
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-hands-only\\deployment\\candidate-stereo-decal-narrow-20261012\\d3d9.dll",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\d3d9.dll",
+                          "Sha256":  "F8D585CD9FB2C72BA6837F4327C173D850679824F531306FFF46EA77A3AF0817"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-hands-only\\deployment\\candidate-stereo-decal-narrow-20261012\\SingularityVR.ini",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\SingularityVR.ini",
+                          "Sha256":  "BEDC58E844C873831C70E5F89326D05807EF0DA64C2AC58495D5429EBEA40637"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets\\asset-tools\\texture-injector\\dinput8.dll",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\dinput8.dll",
+                          "Sha256":  "AAA07005F4FF658C4A71CC30EA258E469DAF250C77BFE447011FFD650379E4F7"
+                      },
+                      {
+                          "Source":  "C:\\WINDOWS\\SysWOW64\\dinput8.dll",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\dinput8_orig.dll",
+                          "Sha256":  "2A746CCF3922AECCED0387F3C6E21E55C6DF786DF8164C482F2A2E6165EDD395"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets\\asset-tools\\texture-injector\\texture_override.ini",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture_override.ini",
+                          "Sha256":  "146140CD8DAB8867CBAA15BD13BC983EE90E30EE73E80A6325E83FE2962E5093"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\upscaled\\360_A__B_ibp.dds",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture-override\\360_A.dds",
+                          "Sha256":  "7C13BC3ED200A14FF4AA389CB240DF08D6DBAB468335A4A3D6CB058FE26303C7"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\upscaled\\360_Back__B_ibp.dds",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture-override\\360_Back.dds",
+                          "Sha256":  "E589D0C8142E6A8EBF0DCF552C0674B0B5783F2657B4BC35FBB96D367FD50D0E"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\upscaled\\360_B__B_ibp.dds",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture-override\\360_B.dds",
+                          "Sha256":  "AA4957FB4B2DCA6C22DA257CB443CA26A3EB86D4C28560220CAA41DFC8D5A007"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\upscaled\\360_DPAD_D__B_ibp.dds",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture-override\\360_DPAD_D.dds",
+                          "Sha256":  "39E3A27C8C6D6BEF55C645D7E88E683379B5DAFB089DFD84622599A2FAA4266B"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\upscaled\\360_DPAD_L__B_ibp.dds",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture-override\\360_DPAD_L.dds",
+                          "Sha256":  "CB8C3E478D249F5F3D379F0B983B7FB5C11F4EC301FB749C8E44A034B2A3F71E"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\upscaled\\360_DPAD_R__B_ibp.dds",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture-override\\360_DPAD_R.dds",
+                          "Sha256":  "1DBCAFDB5931031BF059187842A43C8A671E0DAEA0B9C7413239B2A3FD3FA04B"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\upscaled\\360_DPAD_U__B_ibp.dds",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture-override\\360_DPAD_U.dds",
+                          "Sha256":  "7364E8E6A48465E0F485095182F934B8F9F785DE3500071A6898B51743AFBEE3"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\upscaled\\360_DPad__B_ibp.dds",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture-override\\360_DPad.dds",
+                          "Sha256":  "B7FF61D14F48F0A492764AFD742CFAF03BBE2A8B92AC10282A8821D7C79B63A8"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\upscaled\\360_L3__B_ibp.dds",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture-override\\360_L3.dds",
+                          "Sha256":  "609AD84BA20E94C56FFDCB3F947A2383D7839D6AABE540102585D4AFD0514E1A"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\upscaled\\360_LB__B_ibp.dds",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture-override\\360_LB.dds",
+                          "Sha256":  "AA73407197343101FC104D63AAE97CE61A8F98AAEA60F3DF47300C124FCD8C65"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\upscaled\\360_LS__B_ibp.dds",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture-override\\360_LS.dds",
+                          "Sha256":  "EF6CBCC32810DC7A47C528D4CF6247A8A560C294B64932550E90D0968BC85C8A"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\upscaled\\360_LT__B_ibp.dds",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture-override\\360_LT.dds",
+                          "Sha256":  "3646CD9A85AB44AF190A405D82A194E0EC11E928BF8AC4DD1EE799F53E1FCB7F"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\upscaled\\360_R3__B_ibp.dds",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture-override\\360_R3.dds",
+                          "Sha256":  "01589971B96517079094EC158A15167D4C160458D3322502D40EE7DCA3631F67"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\upscaled\\360_RB__B_ibp.dds",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture-override\\360_RB.dds",
+                          "Sha256":  "89063D258CCED80146D9AF6B2AB34F66EB75F4789BEBCE0A54853F74BAE37E2F"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\upscaled\\360_RS__B_ibp.dds",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture-override\\360_RS.dds",
+                          "Sha256":  "75EED4F87ED525E1EA1A19EAC975C90E22017E17DC1C60C4039AEBB5FC847A49"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\upscaled\\360_RT__B_ibp.dds",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture-override\\360_RT.dds",
+                          "Sha256":  "31DFFB1DDD96401B58EA3906CCC20A2B9DD50A16EF25BFCF9600AB1120B19029"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\upscaled\\360_Start__B_ibp.dds",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture-override\\360_Start.dds",
+                          "Sha256":  "C4969D58FCFBF1BB696247C09509A948576FE05B85AEC2C8ED841EA3D54D9CCB"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\upscaled\\360_X__B_ibp.dds",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture-override\\360_X.dds",
+                          "Sha256":  "F0DEF1D936E4DD6B6B10B3F28BDCEE0C4D8F7D6813634ED20640507492536174"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\upscaled\\360_Y__B_ibp.dds",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture-override\\360_Y.dds",
+                          "Sha256":  "7234BA034BE5BE8E152A1A56489F5FA7D94654FCFBE15A5146AC35D79ABAAEB4"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\upscaled\\AR_E99Rifle_alt_d__B_ibp.dds",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture-override\\AR_E99Rifle_alt_d.dds",
+                          "Sha256":  "47E46B60646D081B1247218A5C8D89DB35B5CEBF389045A01EB37E9DE396E9A0"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\upscaled\\AR_E99Rifle_n__B_ibp.dds",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture-override\\AR_E99Rifle_n.dds",
+                          "Sha256":  "9CF49F282AFB9EC43A8E1CD3F780800788F81F6F095B4EDE133E5418830D2CFF"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\upscaled\\ar_gatling_gun_d__B_ibp.dds",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture-override\\ar_gatling_gun_d.dds",
+                          "Sha256":  "EF3466B9FCB024FFFCA640BCB5AB43C9AF46DE3E4FF913CAB4E5D5B21463979A"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\upscaled\\ar_gatling_gun_n__B_ibp.dds",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture-override\\ar_gatling_gun_n.dds",
+                          "Sha256":  "244CF49AD12A0A2C63B4EA253157B1E635A445417151A70CFA670F640F84D3EE"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\upscaled\\AR_shotgun_d__B_ibp.dds",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture-override\\AR_shotgun_d.dds",
+                          "Sha256":  "8D1865053B48F8A4ED83B2FFC374345A023884816CED3FAD4E0E3F559AC9B6A0"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\upscaled\\AR_shotgun_e__B_ibp.dds",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture-override\\AR_shotgun_e.dds",
+                          "Sha256":  "47B8CB7D0492D30B756C3A5DED69BE95EC182ED7E4FF94495054D451E4F6A9A7"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\upscaled\\AR_shotgun_n__B_ibp.dds",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture-override\\AR_shotgun_n.dds",
+                          "Sha256":  "AE29C0397023ADBBC127F3D7E14B35D9B7341D2D806C0298B1108CB7ACC4B7A3"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\upscaled\\ar_sniper_rifle_n__B_ibp.dds",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture-override\\ar_sniper_rifle_n.dds",
+                          "Sha256":  "2CA690C226A2C5CFF2E3948B69C1390B743A541FC3D41E0912B3E37AC9ADF7A9"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\upscaled\\brightFlash_01__B_ibp.dds",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture-override\\brightFlash_01.dds",
+                          "Sha256":  "1EBAE38DBB025B58D69D98E0531A155DFAF3D115A5A2BE2A8CBA4A12A70A73B9"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\upscaled\\bsplat3_d__B_ibp.dds",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture-override\\bsplat3_d.dds",
+                          "Sha256":  "1F1BBB428A6FA31FD975A83A38412944F934276B60EA8562A8D5B213A9AEAA78"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\upscaled\\bulletImpactFlesh_d__B_ibp.dds",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture-override\\bulletImpactFlesh_d.dds",
+                          "Sha256":  "457A447442DDDEEE8CA57949CF864DEE2FDA13E5D8D4F43E4AEAE2DA78B304D4"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\upscaled\\bulletImpactFlesh_n__B_ibp.dds",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture-override\\bulletImpactFlesh_n.dds",
+                          "Sha256":  "7DD490ADF5CF09A7D43B8449ABA4933B140AD9FE3D112A833D7FA7C026BCA66A"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\upscaled\\door_blastdoorN_d__B_ibp.dds",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture-override\\door_blastdoorN_d.dds",
+                          "Sha256":  "C98259526D7B0E80D018BD4EBB82C559798BDFAACC9013E0405870C150625B49"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\upscaled\\door_blastdoorN_n__B_ibp.dds",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture-override\\door_blastdoorN_n.dds",
+                          "Sha256":  "106A5883FD691A898B548B7D8B9105CAB226E53DC56745478C5A3B6960F63D37"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\upscaled\\door_blastdoorN_s__B_ibp.dds",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture-override\\door_blastdoorN_s.dds",
+                          "Sha256":  "5E2F2873D8E2A086F6C5084CA3D855BC167AD4D90A8F995AAF14048C4F5F8551"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\upscaled\\door_rollingT_d__B_ibp.dds",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture-override\\door_rollingT_d.dds",
+                          "Sha256":  "9C0DBBC09C74EA3FE1F99D38C186C1111B9CCF71A4B43D1DD68A4531498D9035"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\upscaled\\door_rollingT_n__B_ibp.dds",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture-override\\door_rollingT_n.dds",
+                          "Sha256":  "51C4633E99C2F6C2ECC77A2E20F408D845425137FECB86F32EA906F6EA1A22E6"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\upscaled\\door_rollingT_s__B_ibp.dds",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture-override\\door_rollingT_s.dds",
+                          "Sha256":  "5F5CFC34637B6A4D1534000DEDF08B1E97D17F2456DA770D50C38A463160E56F"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\upscaled\\elite_beam_n__B_ibp.dds",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture-override\\elite_beam_n.dds",
+                          "Sha256":  "4921F7C5896E4156C8C1B6BED320276483968E2982517543CFB3BDDB5F2A28B1"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\upscaled\\env_00adab7c__B_ibp.dds",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture-override\\env_00adab7c.dds",
+                          "Sha256":  "8EB0A50A7429B70E75A2CBC27D7E0E69DC3C78162FBB0755C8968094B663C1F3"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\upscaled\\env_03b581da__B_ibp.dds",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture-override\\env_03b581da.dds",
+                          "Sha256":  "18247C4155ECDD8ABCC6E07DE32614C6E041380CCF22F78BCD7745925CB057A6"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\upscaled\\env_0b27b3ce__B_ibp.dds",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture-override\\env_0b27b3ce.dds",
+                          "Sha256":  "5F9284AE25799331943349B826659694A24C723F63C7B8C67D4F71A69A879BA0"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\upscaled\\env_0d582fd6__B_ibp.dds",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture-override\\env_0d582fd6.dds",
+                          "Sha256":  "229854447BCCB729C6BBD0204BB00265253DA495B197ABC04EB7E4F49560C62B"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\upscaled\\env_0e7a4cce__B_ibp.dds",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture-override\\env_0e7a4cce.dds",
+                          "Sha256":  "4565FE703A418F47A05D6F58AEC82F652BD716533359A2151B552FB309E3FF84"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\upscaled\\env_1a86a04b__B_ibp.dds",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture-override\\env_1a86a04b.dds",
+                          "Sha256":  "4CD8BBB731E6D00DB3C3BF1781A86BBA421A7FFF7D873E897A428B7B17527F39"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\upscaled\\env_1f161de7__B_ibp.dds",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture-override\\env_1f161de7.dds",
+                          "Sha256":  "D72CE11A86438E20DC2372E8960DAE9C35C739C9977B35B58C305ABA06BBA278"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\upscaled\\env_2177e137__B_ibp.dds",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture-override\\env_2177e137.dds",
+                          "Sha256":  "05F1A18D59065379809727A1335623FD411358471AB6CAF1344F3D2662011787"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\upscaled\\env_23077af2__B_ibp.dds",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture-override\\env_23077af2.dds",
+                          "Sha256":  "C70CD609BF8D00D9CB2EAB0748A569525FF441811070E6D5002B3E458BB10D0E"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\upscaled\\env_252c3df4__B_ibp.dds",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture-override\\env_252c3df4.dds",
+                          "Sha256":  "CEFCB2F8360DB1B463D1C86774278B552B4C0ED3DEEB3A4155407055EA637D55"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\upscaled\\env_2f09c1bc__B_ibp.dds",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture-override\\env_2f09c1bc.dds",
+                          "Sha256":  "C9601A8CBE8A14603C07315290AD607DF42597A315F1CE6FCADEACD6E61289AB"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\upscaled\\env_3657a320__B_ibp.dds",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture-override\\env_3657a320.dds",
+                          "Sha256":  "1CA69963D918E91949B8E62143B6B5826F4223638E3F4F765BCE617CDFAF5481"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\upscaled\\env_37469b7a__B_ibp.dds",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture-override\\env_37469b7a.dds",
+                          "Sha256":  "C5F867108CA7BB38C6B28C8D89A0E0019DDD68F5438D2A5193AC66E03DBA8F06"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\upscaled\\env_4741d8cd__B_ibp.dds",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture-override\\env_4741d8cd.dds",
+                          "Sha256":  "232C18F07C81AFC0FAD2F8DF0F99043E42CB11B3444EF47BB28120CEC5E0BCB1"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\upscaled\\env_5bca8499__B_ibp.dds",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture-override\\env_5bca8499.dds",
+                          "Sha256":  "8E327C57698D3E3EB5754322058DDC3BCF28AE01EF21EA15C19A5137448AC183"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\upscaled\\env_6201ffb9__B_ibp.dds",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture-override\\env_6201ffb9.dds",
+                          "Sha256":  "FA9807DBD16E12A09A054AB35FC01F950AC58750000AD8EB927BA66744A7E67A"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\upscaled\\env_63b3ec8d__B_ibp.dds",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture-override\\env_63b3ec8d.dds",
+                          "Sha256":  "8AF2CA0A4904D29B3BC8FF8BDD96F194A3BF5C897E136C4CD09BC667C0DE1EF0"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\upscaled\\env_6489c88e__B_ibp.dds",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture-override\\env_6489c88e.dds",
+                          "Sha256":  "226E19F11C9458F6289BD60B200776C4741CAEE78048E7B01E53633B7C7BB6EC"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\upscaled\\env_76306a2d__B_ibp.dds",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture-override\\env_76306a2d.dds",
+                          "Sha256":  "C2A885C3D973B95FD1F1F2C93E467321C4AB09E09204655D27C1B77DA7D45D8E"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\upscaled\\env_783d13f7__B_ibp.dds",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture-override\\env_783d13f7.dds",
+                          "Sha256":  "3A62F98B94266EB637CE2DCFEB655BF76697ED3700D8E85D01B5C284BDBA515B"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\upscaled\\env_7d21f673__B_ibp.dds",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture-override\\env_7d21f673.dds",
+                          "Sha256":  "51F46569D5A8300C05BFDBF2D1506F170C0C59D158D5E69BD5774A68EBC1E97E"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\upscaled\\env_bd9cf530__B_ibp.dds",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture-override\\env_bd9cf530.dds",
+                          "Sha256":  "4DCAE522FCADA372B46E55B8DE5B3DF56A63DFF87CAB285F9A7664ED825C5456"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\upscaled\\env_d3287886__B_ibp.dds",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture-override\\env_d3287886.dds",
+                          "Sha256":  "DEBA7C4998276754BB9D250C658FC7B2B5F56D3C8A7AEF8D6BDD9FD03ED0908F"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\upscaled\\env_d83b3c3a__B_ibp.dds",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture-override\\env_d83b3c3a.dds",
+                          "Sha256":  "19C4D6CDF1076352BFFD927D2C9CC3039247C3AA655466D941F38E0960587A38"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\upscaled\\env_dc94648c__B_ibp.dds",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture-override\\env_dc94648c.dds",
+                          "Sha256":  "8B6105302481A488BD4740327069F69A6EA08805EF2CB32BAE5E1090D7DD455C"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\upscaled\\env_door_a_d__B_ibp.dds",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture-override\\env_door_a_d.dds",
+                          "Sha256":  "5309B0692A4C8AB316C6F72A3A0A08FE82ACE9832347733BCE94ED7F8683080B"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\upscaled\\env_door_a_n__B_ibp.dds",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture-override\\env_door_a_n.dds",
+                          "Sha256":  "724C7831DFB9E713B7ECD9935F124667710D9B3508BF6BCE28A6B4161B694488"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\upscaled\\env_door_b_d__B_ibp.dds",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture-override\\env_door_b_d.dds",
+                          "Sha256":  "6ED841DF105DFEE015D83B488DA392E502C299B04330C09D019B6CF1DB3F7723"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\upscaled\\env_door_b_n__B_ibp.dds",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture-override\\env_door_b_n.dds",
+                          "Sha256":  "8B551D584FBC63AAAC864A74CDD7D14C3FE1056491EAFD28DE084F45F056784F"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\upscaled\\env_e00a5e0e__B_ibp.dds",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture-override\\env_e00a5e0e.dds",
+                          "Sha256":  "EB55AE871F44373B484B95D9934CEF85E2B0A73923EF6C7139532D22F47DE605"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\upscaled\\env_e1062625__B_ibp.dds",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture-override\\env_e1062625.dds",
+                          "Sha256":  "1301875FF5D9505444EE11672142951833CD3679F1DB03446EA20812DB83AFE9"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\upscaled\\env_e1390108__B_ibp.dds",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture-override\\env_e1390108.dds",
+                          "Sha256":  "5C9C976D1488597F44FA987285D82695EA8B9603FF031D28B46F42BBAF65C1F9"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\upscaled\\env_e70c80ab__B_ibp.dds",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture-override\\env_e70c80ab.dds",
+                          "Sha256":  "DF63F25E20352FD05E8FF955739FCF69A66B1DA5231D6F9326C999621CDC0B28"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\upscaled\\env_e8a7a177__B_ibp.dds",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture-override\\env_e8a7a177.dds",
+                          "Sha256":  "9FD611BA95EA010E6E7BA5C54691A5488F1C6C2FEF849C6B31493E3962D97806"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\upscaled\\env_eb3e6425__B_ibp.dds",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture-override\\env_eb3e6425.dds",
+                          "Sha256":  "439551A962C014954A3FBD6981C99BA67FDC7473384AAB848A04F4727DBFAEC8"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\upscaled\\env_eed86f3c__B_ibp.dds",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture-override\\env_eed86f3c.dds",
+                          "Sha256":  "B71BA2DC30304E402CFA8642C4D19EC4F92421D00CB05C67F4DE21C539AEBA9F"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\upscaled\\env_f42d9038__B_ibp.dds",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture-override\\env_f42d9038.dds",
+                          "Sha256":  "64D90D993EB343A4D52CEB457EDFEE2A04B1A51F5EFB72D6B81CB03CE8662578"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\upscaled\\env_f51f572e__B_ibp.dds",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture-override\\env_f51f572e.dds",
+                          "Sha256":  "4F18EDDC59D60122E542393BCFB46C5F15D79E069CB22E4C1B8339F928119A03"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\upscaled\\env_ff0916dd__B_ibp.dds",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture-override\\env_ff0916dd.dds",
+                          "Sha256":  "987D534DDDDC7BEC2B1239B9594D908E5E5402EF50838241E63FFF639246B98E"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\upscaled\\env_shutter_d__B_ibp.dds",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture-override\\env_shutter_d.dds",
+                          "Sha256":  "599E8D7698B209C49D24A3B93CE18E14DC62D06AEB4A8996E70CF6F99F941751"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\upscaled\\explosion__B_ibp.dds",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture-override\\explosion.dds",
+                          "Sha256":  "BAE928F2E75EA3C4256034F222ACE0F9DE137ED676AFE51B317049C3B9667286"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\upscaled\\fireball_base_intense_02__B_ibp.dds",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture-override\\fireball_base_intense_02.dds",
+                          "Sha256":  "759269661DC10B30A6BCD3259AEFC7C5B60D57498F25C499758EF25905AEDE5A"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\upscaled\\handgun_d__B_ibp.dds",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture-override\\handgun_d.dds",
+                          "Sha256":  "29265A9764818995D74C7A67F0909943BE5CF78DCA52FCA318FB5779B5230184"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\upscaled\\handgun_n__B_ibp.dds",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture-override\\handgun_n.dds",
+                          "Sha256":  "465AE06EE043994A66A5671F7783FA1ED406C3F7CB36FF2F2778F6C32E430EED"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\upscaled\\inview_glove_d__B_ibp.dds",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture-override\\inview_glove_d.dds",
+                          "Sha256":  "110E808A41E3144AFFEFF42C8F06886E7AD4CCFC413B0B69744A1A5F069694FB"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\upscaled\\inview_glove_n__B_ibp.dds",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture-override\\inview_glove_n.dds",
+                          "Sha256":  "7EA4F657FA95A1CF220383B00C6E8170216A335C2F2E626DF044FF0B0CEA99D3"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\upscaled\\laser_d__B_ibp.dds",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture-override\\laser_d.dds",
+                          "Sha256":  "57109A9951A98B595EF1653930A1709023A5FEAA4089D031AD58F09488792877"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\upscaled\\laser_n__B_ibp.dds",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture-override\\laser_n.dds",
+                          "Sha256":  "FB597690BB552FA1723945BAE582A9024CFEA4220F732C7B5702C2CBA0F24D55"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\upscaled\\muzzleflashCenter__B_ibp.dds",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture-override\\muzzleflashCenter.dds",
+                          "Sha256":  "5FD6E354FF3F9328965FC766D8877DCD08D75C32C3D10BE55791E15E55643089"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\upscaled\\muzzleFlashDir_01__B_ibp.dds",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture-override\\muzzleFlashDir_01.dds",
+                          "Sha256":  "D0304E17DA636324BB96A5D8E0F251F987AF7FC64A4DEC6D30B266D1114F7D08"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\upscaled\\phasetick_d__B_ibp.dds",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture-override\\phasetick_d.dds",
+                          "Sha256":  "549EF960271B6028C6BC1C3B65EE8CDE5AD6C4FA75550D05EF1EECFDC79DC210"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\upscaled\\phasetick_e__B_ibp.dds",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture-override\\phasetick_e.dds",
+                          "Sha256":  "31E11896D5A8B5B11D9E6DA87CACA33E5424B3283ED4F5A7D57DF4C28F3D95E0"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\upscaled\\phasetick_n__B_ibp.dds",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture-override\\phasetick_n.dds",
+                          "Sha256":  "5B757172ABB9EF6B67A1A181B0AAEA2DCFCD1E92A9C091F70D56708AFC66656B"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\upscaled\\phasetick_s__B_ibp.dds",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture-override\\phasetick_s.dds",
+                          "Sha256":  "90265FB4932A5C6DB41B65681F26369B2AB09A90E6A7F2DBE89A84B7D2395C4A"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\upscaled\\revert_d2__B_ibp.dds",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture-override\\revert_d2.dds",
+                          "Sha256":  "5FE38C8C81A6029F261285007CB9CE39B616288FC721A8B3B19A833DB44810B2"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\upscaled\\revert_n2__B_ibp.dds",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture-override\\revert_n2.dds",
+                          "Sha256":  "C8E556884951B09F337A0A58F5DA3C33F8E92EC0E4FBAE373C79803526FCCAB9"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\upscaled\\revert_t__B_ibp.dds",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture-override\\revert_t.dds",
+                          "Sha256":  "78DD22D48BD30F564128819C4BA6BE9FDF1367DFE3854C67AD0F49FFBF0E1123"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\upscaled\\smoketrail_01__B_ibp.dds",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture-override\\smoketrail_01.dds",
+                          "Sha256":  "C2ECAFCF62E531EB6F1396F6F4CD91447D38891DA78BF3EAF4CDE5E6E3A4AF95"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\upscaled\\sparks1_subuv__B_ibp.dds",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture-override\\sparks1_subuv.dds",
+                          "Sha256":  "E8F186398C1A7C94F431529D983B6FAFAD90925C6CE735EDB6D627F61D543FF0"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\upscaled\\spark_hit01__B_ibp.dds",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture-override\\spark_hit01.dds",
+                          "Sha256":  "C4758D90DFD16675F812829D42241270DBA51469EFC7485A4654E8E642C251E8"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\upscaled\\Spetsnaz_MP_Body_d__B_ibp.dds",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture-override\\Spetsnaz_MP_Body_d.dds",
+                          "Sha256":  "1576A7F3EA4B2E6FBCCFF279B77FA4940C17F46B8AE89058BDAC0403FBA646A2"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\upscaled\\Spetsnaz_MP_Body_n__B_ibp.dds",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture-override\\Spetsnaz_MP_Body_n.dds",
+                          "Sha256":  "844772DBB9DECD2164AF8AD59096EB3E1E89CA387710249FC055CA891DED0BCC"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\upscaled\\Spetsnaz_MP_helmet_d__B_ibp.dds",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture-override\\Spetsnaz_MP_helmet_d.dds",
+                          "Sha256":  "F0A1B1CEE0C17167675453AE1CCEB3A66753FA56C11DD18B79C5A926433BB63C"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\upscaled\\Spetsnaz_MP_helmet_e__B_ibp.dds",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture-override\\Spetsnaz_MP_helmet_e.dds",
+                          "Sha256":  "15C016336F6C61DD701F3B9290084030C6BEC0A48BC50156E7115FFE43CCFB77"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\upscaled\\Spetsnaz_MP_helmet_n__B_ibp.dds",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture-override\\Spetsnaz_MP_helmet_n.dds",
+                          "Sha256":  "365270FD170BF77E5234309F52207ABFA7154912B94305E87924BB85F08F0EE9"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\upscaled\\Spetsnaz_MP_helmet_s__B_ibp.dds",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture-override\\Spetsnaz_MP_helmet_s.dds",
+                          "Sha256":  "24864435D9294DDB2EDB0C8041601AABC3499DC03177875B61C46CC70AFF1593"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\upscaled\\tracer2__B_ibp.dds",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture-override\\tracer2.dds",
+                          "Sha256":  "3E3D46B5F4FF79335D7559B79A9EAFA4F3707A9DD4674CCB289EA90C09D109EB"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\upscaled\\t_decal_metal_d_v4__B_ibp.dds",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture-override\\t_decal_metal_d_v4.dds",
+                          "Sha256":  "C04E835D98852A940530EFEFC22B7DA3C8BE01C439E8D5B2F8E3A84721C45FC2"
+                      },
+                      {
+                          "Source":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-assets-local\\textures\\upscaled\\t_decal_stone_d_v1__B_ibp.dds",
+                          "Target":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture-override\\t_decal_stone_d_v1.dds",
+                          "Sha256":  "B9B70F1F97F89C50C0719DD9FF3CC5FE23766F4268FE10A140C1921FB8523B15"
+                      }
+                  ],
+    "TextureVariant":  "B",
+    "TextureCount":  107,
+    "FinalState":  [
+                       {
+                           "Path":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\d3d9.dll",
+                           "Exists":  true,
+                           "Size":  677888,
+                           "Sha256":  "F8D585CD9FB2C72BA6837F4327C173D850679824F531306FFF46EA77A3AF0817",
+                           "Pe32":  true,
+                           "Machine":  "0x014C",
+                           "OptionalMagic":  "0x010B"
+                       },
+                       {
+                           "Path":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\SingularityVR.ini",
+                           "Exists":  true,
+                           "Size":  12066,
+                           "Sha256":  "BEDC58E844C873831C70E5F89326D05807EF0DA64C2AC58495D5429EBEA40637",
+                           "Pe32":  null,
+                           "Machine":  null,
+                           "OptionalMagic":  null
+                       },
+                       {
+                           "Path":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\dinput8.dll",
+                           "Exists":  true,
+                           "Size":  38400,
+                           "Sha256":  "AAA07005F4FF658C4A71CC30EA258E469DAF250C77BFE447011FFD650379E4F7",
+                           "Pe32":  true,
+                           "Machine":  "0x014C",
+                           "OptionalMagic":  "0x010B"
+                       },
+                       {
+                           "Path":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\dinput8_orig.dll",
+                           "Exists":  true,
+                           "Size":  176640,
+                           "Sha256":  "2A746CCF3922AECCED0387F3C6E21E55C6DF786DF8164C482F2A2E6165EDD395",
+                           "Pe32":  true,
+                           "Machine":  "0x014C",
+                           "OptionalMagic":  "0x010B"
+                       },
+                       {
+                           "Path":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture_override.ini",
+                           "Exists":  true,
+                           "Size":  1834,
+                           "Sha256":  "146140CD8DAB8867CBAA15BD13BC983EE90E30EE73E80A6325E83FE2962E5093",
+                           "Pe32":  null,
+                           "Machine":  null,
+                           "OptionalMagic":  null
+                       }
+                   ]
+}
