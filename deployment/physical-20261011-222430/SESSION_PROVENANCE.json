@@ -1,0 +1,70 @@
+{
+  "session": "PR5+PR6 physical PSVR2 acceptance",
+  "sessionEndUtc": "2026-10-11T20:29:19Z",
+  "verdict": {
+    "bink": "PASS",
+    "class1IisScale070": "PASS",
+    "class2MainMenu": "PASS",
+    "openXrShouldRender1": "PASS",
+    "class3PausePlacement": "UNRESOLVED",
+    "stationsLockers": "NOT_RETESTED",
+    "pr7VrSettingsRow": "NOT_TESTED"
+  },
+  "deployedDll": {
+    "sha256": "F62D337CC70481989DBC05CBA433CFB2FF7BA2D7D71BCA115D793048D9C5EC4D",
+    "commit": "0e6c08b98e9384af62f7e5cc77f04eb010ebf50d",
+    "branch": "fix/menu-class1-inset-pause-capture",
+    "pr": 6,
+    "architecture": "x86 PE32",
+    "optimization": "/O2"
+  },
+  "rollbackDll": {
+    "sha256": "590788116C7C173737E285D6D1B9575544AD2517690003ECC24CE378FDD0BDAD"
+  },
+  "rollbackIni": {
+    "sha256": "44A3C4DBE089C82D951916F772EB7EA6DB8849256CDA77EB22BA892FF9AEFD20"
+  },
+  "installBackup": "deployment/install-backups/20261011-222352",
+  "installReport": "deployment/install-reports/20261011-222352.json",
+  "logs": {
+    "view_matrix.log": {
+      "sha256": "3CAE994A237FD1F1312C41124DC0A1DCE4907316513B0D9E637503B19AB917F9",
+      "bytes": 2650041
+    },
+    "view_matrix_2026-10-11_22-24-22.log": {
+      "sha256": "A0453F7A7B40821917AA4B8B06C18281103160302F844338ACDF0E73988CAA7B",
+      "bytes": 110672
+    },
+    "view_matrix_2026-10-11_22-25-25.log": {
+      "sha256": "35505D921C2272D31F46D6CFF69340F2EB845EE069C99AB66BFFBE6A9FBD830D",
+      "bytes": 614428
+    }
+  },
+  "menuSubmitTotals": {
+    "heartbeats": 96,
+    "shouldRender1": 96,
+    "c1": "471/471/471/0/0/0",
+    "c2": "1888/1888/0/1888/0/0",
+    "c3": "743/743/0/743/0/0",
+    "c4": "401/401/0/401/0/0",
+    "c0": "3280/0/0/3280/0/0"
+  },
+  "githubMerges": {
+    "pr5": {
+      "mergeCommit": "ae89341fc508f99a58b36e3a1bf0247ffef70122",
+      "mergedAt": "2026-10-11T20:41:25Z",
+      "base": "main"
+    },
+    "pr6": {
+      "mergeCommit": "753d94bd2416ad9ee7830070588b86eaaf49454c",
+      "mergedAt": "2026-10-11T20:41:35Z",
+      "base": "fix/vr-menu-flat-submission",
+      "note": "Merged into the PR #5 stack branch; origin/main at PR #5 merge only until a main merge lands PR #6."
+    }
+  },
+  "pr7Pending": {
+    "url": "https://github.com/trilex07/SingularityVR/pull/7",
+    "head": "3d5d14d6d4473692c580f9fd52967a57c6b14ae3",
+    "doNotMergeUntil": "headset verifies class-3 row V 0.60-0.70 hover and R2"
+  }
+}
