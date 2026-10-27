@@ -65,3 +65,18 @@ Nine additional historical root build/test directories were removed after verifi
 Final checks again passed all 361 current release/resource SHA256 pins, all 11 installer module input checks, and one existing SingularityVR worktree. No Steam deployment or game launch occurred.
 
 Final measured free-space gain since this cleanup's archives started: 12.719 GB, including all added archive overhead. Concurrent disk activity can affect this measurement.
+
+## Off-device recovery storage — Google Drive
+
+On 2026-10-27, Trilex chose to move the cleanup recovery archives to his private Google Drive. Upload and verification are performed by Trilex; this note does not confirm that the upload has completed. No public download URL is recorded.
+
+Archive folders to upload in full:
+
+- `cleanup-recovery-20261026/`
+- `cleanup-recovery-20261027/`
+
+If an old private asset or historical working file is needed, ask Trilex to download the relevant archive from Google Drive back into the matching folder under `C:\Users\Trilex\vr-mods`. Use the archive receipts and SHA256 values above to verify downloads before restoration. These archives are historical recovery material, not installer downloads.
+
+Keep `cleanup-audit-20261027-final/` with its manifests and `restore_archived_files.py` available alongside the archives. Some deduplicated archive entries also depend on the retained canonical installer inputs, `dependencies/Singularity`, or Git objects; a ZIP alone is not necessarily a standalone full backup. Preserve those dependencies, or include them in any future complete off-device backup.
+
+Do not delete the local archives until the Google Drive upload is complete and verified. No archive was uploaded or deleted as part of adding this note.
