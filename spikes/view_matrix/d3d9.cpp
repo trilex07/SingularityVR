@@ -3634,6 +3634,7 @@ float g_povPos[3] = {0,0,0};
 volatile LONG g_camPosValid = 0;
 int g_cameraTranslationEvidence = 0; // bounded passive decomposition, default off
 float g_vrCameraStabOffset[3] = {0,0,0};
+float g_vrCameraStabSmooth[3] = {0,0,0};
 volatile LONG g_vrCameraStabValid = 0;
 volatile LONG g_vrTranslationStabilization = 0;
 
@@ -13511,7 +13512,10 @@ void UpdateCameraStabilizationThisFrame() {
         Readable((void*)(pawn + eyeOffset), 4)) {
         PawnCameraSample sample{};
         if (TryReadPawnCameraSample(pawn, ACTOR_LOCATION, eyeOffset, &sample)) {
-            if (ComputeVrCameraStabilization(g_povPos, sample.location, sample.eyeHeight, g_vrCameraStabOffset)) {
+            float rawStab[3]{};
+            if (ComputeVrCameraStabilization(g_povPos, sample.location, sample.eyeHeight, rawStab)) {
+                SmoothVrCameraStabilizationOffset(rawStab, g_vrCameraStabSmooth);
+                memcpy(g_vrCameraStabOffset, g_vrCameraStabSmooth, sizeof(g_vrCameraStabOffset));
                 InterlockedExchange(&g_vrCameraStabValid, 1);
                 return;
             }
@@ -13869,12 +13873,8 @@ HRESULT STDMETHODCALLTYPE Hook_SetVSConstF(IDirect3DDevice9* dev, UINT startReg,
             ApplyHeadRotation(m, c, curPitch, curYaw,
                               g_matDesPitchUU * kUUToRad, g_matDesYawUU * kUUToRad);
         } else if (VrModeOn() && Rd(g_vrCameraShakeSuppression) && !CutsceneNativeCameraArmed()) {
-            if (MeleeWindowActive()) {
-                const float kUUToRad = 6.2831853f / 65536.0f;
-                StabilizeMatrixBasis(m, c, g_wantPitch * kUUToRad, g_wantYaw * kUUToRad);
-            } else {
-                CancelMatrixRoll(m, c);
-            }
+            const float kUUToRad = 6.2831853f / 65536.0f;
+            StabilizeMatrixBasis(m, c, g_wantPitch * kUUToRad, g_wantYaw * kUUToRad);
         }
         if (inject) ApplyOffset(m, c, o);
         if (forceProj) {
@@ -30903,8 +30903,14 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
                 if (++rejected <= 8)
                     Log("camera pawn sample: inaccessible pawn=%p, skipped stabilization and invalidated pawn cache (#%u)",
                         (void*)pawnAddress, rejected);
-            } else if (ComputeVrCameraStabilization(g_povPos, pawn.location, pawn.eyeHeight, g_vrCameraStabOffset))
-                InterlockedExchange(&g_vrCameraStabValid, 1);
+            } else {
+                float rawStab[3]{};
+                if (ComputeVrCameraStabilization(g_povPos, pawn.location, pawn.eyeHeight, rawStab)) {
+                    SmoothVrCameraStabilizationOffset(rawStab, g_vrCameraStabSmooth);
+                    memcpy(g_vrCameraStabOffset, g_vrCameraStabSmooth, sizeof(g_vrCameraStabOffset));
+                    InterlockedExchange(&g_vrCameraStabValid, 1);
+                }
+            }
         }
         if(g_cameraTranslationEvidence) {
             static camera_translation::Gate gate;
