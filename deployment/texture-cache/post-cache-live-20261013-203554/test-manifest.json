@@ -1,0 +1,20 @@
+{
+  "startedAt": "2026-10-13T20:35:55.4350744+02:00",
+  "evidence": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene-observation\\deployment\\texture-cache\\post-cache-live-20261013-203554",
+  "backupPath": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene-observation\\deployment\\install-backups\\20261013-203555",
+  "guardPid": 31268,
+  "vrSha256": "64353686EDD457EDE84B0D8892B32B6EC9D108C78912AEF9A7F753CFA163DC15",
+  "injectorSha256": "D6EFDDAE3FB41DD9C8F348BB40BBD6B9023D4575F0FC7BC590B58920B2ADA62F",
+  "injectorCommit": "84384478c32bfa5e7e73945af09cd55764500000",
+  "vrCommit": "f57c3d5920d54d325564ac9e50eb86c469dd68e8",
+  "steamApp": 42670,
+  "gamePid": 33140,
+  "observerPid": 31380,
+  "note": "Completed evidence collected. Safe installation verified; new candidate remains offline pending fresh start.",
+  "restoreVerified": true,
+  "frozenVerified": true,
+  "profileFrames": 3600,
+  "profileMenuFrames": 229,
+  "physicalFeedback": "Remaining dips during gameplay; other visual questions not answered",
+  "nextOfflineStage": "deployment/native-draw-cpu/artifact"
+}

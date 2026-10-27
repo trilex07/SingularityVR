@@ -1,0 +1,31 @@
+{
+  "builtAt": "2026-10-13T20:03:52.5277621+02:00",
+  "branch": "fix/cutscene-physical-observation",
+  "commit": "f6aeb6bafff1b65716bc197a1ff8ee4c1d987807",
+  "optimization": "/O2",
+  "architecture": "x86 PE32",
+  "sha256": "1BC0F7DD59A46BD7E29DDEC0B17053A3CEA6726C0476A5C0782DC672F6CC3059",
+  "inputs": [
+    {
+      "name": "texture_injector.cpp",
+      "sha256": "5ADABBF94A313D9888904E7110D4D287793CE8DB0F498879B6334736E422529F"
+    },
+    {
+      "name": "resource_native_cache.h",
+      "sha256": "48D5FD6A631A7F745ED3EA2EC31C2FE01EE456A4558AF7423AE2BB04FE406E89"
+    },
+    {
+      "name": "texture_groups.h",
+      "sha256": "8A4FE7D560E22FB3E6BA561386B12EAA4C046AE099143B7181920B97B91CDB89"
+    },
+    {
+      "name": "targets_generated.h",
+      "sha256": "C53707D9FF562C02143E578F260B444FED3A449E768B6766BC4CD65A85971A21"
+    },
+    {
+      "name": "dinput8.def",
+      "sha256": "81FD3581029151CD9ED6651334DCD2FFDE13B398FD140B0C054163259CBE8026"
+    }
+  ],
+  "trackedDiff": []
+}

@@ -1,0 +1,71 @@
+{
+  "Action": "Install",
+  "Timestamp": "2026-10-13T20:04:43.1425091+02:00",
+  "GameBin": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene-observation\\deployment\\texture-cache\\installer-fixture-20261013-200442\\Steam\\steamapps\\common\\Singularity\\Binaries",
+  "BackupPath": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene-observation\\deployment\\texture-cache\\installer-fixture-20261013-200442\\Repo\\deployment\\install-backups\\20261013-200443",
+  "Pe32": true,
+  "DllOnly": false,
+  "RuntimeDllPairOnly": true,
+  "DInput8Pe32": true,
+  "Installed": [
+    {
+      "Source": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene-observation\\deployment\\texture-cache\\artifact\\d3d9.dll",
+      "Target": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene-observation\\deployment\\texture-cache\\installer-fixture-20261013-200442\\Steam\\steamapps\\common\\Singularity\\Binaries\\d3d9.dll",
+      "Sha256": "64353686EDD457EDE84B0D8892B32B6EC9D108C78912AEF9A7F753CFA163DC15"
+    },
+    {
+      "Source": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene-observation\\deployment\\texture-cache\\artifact\\dinput8.dll",
+      "Target": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene-observation\\deployment\\texture-cache\\installer-fixture-20261013-200442\\Steam\\steamapps\\common\\Singularity\\Binaries\\dinput8.dll",
+      "Sha256": "1BC0F7DD59A46BD7E29DDEC0B17053A3CEA6726C0476A5C0782DC672F6CC3059"
+    }
+  ],
+  "TextureVariant": "skipped",
+  "TextureCount": 0,
+  "FinalState": [
+    {
+      "Path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene-observation\\deployment\\texture-cache\\installer-fixture-20261013-200442\\Steam\\steamapps\\common\\Singularity\\Binaries\\d3d9.dll",
+      "Exists": true,
+      "Size": 2802688,
+      "Sha256": "64353686EDD457EDE84B0D8892B32B6EC9D108C78912AEF9A7F753CFA163DC15",
+      "Pe32": true,
+      "Machine": "0x014C",
+      "OptionalMagic": "0x010B"
+    },
+    {
+      "Path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene-observation\\deployment\\texture-cache\\installer-fixture-20261013-200442\\Steam\\steamapps\\common\\Singularity\\Binaries\\SingularityVR.ini",
+      "Exists": true,
+      "Size": 5,
+      "Sha256": "74F81FE167D99B4CB41D6D0CCDA82278CAEE9F3E2F25D5E5A3936FF3DCEC60D0",
+      "Pe32": null,
+      "Machine": null,
+      "OptionalMagic": null
+    },
+    {
+      "Path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene-observation\\deployment\\texture-cache\\installer-fixture-20261013-200442\\Steam\\steamapps\\common\\Singularity\\Binaries\\dinput8.dll",
+      "Exists": true,
+      "Size": 40448,
+      "Sha256": "1BC0F7DD59A46BD7E29DDEC0B17053A3CEA6726C0476A5C0782DC672F6CC3059",
+      "Pe32": true,
+      "Machine": "0x014C",
+      "OptionalMagic": "0x010B"
+    },
+    {
+      "Path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene-observation\\deployment\\texture-cache\\installer-fixture-20261013-200442\\Steam\\steamapps\\common\\Singularity\\Binaries\\dinput8_orig.dll",
+      "Exists": true,
+      "Size": 5,
+      "Sha256": "74F81FE167D99B4CB41D6D0CCDA82278CAEE9F3E2F25D5E5A3936FF3DCEC60D0",
+      "Pe32": false,
+      "Machine": null,
+      "OptionalMagic": null
+    },
+    {
+      "Path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene-observation\\deployment\\texture-cache\\installer-fixture-20261013-200442\\Steam\\steamapps\\common\\Singularity\\Binaries\\texture_override.ini",
+      "Exists": true,
+      "Size": 5,
+      "Sha256": "74F81FE167D99B4CB41D6D0CCDA82278CAEE9F3E2F25D5E5A3936FF3DCEC60D0",
+      "Pe32": null,
+      "Machine": null,
+      "OptionalMagic": null
+    }
+  ]
+}

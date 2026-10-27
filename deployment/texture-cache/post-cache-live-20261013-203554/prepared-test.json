@@ -1,0 +1,18 @@
+{
+  "preparedAt": "2026-10-13T20:32:50.0857406+02:00",
+  "status": "L1_L2_PASS_OFFLINE_ONLY",
+  "startRequired": true,
+  "installed": false,
+  "profileRequestArmed": false,
+  "branch": "fix/cutscene-physical-observation",
+  "injectorCommit": "84384478c32bfa5e7e73945af09cd55764500000",
+  "injectorSha256": "D6EFDDAE3FB41DD9C8F348BB40BBD6B9023D4575F0FC7BC590B58920B2ADA62F",
+  "vrCommit": "f57c3d5920d54d325564ac9e50eb86c469dd68e8",
+  "vrSha256": "64353686EDD457EDE84B0D8892B32B6EC9D108C78912AEF9A7F753CFA163DC15",
+  "acceptedBackup": "deployment/install-backups/20261013-200809",
+  "acceptedD3dSha256": "D8928180262706A95972D13B728A1867F1EAB1757DCFD6C4A32D99EFBFBEC1BE",
+  "acceptedInjectorSha256": "AAA07005F4FF658C4A71CC30EA258E469DAF250C77BFE447011FFD650379E4F7",
+  "frozenManifest": "frozen-manifest.json",
+  "recipe": "docs/post-cache-performance.md",
+  "note": "No hands/render/texture policy change. Do not install or launch before explicit user start."
+}

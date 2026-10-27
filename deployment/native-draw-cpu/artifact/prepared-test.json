@@ -1,0 +1,28 @@
+{
+  "preparedAt": "2026-10-13T20:55:34.1022691+02:00",
+  "status": "L1_L2_PASS_OFFLINE_ONLY",
+  "startRequired": true,
+  "installed": false,
+  "profileRequestArmed": false,
+  "branch": "fix/cutscene-physical-observation",
+  "vrCommit": "bdcd330e4a680f02f6969e15d9c1f5718d765589",
+  "vrSha256": "99D3F8008F3BF0BD894E2AA28BF062F1A32BE354F3DB055DBD5429BB7C51660E",
+  "injectorCommit": "84384478c32bfa5e7e73945af09cd55764500000",
+  "injectorSha256": "D6EFDDAE3FB41DD9C8F348BB40BBD6B9023D4575F0FC7BC590B58920B2ADA62F",
+  "vrInputs": [
+    {
+      "path": "spikes/view_matrix/d3d9.cpp",
+      "sha256": "59DB17036EF1A3AD9F81908EA3A862B3C42912AAFC8AFF1FB42DE58F0A60C9F5"
+    },
+    {
+      "path": "spikes/view_matrix/hotpath_sampler.h",
+      "sha256": "9D2B8A45AB99F404BF4DE99324A11E5826D6B1C3B00743AD92232CCF6E256D02"
+    }
+  ],
+  "acceptedBackup": "deployment/install-backups/20261013-203555",
+  "acceptedD3dSha256": "D8928180262706A95972D13B728A1867F1EAB1757DCFD6C4A32D99EFBFBEC1BE",
+  "acceptedInjectorSha256": "AAA07005F4FF658C4A71CC30EA258E469DAF250C77BFE447011FFD650379E4F7",
+  "frozenManifest": "frozen-manifest.json",
+  "recipe": "docs/post-cache-performance.md",
+  "note": "Native draw CPU timing only. Same texture cache. No image/input/hand policy change. Await fresh start."
+}

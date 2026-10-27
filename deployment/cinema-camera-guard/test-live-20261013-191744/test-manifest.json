@@ -1,0 +1,15 @@
+{
+  "recordedAt": "2026-10-13T19:17:44.2535294+02:00",
+  "dllSource": "f57c3d5920d54d325564ac9e50eb86c469dd68e8",
+  "toolingCommit": "fb3422bbbcc659a0f14778e92bc57e105c06945f",
+  "candidateSha256": "64353686EDD457EDE84B0D8892B32B6EC9D108C78912AEF9A7F753CFA163DC15",
+  "backup": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene-observation\\deployment\\install-backups\\20261013-191743",
+  "guardPid": 3472,
+  "gamePid": 8804,
+  "observerPid": 12956,
+  "recorderPid": 22032,
+  "recorderToolingCommit": "8bc527f",
+  "recorderFailedAttempts": [4548, 26980],
+  "cpuEvidence": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene-observation\\deployment\\shadow-probe\\cpu-20261013-192210-932",
+  "nativeEvidence": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene-observation\\deployment\\cinema-camera-guard\\test-live-20261013-191744"
+}

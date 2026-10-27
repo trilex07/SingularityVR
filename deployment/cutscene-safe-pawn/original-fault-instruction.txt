@@ -1,0 +1,18 @@
+
+Dump of file C:\Users\Trilex\vr-mods\SingularityVR-cutscene-mono\spikes\view_matrix\d3d9.dll
+
+File Type: DLL
+
+  10028980: 84 42 01           test        byte ptr [edx+1],al
+  10028983: 00 00              add         byte ptr [eax],al
+  10028985: 8B 0D C4 67 3C 10  mov         ecx,dword ptr ds:[103C67C4h]
+  1002898B: 51                 push        ecx
+  1002898C: 8B 41 5C           mov         eax,dword ptr [ecx+5Ch]
+  1002898F: F3 0F 7E 41 54     movq        xmm0,mmword ptr [ecx+54h]
+  10028994: 89 85 34 F9 FF FF  mov         dword ptr [ebp+FFFFF934h],eax
+  1002899A: A1 B8 D3 09 10     mov         eax,dword ptr ds:[1009D3B8h]
+  1002899F: 66
+
+  Summary
+
+       6A000 .text

@@ -1,0 +1,42 @@
+{
+  "builtAt": "2026-10-13T20:30:02.5192620+02:00",
+  "branch": "fix/cutscene-physical-observation",
+  "commit": "537def302969270b0931e5718b0136d0a73467e8",
+  "optimization": "/O2",
+  "architecture": "x86 PE32",
+  "sha256": "154887F65A02A2D56BC33F798515DBD420D12260FFACC5A32CE515CC49E54EFA",
+  "diagnosticTiming": false,
+  "inputs": [
+    {
+      "name": "texture_injector.cpp",
+      "sha256": "43248E67F3F6BD475775F5466D8CC3346A77C58B365BB15B1BD285A8657A6E75"
+    },
+    {
+      "name": "resource_native_cache.h",
+      "sha256": "48D5FD6A631A7F745ED3EA2EC31C2FE01EE456A4558AF7423AE2BB04FE406E89"
+    },
+    {
+      "name": "texture_hook_timing.h",
+      "sha256": "2E3361680A08E9FC8E39E3E9CCFE093DDB6124C662A713F13E82B7858618B38A"
+    },
+    {
+      "name": "texture_groups.h",
+      "sha256": "8A4FE7D560E22FB3E6BA561386B12EAA4C046AE099143B7181920B97B91CDB89"
+    },
+    {
+      "name": "targets_generated.h",
+      "sha256": "C53707D9FF562C02143E578F260B444FED3A449E768B6766BC4CD65A85971A21"
+    },
+    {
+      "name": "dinput8.def",
+      "sha256": "81FD3581029151CD9ED6651334DCD2FFDE13B398FD140B0C054163259CBE8026"
+    }
+  ],
+  "trackedDiff": [
+    " M STATUS.md",
+    " M docs/texture-native-cache-fix.md",
+    " M spikes/texture_cache/build.ps1",
+    " M spikes/texture_cache/texture_injector.cpp",
+    " M tools/watch-texture-cache-test-restore.ps1"
+  ]
+}

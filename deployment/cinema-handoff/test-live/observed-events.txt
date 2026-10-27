@@ -1,0 +1,301 @@
+﻿2026-10-13T17:42:39.7629583+02:00 observed: bink-audio: exports sound=0 open=0 max12 notes; known-intro Polish fix=1 ready=1; other movies native
+2026-10-13T17:42:39.7679619+02:00 observed: OpenXR ready
+2026-10-13T17:42:44.7862521+02:00 observed: SceneMode: GameplayStereo -> VideoFlat reason=2 cinematic=0 video=1 menu=0 paused=0 frame=1
+2026-10-13T17:42:44.7872529+02:00 observed: xr-heartbeat: session=3 running=1 shouldRender=0 haveEyes=1 ticks=30 copy=1 (+1) submit=1 (+1) captureTry=1 validCapture=1 failedCapture=0 missingLayer=29
+2026-10-13T17:42:44.7887580+02:00 observed: xr-heartbeat: session=3 running=1 shouldRender=0 haveEyes=1 ticks=29 copy=1 (+0) submit=1 (+0) captureTry=0 validCapture=0 failedCapture=0 missingLayer=29
+2026-10-13T17:42:44.7887580+02:00 observed: perf: 27.9 fps (35.87 ms/frame) | draws/frame peak 0, split 0 (0 with parallax, 0 flat), offscreen 0, mono-fallback 0, user-ptr 1, frames with NO identification 0 [TRUE STEREO ON]
+2026-10-13T17:42:49.8055132+02:00 observed: bink-audio: native track selection count=4 readable=1 ids=0,1,2,3,0,0,0,0 (unchanged)
+2026-10-13T17:42:49.8065137+02:00 observed: bink-audio: opened name=<not a readable filename> flags=0x04004400 handle=34120600 (unchanged)
+2026-10-13T17:42:49.8065137+02:00 observed: xr-heartbeat: session=3 running=1 shouldRender=0 haveEyes=1 ticks=30 copy=0 (+-1) submit=1 (+0) captureTry=0 validCapture=0 failedCapture=0 missingLayer=30
+2026-10-13T17:42:49.8075138+02:00 observed: xr-heartbeat: session=3 running=1 shouldRender=0 haveEyes=1 ticks=28 copy=0 (+0) submit=1 (+0) captureTry=0 validCapture=0 failedCapture=0 missingLayer=28
+2026-10-13T17:42:49.8075138+02:00 observed: perf: 28.2 fps (35.50 ms/frame) | draws/frame peak 0, split 0 (0 with parallax, 0 flat), offscreen 0, mono-fallback 0, user-ptr 1, frames with NO identification 0 [TRUE STEREO ON]
+2026-10-13T17:42:54.8331620+02:00 observed: perf: 27.7 fps (36.13 ms/frame) | draws/frame peak 0, split 0 (0 with parallax, 0 flat), offscreen 0, mono-fallback 0, user-ptr 1, frames with NO identification 0 [TRUE STEREO ON]
+2026-10-13T17:42:59.8602469+02:00 observed: perf: 28.0 fps (35.72 ms/frame) | draws/frame peak 0, split 0 (0 with parallax, 0 flat), offscreen 0, mono-fallback 0, user-ptr 1, frames with NO identification 0 [TRUE STEREO ON]
+2026-10-13T17:42:59.8612471+02:00 observed: xr-heartbeat: session=3 running=1 shouldRender=0 haveEyes=1 ticks=29 copy=0 (+0) submit=1 (+0) captureTry=0 validCapture=0 failedCapture=0 missingLayer=29
+2026-10-13T17:43:04.8836081+02:00 observed: perf: 28.3 fps (35.28 ms/frame) | draws/frame peak 0, split 0 (0 with parallax, 0 flat), offscreen 0, mono-fallback 0, user-ptr 1, frames with NO identification 0 [TRUE STEREO ON]
+2026-10-13T17:43:09.9027105+02:00 observed: perf: 27.6 fps (36.25 ms/frame) | draws/frame peak 0, split 0 (0 with parallax, 0 flat), offscreen 0, mono-fallback 0, user-ptr 1, frames with NO identification 0 [TRUE STEREO ON]
+2026-10-13T17:43:09.9047756+02:00 observed: xr-heartbeat: session=3 running=1 shouldRender=0 haveEyes=1 ticks=26 copy=0 (+0) submit=1 (+0) captureTry=0 validCapture=0 failedCapture=0 missingLayer=26
+2026-10-13T17:43:14.9178093+02:00 observed: yaw asserted by the ENGINE: observed 16289, we wrote 18438, delta -2149 (-11.8 deg) | baseYaw 16289 (+89.5 deg) | fold-in ON, cine off
+2026-10-13T17:43:14.9188073+02:00 observed: SceneMode: VideoFlat -> GameplayStereo reason=0 cinematic=0 video=0 menu=0 paused=0 frame=927
+2026-10-13T17:43:14.9188073+02:00 observed: xr-heartbeat: session=3 running=1 shouldRender=0 haveEyes=1 ticks=18 copy=0 (+0) submit=1 (+0) captureTry=0 validCapture=0 failedCapture=0 missingLayer=18
+2026-10-13T17:43:14.9198074+02:00 observed: perf: 26.5 fps (37.73 ms/frame) | draws/frame peak 546, split 160 (160 with parallax, 0 flat), offscreen 0, mono-fallback 160, user-ptr 219, frames with NO identification 0 [TRUE STEREO ON]
+2026-10-13T17:43:19.9549247+02:00 observed: xr-heartbeat: session=4 running=1 shouldRender=1 haveEyes=1 ticks=89 copy=93 (+89) submit=134 (+89) captureTry=89 validCapture=89 failedCapture=0 missingLayer=0
+2026-10-13T17:43:19.9559254+02:00 observed: perf: 89.6 fps (11.16 ms/frame) | draws/frame peak 136, split 136 (136 with parallax, 0 flat), offscreen 0, mono-fallback 0, user-ptr 60, frames with NO identification 0 [TRUE STEREO ON]
+2026-10-13T17:43:19.9579261+02:00 observed: xr-heartbeat: session=4 running=1 shouldRender=1 haveEyes=1 ticks=90 copy=63 (+-30) submit=224 (+90) captureTry=90 validCapture=90 failedCapture=0 missingLayer=0
+2026-10-13T17:43:19.9589248+02:00 observed: perf: 89.8 fps (11.13 ms/frame) | draws/frame peak 136, split 136 (136 with parallax, 0 flat), offscreen 0, mono-fallback 0, user-ptr 60, frames with NO identification 0 [TRUE STEREO ON]
+2026-10-13T17:43:24.9819884+02:00 observed: SceneMode: GameplayStereo -> MenuFlat reason=4 cinematic=0 video=0 menu=1 paused=0 frame=1763
+2026-10-13T17:43:24.9829883+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=83 copy=114 (+83) submit=635 (+83) captureTry=83 validCapture=83 failedCapture=0 missingLayer=0
+2026-10-13T17:43:24.9834907+02:00 observed: perf: 85.3 fps (11.73 ms/frame) | draws/frame peak 437, split 410 (410 with parallax, 0 flat), offscreen 28, mono-fallback 0, user-ptr 99, frames with NO identification 0 [TRUE STEREO ON]
+2026-10-13T17:43:30.0000916+02:00 observed: level transition: camera 1A5B9300 -> 2D536900, CINE was OFF
+2026-10-13T17:43:30.0020966+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=29 copy=108 (+29) submit=749 (+29) captureTry=29 validCapture=29 failedCapture=0 missingLayer=0
+2026-10-13T17:43:30.0020966+02:00 observed: perf: 50.8 fps (19.70 ms/frame) | draws/frame peak 395, split 367 (367 with parallax, 0 flat), offscreen 28, mono-fallback 0, user-ptr 93, frames with NO identification 1 [TRUE STEREO ON]
+2026-10-13T17:43:30.0030962+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=30 copy=18 (+-90) submit=779 (+30) captureTry=30 validCapture=30 failedCapture=0 missingLayer=0
+2026-10-13T17:43:30.0042897+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=30 copy=48 (+30) submit=809 (+30) captureTry=30 validCapture=30 failedCapture=0 missingLayer=0
+2026-10-13T17:43:30.0042897+02:00 observed: cutscene STARTED (OcclusionQueryMode=2, unchanged - run 272's DRAW ALL override was measured dead here: the engine culls on the CPU before any query. run 273)
+2026-10-13T17:43:30.0052892+02:00 observed: cutscene STARTED - switching to mode 3 (ROT MATRIX, YAW FOLD OFF) so head yaw survives the scripted camera. Was mode 1, restored on exit.
+2026-10-13T17:43:30.0052892+02:00 observed: cutscene-mono: stage=gate-blocked hr=0x00000001 mode=VideoFlat cine=1 flat=1 menuClass=0 vr=1 src=5264x2684
+2026-10-13T17:43:30.0052892+02:00 observed: yaw asserted by the ENGINE: observed 0, we wrote 660, delta -660 (-3.6 deg) | baseYaw 0 (+0.0 deg) | fold-in off, cine ON
+2026-10-13T17:43:30.0062880+02:00 observed: yaw asserted by the ENGINE: observed 0, we wrote 658, delta -658 (-3.6 deg) | baseYaw 0 (+0.0 deg) | fold-in off, cine ON
+2026-10-13T17:43:30.0062880+02:00 observed: yaw asserted by the ENGINE: observed 0, we wrote 650, delta -650 (-3.6 deg) | baseYaw 0 (+0.0 deg) | fold-in off, cine ON
+2026-10-13T17:43:30.0072903+02:00 observed: yaw asserted by the ENGINE: observed 0, we wrote 645, delta -645 (-3.5 deg) | baseYaw 0 (+0.0 deg) | fold-in off, cine ON
+2026-10-13T17:43:30.0072903+02:00 observed: yaw asserted by the ENGINE: observed 0, we wrote 641, delta -641 (-3.5 deg) | baseYaw 0 (+0.0 deg) | fold-in off, cine ON
+2026-10-13T17:43:30.0082886+02:00 observed: yaw asserted by the ENGINE: observed 0, we wrote 636, delta -636 (-3.5 deg) | baseYaw 0 (+0.0 deg) | fold-in off, cine ON
+2026-10-13T17:43:30.0082886+02:00 observed: yaw asserted by the ENGINE: observed 0, we wrote 633, delta -633 (-3.5 deg) | baseYaw 0 (+0.0 deg) | fold-in off, cine ON
+2026-10-13T17:43:30.0092880+02:00 observed: yaw asserted by the ENGINE: observed 0, we wrote 630, delta -630 (-3.5 deg) | baseYaw 0 (+0.0 deg) | fold-in off, cine ON
+2026-10-13T17:43:30.0092880+02:00 observed: yaw asserted by the ENGINE: observed 0, we wrote 625, delta -625 (-3.4 deg) | baseYaw 0 (+0.0 deg) | fold-in off, cine ON
+2026-10-13T17:43:30.0102889+02:00 observed: yaw asserted by the ENGINE: observed 0, we wrote 610, delta -610 (-3.4 deg) | baseYaw 0 (+0.0 deg) | fold-in off, cine ON
+2026-10-13T17:43:30.0102889+02:00 observed: yaw asserted by the ENGINE: observed 0, we wrote 577, delta -577 (-3.2 deg) | baseYaw 0 (+0.0 deg) | fold-in off, cine ON
+2026-10-13T17:43:30.0102889+02:00 observed: yaw asserted by the ENGINE: observed 0, we wrote -63, delta 63 (+0.3 deg) | baseYaw 0 (+0.0 deg) | fold-in off, cine ON
+2026-10-13T17:43:30.0114373+02:00 observed: yaw asserted by the ENGINE: observed 0, we wrote -173, delta 173 (+1.0 deg) | baseYaw 0 (+0.0 deg) | fold-in off, cine ON
+2026-10-13T17:43:30.0114373+02:00 observed: yaw asserted by the ENGINE: observed 0, we wrote -294, delta 294 (+1.6 deg) | baseYaw 0 (+0.0 deg) | fold-in off, cine ON
+2026-10-13T17:43:30.0114373+02:00 observed: yaw asserted by the ENGINE: observed 0, we wrote -440, delta 440 (+2.4 deg) | baseYaw 0 (+0.0 deg) | fold-in off, cine ON
+2026-10-13T17:43:30.0124372+02:00 observed: yaw asserted by the ENGINE: observed 0, we wrote -498, delta 498 (+2.7 deg) | baseYaw 0 (+0.0 deg) | fold-in off, cine ON
+2026-10-13T17:43:30.0124372+02:00 observed: yaw asserted by the ENGINE: observed 0, we wrote -568, delta 568 (+3.1 deg) | baseYaw 0 (+0.0 deg) | fold-in off, cine ON
+2026-10-13T17:43:30.0134406+02:00 observed: yaw asserted by the ENGINE: observed 0, we wrote -614, delta 614 (+3.4 deg) | baseYaw 0 (+0.0 deg) | fold-in off, cine ON
+2026-10-13T17:43:30.0134406+02:00 observed: yaw asserted by the ENGINE: observed 0, we wrote -639, delta 639 (+3.5 deg) | baseYaw 0 (+0.0 deg) | fold-in off, cine ON
+2026-10-13T17:43:30.0134406+02:00 observed: yaw asserted by the ENGINE: observed 0, we wrote -653, delta 653 (+3.6 deg) | baseYaw 0 (+0.0 deg) | fold-in off, cine ON
+2026-10-13T17:43:30.0144450+02:00 observed: yaw asserted by the ENGINE: observed 0, we wrote -662, delta 662 (+3.6 deg) | baseYaw 0 (+0.0 deg) | fold-in off, cine ON
+2026-10-13T17:43:30.0144450+02:00 observed: yaw asserted by the ENGINE: observed 0, we wrote -674, delta 674 (+3.7 deg) | baseYaw 0 (+0.0 deg) | fold-in off, cine ON
+2026-10-13T17:43:30.0144450+02:00 observed: yaw asserted by the ENGINE: observed 0, we wrote -697, delta 697 (+3.8 deg) | baseYaw 0 (+0.0 deg) | fold-in off, cine ON
+2026-10-13T17:43:30.0154490+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=31 copy=79 (+31) submit=840 (+31) captureTry=31 validCapture=31 failedCapture=0 missingLayer=0
+2026-10-13T17:43:30.0154490+02:00 observed: yaw asserted by the ENGINE: observed 0, we wrote -715, delta 715 (+3.9 deg) | baseYaw 0 (+0.0 deg) | fold-in off, cine ON
+2026-10-13T17:43:30.0154490+02:00 observed: yaw asserted by the ENGINE: observed 0, we wrote -759, delta 759 (+4.2 deg) | baseYaw 0 (+0.0 deg) | fold-in off, cine ON
+2026-10-13T17:43:30.0164502+02:00 observed: yaw asserted by the ENGINE: observed 0, we wrote -839, delta 839 (+4.6 deg) | baseYaw 0 (+0.0 deg) | fold-in off, cine ON
+2026-10-13T17:43:30.0164502+02:00 observed: yaw asserted by the ENGINE: observed 0, we wrote -893, delta 893 (+4.9 deg) | baseYaw 0 (+0.0 deg) | fold-in off, cine ON
+2026-10-13T17:43:30.0174490+02:00 observed: yaw asserted by the ENGINE: observed 0, we wrote -992, delta 992 (+5.4 deg) | baseYaw 0 (+0.0 deg) | fold-in off, cine ON
+2026-10-13T17:43:30.0174490+02:00 observed: yaw asserted by the ENGINE: observed 0, we wrote -1112, delta 1112 (+6.1 deg) | baseYaw 0 (+0.0 deg) | fold-in off, cine ON
+2026-10-13T17:43:30.0184487+02:00 observed: yaw asserted by the ENGINE: observed 0, we wrote -1239, delta 1239 (+6.8 deg) | baseYaw 0 (+0.0 deg) | fold-in off, cine ON
+2026-10-13T17:43:30.0184487+02:00 observed: yaw asserted by the ENGINE: observed 0, we wrote -1349, delta 1349 (+7.4 deg) | baseYaw 0 (+0.0 deg) | fold-in off, cine ON
+2026-10-13T17:43:30.0184487+02:00 observed: yaw asserted by the ENGINE: observed 0, we wrote -1441, delta 1441 (+7.9 deg) | baseYaw 0 (+0.0 deg) | fold-in off, cine ON
+2026-10-13T17:43:30.0184487+02:00 observed: yaw asserted by the ENGINE: observed 0, we wrote -1526, delta 1526 (+8.4 deg) | baseYaw 0 (+0.0 deg) | fold-in off, cine ON
+2026-10-13T17:43:30.0194493+02:00 observed: yaw asserted by the ENGINE: observed 0, we wrote -1618, delta 1618 (+8.9 deg) | baseYaw 0 (+0.0 deg) | fold-in off, cine ON
+2026-10-13T17:43:30.0194493+02:00 observed: yaw asserted by the ENGINE: observed 0, we wrote -1725, delta 1725 (+9.5 deg) | baseYaw 0 (+0.0 deg) | fold-in off, cine ON
+2026-10-13T17:43:30.0194493+02:00 observed: yaw asserted by the ENGINE: observed 0, we wrote -1843, delta 1843 (+10.1 deg) | baseYaw 0 (+0.0 deg) | fold-in off, cine ON
+2026-10-13T17:43:30.0204481+02:00 observed: yaw asserted by the ENGINE: observed 0, we wrote -1976, delta 1976 (+10.9 deg) | baseYaw 0 (+0.0 deg) | fold-in off, cine ON
+2026-10-13T17:43:30.0204481+02:00 observed: yaw asserted by the ENGINE: observed 0, we wrote -2113, delta 2113 (+11.6 deg) | baseYaw 0 (+0.0 deg) | fold-in off, cine ON
+2026-10-13T17:43:30.0204481+02:00 observed: yaw asserted by the ENGINE: observed 0, we wrote -2250, delta 2250 (+12.4 deg) | baseYaw 0 (+0.0 deg) | fold-in off, cine ON
+2026-10-13T17:43:30.0214646+02:00 observed: yaw asserted by the ENGINE: observed 0, we wrote -2384, delta 2384 (+13.1 deg) | baseYaw 0 (+0.0 deg) | fold-in off, cine ON
+2026-10-13T17:43:30.0214646+02:00 observed: yaw asserted by the ENGINE: observed 0, we wrote -2521, delta 2521 (+13.8 deg) | baseYaw 0 (+0.0 deg) | fold-in off, cine ON
+2026-10-13T17:43:30.0214646+02:00 observed: yaw asserted by the ENGINE: observed 0, we wrote -2634, delta 2634 (+14.5 deg) | baseYaw 0 (+0.0 deg) | fold-in off, cine ON
+2026-10-13T17:43:35.0465718+02:00 observed: yaw asserted by the ENGINE: observed 0, we wrote -2713, delta 2713 (+14.9 deg) | baseYaw 0 (+0.0 deg) | fold-in off, cine ON
+2026-10-13T17:43:35.0476671+02:00 observed: yaw asserted by the ENGINE: observed 0, we wrote -2765, delta 2765 (+15.2 deg) | baseYaw 0 (+0.0 deg) | fold-in off, cine ON
+2026-10-13T17:43:35.0476671+02:00 observed: yaw asserted by the ENGINE: observed 0, we wrote -2681, delta 2681 (+14.7 deg) | baseYaw 0 (+0.0 deg) | fold-in off, cine ON
+2026-10-13T17:43:35.0481812+02:00 observed: yaw asserted by the ENGINE: observed 0, we wrote -2638, delta 2638 (+14.5 deg) | baseYaw 0 (+0.0 deg) | fold-in off, cine ON
+2026-10-13T17:43:35.0486945+02:00 observed: yaw asserted by the ENGINE: observed 0, we wrote -2620, delta 2620 (+14.4 deg) | baseYaw 0 (+0.0 deg) | fold-in off, cine ON
+2026-10-13T17:43:35.0492081+02:00 observed: yaw asserted by the ENGINE: observed 0, we wrote -2658, delta 2658 (+14.6 deg) | baseYaw 0 (+0.0 deg) | fold-in off, cine ON
+2026-10-13T17:43:35.0492081+02:00 observed: yaw asserted by the ENGINE: observed 0, we wrote -2707, delta 2707 (+14.9 deg) | baseYaw 0 (+0.0 deg) | fold-in off, cine ON
+2026-10-13T17:43:35.0492081+02:00 observed: yaw asserted by the ENGINE: observed 0, we wrote -2761, delta 2761 (+15.2 deg) | baseYaw 0 (+0.0 deg) | fold-in off, cine ON
+2026-10-13T17:43:35.0492081+02:00 observed: yaw asserted by the ENGINE: observed 0, we wrote -2753, delta 2753 (+15.1 deg) | baseYaw 0 (+0.0 deg) | fold-in off, cine ON
+2026-10-13T17:43:35.0502117+02:00 observed: yaw asserted by the ENGINE: observed 0, we wrote -2738, delta 2738 (+15.0 deg) | baseYaw 0 (+0.0 deg) | fold-in off, cine ON
+2026-10-13T17:43:35.0502117+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=30 copy=109 (+30) submit=870 (+30) captureTry=30 validCapture=30 failedCapture=0 missingLayer=0
+2026-10-13T17:43:35.0502117+02:00 observed: yaw asserted by the ENGINE: observed 0, we wrote -2540, delta 2540 (+14.0 deg) | baseYaw 0 (+0.0 deg) | fold-in off, cine ON
+2026-10-13T17:43:35.0512390+02:00 observed: yaw asserted by the ENGINE: observed 0, we wrote -2296, delta 2296 (+12.6 deg) | baseYaw 0 (+0.0 deg) | fold-in off, cine ON
+2026-10-13T17:43:35.0512390+02:00 observed: yaw asserted by the ENGINE: observed 0, we wrote -2007, delta 2007 (+11.0 deg) | baseYaw 0 (+0.0 deg) | fold-in off, cine ON
+2026-10-13T17:43:35.0512390+02:00 observed: yaw asserted by the ENGINE: observed 0, we wrote -1674, delta 1674 (+9.2 deg) | baseYaw 0 (+0.0 deg) | fold-in off, cine ON
+2026-10-13T17:43:35.0522394+02:00 observed: perf: 30.0 fps (33.33 ms/frame) | draws/frame peak 0, split 0 (0 with parallax, 0 flat), offscreen 0, mono-fallback 0, user-ptr 1, frames with NO identification 0 [TRUE STEREO ON]
+2026-10-13T17:43:35.0522394+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=30 copy=19 (+-90) submit=900 (+30) captureTry=30 validCapture=30 failedCapture=0 missingLayer=0
+2026-10-13T17:43:35.0522394+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=30 copy=49 (+30) submit=930 (+30) captureTry=30 validCapture=30 failedCapture=0 missingLayer=0
+2026-10-13T17:43:35.0539221+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=30 copy=79 (+30) submit=960 (+30) captureTry=30 validCapture=30 failedCapture=0 missingLayer=0
+2026-10-13T17:43:35.0539221+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=30 copy=109 (+30) submit=990 (+30) captureTry=30 validCapture=30 failedCapture=0 missingLayer=0
+2026-10-13T17:43:35.0539221+02:00 observed: perf: 29.9 fps (33.41 ms/frame) | draws/frame peak 0, split 0 (0 with parallax, 0 flat), offscreen 0, mono-fallback 0, user-ptr 1, frames with NO identification 0 [TRUE STEREO ON]
+2026-10-13T17:43:40.0780744+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=30 copy=19 (+-90) submit=1020 (+30) captureTry=30 validCapture=30 failedCapture=0 missingLayer=0
+2026-10-13T17:43:40.0790741+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=30 copy=49 (+30) submit=1050 (+30) captureTry=30 validCapture=30 failedCapture=0 missingLayer=0
+2026-10-13T17:43:40.0790741+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=30 copy=79 (+30) submit=1080 (+30) captureTry=30 validCapture=30 failedCapture=0 missingLayer=0
+2026-10-13T17:43:40.0805777+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=30 copy=109 (+30) submit=1110 (+30) captureTry=30 validCapture=30 failedCapture=0 missingLayer=0
+2026-10-13T17:43:40.0815818+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=30 copy=19 (+-90) submit=1140 (+30) captureTry=30 validCapture=30 failedCapture=0 missingLayer=0
+2026-10-13T17:43:45.1086016+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=30 copy=49 (+30) submit=1170 (+30) captureTry=30 validCapture=30 failedCapture=0 missingLayer=0
+2026-10-13T17:43:45.1095996+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=30 copy=79 (+30) submit=1200 (+30) captureTry=30 validCapture=30 failedCapture=0 missingLayer=0
+2026-10-13T17:43:45.1106019+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=30 copy=109 (+30) submit=1230 (+30) captureTry=30 validCapture=30 failedCapture=0 missingLayer=0
+2026-10-13T17:43:45.1111083+02:00 observed: perf: 29.9 fps (33.40 ms/frame) | draws/frame peak 0, split 0 (0 with parallax, 0 flat), offscreen 0, mono-fallback 0, user-ptr 1, frames with NO identification 0 [TRUE STEREO ON]
+2026-10-13T17:43:45.1126117+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=30 copy=19 (+-90) submit=1260 (+30) captureTry=30 validCapture=30 failedCapture=0 missingLayer=0
+2026-10-13T17:43:45.1136148+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=30 copy=49 (+30) submit=1290 (+30) captureTry=30 validCapture=30 failedCapture=0 missingLayer=0
+2026-10-13T17:43:50.1379320+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=30 copy=79 (+30) submit=1320 (+30) captureTry=30 validCapture=30 failedCapture=0 missingLayer=0
+2026-10-13T17:43:50.1389320+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=30 copy=109 (+30) submit=1350 (+30) captureTry=30 validCapture=30 failedCapture=0 missingLayer=0
+2026-10-13T17:43:50.1389320+02:00 observed: perf: 30.0 fps (33.35 ms/frame) | draws/frame peak 0, split 0 (0 with parallax, 0 flat), offscreen 0, mono-fallback 0, user-ptr 1, frames with NO identification 0 [TRUE STEREO ON]
+2026-10-13T17:43:50.1399321+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=30 copy=19 (+-90) submit=1380 (+30) captureTry=30 validCapture=30 failedCapture=0 missingLayer=0
+2026-10-13T17:43:50.1409320+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=30 copy=49 (+30) submit=1410 (+30) captureTry=30 validCapture=30 failedCapture=0 missingLayer=0
+2026-10-13T17:43:50.1414345+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=30 copy=79 (+30) submit=1440 (+30) captureTry=30 validCapture=30 failedCapture=0 missingLayer=0
+2026-10-13T17:43:55.1652760+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=30 copy=109 (+30) submit=1470 (+30) captureTry=30 validCapture=30 failedCapture=0 missingLayer=0
+2026-10-13T17:43:55.1662797+02:00 observed: perf: 29.9 fps (33.39 ms/frame) | draws/frame peak 0, split 0 (0 with parallax, 0 flat), offscreen 0, mono-fallback 0, user-ptr 1, frames with NO identification 0 [TRUE STEREO ON]
+2026-10-13T17:43:55.1672791+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=30 copy=19 (+-90) submit=1500 (+30) captureTry=30 validCapture=30 failedCapture=0 missingLayer=0
+2026-10-13T17:43:55.1672791+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=30 copy=49 (+30) submit=1530 (+30) captureTry=30 validCapture=30 failedCapture=0 missingLayer=0
+2026-10-13T17:43:55.1682797+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=30 copy=79 (+30) submit=1560 (+30) captureTry=30 validCapture=30 failedCapture=0 missingLayer=0
+2026-10-13T17:43:55.1692797+02:00 observed: SceneMode: VideoFlat -> CutsceneFlat reason=1 cinematic=1 video=0 menu=0 paused=0 frame=2735
+2026-10-13T17:43:55.1692797+02:00 observed: cutscene-mono: stage=armed hr=0x00000000 mode=CutsceneFlat cine=1 flat=1 menuClass=0 vr=1 src=5264x2684
+2026-10-13T17:43:55.1692797+02:00 observed: cutscene-mono: source=0555FB60 fmt=21 pool=0 usage=0x00000001 msaa=0 quality=0 scratch=RT-texture surface=7892A6E0
+2026-10-13T17:43:55.1692797+02:00 observed: cutscene-mono: stage=complete hr=0x00000000 mode=CutsceneFlat cine=1 flat=1 menuClass=0 vr=1 src=5264x2684
+2026-10-13T17:43:55.1692797+02:00 observed: cutscene-mono: composed 5264x2684 -> left-half fit (197,772)-(2434,1912), both eyes share it
+2026-10-13T17:43:55.1707836+02:00 observed: cutscene-mono: XR bridge submits one identical full-image crop to both eyes (2632x2684 at x=0)
+2026-10-13T17:43:55.1707836+02:00 observed: cutscene-mono: suppressed tracked foreground verts=3314 first=0 tris=4830; gameplay policy unchanged
+2026-10-13T17:43:55.1717879+02:00 observed: cutscene-mono: full-viewport projection tanX=2.60647 eyeTanX=1.30323 tanY=1.32898; fit=85%
+2026-10-13T17:43:55.1717879+02:00 observed: perf: 33.3 fps (30.00 ms/frame) | draws/frame peak 2133, split 0 (0 with parallax, 0 flat), offscreen 0, mono-fallback 0, user-ptr 969, frames with NO identification 0 [TRUE STEREO ON]
+2026-10-13T17:43:55.1732916+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=42 copy=1 (+-78) submit=1602 (+42) captureTry=42 validCapture=42 failedCapture=0 missingLayer=0
+2026-10-13T17:44:00.1983662+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=89 copy=13 (+-31) submit=1854 (+89) captureTry=89 validCapture=89 failedCapture=0 missingLayer=0
+2026-10-13T17:44:00.1993665+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=90 copy=103 (+90) submit=1944 (+90) captureTry=90 validCapture=90 failedCapture=0 missingLayer=0
+2026-10-13T17:44:00.1993665+02:00 observed: perf: 90.0 fps (11.12 ms/frame) | draws/frame peak 1055, split 0 (0 with parallax, 0 flat), offscreen 0, mono-fallback 0, user-ptr 318, frames with NO identification 0 [TRUE STEREO ON]
+2026-10-13T17:44:00.2018774+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=90 copy=73 (+-30) submit=2034 (+90) captureTry=90 validCapture=90 failedCapture=0 missingLayer=0
+2026-10-13T17:44:00.2018774+02:00 observed: polish cine text: mapped=1 chars=71 english="Katorga, Sea of Okhostk
+2026-10-13T17:44:00.2018774+02:00 observed: perf: 89.8 fps (11.13 ms/frame) | draws/frame peak 986, split 0 (0 with parallax, 0 flat), offscreen 0, mono-fallback 0, user-ptr 327, frames with NO identification 0 [TRUE STEREO ON]
+2026-10-13T17:44:05.2283077+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=90 copy=13 (+-30) submit=2214 (+90) captureTry=90 validCapture=90 failedCapture=0 missingLayer=0
+2026-10-13T17:44:05.2293073+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=90 copy=103 (+90) submit=2304 (+90) captureTry=90 validCapture=90 failedCapture=0 missingLayer=0
+2026-10-13T17:44:05.2303076+02:00 observed: perf: 89.9 fps (11.13 ms/frame) | draws/frame peak 893, split 0 (0 with parallax, 0 flat), offscreen 0, mono-fallback 0, user-ptr 349, frames with NO identification 0 [TRUE STEREO ON]
+2026-10-13T17:44:05.2313071+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=90 copy=73 (+-30) submit=2394 (+90) captureTry=90 validCapture=90 failedCapture=0 missingLayer=0
+2026-10-13T17:44:05.2313071+02:00 observed: perf: 90.0 fps (11.12 ms/frame) | draws/frame peak 843, split 0 (0 with parallax, 0 flat), offscreen 0, mono-fallback 0, user-ptr 345, frames with NO identification 0 [TRUE STEREO ON]
+2026-10-13T17:44:05.2326837+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=90 copy=43 (+-30) submit=2484 (+90) captureTry=90 validCapture=90 failedCapture=0 missingLayer=0
+2026-10-13T17:44:10.2523709+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=89 copy=72 (+-31) submit=2753 (+89) captureTry=89 validCapture=89 failedCapture=0 missingLayer=0
+2026-10-13T17:44:10.2558604+02:00 observed: perf: 90.0 fps (11.12 ms/frame) | draws/frame peak 778, split 0 (0 with parallax, 0 flat), offscreen 0, mono-fallback 0, user-ptr 364, frames with NO identification 0 [TRUE STEREO ON]
+2026-10-13T17:44:10.2568600+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=90 copy=42 (+-30) submit=2843 (+90) captureTry=90 validCapture=90 failedCapture=0 missingLayer=0
+2026-10-13T17:44:10.2578606+02:00 observed: perf: 89.9 fps (11.12 ms/frame) | draws/frame peak 743, split 0 (0 with parallax, 0 flat), offscreen 0, mono-fallback 0, user-ptr 360, frames with NO identification 0 [TRUE STEREO ON]
+2026-10-13T17:44:10.2588609+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=90 copy=12 (+-30) submit=2933 (+90) captureTry=90 validCapture=90 failedCapture=0 missingLayer=0
+2026-10-13T17:44:10.2588609+02:00 observed: polish cine text: mapped=0 chars=59 english="Activision Presents
+2026-10-13T17:44:15.2726755+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=90 copy=72 (+-30) submit=3113 (+90) captureTry=90 validCapture=90 failedCapture=0 missingLayer=0
+2026-10-13T17:44:15.2746760+02:00 observed: perf: 89.9 fps (11.13 ms/frame) | draws/frame peak 725, split 0 (0 with parallax, 0 flat), offscreen 0, mono-fallback 0, user-ptr 365, frames with NO identification 0 [TRUE STEREO ON]
+2026-10-13T17:44:15.2746760+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=90 copy=42 (+-30) submit=3203 (+90) captureTry=90 validCapture=90 failedCapture=0 missingLayer=0
+2026-10-13T17:44:15.2758586+02:00 observed: perf: 89.9 fps (11.12 ms/frame) | draws/frame peak 764, split 0 (0 with parallax, 0 flat), offscreen 0, mono-fallback 0, user-ptr 367, frames with NO identification 0 [TRUE STEREO ON]
+2026-10-13T17:44:15.2768586+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=90 copy=12 (+-30) submit=3293 (+90) captureTry=90 validCapture=90 failedCapture=0 missingLayer=0
+2026-10-13T17:44:15.2768586+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=90 copy=102 (+90) submit=3383 (+90) captureTry=90 validCapture=90 failedCapture=0 missingLayer=0
+2026-10-13T17:44:15.2778586+02:00 observed: perf: 89.9 fps (11.13 ms/frame) | draws/frame peak 755, split 0 (0 with parallax, 0 flat), offscreen 0, mono-fallback 0, user-ptr 361, frames with NO identification 0 [TRUE STEREO ON]
+2026-10-13T17:44:20.2969677+02:00 observed: perf: 89.9 fps (11.13 ms/frame) | draws/frame peak 704, split 0 (0 with parallax, 0 flat), offscreen 0, mono-fallback 0, user-ptr 355, frames with NO identification 0 [TRUE STEREO ON]
+2026-10-13T17:44:20.2979682+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=89 copy=11 (+-31) submit=3652 (+89) captureTry=89 validCapture=89 failedCapture=0 missingLayer=0
+2026-10-13T17:44:20.2989679+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=90 copy=101 (+90) submit=3742 (+90) captureTry=90 validCapture=90 failedCapture=0 missingLayer=0
+2026-10-13T17:44:20.2989679+02:00 observed: perf: 89.9 fps (11.12 ms/frame) | draws/frame peak 611, split 0 (0 with parallax, 0 flat), offscreen 0, mono-fallback 0, user-ptr 324, frames with NO identification 0 [TRUE STEREO ON]
+2026-10-13T17:44:20.2999679+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=90 copy=71 (+-30) submit=3832 (+90) captureTry=90 validCapture=90 failedCapture=0 missingLayer=0
+2026-10-13T17:44:20.2999679+02:00 observed: perf: 89.9 fps (11.12 ms/frame) | draws/frame peak 581, split 0 (0 with parallax, 0 flat), offscreen 0, mono-fallback 0, user-ptr 320, frames with NO identification 0 [TRUE STEREO ON]
+2026-10-13T17:44:25.3263089+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=90 copy=101 (+90) submit=4102 (+90) captureTry=90 validCapture=90 failedCapture=0 missingLayer=0
+2026-10-13T17:44:25.3273087+02:00 observed: perf: 89.9 fps (11.12 ms/frame) | draws/frame peak 544, split 0 (0 with parallax, 0 flat), offscreen 0, mono-fallback 0, user-ptr 317, frames with NO identification 0 [TRUE STEREO ON]
+2026-10-13T17:44:25.3293087+02:00 observed: polish cine text: mapped=0 chars=6 english="Devlin"
+2026-10-13T17:44:25.3293087+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=90 copy=71 (+-30) submit=4192 (+90) captureTry=90 validCapture=90 failedCapture=0 missingLayer=0
+2026-10-13T17:44:25.3303091+02:00 observed: perf: 89.9 fps (11.12 ms/frame) | draws/frame peak 529, split 0 (0 with parallax, 0 flat), offscreen 0, mono-fallback 0, user-ptr 305, frames with NO identification 0 [TRUE STEREO ON]
+2026-10-13T17:44:25.3318124+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=90 copy=41 (+-30) submit=4282 (+90) captureTry=90 validCapture=90 failedCapture=0 missingLayer=0
+2026-10-13T17:44:25.3323342+02:00 observed: perf: 89.9 fps (11.12 ms/frame) | draws/frame peak 517, split 0 (0 with parallax, 0 flat), offscreen 0, mono-fallback 0, user-ptr 307, frames with NO identification 0 [TRUE STEREO ON]
+2026-10-13T17:44:30.3597752+02:00 observed: perf: 89.9 fps (11.12 ms/frame) | draws/frame peak 506, split 0 (0 with parallax, 0 flat), offscreen 0, mono-fallback 0, user-ptr 329, frames with NO identification 0 [TRUE STEREO ON]
+2026-10-13T17:44:30.3617744+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=90 copy=71 (+-30) submit=4552 (+90) captureTry=90 validCapture=90 failedCapture=0 missingLayer=0
+2026-10-13T17:44:30.3617744+02:00 observed: perf: 89.9 fps (11.13 ms/frame) | draws/frame peak 519, split 0 (0 with parallax, 0 flat), offscreen 0, mono-fallback 0, user-ptr 336, frames with NO identification 0 [TRUE STEREO ON]
+2026-10-13T17:44:30.3643283+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=86 copy=37 (+-34) submit=4638 (+86) captureTry=86 validCapture=86 failedCapture=0 missingLayer=0
+2026-10-13T17:44:30.3648321+02:00 observed: perf: 87.0 fps (11.50 ms/frame) | draws/frame peak 538, split 0 (0 with parallax, 0 flat), offscreen 0, mono-fallback 0, user-ptr 339, frames with NO identification 0 [TRUE STEREO ON]
+2026-10-13T17:44:30.3668367+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=89 copy=6 (+-31) submit=4727 (+89) captureTry=89 validCapture=89 failedCapture=0 missingLayer=0
+2026-10-13T17:44:35.3940084+02:00 observed: perf: 89.4 fps (11.19 ms/frame) | draws/frame peak 1296, split 0 (0 with parallax, 0 flat), offscreen 0, mono-fallback 0, user-ptr 406, frames with NO identification 0 [TRUE STEREO ON]
+2026-10-13T17:44:35.3950093+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=90 copy=36 (+-30) submit=4997 (+90) captureTry=90 validCapture=90 failedCapture=0 missingLayer=0
+2026-10-13T17:44:35.3962431+02:00 observed: perf: 90.2 fps (11.09 ms/frame) | draws/frame peak 1329, split 0 (0 with parallax, 0 flat), offscreen 0, mono-fallback 0, user-ptr 322, frames with NO identification 0 [TRUE STEREO ON]
+2026-10-13T17:44:35.3972425+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=90 copy=6 (+-30) submit=5087 (+90) captureTry=90 validCapture=90 failedCapture=0 missingLayer=0
+2026-10-13T17:44:35.3982424+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=90 copy=96 (+90) submit=5177 (+90) captureTry=90 validCapture=90 failedCapture=0 missingLayer=0
+2026-10-13T17:44:35.3982424+02:00 observed: perf: 89.8 fps (11.13 ms/frame) | draws/frame peak 1155, split 0 (0 with parallax, 0 flat), offscreen 0, mono-fallback 0, user-ptr 230, frames with NO identification 0 [TRUE STEREO ON]
+2026-10-13T17:44:40.4178818+02:00 observed: perf: 89.9 fps (11.13 ms/frame) | draws/frame peak 1167, split 0 (0 with parallax, 0 flat), offscreen 0, mono-fallback 0, user-ptr 221, frames with NO identification 0 [TRUE STEREO ON]
+2026-10-13T17:44:40.4198808+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=90 copy=6 (+-30) submit=5447 (+90) captureTry=90 validCapture=90 failedCapture=0 missingLayer=0
+2026-10-13T17:44:40.4198808+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=89 copy=95 (+89) submit=5536 (+89) captureTry=89 validCapture=89 failedCapture=0 missingLayer=0
+2026-10-13T17:44:40.4208807+02:00 observed: perf: 89.8 fps (11.14 ms/frame) | draws/frame peak 1186, split 0 (0 with parallax, 0 flat), offscreen 0, mono-fallback 0, user-ptr 201, frames with NO identification 0 [TRUE STEREO ON]
+2026-10-13T17:44:40.4208807+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=90 copy=65 (+-30) submit=5626 (+90) captureTry=90 validCapture=90 failedCapture=0 missingLayer=0
+2026-10-13T17:44:40.4223839+02:00 observed: perf: 90.2 fps (11.09 ms/frame) | draws/frame peak 1170, split 0 (0 with parallax, 0 flat), offscreen 0, mono-fallback 0, user-ptr 200, frames with NO identification 0 [TRUE STEREO ON]
+2026-10-13T17:44:40.4233882+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=90 copy=35 (+-30) submit=5716 (+90) captureTry=90 validCapture=90 failedCapture=0 missingLayer=0
+2026-10-13T17:44:45.4474916+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=90 copy=95 (+90) submit=5896 (+90) captureTry=90 validCapture=90 failedCapture=0 missingLayer=0
+2026-10-13T17:44:45.4484939+02:00 observed: perf: 89.9 fps (11.13 ms/frame) | draws/frame peak 1252, split 0 (0 with parallax, 0 flat), offscreen 0, mono-fallback 0, user-ptr 215, frames with NO identification 0 [TRUE STEREO ON]
+2026-10-13T17:44:45.4499972+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=90 copy=65 (+-30) submit=5986 (+90) captureTry=90 validCapture=90 failedCapture=0 missingLayer=0
+2026-10-13T17:44:45.4499972+02:00 observed: perf: 89.8 fps (11.14 ms/frame) | draws/frame peak 1255, split 0 (0 with parallax, 0 flat), offscreen 0, mono-fallback 0, user-ptr 204, frames with NO identification 0 [TRUE STEREO ON]
+2026-10-13T17:44:45.4510015+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=90 copy=35 (+-30) submit=6076 (+90) captureTry=90 validCapture=90 failedCapture=0 missingLayer=0
+2026-10-13T17:44:45.4510015+02:00 observed: perf: 90.0 fps (11.11 ms/frame) | draws/frame peak 1276, split 0 (0 with parallax, 0 flat), offscreen 0, mono-fallback 0, user-ptr 191, frames with NO identification 0 [TRUE STEREO ON]
+2026-10-13T17:44:45.4525054+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=90 copy=5 (+-30) submit=6166 (+90) captureTry=90 validCapture=90 failedCapture=0 missingLayer=0
+2026-10-13T17:44:50.4774563+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=90 copy=65 (+-30) submit=6346 (+90) captureTry=90 validCapture=90 failedCapture=0 missingLayer=0
+2026-10-13T17:44:50.4794603+02:00 observed: perf: 89.8 fps (11.13 ms/frame) | draws/frame peak 1276, split 0 (0 with parallax, 0 flat), offscreen 0, mono-fallback 0, user-ptr 183, frames with NO identification 0 [TRUE STEREO ON]
+2026-10-13T17:44:50.4804603+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=90 copy=35 (+-30) submit=6436 (+90) captureTry=90 validCapture=90 failedCapture=0 missingLayer=0
+2026-10-13T17:44:50.4804603+02:00 observed: perf: 89.9 fps (11.13 ms/frame) | draws/frame peak 1065, split 0 (0 with parallax, 0 flat), offscreen 0, mono-fallback 0, user-ptr 170, frames with NO identification 0 [TRUE STEREO ON]
+2026-10-13T17:44:50.4814612+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=90 copy=5 (+-30) submit=6526 (+90) captureTry=90 validCapture=90 failedCapture=0 missingLayer=0
+2026-10-13T17:44:50.4824608+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=89 copy=94 (+89) submit=6615 (+89) captureTry=89 validCapture=89 failedCapture=0 missingLayer=0
+2026-10-13T17:44:55.5081964+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=90 copy=34 (+-30) submit=6795 (+90) captureTry=90 validCapture=90 failedCapture=0 missingLayer=0
+2026-10-13T17:44:55.5092022+02:00 observed: perf: 90.0 fps (11.12 ms/frame) | draws/frame peak 252, split 0 (0 with parallax, 0 flat), offscreen 0, mono-fallback 0, user-ptr 108, frames with NO identification 0 [TRUE STEREO ON]
+2026-10-13T17:44:55.5112017+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=90 copy=4 (+-30) submit=6885 (+90) captureTry=90 validCapture=90 failedCapture=0 missingLayer=0
+2026-10-13T17:44:55.5112017+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=90 copy=94 (+90) submit=6975 (+90) captureTry=90 validCapture=90 failedCapture=0 missingLayer=0
+2026-10-13T17:44:55.5127062+02:00 observed: perf: 89.8 fps (11.13 ms/frame) | draws/frame peak 275, split 0 (0 with parallax, 0 flat), offscreen 0, mono-fallback 0, user-ptr 130, frames with NO identification 0 [TRUE STEREO ON]
+2026-10-13T17:44:55.5137106+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=90 copy=64 (+-30) submit=7065 (+90) captureTry=90 validCapture=90 failedCapture=0 missingLayer=0
+2026-10-13T17:45:00.5259708+02:00 observed: perf: 90.1 fps (11.10 ms/frame) | draws/frame peak 220, split 0 (0 with parallax, 0 flat), offscreen 0, mono-fallback 0, user-ptr 80, frames with NO identification 0 [TRUE STEREO ON]
+2026-10-13T17:45:00.5269754+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=90 copy=4 (+-30) submit=7245 (+90) captureTry=90 validCapture=90 failedCapture=0 missingLayer=0
+2026-10-13T17:45:00.5279800+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=90 copy=94 (+90) submit=7335 (+90) captureTry=90 validCapture=90 failedCapture=0 missingLayer=0
+2026-10-13T17:45:00.5279800+02:00 observed: perf: 88.0 fps (11.36 ms/frame) | draws/frame peak 1297, split 0 (0 with parallax, 0 flat), offscreen 0, mono-fallback 0, user-ptr 79, frames with NO identification 0 [TRUE STEREO ON]
+2026-10-13T17:45:00.5299787+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=87 copy=61 (+-33) submit=7422 (+87) captureTry=87 validCapture=87 failedCapture=0 missingLayer=0
+2026-10-13T17:45:00.5299787+02:00 observed: perf: 90.0 fps (11.11 ms/frame) | draws/frame peak 1329, split 0 (0 with parallax, 0 flat), offscreen 0, mono-fallback 0, user-ptr 53, frames with NO identification 0 [TRUE STEREO ON]
+2026-10-13T17:45:00.5309787+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=90 copy=31 (+-30) submit=7512 (+90) captureTry=90 validCapture=90 failedCapture=0 missingLayer=0
+2026-10-13T17:45:05.5574991+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=90 copy=91 (+90) submit=7692 (+90) captureTry=90 validCapture=90 failedCapture=0 missingLayer=0
+2026-10-13T17:45:05.5585038+02:00 observed: perf: 89.8 fps (11.13 ms/frame) | draws/frame peak 1289, split 0 (0 with parallax, 0 flat), offscreen 0, mono-fallback 0, user-ptr 57, frames with NO identification 0 [TRUE STEREO ON]
+2026-10-13T17:45:05.5605033+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=90 copy=61 (+-30) submit=7782 (+90) captureTry=90 validCapture=90 failedCapture=0 missingLayer=0
+2026-10-13T17:45:05.5605033+02:00 observed: perf: 90.0 fps (11.11 ms/frame) | draws/frame peak 1287, split 0 (0 with parallax, 0 flat), offscreen 0, mono-fallback 0, user-ptr 57, frames with NO identification 0 [TRUE STEREO ON]
+2026-10-13T17:45:05.5615036+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=90 copy=31 (+-30) submit=7872 (+90) captureTry=90 validCapture=90 failedCapture=0 missingLayer=0
+2026-10-13T17:45:05.5630072+02:00 observed: perf: 89.9 fps (11.12 ms/frame) | draws/frame peak 1290, split 0 (0 with parallax, 0 flat), offscreen 0, mono-fallback 0, user-ptr 58, frames with NO identification 0 [TRUE STEREO ON]
+2026-10-13T17:45:05.5640122+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=90 copy=1 (+-30) submit=7962 (+90) captureTry=90 validCapture=90 failedCapture=0 missingLayer=0
+2026-10-13T17:45:10.6001773+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=90 copy=91 (+90) submit=8052 (+90) captureTry=90 validCapture=90 failedCapture=0 missingLayer=0
+2026-10-13T17:45:10.6021782+02:00 observed: perf: 89.8 fps (11.14 ms/frame) | draws/frame peak 1277, split 0 (0 with parallax, 0 flat), offscreen 0, mono-fallback 0, user-ptr 55, frames with NO identification 0 [TRUE STEREO ON]
+2026-10-13T17:45:10.6031780+02:00 observed: polish voice: 0226_f6714423388a.wav accepted=1 chars=41 cine=0
+2026-10-13T17:45:10.6036826+02:00 observed: cutscene ENDED (OcclusionQueryMode=2, unchanged - run 272's DRAW ALL override was measured dead here: the engine culls on the CPU before any query. run 273)
+2026-10-13T17:45:10.6046881+02:00 observed: cutscene ENDED - restoring mode 1. The yaw fold-in is back on, which is what mouse and gamepad turning need.
+2026-10-13T17:45:10.6046881+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=79 copy=50 (+-41) submit=8131 (+79) captureTry=79 validCapture=79 failedCapture=0 missingLayer=0
+2026-10-13T17:45:10.6056871+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=43 copy=93 (+43) submit=8174 (+43) captureTry=43 validCapture=43 failedCapture=0 missingLayer=0
+2026-10-13T17:45:10.6061910+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=14 copy=107 (+14) submit=8188 (+14) captureTry=14 validCapture=14 failedCapture=0 missingLayer=0
+2026-10-13T17:45:15.6304182+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=4 copy=111 (+4) submit=8192 (+4) captureTry=4 validCapture=4 failedCapture=0 missingLayer=0
+2026-10-13T17:45:15.6314180+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=4 copy=115 (+4) submit=8196 (+4) captureTry=4 validCapture=4 failedCapture=0 missingLayer=0
+2026-10-13T17:45:15.6329210+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=4 copy=119 (+4) submit=8200 (+4) captureTry=4 validCapture=4 failedCapture=0 missingLayer=0
+2026-10-13T17:45:15.6329210+02:00 observed: perf: 16.3 fps (61.48 ms/frame) | draws/frame peak 2605, split 0 (0 with parallax, 0 flat), offscreen 0, mono-fallback 0, user-ptr 732, frames with NO identification 0 [TRUE STEREO ON]
+2026-10-13T17:45:15.6339252+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=3 copy=2 (+-117) submit=8203 (+3) captureTry=3 validCapture=3 failedCapture=0 missingLayer=0
+2026-10-13T17:45:15.6349246+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=3 copy=5 (+3) submit=8206 (+3) captureTry=3 validCapture=3 failedCapture=0 missingLayer=0
+2026-10-13T17:45:20.6612425+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=3 copy=8 (+3) submit=8209 (+3) captureTry=3 validCapture=3 failedCapture=0 missingLayer=0
+2026-10-13T17:45:20.6632432+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=3 copy=11 (+3) submit=8212 (+3) captureTry=3 validCapture=3 failedCapture=0 missingLayer=0
+2026-10-13T17:45:20.6637475+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=3 copy=14 (+3) submit=8215 (+3) captureTry=3 validCapture=3 failedCapture=0 missingLayer=0
+2026-10-13T17:45:25.6949929+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=3 copy=17 (+3) submit=8218 (+3) captureTry=3 validCapture=3 failedCapture=0 missingLayer=0
+2026-10-13T17:45:25.6964966+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=3 copy=20 (+3) submit=8221 (+3) captureTry=3 validCapture=3 failedCapture=0 missingLayer=0
+2026-10-13T17:45:25.6975006+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=3 copy=23 (+3) submit=8224 (+3) captureTry=3 validCapture=3 failedCapture=0 missingLayer=0
+2026-10-13T17:45:25.6975006+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=3 copy=26 (+3) submit=8227 (+3) captureTry=3 validCapture=3 failedCapture=0 missingLayer=0
+2026-10-13T17:45:30.7171376+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=3 copy=29 (+3) submit=8230 (+3) captureTry=3 validCapture=3 failedCapture=0 missingLayer=0
+2026-10-13T17:45:30.7181439+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=3 copy=32 (+3) submit=8233 (+3) captureTry=3 validCapture=3 failedCapture=0 missingLayer=0
+2026-10-13T17:45:30.7191422+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=3 copy=35 (+3) submit=8236 (+3) captureTry=3 validCapture=3 failedCapture=0 missingLayer=0
+2026-10-13T17:45:30.7201419+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=3 copy=38 (+3) submit=8239 (+3) captureTry=3 validCapture=3 failedCapture=0 missingLayer=0
+2026-10-13T17:45:35.7766754+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=3 copy=41 (+3) submit=8242 (+3) captureTry=3 validCapture=3 failedCapture=0 missingLayer=0
+2026-10-13T17:45:35.7776805+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=3 copy=44 (+3) submit=8245 (+3) captureTry=3 validCapture=3 failedCapture=0 missingLayer=0
+2026-10-13T17:45:35.7786798+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=3 copy=47 (+3) submit=8248 (+3) captureTry=3 validCapture=3 failedCapture=0 missingLayer=0
+2026-10-13T17:45:35.7786798+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=3 copy=50 (+3) submit=8251 (+3) captureTry=3 validCapture=3 failedCapture=0 missingLayer=0
+2026-10-13T17:45:40.8008312+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=3 copy=53 (+3) submit=8254 (+3) captureTry=3 validCapture=3 failedCapture=0 missingLayer=0
+2026-10-13T17:45:40.8018316+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=3 copy=56 (+3) submit=8257 (+3) captureTry=3 validCapture=3 failedCapture=0 missingLayer=0
+2026-10-13T17:45:40.8028325+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=3 copy=59 (+3) submit=8260 (+3) captureTry=3 validCapture=3 failedCapture=0 missingLayer=0
+2026-10-13T17:45:45.8365998+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=3 copy=62 (+3) submit=8263 (+3) captureTry=3 validCapture=3 failedCapture=0 missingLayer=0
+2026-10-13T17:45:45.8381082+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=3 copy=65 (+3) submit=8266 (+3) captureTry=3 validCapture=3 failedCapture=0 missingLayer=0
+2026-10-13T17:45:45.8381082+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=3 copy=68 (+3) submit=8269 (+3) captureTry=3 validCapture=3 failedCapture=0 missingLayer=0
+2026-10-13T17:45:45.8391122+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=3 copy=71 (+3) submit=8272 (+3) captureTry=3 validCapture=3 failedCapture=0 missingLayer=0
+2026-10-13T17:45:50.8610174+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=3 copy=74 (+3) submit=8275 (+3) captureTry=3 validCapture=3 failedCapture=0 missingLayer=0
+2026-10-13T17:45:50.8625202+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=3 copy=77 (+3) submit=8278 (+3) captureTry=3 validCapture=3 failedCapture=0 missingLayer=0
+2026-10-13T17:45:50.8641101+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=3 copy=80 (+3) submit=8281 (+3) captureTry=3 validCapture=3 failedCapture=0 missingLayer=0
+2026-10-13T17:45:50.8641101+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=3 copy=83 (+3) submit=8284 (+3) captureTry=3 validCapture=3 failedCapture=0 missingLayer=0
+2026-10-13T17:45:55.8849698+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=3 copy=86 (+3) submit=8287 (+3) captureTry=3 validCapture=3 failedCapture=0 missingLayer=0
+2026-10-13T17:45:55.8859715+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=3 copy=89 (+3) submit=8290 (+3) captureTry=3 validCapture=3 failedCapture=0 missingLayer=0
+2026-10-13T17:45:55.8869693+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=3 copy=92 (+3) submit=8293 (+3) captureTry=3 validCapture=3 failedCapture=0 missingLayer=0
+2026-10-13T17:46:00.9260551+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=3 copy=95 (+3) submit=8296 (+3) captureTry=3 validCapture=3 failedCapture=0 missingLayer=0
+2026-10-13T17:46:00.9260551+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=3 copy=98 (+3) submit=8299 (+3) captureTry=3 validCapture=3 failedCapture=0 missingLayer=0
+2026-10-13T17:46:00.9275585+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=3 copy=101 (+3) submit=8302 (+3) captureTry=3 validCapture=3 failedCapture=0 missingLayer=0
+2026-10-13T17:46:00.9285625+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=3 copy=104 (+3) submit=8305 (+3) captureTry=3 validCapture=3 failedCapture=0 missingLayer=0
+2026-10-13T17:46:00.9285625+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=3 copy=107 (+3) submit=8308 (+3) captureTry=3 validCapture=3 failedCapture=0 missingLayer=0
+2026-10-13T17:46:05.9573788+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=3 copy=110 (+3) submit=8311 (+3) captureTry=3 validCapture=3 failedCapture=0 missingLayer=0
+2026-10-13T17:46:05.9578822+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=3 copy=113 (+3) submit=8314 (+3) captureTry=3 validCapture=3 failedCapture=0 missingLayer=0
+2026-10-13T17:46:05.9588863+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=3 copy=116 (+3) submit=8317 (+3) captureTry=3 validCapture=3 failedCapture=0 missingLayer=0
+2026-10-13T17:46:05.9598890+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=3 copy=119 (+3) submit=8320 (+3) captureTry=3 validCapture=3 failedCapture=0 missingLayer=0
+2026-10-13T17:46:10.9863078+02:00 observed: perf: 2.3 fps (439.29 ms/frame) | draws/frame peak 2534, split 0 (0 with parallax, 0 flat), offscreen 0, mono-fallback 0, user-ptr 275, frames with NO identification 0 [TRUE STEREO ON]
+2026-10-13T17:46:10.9863078+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=3 copy=2 (+-117) submit=8323 (+3) captureTry=3 validCapture=3 failedCapture=0 missingLayer=0
+2026-10-13T17:46:10.9887691+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=3 copy=5 (+3) submit=8326 (+3) captureTry=3 validCapture=3 failedCapture=0 missingLayer=0
+2026-10-13T17:46:10.9887691+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=3 copy=8 (+3) submit=8329 (+3) captureTry=3 validCapture=3 failedCapture=0 missingLayer=0
+2026-10-13T17:46:16.0208757+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=3 copy=11 (+3) submit=8332 (+3) captureTry=3 validCapture=3 failedCapture=0 missingLayer=0
+2026-10-13T17:46:16.0219405+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=3 copy=14 (+3) submit=8335 (+3) captureTry=3 validCapture=3 failedCapture=0 missingLayer=0
+2026-10-13T17:46:16.0225297+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=3 copy=17 (+3) submit=8338 (+3) captureTry=3 validCapture=3 failedCapture=0 missingLayer=0
+2026-10-13T17:46:16.0230958+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=3 copy=20 (+3) submit=8341 (+3) captureTry=3 validCapture=3 failedCapture=0 missingLayer=0
+2026-10-13T17:46:21.0707290+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=3 copy=23 (+3) submit=8344 (+3) captureTry=3 validCapture=3 failedCapture=0 missingLayer=0
+2026-10-13T17:46:21.0717277+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=3 copy=26 (+3) submit=8347 (+3) captureTry=3 validCapture=3 failedCapture=0 missingLayer=0
+2026-10-13T17:46:21.0717277+02:00 observed: polish cine text: mapped=0 chars=5 english="Enter"
+2026-10-13T17:46:21.0727284+02:00 observed: polish cine text: mapped=0 chars=3 english="Esc"
+2026-10-13T17:46:21.0727284+02:00 observed: polish cine text: mapped=0 chars=1 english="Q"
+2026-10-13T17:46:21.0727284+02:00 observed: polish cine text: mapped=0 chars=1 english="E"
+2026-10-13T17:46:21.0737266+02:00 observed: polish cine text: mapped=1 chars=6 english="Paused"
+2026-10-13T17:46:21.0737266+02:00 observed: cutscene-mono: stage=complete hr=0x00000000 mode=CutsceneFlat cine=1 flat=1 menuClass=3 vr=1 src=5264x2684
+2026-10-13T17:46:21.0747268+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=3 copy=29 (+3) submit=8350 (+3) captureTry=3 validCapture=3 failedCapture=0 missingLayer=0
+2026-10-13T17:46:21.0747268+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=3 copy=32 (+3) submit=8353 (+3) captureTry=3 validCapture=3 failedCapture=0 missingLayer=0
+2026-10-13T17:46:26.0934395+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=3 copy=35 (+3) submit=8356 (+3) captureTry=3 validCapture=3 failedCapture=0 missingLayer=0
+2026-10-13T17:46:26.0934395+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=3 copy=38 (+3) submit=8359 (+3) captureTry=3 validCapture=3 failedCapture=0 missingLayer=0
+2026-10-13T17:46:26.0949436+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=3 copy=41 (+3) submit=8362 (+3) captureTry=3 validCapture=3 failedCapture=0 missingLayer=0
+2026-10-13T17:46:26.0949436+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=3 copy=44 (+3) submit=8365 (+3) captureTry=3 validCapture=3 failedCapture=0 missingLayer=0
+2026-10-13T17:46:26.0959490+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=3 copy=47 (+3) submit=8368 (+3) captureTry=3 validCapture=3 failedCapture=0 missingLayer=0
+2026-10-13T17:46:31.1192133+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=3 copy=50 (+3) submit=8371 (+3) captureTry=3 validCapture=3 failedCapture=0 missingLayer=0
+2026-10-13T17:46:31.1212169+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=3 copy=53 (+3) submit=8374 (+3) captureTry=3 validCapture=3 failedCapture=0 missingLayer=0
+2026-10-13T17:46:31.1212169+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=3 copy=56 (+3) submit=8377 (+3) captureTry=3 validCapture=3 failedCapture=0 missingLayer=0
+2026-10-13T17:46:31.1212169+02:00 observed: xr-heartbeat: session=5 running=1 shouldRender=1 haveEyes=1 ticks=3 copy=59 (+3) submit=8380 (+3) captureTry=3 validCapture=3 failedCapture=0 missingLayer=0

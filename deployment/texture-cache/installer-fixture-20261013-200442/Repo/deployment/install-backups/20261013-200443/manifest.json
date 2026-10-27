@@ -1,0 +1,20 @@
+[
+  {
+    "Path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene-observation\\deployment\\texture-cache\\installer-fixture-20261013-200442\\Repo\\deployment\\install-backups\\20261013-200443\\d3d9.dll",
+    "Exists": true,
+    "Size": 2802688,
+    "Sha256": "64353686EDD457EDE84B0D8892B32B6EC9D108C78912AEF9A7F753CFA163DC15",
+    "Pe32": true,
+    "Machine": "0x014C",
+    "OptionalMagic": "0x010B"
+  },
+  {
+    "Path": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene-observation\\deployment\\texture-cache\\installer-fixture-20261013-200442\\Repo\\deployment\\install-backups\\20261013-200443\\dinput8.dll",
+    "Exists": true,
+    "Size": 40448,
+    "Sha256": "1BC0F7DD59A46BD7E29DDEC0B17053A3CEA6726C0476A5C0782DC672F6CC3059",
+    "Pe32": true,
+    "Machine": "0x014C",
+    "OptionalMagic": "0x010B"
+  }
+]

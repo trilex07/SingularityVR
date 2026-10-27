@@ -1,0 +1,21 @@
+{
+  "createdAt": "2026-10-13T14:50:04.0158996+02:00",
+  "provenance": "merged main 3c5ab21",
+  "files": [
+    {
+      "target": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\d3d9.dll",
+      "saved": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene-observation\\deployment\\shadow-backups\\20261013-145003-975\\d3d9.dll",
+      "sha256": "D8928180262706A95972D13B728A1867F1EAB1757DCFD6C4A32D99EFBFBEC1BE"
+    },
+    {
+      "target": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\SingularityVR.ini",
+      "saved": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene-observation\\deployment\\shadow-backups\\20261013-145003-975\\SingularityVR.ini",
+      "sha256": "C59B1CF6C75B72512BDDDE0BFFD9E627FF88729AE246B86B5656D18C42241AD6"
+    },
+    {
+      "target": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\RvGame\\CookedPC\\UI_SinglePlayer_SF.xxx",
+      "saved": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene-observation\\deployment\\shadow-backups\\20261013-145003-975\\UI_SinglePlayer_SF.xxx",
+      "sha256": "5B2EA469A3EE06FF154AC78BD58604E8034970D4837F289E5C22503C6A673CDE"
+    }
+  ]
+}

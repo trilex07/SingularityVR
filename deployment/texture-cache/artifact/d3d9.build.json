@@ -1,0 +1,25 @@
+{
+  "builtAt": "2026-10-13T19:09:47.5848876+02:00",
+  "repository": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene-observation",
+  "branch": "fix/cutscene-physical-observation",
+  "commit": "f57c3d5920d54d325564ac9e50eb86c469dd68e8",
+  "workingTreeStatus": [
+    "?? deployment/cinema-exit-cpu/",
+    "?? deployment/cinema-framing/",
+    "?? deployment/cinema-handoff/",
+    "?? deployment/cinema-native-camera/",
+    "?? deployment/cinema-rt/",
+    "?? deployment/cinema-target-fix/",
+    "?? deployment/cutscene-round3-resume/",
+    "?? deployment/cutscene-safe-pawn/",
+    "?? deployment/install-backups/",
+    "?? deployment/install-reports/",
+    "?? deployment/shadow-backups/"
+  ],
+  "optimization": "/O2",
+  "performanceInstrumentation": false,
+  "architecture": "x86 PE32",
+  "machine": "0x014C",
+  "optionalHeaderMagic": "0x010B",
+  "sha256": "64353686EDD457EDE84B0D8892B32B6EC9D108C78912AEF9A7F753CFA163DC15"
+}

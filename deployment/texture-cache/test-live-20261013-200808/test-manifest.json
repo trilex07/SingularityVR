@@ -1,0 +1,16 @@
+{
+  "recordedAt": "2026-10-13T20:08:09.6533399+02:00",
+  "injectorSource": "f6aeb6bafff1b65716bc197a1ff8ee4c1d987807",
+  "vrSource": "f57c3d5920d54d325564ac9e50eb86c469dd68e8",
+  "toolingCommit": "8bfc444",
+  "candidateInjector": "1BC0F7DD59A46BD7E29DDEC0B17053A3CEA6726C0476A5C0782DC672F6CC3059",
+  "candidateVr": "64353686EDD457EDE84B0D8892B32B6EC9D108C78912AEF9A7F753CFA163DC15",
+  "backup": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene-observation\\deployment\\install-backups\\20261013-200809",
+  "guardPid": 23272,
+  "failedGuardPid": 17240,
+  "gamePid": 43712,
+  "observerPid": 32148,
+  "guardToolingCommit": "537def3",
+  "evidence": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene-observation\\deployment\\texture-cache\\test-live-20261013-200808",
+  "ddsCount": 107
+}

@@ -1,0 +1,8 @@
+﻿{
+    "startedAt":  "2026-10-13T20:11:37.8121716+02:00",
+    "finishedAt":  "2026-10-13T20:12:33.3417984+02:00",
+    "gameProcessId":  43712,
+    "eventCount":  69,
+    "gameStillRunning":  false,
+    "note":  "Observation timestamps, not native event times. Live tail can miss bursts; session.log is authoritative. No visual acceptance inferred."
+}

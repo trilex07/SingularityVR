@@ -1,0 +1,15 @@
+{
+  "Files": [
+    {
+      "Name": "d3d9.dll",
+      "Existed": true,
+      "Sha256": "64353686EDD457EDE84B0D8892B32B6EC9D108C78912AEF9A7F753CFA163DC15"
+    },
+    {
+      "Name": "dinput8.dll",
+      "Existed": true,
+      "Sha256": "1BC0F7DD59A46BD7E29DDEC0B17053A3CEA6726C0476A5C0782DC672F6CC3059"
+    }
+  ],
+  "Directories": []
+}

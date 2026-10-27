@@ -1,0 +1,9 @@
+﻿{
+    "Path":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-main-check\\deployment\\install-backups\\20261013-130923\\d3d9.dll",
+    "Exists":  true,
+    "Size":  2788864,
+    "Sha256":  "D8928180262706A95972D13B728A1867F1EAB1757DCFD6C4A32D99EFBFBEC1BE",
+    "Pe32":  true,
+    "Machine":  "0x014C",
+    "OptionalMagic":  "0x010B"
+}

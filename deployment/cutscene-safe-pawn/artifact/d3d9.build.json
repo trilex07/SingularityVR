@@ -1,0 +1,16 @@
+{
+  "builtAt": "2026-10-13T14:48:57.8484919+02:00",
+  "repository": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-cutscene-observation",
+  "branch": "fix/cutscene-physical-observation",
+  "commit": "f69caf3e8160f836ed0f2fc3282f88fad74edad1",
+  "workingTreeStatus": [
+    "?? deployment/cutscene-round3-resume/",
+    "?? deployment/shadow-backups/"
+  ],
+  "optimization": "/O2",
+  "performanceInstrumentation": false,
+  "architecture": "x86 PE32",
+  "machine": "0x014C",
+  "optionalHeaderMagic": "0x010B",
+  "sha256": "4483CF02D86D6EB466CB9A2A924B4401329BD0345544BD5BA2254814E305A921"
+}
