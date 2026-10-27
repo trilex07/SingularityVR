@@ -1,0 +1,29 @@
+ini: AdaptiveTriggers=0 (opt-in; SteamVR runtime and authenticated x64 bridge required)
+ini: [Diagnostic] CaptureFirstContextPrompt=0 (one bounded screenshot; default off)
+ini: MenuInsetPct=70 (initial/paused GFx menus; gameplay HUD unchanged)
+ini: VrMenuDistanceMm=950 (shared OpenXR menu plane for render, laser and hit test)
+VR render: menu laser=1 opacity=55% width=100%; shadows=1; translation stabilization=1
+shadow sampling: ShadowMode=1 (0=full split 1=mono sample 2=drop sample 3=protect light-space; hub ADVANCED page)
+VR menu FP hide=1 (HideFpInMenu; drops latched gun/arm draws while a GFx menu is focused)
+VFX host seams=1 (VfxHost; plugin DLL absence still no-ops everything)
+VFX draw=2 (0=off 1=scene/mid-scene 2=present/backbuffer), diag dot=0
+VFX muzzle origin=1 (0=legacy camera anchor 1=GunPivotWorld); shadow test=0 (0=normal 1=drop all shadow-layout draws)
+VFX look=0 (0=soft mist 1=normal 2=large ref), muzzle forward offset=150mm (INI override); smoke=0 screen-flash=1
+VR menu pointer=1; native GFx viewport input; no desktop cursor movement
+ini: HudStereo=1 (the game's HUD and menus are drawn into BOTH eyes)
+VFX host init: plugin=absent (kill-switch, seams no-op) drawer=ok atlas=vfx_atlas dir (VfxHost=1)
+OpenXR runtime: SteamVR/OpenXR; adaptive PSVR2 triggers eligible (SteamVR)
+xrinput: xrSuggestInteractionProfileBindings failed (-22) for 4 bindings on /interaction_profiles/khr/generic_controller - one bad path rejects them all, but only for this profile
+OpenXR ready
+    ShowMenu               resolved
+    OpenMenu               resolved
+    OpenMenuDelayed        resolved
+    IsAnyMenuOpen          resolved
+    IsMenuOpen             resolved
+session running
+headset display period 11.11 ms (90.0 Hz) - frame times at 2x this are a missed deadline
+perf: 29.4 fps (34.03 ms/frame) | draws/frame peak 0, split 0 (0 with parallax, 0 flat), offscreen 0, mono-fallback 0, mono-paired 0, user-ptr 0, frames with NO identification 0 [TRUE STEREO ON]
+      pad ON , feed ON , controllers ON DESK : 29.1 fps | residual 33.74 | MISSED 100.0% of frames (worst 63 ms) | 0 draws/frame | 119 frames [wait 0.03, submit 0.55]
+    round-trip split: gpu wait 1.66 ms (rendering - NOT recoverable) | transfer 0.01 + memcpy 0.00 + upload 0.12 = 0.13 ms RECOVERABLE -> zero-copy ceiling 33.90 ms/frame (30 fps)
+perf: 29.0 fps (34.50 ms/frame) | draws/frame peak 0, split 0 (0 with parallax, 0 flat), offscreen 0, mono-fallback 0, mono-paired 0, user-ptr 0, frames with NO identification 0 [TRUE STEREO ON]
+      pad ON , feed ON , controllers ON DESK : 29.1 fps | residual 33.94 | MISSED 99.6% of frames (worst 63 ms) | 0 draws/frame | 238 frames [wait 0.03, submit 0.44]

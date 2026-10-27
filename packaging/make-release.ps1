@@ -32,9 +32,9 @@ $here = $PSScriptRoot
 $root = Resolve-Path (Join-Path $here '..')
 $src  = Join-Path $root 'spikes\view_matrix'
 
-# Same SDK the build uses. Overridable so this is not welded to one machine.
-if ($env:OPENXR_SDK) { $sdk = $env:OPENXR_SDK } else { $sdk = 'R:\SingularityVR-Dev\tools\openxr-sdk' }
-$xrBin = Join-Path $sdk 'native\Win32\release\bin'
+. (Join-Path $root 'tools\Resolve-OpenXrSdk.ps1')
+$xr = Get-OpenXrSdkPaths -RepoRoot $root.Path
+$xrBin = $xr.BinDir
 
 $stage = Join-Path $here 'staging'
 $dist  = Join-Path $here 'dist'

@@ -1,0 +1,120 @@
+perf: 90.0 fps (11.11 ms/frame) | draws/frame peak 138, split 0 (0 with parallax, 0 flat), offscreen 0, mono-fallback 0, user-ptr 60, frames with NO identification 0 [TRUE STEREO ON]
+      pad ON , feed ON , controllers ON DESK : 84.8 fps | residual 2.16 | MISSED 3.1% of frames (worst 434 ms) | 87 draws/frame | 34748 frames [wait 9.62, submit 0.00]
+    ---- CPU by thread, bucketed by FRAME TIME (cumulative), ms per frame ----
+      [1] SLOW frames (<=90 fps)   :  17280 fr | wall  12.32 | CPU   4.42 (user 3.46 kernel 0.95)
+    triggers: LEFT raw 0.00 (min 0.00 max 0.00, inactive 0/120) | RIGHT raw 0.00 (min 0.00 max 0.00, inactive 0/120) -> game receives LT 0 RT 0
+    trigger touch gate ON: LEFT NO SENSOR (values pass through unchanged), RIGHT NO SENSOR (values pass through unchanged) - vetoed 0/120 and 0/120 frames
+    round-trip split: gpu wait 0.21 ms (rendering - NOT recoverable) | transfer 0.00 + memcpy 0.00 + upload 0.01 = 0.02 ms RECOVERABLE -> zero-copy ceiling 11.09 ms/frame (90 fps)
+    menu-source: 18921 stage-0 binds while menu focused, matches by stage 0-3: 0/0/0/0
+perf: 90.0 fps (11.11 ms/frame) | draws/frame peak 138, split 0 (0 with parallax, 0 flat), offscreen 0, mono-fallback 0, user-ptr 60, frames with NO identification 0 [TRUE STEREO ON]
+      pad ON , feed ON , controllers ON DESK : 84.9 fps | residual 2.16 | MISSED 3.0% of frames (worst 434 ms) | 87 draws/frame | 34867 frames [wait 9.62, submit 0.00]
+    ---- CPU by thread, bucketed by FRAME TIME (cumulative), ms per frame ----
+      [1] SLOW frames (<=90 fps)   :  17400 fr | wall  12.32 | CPU   4.42 (user 3.47 kernel 0.95)
+    triggers: LEFT raw 0.00 (min 0.00 max 0.00, inactive 0/120) | RIGHT raw 0.00 (min 0.00 max 0.00, inactive 0/120) -> game receives LT 0 RT 0
+    trigger touch gate ON: LEFT NO SENSOR (values pass through unchanged), RIGHT NO SENSOR (values pass through unchanged) - vetoed 0/120 and 0/120 frames
+    round-trip split: gpu wait 0.32 ms (rendering - NOT recoverable) | transfer 0.00 + memcpy 0.00 + upload 0.01 = 0.02 ms RECOVERABLE -> zero-copy ceiling 11.09 ms/frame (90 fps)
+    menu-source: 18713 stage-0 binds while menu focused, matches by stage 0-3: 0/0/0/0
+perf: 90.0 fps (11.11 ms/frame) | draws/frame peak 138, split 0 (0 with parallax, 0 flat), offscreen 0, mono-fallback 0, user-ptr 61, frames with NO identification 0 [TRUE STEREO ON]
+      pad ON , feed ON , controllers ON DESK : 84.9 fps | residual 2.16 | MISSED 3.0% of frames (worst 434 ms) | 87 draws/frame | 34986 frames [wait 9.62, submit 0.00]
+    ---- CPU by thread, bucketed by FRAME TIME (cumulative), ms per frame ----
+      [1] SLOW frames (<=90 fps)   :  17400 fr | wall  12.32 | CPU   4.42 (user 3.47 kernel 0.95)
+    triggers: LEFT raw 0.00 (min 0.00 max 0.00, inactive 0/120) | RIGHT raw 0.00 (min 0.00 max 0.00, inactive 0/120) -> game receives LT 0 RT 0
+    trigger touch gate ON: LEFT NO SENSOR (values pass through unchanged), RIGHT NO SENSOR (values pass through unchanged) - vetoed 0/120 and 0/120 frames
+    round-trip split: gpu wait 0.21 ms (rendering - NOT recoverable) | transfer 0.00 + memcpy 0.00 + upload 0.01 = 0.02 ms RECOVERABLE -> zero-copy ceiling 11.09 ms/frame (90 fps)
+    menu-source: 18923 stage-0 binds while menu focused, matches by stage 0-3: 0/0/0/0
+perf: 90.0 fps (11.11 ms/frame) | draws/frame peak 138, split 0 (0 with parallax, 0 flat), offscreen 0, mono-fallback 0, user-ptr 61, frames with NO identification 0 [TRUE STEREO ON]
+      pad ON , feed ON , controllers ON DESK : 84.9 fps | residual 2.16 | MISSED 3.0% of frames (worst 434 ms) | 87 draws/frame | 35105 frames [wait 9.62, submit 0.00]
+    ---- CPU by thread, bucketed by FRAME TIME (cumulative), ms per frame ----
+      [1] SLOW frames (<=90 fps)   :  17400 fr | wall  12.32 | CPU   4.42 (user 3.47 kernel 0.95)
+    triggers: LEFT raw 0.00 (min 0.00 max 0.00, inactive 0/120) | RIGHT raw 0.00 (min 0.00 max 0.00, inactive 0/120) -> game receives LT 0 RT 0
+    trigger touch gate ON: LEFT NO SENSOR (values pass through unchanged), RIGHT NO SENSOR (values pass through unchanged) - vetoed 0/120 and 0/120 frames
+    round-trip split: gpu wait 0.29 ms (rendering - NOT recoverable) | transfer 0.00 + memcpy 0.00 + upload 0.01 = 0.02 ms RECOVERABLE -> zero-copy ceiling 11.09 ms/frame (90 fps)
+    menu-source: 18832 stage-0 binds while menu focused, matches by stage 0-3: 0/0/0/0
+perf: 89.8 fps (11.14 ms/frame) | draws/frame peak 138, split 0 (0 with parallax, 0 flat), offscreen 0, mono-fallback 0, user-ptr 62, frames with NO identification 0 [TRUE STEREO ON]
+      pad ON , feed ON , controllers ON DESK : 84.9 fps | residual 2.15 | MISSED 3.0% of frames (worst 434 ms) | 87 draws/frame | 35224 frames [wait 9.62, submit 0.00]
+    ---- CPU by thread, bucketed by FRAME TIME (cumulative), ms per frame ----
+      [1] SLOW frames (<=90 fps)   :  17520 fr | wall  12.31 | CPU   4.43 (user 3.48 kernel 0.95)
+    triggers: LEFT raw 0.00 (min 0.00 max 0.00, inactive 0/120) | RIGHT raw 0.00 (min 0.00 max 0.00, inactive 0/120) -> game receives LT 0 RT 0
+    trigger touch gate ON: LEFT NO SENSOR (values pass through unchanged), RIGHT NO SENSOR (values pass through unchanged) - vetoed 0/120 and 0/120 frames
+    round-trip split: gpu wait 0.20 ms (rendering - NOT recoverable) | transfer 0.00 + memcpy 0.00 + upload 0.01 = 0.02 ms RECOVERABLE -> zero-copy ceiling 11.12 ms/frame (90 fps)
+    menu-source: 18807 stage-0 binds while menu focused, matches by stage 0-3: 0/0/0/0
+perf: 90.2 fps (11.09 ms/frame) | draws/frame peak 138, split 0 (0 with parallax, 0 flat), offscreen 0, mono-fallback 0, user-ptr 61, frames with NO identification 0 [TRUE STEREO ON]
+      pad ON , feed ON , controllers ON DESK : 84.9 fps | residual 2.15 | MISSED 3.0% of frames (worst 434 ms) | 87 draws/frame | 35343 frames [wait 9.62, submit 0.00]
+    ---- CPU by thread, bucketed by FRAME TIME (cumulative), ms per frame ----
+      [1] SLOW frames (<=90 fps)   :  17520 fr | wall  12.31 | CPU   4.43 (user 3.48 kernel 0.95)
+    triggers: LEFT raw 0.00 (min 0.00 max 0.00, inactive 0/120) | RIGHT raw 0.00 (min 0.00 max 0.00, inactive 0/120) -> game receives LT 0 RT 0
+    trigger touch gate ON: LEFT NO SENSOR (values pass through unchanged), RIGHT NO SENSOR (values pass through unchanged) - vetoed 0/120 and 0/120 frames
+    round-trip split: gpu wait 0.30 ms (rendering - NOT recoverable) | transfer 0.00 + memcpy 0.00 + upload 0.01 = 0.02 ms RECOVERABLE -> zero-copy ceiling 11.07 ms/frame (90 fps)
+    menu-source: 18876 stage-0 binds while menu focused, matches by stage 0-3: 0/0/0/0
+perf: 90.0 fps (11.11 ms/frame) | draws/frame peak 138, split 0 (0 with parallax, 0 flat), offscreen 0, mono-fallback 0, user-ptr 61, frames with NO identification 0 [TRUE STEREO ON]
+      pad ON , feed ON , controllers ON DESK : 84.9 fps | residual 2.15 | MISSED 3.0% of frames (worst 434 ms) | 87 draws/frame | 35462 frames [wait 9.62, submit 0.00]
+    ---- CPU by thread, bucketed by FRAME TIME (cumulative), ms per frame ----
+      [1] SLOW frames (<=90 fps)   :  17520 fr | wall  12.31 | CPU   4.43 (user 3.48 kernel 0.95)
+    triggers: LEFT raw 0.00 (min 0.00 max 0.00, inactive 0/120) | RIGHT raw 0.00 (min 0.00 max 0.00, inactive 0/120) -> game receives LT 0 RT 0
+    trigger touch gate ON: LEFT NO SENSOR (values pass through unchanged), RIGHT NO SENSOR (values pass through unchanged) - vetoed 0/120 and 0/120 frames
+    round-trip split: gpu wait 0.21 ms (rendering - NOT recoverable) | transfer 0.00 + memcpy 0.00 + upload 0.01 = 0.02 ms RECOVERABLE -> zero-copy ceiling 11.09 ms/frame (90 fps)
+    menu-source: 18874 stage-0 binds while menu focused, matches by stage 0-3: 0/0/0/0
+perf: 89.9 fps (11.12 ms/frame) | draws/frame peak 138, split 0 (0 with parallax, 0 flat), offscreen 0, mono-fallback 0, user-ptr 61, frames with NO identification 0 [TRUE STEREO ON]
+      pad ON , feed ON , controllers ON DESK : 84.9 fps | residual 2.14 | MISSED 3.0% of frames (worst 434 ms) | 87 draws/frame | 35581 frames [wait 9.63, submit 0.00]
+    ---- CPU by thread, bucketed by FRAME TIME (cumulative), ms per frame ----
+      [1] SLOW frames (<=90 fps)   :  17640 fr | wall  12.30 | CPU   4.43 (user 3.49 kernel 0.94)
+    triggers: LEFT raw 0.00 (min 0.00 max 0.00, inactive 0/120) | RIGHT raw 0.00 (min 0.00 max 0.00, inactive 0/120) -> game receives LT 0 RT 0
+    trigger touch gate ON: LEFT NO SENSOR (values pass through unchanged), RIGHT NO SENSOR (values pass through unchanged) - vetoed 0/120 and 0/120 frames
+    round-trip split: gpu wait 0.30 ms (rendering - NOT recoverable) | transfer 0.00 + memcpy 0.00 + upload 0.01 = 0.02 ms RECOVERABLE -> zero-copy ceiling 11.10 ms/frame (90 fps)
+    menu-source: 18807 stage-0 binds while menu focused, matches by stage 0-3: 0/0/0/0
+perf: 90.1 fps (11.10 ms/frame) | draws/frame peak 138, split 0 (0 with parallax, 0 flat), offscreen 0, mono-fallback 0, user-ptr 60, frames with NO identification 0 [TRUE STEREO ON]
+      pad ON , feed ON , controllers ON DESK : 85.0 fps | residual 2.14 | MISSED 3.0% of frames (worst 434 ms) | 87 draws/frame | 35700 frames [wait 9.63, submit 0.00]
+    ---- CPU by thread, bucketed by FRAME TIME (cumulative), ms per frame ----
+      [1] SLOW frames (<=90 fps)   :  17640 fr | wall  12.30 | CPU   4.43 (user 3.49 kernel 0.94)
+    triggers: LEFT raw 0.00 (min 0.00 max 0.00, inactive 0/120) | RIGHT raw 0.00 (min 0.00 max 0.00, inactive 0/120) -> game receives LT 0 RT 0
+    trigger touch gate ON: LEFT NO SENSOR (values pass through unchanged), RIGHT NO SENSOR (values pass through unchanged) - vetoed 0/120 and 0/120 frames
+    round-trip split: gpu wait 0.22 ms (rendering - NOT recoverable) | transfer 0.00 + memcpy 0.00 + upload 0.01 = 0.02 ms RECOVERABLE -> zero-copy ceiling 11.08 ms/frame (90 fps)
+    menu-source: 18894 stage-0 binds while menu focused, matches by stage 0-3: 0/0/0/0
+perf: 90.0 fps (11.11 ms/frame) | draws/frame peak 138, split 0 (0 with parallax, 0 flat), offscreen 0, mono-fallback 0, user-ptr 61, frames with NO identification 0 [TRUE STEREO ON]
+      pad ON , feed ON , controllers ON DESK : 85.0 fps | residual 2.14 | MISSED 3.0% of frames (worst 434 ms) | 87 draws/frame | 35819 frames [wait 9.63, submit 0.00]
+    ---- CPU by thread, bucketed by FRAME TIME (cumulative), ms per frame ----
+      [1] SLOW frames (<=90 fps)   :  17760 fr | wall  12.29 | CPU   4.42 (user 3.48 kernel 0.94)
+    triggers: LEFT raw 0.00 (min 0.00 max 0.00, inactive 0/120) | RIGHT raw 0.00 (min 0.00 max 0.00, inactive 0/120) -> game receives LT 0 RT 0
+    trigger touch gate ON: LEFT NO SENSOR (values pass through unchanged), RIGHT NO SENSOR (values pass through unchanged) - vetoed 0/120 and 0/120 frames
+    round-trip split: gpu wait 0.21 ms (rendering - NOT recoverable) | transfer 0.00 + memcpy 0.00 + upload 0.01 = 0.02 ms RECOVERABLE -> zero-copy ceiling 11.10 ms/frame (90 fps)
+    menu-source: 18908 stage-0 binds while menu focused, matches by stage 0-3: 0/0/0/0
+perf: 89.9 fps (11.12 ms/frame) | draws/frame peak 138, split 0 (0 with parallax, 0 flat), offscreen 0, mono-fallback 0, user-ptr 60, frames with NO identification 0 [TRUE STEREO ON]
+      pad ON , feed ON , controllers ON DESK : 85.0 fps | residual 2.13 | MISSED 3.0% of frames (worst 434 ms) | 87 draws/frame | 35938 frames [wait 9.63, submit 0.00]
+    ---- CPU by thread, bucketed by FRAME TIME (cumulative), ms per frame ----
+      [1] SLOW frames (<=90 fps)   :  17880 fr | wall  12.28 | CPU   4.42 (user 3.48 kernel 0.94)
+    triggers: LEFT raw 0.00 (min 0.00 max 0.00, inactive 0/120) | RIGHT raw 0.00 (min 0.00 max 0.00, inactive 0/120) -> game receives LT 0 RT 0
+    trigger touch gate ON: LEFT NO SENSOR (values pass through unchanged), RIGHT NO SENSOR (values pass through unchanged) - vetoed 0/120 and 0/120 frames
+    round-trip split: gpu wait 0.30 ms (rendering - NOT recoverable) | transfer 0.00 + memcpy 0.00 + upload 0.01 = 0.02 ms RECOVERABLE -> zero-copy ceiling 11.10 ms/frame (90 fps)
+    menu-source: 18770 stage-0 binds while menu focused, matches by stage 0-3: 0/0/0/0
+perf: 90.0 fps (11.11 ms/frame) | draws/frame peak 138, split 0 (0 with parallax, 0 flat), offscreen 0, mono-fallback 0, user-ptr 61, frames with NO identification 0 [TRUE STEREO ON]
+      pad ON , feed ON , controllers ON DESK : 85.0 fps | residual 2.13 | MISSED 3.0% of frames (worst 434 ms) | 87 draws/frame | 36057 frames [wait 9.63, submit 0.00]
+    ---- CPU by thread, bucketed by FRAME TIME (cumulative), ms per frame ----
+      [1] SLOW frames (<=90 fps)   :  17880 fr | wall  12.28 | CPU   4.42 (user 3.48 kernel 0.94)
+    triggers: LEFT raw 0.00 (min 0.00 max 0.00, inactive 0/120) | RIGHT raw 0.00 (min 0.00 max 0.00, inactive 0/120) -> game receives LT 0 RT 0
+    trigger touch gate ON: LEFT NO SENSOR (values pass through unchanged), RIGHT NO SENSOR (values pass through unchanged) - vetoed 0/120 and 0/120 frames
+    round-trip split: gpu wait 0.21 ms (rendering - NOT recoverable) | transfer 0.00 + memcpy 0.00 + upload 0.01 = 0.02 ms RECOVERABLE -> zero-copy ceiling 11.09 ms/frame (90 fps)
+    menu-source: 18919 stage-0 binds while menu focused, matches by stage 0-3: 0/0/0/0
+perf: 90.0 fps (11.12 ms/frame) | draws/frame peak 138, split 0 (0 with parallax, 0 flat), offscreen 0, mono-fallback 0, user-ptr 60, frames with NO identification 0 [TRUE STEREO ON]
+      pad ON , feed ON , controllers ON DESK : 85.0 fps | residual 2.13 | MISSED 2.9% of frames (worst 434 ms) | 87 draws/frame | 36176 frames [wait 9.63, submit 0.00]
+    ---- CPU by thread, bucketed by FRAME TIME (cumulative), ms per frame ----
+      [1] SLOW frames (<=90 fps)   :  18000 fr | wall  12.28 | CPU   4.42 (user 3.48 kernel 0.94)
+    triggers: LEFT raw 0.00 (min 0.00 max 0.00, inactive 0/120) | RIGHT raw 0.00 (min 0.00 max 0.00, inactive 0/120) -> game receives LT 0 RT 0
+    trigger touch gate ON: LEFT NO SENSOR (values pass through unchanged), RIGHT NO SENSOR (values pass through unchanged) - vetoed 0/120 and 0/120 frames
+    round-trip split: gpu wait 0.31 ms (rendering - NOT recoverable) | transfer 0.00 + memcpy 0.00 + upload 0.01 = 0.02 ms RECOVERABLE -> zero-copy ceiling 11.10 ms/frame (90 fps)
+    menu-source: 18693 stage-0 binds while menu focused, matches by stage 0-3: 0/0/0/0
+perf: 90.0 fps (11.12 ms/frame) | draws/frame peak 138, split 0 (0 with parallax, 0 flat), offscreen 0, mono-fallback 0, user-ptr 60, frames with NO identification 0 [TRUE STEREO ON]
+      pad ON , feed ON , controllers ON DESK : 85.0 fps | residual 2.12 | MISSED 2.9% of frames (worst 434 ms) | 87 draws/frame | 36295 frames [wait 9.63, submit 0.00]
+    ---- CPU by thread, bucketed by FRAME TIME (cumulative), ms per frame ----
+      [1] SLOW frames (<=90 fps)   :  18120 fr | wall  12.27 | CPU   4.42 (user 3.49 kernel 0.94)
+    triggers: LEFT raw 0.00 (min 0.00 max 0.00, inactive 0/120) | RIGHT raw 0.00 (min 0.00 max 0.00, inactive 0/120) -> game receives LT 0 RT 0
+    trigger touch gate ON: LEFT NO SENSOR (values pass through unchanged), RIGHT NO SENSOR (values pass through unchanged) - vetoed 0/120 and 0/120 frames
+    round-trip split: gpu wait 0.22 ms (rendering - NOT recoverable) | transfer 0.00 + memcpy 0.00 + upload 0.01 = 0.02 ms RECOVERABLE -> zero-copy ceiling 11.10 ms/frame (90 fps)
+    menu-source: 18806 stage-0 binds while menu focused, matches by stage 0-3: 0/0/0/0
+perf: 90.1 fps (11.10 ms/frame) | draws/frame peak 138, split 0 (0 with parallax, 0 flat), offscreen 0, mono-fallback 0, user-ptr 61, frames with NO identification 0 [TRUE STEREO ON]
+      pad ON , feed ON , controllers ON DESK : 85.1 fps | residual 2.12 | MISSED 2.9% of frames (worst 434 ms) | 87 draws/frame | 36414 frames [wait 9.63, submit 0.00]
+    ---- CPU by thread, bucketed by FRAME TIME (cumulative), ms per frame ----
+      [1] SLOW frames (<=90 fps)   :  18120 fr | wall  12.27 | CPU   4.42 (user 3.49 kernel 0.94)
+    triggers: LEFT raw 0.00 (min 0.00 max 0.00, inactive 0/120) | RIGHT raw 0.00 (min 0.00 max 0.00, inactive 0/120) -> game receives LT 0 RT 0
+    trigger touch gate ON: LEFT NO SENSOR (values pass through unchanged), RIGHT NO SENSOR (values pass through unchanged) - vetoed 0/120 and 0/120 frames
+    round-trip split: gpu wait 0.31 ms (rendering - NOT recoverable) | transfer 0.00 + memcpy 0.00 + upload 0.02 = 0.02 ms RECOVERABLE -> zero-copy ceiling 11.08 ms/frame (90 fps)
+    menu-source: 18835 stage-0 binds while menu focused, matches by stage 0-3: 0/0/0/0

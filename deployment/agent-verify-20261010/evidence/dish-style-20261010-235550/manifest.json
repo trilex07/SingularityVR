@@ -1,0 +1,28 @@
+﻿{
+    "evidenceDir":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-production\\deployment\\agent-verify-20261010\\evidence\\dish-style-20261010-235550",
+    "dllSha256":  "176C9CFFD96381BEC768CA382B52EC97CDFCDF4B39571AEB344153E91E486B17",
+    "gamePid":  50084,
+    "xrsimDir":  "C:\\Users\\Trilex\\AppData\\Local\\SingularityVR\\xrsim-steam-20261010-235550",
+    "shots":  [
+                  {
+                      "Left":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-production\\deployment\\agent-verify-20261010\\evidence\\dish-style-20261010-235550\\pause-menu_left.png",
+                      "Right":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-production\\deployment\\agent-verify-20261010\\evidence\\dish-style-20261010-235550\\pause-menu_right.png",
+                      "Sbs":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-production\\deployment\\agent-verify-20261010\\evidence\\dish-style-20261010-235550\\pause-menu_sbs.png"
+                  },
+                  {
+                      "Left":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-production\\deployment\\agent-verify-20261010\\evidence\\dish-style-20261010-235550\\pause-settings-a_left.png",
+                      "Right":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-production\\deployment\\agent-verify-20261010\\evidence\\dish-style-20261010-235550\\pause-settings-a_right.png",
+                      "Sbs":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-production\\deployment\\agent-verify-20261010\\evidence\\dish-style-20261010-235550\\pause-settings-a_sbs.png"
+                  },
+                  {
+                      "Left":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-production\\deployment\\agent-verify-20261010\\evidence\\dish-style-20261010-235550\\pause-settings-b_left.png",
+                      "Right":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-production\\deployment\\agent-verify-20261010\\evidence\\dish-style-20261010-235550\\pause-settings-b_right.png",
+                      "Sbs":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-production\\deployment\\agent-verify-20261010\\evidence\\dish-style-20261010-235550\\pause-settings-b_sbs.png"
+                  },
+                  {
+                      "Left":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-production\\deployment\\agent-verify-20261010\\evidence\\dish-style-20261010-235550\\pause-settings-c_left.png",
+                      "Right":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-production\\deployment\\agent-verify-20261010\\evidence\\dish-style-20261010-235550\\pause-settings-c_right.png",
+                      "Sbs":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-production\\deployment\\agent-verify-20261010\\evidence\\dish-style-20261010-235550\\pause-settings-c_sbs.png"
+                  }
+              ]
+}

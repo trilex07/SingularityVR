@@ -1,0 +1,5 @@
+head pose 0 1.6000 0 0 0 0
+hand r grip pose 0.20 1.30 -0.35 0 0 0
+hand r aim pose 0.20 1.30 -0.35 0 0 0
+hand l grip pose -0.20 1.30 -0.35 0 0 0
+hand l aim pose -0.20 1.30 -0.35 0 0 0

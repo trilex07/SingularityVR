@@ -1,0 +1,20 @@
+{
+  "recording": "C:\\Users\\Trilex\\vr-mods\\deployment\\vr-user-test-20261009-130701\\session_2026-10-09_12-01-40.vrrec",
+  "source_samples": 79,
+  "samples": 21,
+  "stride": 4,
+  "recorded_duration_s": 0.875,
+  "replay_duration_s": 0.875,
+  "events": {
+    "fire": 0,
+    "melee": 0,
+    "recenter": 0,
+    "ui_click": 0
+  },
+  "transitions": [],
+  "ui_button": "a",
+  "applied_batches": 0,
+  "skipped_duplicate_batches": 0,
+  "first_frame": 1,
+  "last_frame": 79
+}

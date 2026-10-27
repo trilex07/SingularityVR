@@ -1,0 +1,15 @@
+{
+  "timestamp_utc": "2026-10-09T19:13:05.6524866Z",
+  "bridge_exe": "deployment/psvr2-bridge-validation-20261009/SingularityPsvr2Bridge.exe",
+  "bridge_sha256": "177CFBE5E4D3C1A15D9D767D32B0223954DCE4978A5F8836BAE3EFFB3F89CDAD",
+  "x86_client": "deployment/psvr2-bridge-validation-20261009/psvr2-pipe-client-x86.exe",
+  "result": "PASS",
+  "connects": 1,
+  "sends": 2,
+  "errors": 0,
+  "mode": "dry",
+  "hardware_initialized": false,
+  "game_launched": false,
+  "sandbox_default_attempt": "FAIL: WaitNamedPipeW error=2",
+  "elevated_attempt": "PASS: same x86 client authenticated and submitted trigger state"
+}

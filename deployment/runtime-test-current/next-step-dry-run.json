@@ -1,0 +1,91 @@
+{
+  "recording": "deployment\\agent-test-bridge\\final-20261009-194135\\session_2026-10-09_14-18-07.vrrec",
+  "source_samples": 5573,
+  "samples": 1420,
+  "stride": 4,
+  "recorded_duration_s": 80.641,
+  "replay_duration_s": 80.641,
+  "events": {
+    "fire": 8,
+    "melee": 2,
+    "recenter": 1,
+    "ui_click": 6
+  },
+  "transitions": [
+    {
+      "frame": 285,
+      "from": "panel",
+      "to": "menu"
+    },
+    {
+      "frame": 296,
+      "from": "menu",
+      "to": "gameplay"
+    },
+    {
+      "frame": 4379,
+      "from": "gameplay",
+      "to": "menu"
+    },
+    {
+      "frame": 4502,
+      "from": "menu",
+      "to": "panel"
+    },
+    {
+      "frame": 5076,
+      "from": "panel",
+      "to": "menu"
+    },
+    {
+      "frame": 5090,
+      "from": "menu",
+      "to": "gameplay"
+    },
+    {
+      "frame": 5169,
+      "from": "gameplay",
+      "to": "menu"
+    },
+    {
+      "frame": 5408,
+      "from": "menu",
+      "to": "unknown"
+    },
+    {
+      "frame": 5410,
+      "from": "unknown",
+      "to": "gameplay"
+    },
+    {
+      "frame": 5417,
+      "from": "gameplay",
+      "to": "unknown"
+    },
+    {
+      "frame": 5418,
+      "from": "unknown",
+      "to": "gameplay"
+    },
+    {
+      "frame": 5446,
+      "from": "gameplay",
+      "to": "menu"
+    },
+    {
+      "frame": 5478,
+      "from": "menu",
+      "to": "gameplay"
+    },
+    {
+      "frame": 5499,
+      "from": "gameplay",
+      "to": "menu"
+    }
+  ],
+  "ui_button": "a",
+  "applied_batches": 0,
+  "skipped_duplicate_batches": 0,
+  "first_frame": 1,
+  "last_frame": 5573
+}

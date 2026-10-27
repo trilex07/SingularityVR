@@ -1,0 +1,212 @@
+{
+  "recording": "C:\\Users\\Trilex\\vr-mods\\deployment\\vfx-plugin-test-20261009\\canonical.vrrec",
+  "source_samples": 5573,
+  "samples": 1420,
+  "stride": 4,
+  "recorded_duration_s": 80.641,
+  "replay_duration_s": 20.16025,
+  "events": {
+    "fire": 8,
+    "melee": 2,
+    "recenter": 1,
+    "ui_click": 6
+  },
+  "transitions": [
+    {
+      "frame": 285,
+      "from": "panel",
+      "to": "menu"
+    },
+    {
+      "frame": 296,
+      "from": "menu",
+      "to": "gameplay"
+    },
+    {
+      "frame": 4379,
+      "from": "gameplay",
+      "to": "menu"
+    },
+    {
+      "frame": 4502,
+      "from": "menu",
+      "to": "panel"
+    },
+    {
+      "frame": 5076,
+      "from": "panel",
+      "to": "menu"
+    },
+    {
+      "frame": 5090,
+      "from": "menu",
+      "to": "gameplay"
+    },
+    {
+      "frame": 5169,
+      "from": "gameplay",
+      "to": "menu"
+    },
+    {
+      "frame": 5408,
+      "from": "menu",
+      "to": "unknown"
+    },
+    {
+      "frame": 5410,
+      "from": "unknown",
+      "to": "gameplay"
+    },
+    {
+      "frame": 5417,
+      "from": "gameplay",
+      "to": "unknown"
+    },
+    {
+      "frame": 5418,
+      "from": "unknown",
+      "to": "gameplay"
+    },
+    {
+      "frame": 5446,
+      "from": "gameplay",
+      "to": "menu"
+    },
+    {
+      "frame": 5478,
+      "from": "menu",
+      "to": "gameplay"
+    },
+    {
+      "frame": 5499,
+      "from": "gameplay",
+      "to": "menu"
+    }
+  ],
+  "ui_button": "a",
+  "applied_batches": 1420,
+  "skipped_duplicate_batches": 0,
+  "first_frame": 1,
+  "last_frame": 5573,
+  "elapsed_wall_s": 66.8544458000033,
+  "final_cmd_seq": 12794,
+  "final_state": {
+    "pid": 39500,
+    "runtime": "dvr-xrsim",
+    "system": "Meta Quest 3",
+    "uptimeMs": 81406,
+    "frame": 6273,
+    "waitFrames": 6273,
+    "beginFrames": 6273,
+    "endFrames": 6273,
+    "frameOpen": false,
+    "framesDiscarded": 0,
+    "endsOutOfOrder": 0,
+    "sessionState": "FOCUSED",
+    "sessionRunning": true,
+    "actionsAttached": true,
+    "focusPolicy": "vdxr",
+    "focusNoRender": false,
+    "focusThrottleMs": 0,
+    "layeredFrames": 6273,
+    "paceMode": "free",
+    "refreshHz": 90.0,
+    "stepsPending": 0,
+    "idleBlockMs": 0,
+    "eventsDropped": 0,
+    "ipdMm": 63.0,
+    "fovDeg": {
+      "l": -54.0,
+      "r": 44.0,
+      "u": 55.0,
+      "d": -55.0
+    },
+    "head": {
+      "pos": [
+        -0.4799,
+        1.2286,
+        -0.5433
+      ],
+      "ypr": [
+        -63.82,
+        0.0,
+        -5.2
+      ],
+      "valid": true
+    },
+    "handL": {
+      "pos": [
+        -0.3676,
+        0.6682,
+        -0.6659
+      ],
+      "ypr": [
+        -80.03,
+        -4.63,
+        21.33
+      ],
+      "valid": true,
+      "followsHead": false
+    },
+    "handR": {
+      "pos": [
+        -0.1697,
+        0.7201,
+        -0.4744
+      ],
+      "ypr": [
+        -72.77,
+        -6.75,
+        12.21
+      ],
+      "valid": true,
+      "followsHead": false
+    },
+    "controls": {
+      "a": false,
+      "b": false,
+      "x": false,
+      "y": false,
+      "menu": false,
+      "clickL": false,
+      "clickR": false,
+      "restL": false,
+      "restR": false,
+      "trigL": 0.0,
+      "trigR": 0.0,
+      "gripL": 0.0,
+      "gripR": 0.0,
+      "stickL": [
+        0.0,
+        0.0
+      ],
+      "stickR": [
+        0.0,
+        0.0
+      ]
+    },
+    "layersLastFrame": 1,
+    "projectionViews": 2,
+    "quadLayers": 0,
+    "quadAlphaPct": 0.0,
+    "capNonBlackL": 97,
+    "capNonBlackR": 97,
+    "eyeReleasedOnFrameL": 6273,
+    "eyeReleasedOnFrameR": 6273,
+    "eyeAgeL": 0,
+    "eyeAgeR": 0,
+    "eyeAgeMaxL": 0,
+    "eyeAgeMaxR": 0,
+    "eyeSameSwapchain": false,
+    "projSubmits": 6273,
+    "projMonoSubmits": 0,
+    "projStaleSubmits": 0,
+    "endPhaseMs": 1.21,
+    "captureSeq": 1,
+    "lastCapture": "C:\\Users\\Trilex\\vr-mods\\xrsim-scratch-run\\capture\\sticky0",
+    "cmdSeq": 12794,
+    "lastCmd": "stick r 0.000000 0.000000",
+    "lastCmdError": "",
+    "errors": 0
+  }
+}

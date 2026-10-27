@@ -1,0 +1,23 @@
+{
+  "timestamp": "2026-10-09T19:34:34.2410777+02:00",
+  "finished": "2026-10-09T19:36:44.8444878+02:00",
+  "candidate": "desktop-hmd-current",
+  "candidate_dir": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-production\\deployment\\agent-test-bridge\\xrsim-o2-20261009-192950",
+  "game_exe": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\Singularity.exe",
+  "dll_before": "6633D893856A9A650C9A955773B81A7B2B2973959B1DB6C6DC026A1CAABA7B9E",
+  "dll_candidate": "6633D893856A9A650C9A955773B81A7B2B2973959B1DB6C6DC026A1CAABA7B9E",
+  "dll_after_install": "6633D893856A9A650C9A955773B81A7B2B2973959B1DB6C6DC026A1CAABA7B9E",
+  "launched": true,
+  "restored": true,
+  "error": "",
+  "restore_error": "",
+  "log_path": "C:\\Users\\Trilex\\AppData\\Local\\SingularityVR\\view_matrix.log",
+  "runtime_ready": true,
+  "process_exit": false,
+  "exit_code": null,
+  "missing_mouse_path": false,
+  "foreground_boundary": false,
+  "shadow_path": false,
+  "vfx_path": false,
+  "log_tail": "=== view_matrix attached 2026-10-09 19:34:53 - run starts here ===\nphysx preflight: PhysXLoader.dll resolves to C:\\Program Files (x86)\\NVIDIA Corporation\\PhysX\\Common\\PhysXLoader.dll\nphysx preflight:   -> the SYSTEM copy - another game's legacy PhysX installer can remove it\nauto-resolution: injecting -ResX=4128 -ResY=2208 -windowed (cached from the headset last run)\nsleep: hooked kernel32!Sleep - UE3's frame-rate smoother sleeps through this. NUMPAD+ neutralises it on the render thread.\nxinput: hooked XInputSetState - the game's authored force feedback will drive controller haptics\nxinput: hooked XInputGetState at 58144760. NUMPAD3 = pretend a 360 pad is plugged in.\nxinput:   the game imports this BY ORDINAL, so watch the call count below - if it stays at 0 the engine is not polling and the gamepad route is dead.\ninput-device cache ACTIVE at Singularity.exe+0xDD12F0; original cold classification, invalidate on device change\nstartup DirectInput creation probe: hook status 0\n"
+}

@@ -1,0 +1,10 @@
+{
+  "timestamp": "2026-10-10T11:47:54.6154459+02:00",
+  "launch": "steam://rungameid/42670",
+  "game_exe": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\Singularity.exe",
+  "launched": true,
+  "pid": 28648,
+  "log": "C:\\Users\\Trilex\\AppData\\Local\\SingularityVR\\view_matrix.log",
+  "capture_directory": "C:\\Users\\Trilex\\AppData\\Local\\SingularityVR",
+  "note": "Use L3+R3 for one backbuffer BMP. Start/stop .vrrec separately from VR Settings."
+}

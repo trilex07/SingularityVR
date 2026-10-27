@@ -1,0 +1,23 @@
+﻿{
+    "evidenceDir":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-production\\deployment\\agent-verify-20261010\\evidence\\dish-style-20261010-214751",
+    "dllSha256":  "20F10DD898FBB491680B2C71D7ABB938AA7FBDD706B37C58488D4F8A32172091",
+    "gamePid":  49908,
+    "xrsimDir":  "C:\\Users\\Trilex\\AppData\\Local\\SingularityVR\\xrsim-steam-20261010-214751",
+    "shots":  [
+                  {
+                      "Left":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-production\\deployment\\agent-verify-20261010\\evidence\\dish-style-20261010-214751\\steam-intro-splash_left.png",
+                      "Right":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-production\\deployment\\agent-verify-20261010\\evidence\\dish-style-20261010-214751\\steam-intro-splash_right.png",
+                      "Sbs":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-production\\deployment\\agent-verify-20261010\\evidence\\dish-style-20261010-214751\\steam-intro-splash_sbs.png"
+                  },
+                  {
+                      "Left":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-production\\deployment\\agent-verify-20261010\\evidence\\dish-style-20261010-214751\\steam-menu-after-enter_left.png",
+                      "Right":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-production\\deployment\\agent-verify-20261010\\evidence\\dish-style-20261010-214751\\steam-menu-after-enter_right.png",
+                      "Sbs":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-production\\deployment\\agent-verify-20261010\\evidence\\dish-style-20261010-214751\\steam-menu-after-enter_sbs.png"
+                  },
+                  {
+                      "Left":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-production\\deployment\\agent-verify-20261010\\evidence\\dish-style-20261010-214751\\steam-gameplay-hands-shadows_left.png",
+                      "Right":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-production\\deployment\\agent-verify-20261010\\evidence\\dish-style-20261010-214751\\steam-gameplay-hands-shadows_right.png",
+                      "Sbs":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-production\\deployment\\agent-verify-20261010\\evidence\\dish-style-20261010-214751\\steam-gameplay-hands-shadows_sbs.png"
+                  }
+              ]
+}

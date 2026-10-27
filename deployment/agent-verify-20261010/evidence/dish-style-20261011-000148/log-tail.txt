@@ -1,0 +1,40 @@
+﻿    yaw held: engine kept our written yaw on 120 of 120 frames (100%) - near 100 is gameplay, near 0 is something else driving the camera
+    frame budget: xrWaitFrame 1.39 (idle) + copy 0.02 + GObjects walk 0.01 + XR submit 0.00 + reg scan 0.00 + gameplay hooks 0.68 + our work 34.92 = 37.02 ms (333% of the 11.11 ms display period)
+    gameplay hooks: mean 0.68 ms/frame, WORST SINGLE FRAME 1.02 ms | of which ResolveGameplayOffsets 0.04 ms total, WORST 0.00 ms. It walks GObjects on a miss and there is no pawn at a splash screen, so every attempt there is a walk that cannot succeed. (run 254)
+    gameplay hook breakdown (total ms this window / WORST single call): SolvePropertyLayout 0.0/0.0 | RefreshArmedState 80.9/1.0 | UpdateFgLatch 0.0/0.0 | ApplyMuzzleFxSuppression 0.0/0.0 (run 255)
+    yaw held: engine kept our written yaw on 120 of 120 frames (100%) - near 100 is gameplay, near 0 is something else driving the camera
+    frame budget: xrWaitFrame 1.33 (idle) + copy 0.02 + GObjects walk 0.01 + XR submit 0.00 + reg scan 0.00 + gameplay hooks 0.80 + our work 34.48 = 36.64 ms (330% of the 11.11 ms display period)
+    gameplay hooks: mean 0.80 ms/frame, WORST SINGLE FRAME 1.08 ms | of which ResolveGameplayOffsets 0.05 ms total, WORST 0.01 ms. It walks GObjects on a miss and there is no pawn at a splash screen, so every attempt there is a walk that cannot succeed. (run 254)
+    gameplay hook breakdown (total ms this window / WORST single call): SolvePropertyLayout 0.0/0.0 | RefreshArmedState 95.9/1.1 | UpdateFgLatch 0.0/0.0 | ApplyMuzzleFxSuppression 0.0/0.0 (run 255)
+    yaw held: engine kept our written yaw on 120 of 120 frames (100%) - near 100 is gameplay, near 0 is something else driving the camera
+    frame budget: xrWaitFrame 1.32 (idle) + copy 0.02 + GObjects walk 0.01 + XR submit 0.00 + reg scan 0.00 + gameplay hooks 1.00 + our work 35.03 = 37.37 ms (336% of the 11.11 ms display period)
+    gameplay hooks: mean 1.00 ms/frame, WORST SINGLE FRAME 1.01 ms | of which ResolveGameplayOffsets 0.03 ms total, WORST 0.00 ms. It walks GObjects on a miss and there is no pawn at a splash screen, so every attempt there is a walk that cannot succeed. (run 254)
+    gameplay hook breakdown (total ms this window / WORST single call): SolvePropertyLayout 0.0/0.0 | RefreshArmedState 120.1/1.0 | UpdateFgLatch 0.0/0.0 | ApplyMuzzleFxSuppression 0.0/0.0 (run 255)
+    yaw held: engine kept our written yaw on 120 of 120 frames (100%) - near 100 is gameplay, near 0 is something else driving the camera
+    frame budget: xrWaitFrame 1.32 (idle) + copy 0.02 + GObjects walk 0.01 + XR submit 0.00 + reg scan 0.00 + gameplay hooks 0.99 + our work 37.64 = 39.99 ms (360% of the 11.11 ms display period)
+    gameplay hooks: mean 0.99 ms/frame, WORST SINGLE FRAME 1.08 ms | of which ResolveGameplayOffsets 0.03 ms total, WORST 0.00 ms. It walks GObjects on a miss and there is no pawn at a splash screen, so every attempt there is a walk that cannot succeed. (run 254)
+    gameplay hook breakdown (total ms this window / WORST single call): SolvePropertyLayout 0.0/0.0 | RefreshArmedState 119.1/1.1 | UpdateFgLatch 0.0/0.0 | ApplyMuzzleFxSuppression 0.0/0.0 (run 255)
+    yaw held: engine kept our written yaw on 120 of 120 frames (100%) - near 100 is gameplay, near 0 is something else driving the camera
+IndependentHandsAudit candidates=4 context=4 blocked=0/0/0/0/0/0/0/0/0/0 shader=0 section=0 map=0 palette=0 success=2 (cfg/mode/ride/gun/camera/offhand/position/window/animation/weapon)
+    frame budget: xrWaitFrame 4.60 (idle) + copy 0.02 + GObjects walk 0.01 + XR submit 0.00 + reg scan 0.00 + gameplay hooks 0.59 + our work 19.76 = 24.98 ms (225% of the 11.11 ms display period)
+    gameplay hooks: mean 0.59 ms/frame, WORST SINGLE FRAME 1.02 ms | of which ResolveGameplayOffsets 0.04 ms total, WORST 0.01 ms. It walks GObjects on a miss and there is no pawn at a splash screen, so every attempt there is a walk that cannot succeed. (run 254)
+    gameplay hook breakdown (total ms this window / WORST single call): SolvePropertyLayout 0.0/0.0 | RefreshArmedState 71.1/1.0 | UpdateFgLatch 0.0/0.0 | ApplyMuzzleFxSuppression 0.0/0.0 (run 255)
+    yaw held: engine kept our written yaw on 120 of 120 frames (100%) - near 100 is gameplay, near 0 is something else driving the camera
+    frame budget: xrWaitFrame 9.52 (idle) + copy 0.02 + GObjects walk 0.00 + XR submit 0.00 + reg scan 0.00 + gameplay hooks 0.13 + our work 1.43 = 11.11 ms (100% of the 11.11 ms display period)
+    gameplay hooks: mean 0.13 ms/frame, WORST SINGLE FRAME 1.02 ms | of which ResolveGameplayOffsets 0.03 ms total, WORST 0.00 ms. It walks GObjects on a miss and there is no pawn at a splash screen, so every attempt there is a walk that cannot succeed. (run 254)
+    gameplay hook breakdown (total ms this window / WORST single call): SolvePropertyLayout 0.0/0.0 | RefreshArmedState 15.9/1.0 | UpdateFgLatch 0.0/0.0 | ApplyMuzzleFxSuppression 0.0/0.0 (run 255)
+    yaw held: engine kept our written yaw on 120 of 120 frames (100%) - near 100 is gameplay, near 0 is something else driving the camera
+    frame budget: xrWaitFrame 7.46 (idle) + copy 0.02 + GObjects walk 0.00 + XR submit 0.00 + reg scan 0.00 + gameplay hooks 0.00 + our work 3.65 = 11.14 ms (100% of the 11.11 ms display period)
+    yaw held: engine kept our written yaw on 120 of 120 frames (100%) - near 100 is gameplay, near 0 is something else driving the camera
+    frame budget: xrWaitFrame 8.01 (idle) + copy 0.02 + GObjects walk 0.00 + XR submit 0.00 + reg scan 0.00 + gameplay hooks 0.00 + our work 3.07 = 11.11 ms (100% of the 11.11 ms display period)
+    yaw held: engine kept our written yaw on 120 of 120 frames (100%) - near 100 is gameplay, near 0 is something else driving the camera
+weapon fx: STOPPED RIDING again - 124 draw(s) bailed so far. If this is climbing during GAMEPLAY the foreground boundary is not reliable and the gun transform rests on it too.
+    frame budget: xrWaitFrame 8.80 (idle) + copy 0.02 + GObjects walk 0.00 + XR submit 0.14 + reg scan 0.00 + gameplay hooks 0.00 + our work 2.13 = 11.10 ms (100% of the 11.11 ms display period)
+    yaw held: engine kept our written yaw on 120 of 120 frames (100%) - near 100 is gameplay, near 0 is something else driving the camera
+    frame budget: xrWaitFrame 8.86 (idle) + copy 0.02 + GObjects walk 0.00 + XR submit 0.08 + reg scan 0.00 + gameplay hooks 0.00 + our work 2.13 = 11.10 ms (100% of the 11.11 ms display period)
+    yaw held: engine kept our written yaw on 120 of 120 frames (100%) - near 100 is gameplay, near 0 is something else driving the camera
+    frame budget: xrWaitFrame 8.95 (idle) + copy 0.02 + GObjects walk 0.00 + XR submit 0.08 + reg scan 0.00 + gameplay hooks 0.00 + our work 2.07 = 11.13 ms (100% of the 11.11 ms display period)
+    yaw held: engine kept our written yaw on 120 of 120 frames (100%) - near 100 is gameplay, near 0 is something else driving the camera
+weapon fx: STOPPED RIDING again - 252 draw(s) bailed so far. If this is climbing during GAMEPLAY the foreground boundary is not reliable and the gun transform rests on it too.
+    frame budget: xrWaitFrame 8.95 (idle) + copy 0.02 + GObjects walk 0.00 + XR submit 0.07 + reg scan 0.00 + gameplay hooks 0.00 + our work 2.04 = 11.10 ms (100% of the 11.11 ms display period)
+    yaw held: engine kept our written yaw on 120 of 120 frames (100%) - near 100 is gameplay, near 0 is something else driving the camera

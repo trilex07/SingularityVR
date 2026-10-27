@@ -1,0 +1,40 @@
+﻿    yaw held: engine kept our written yaw on 0 of 120 frames (0%) - near 100 is gameplay, near 0 is something else driving the camera
+    frame budget: xrWaitFrame 9.97 (idle) + copy 0.02 + GObjects walk 0.00 + XR submit 0.00 + reg scan 0.00 + gameplay hooks 0.00 + our work 1.11 = 11.10 ms (100% of the 11.11 ms display period)
+    yaw held: engine kept our written yaw on 0 of 120 frames (0%) - near 100 is gameplay, near 0 is something else driving the camera
+weapon fx: STOPPED RIDING again - 642 draw(s) bailed so far. If this is climbing during GAMEPLAY the foreground boundary is not reliable and the gun transform rests on it too.
+    frame budget: xrWaitFrame 8.01 (idle) + copy 0.02 + GObjects walk 0.00 + XR submit 0.00 + reg scan 0.00 + gameplay hooks 0.00 + our work 3.16 = 11.19 ms (101% of the 11.11 ms display period)
+    yaw held: engine kept our written yaw on 0 of 120 frames (0%) - near 100 is gameplay, near 0 is something else driving the camera
+    frame budget: xrWaitFrame 8.39 (idle) + copy 0.02 + GObjects walk 0.00 + XR submit 0.00 + reg scan 0.00 + gameplay hooks 0.00 + our work 2.64 = 11.05 ms (99% of the 11.11 ms display period)
+    yaw held: engine kept our written yaw on 0 of 120 frames (0%) - near 100 is gameplay, near 0 is something else driving the camera
+    frame budget: xrWaitFrame 9.30 (idle) + copy 0.02 + GObjects walk 0.00 + XR submit 0.00 + reg scan 0.00 + gameplay hooks 0.00 + our work 1.78 = 11.10 ms (100% of the 11.11 ms display period)
+    yaw held: engine kept our written yaw on 0 of 120 frames (0%) - near 100 is gameplay, near 0 is something else driving the camera
+    frame budget: xrWaitFrame 9.29 (idle) + copy 0.02 + GObjects walk 0.00 + XR submit 0.00 + reg scan 0.00 + gameplay hooks 0.00 + our work 1.80 = 11.11 ms (100% of the 11.11 ms display period)
+    yaw held: engine kept our written yaw on 0 of 120 frames (0%) - near 100 is gameplay, near 0 is something else driving the camera
+weapon fx: STOPPED RIDING again - 763 draw(s) bailed so far. If this is climbing during GAMEPLAY the foreground boundary is not reliable and the gun transform rests on it too.
+    frame budget: xrWaitFrame 9.31 (idle) + copy 0.02 + GObjects walk 0.00 + XR submit 0.00 + reg scan 0.00 + gameplay hooks 0.00 + our work 1.78 = 11.11 ms (100% of the 11.11 ms display period)
+    yaw held: engine kept our written yaw on 0 of 120 frames (0%) - near 100 is gameplay, near 0 is something else driving the camera
+    frame budget: xrWaitFrame 9.32 (idle) + copy 0.02 + GObjects walk 0.00 + XR submit 0.00 + reg scan 0.00 + gameplay hooks 0.00 + our work 1.77 = 11.12 ms (100% of the 11.11 ms display period)
+    yaw held: engine kept our written yaw on 0 of 120 frames (0%) - near 100 is gameplay, near 0 is something else driving the camera
+    frame budget: xrWaitFrame 9.34 (idle) + copy 0.02 + GObjects walk 0.00 + XR submit 0.00 + reg scan 0.00 + gameplay hooks 0.00 + our work 1.75 = 11.12 ms (100% of the 11.11 ms display period)
+    yaw held: engine kept our written yaw on 0 of 120 frames (0%) - near 100 is gameplay, near 0 is something else driving the camera
+    frame budget: xrWaitFrame 9.18 (idle) + copy 0.02 + GObjects walk 0.00 + XR submit 0.00 + reg scan 0.00 + gameplay hooks 0.00 + our work 1.91 = 11.11 ms (100% of the 11.11 ms display period)
+    yaw held: engine kept our written yaw on 0 of 120 frames (0%) - near 100 is gameplay, near 0 is something else driving the camera
+weapon fx: STOPPED RIDING again - 891 draw(s) bailed so far. If this is climbing during GAMEPLAY the foreground boundary is not reliable and the gun transform rests on it too.
+    frame budget: xrWaitFrame 8.28 (idle) + copy 0.02 + GObjects walk 0.00 + XR submit 0.00 + reg scan 0.00 + gameplay hooks 0.00 + our work 2.81 = 11.11 ms (100% of the 11.11 ms display period)
+    yaw held: engine kept our written yaw on 0 of 120 frames (0%) - near 100 is gameplay, near 0 is something else driving the camera
+    frame budget: xrWaitFrame 9.81 (idle) + copy 0.02 + GObjects walk 0.00 + XR submit 0.00 + reg scan 0.00 + gameplay hooks 0.00 + our work 1.27 = 11.11 ms (100% of the 11.11 ms display period)
+    yaw held: engine kept our written yaw on 0 of 120 frames (0%) - near 100 is gameplay, near 0 is something else driving the camera
+    frame budget: xrWaitFrame 9.64 (idle) + copy 0.02 + GObjects walk 0.00 + XR submit 0.00 + reg scan 0.00 + gameplay hooks 0.00 + our work 1.44 = 11.10 ms (100% of the 11.11 ms display period)
+    yaw held: engine kept our written yaw on 0 of 120 frames (0%) - near 100 is gameplay, near 0 is something else driving the camera
+    frame budget: xrWaitFrame 9.79 (idle) + copy 0.02 + GObjects walk 0.00 + XR submit 0.00 + reg scan 0.00 + gameplay hooks 0.00 + our work 1.30 = 11.11 ms (100% of the 11.11 ms display period)
+    yaw held: engine kept our written yaw on 0 of 120 frames (0%) - near 100 is gameplay, near 0 is something else driving the camera
+    frame budget: xrWaitFrame 9.87 (idle) + copy 0.02 + GObjects walk 0.00 + XR submit 0.00 + reg scan 0.00 + gameplay hooks 0.00 + our work 1.22 = 11.11 ms (100% of the 11.11 ms display period)
+    yaw held: engine kept our written yaw on 0 of 120 frames (0%) - near 100 is gameplay, near 0 is something else driving the camera
+    frame budget: xrWaitFrame 9.88 (idle) + copy 0.02 + GObjects walk 0.00 + XR submit 0.00 + reg scan 0.00 + gameplay hooks 0.00 + our work 1.21 = 11.11 ms (100% of the 11.11 ms display period)
+    yaw held: engine kept our written yaw on 0 of 120 frames (0%) - near 100 is gameplay, near 0 is something else driving the camera
+    frame budget: xrWaitFrame 9.88 (idle) + copy 0.02 + GObjects walk 0.00 + XR submit 0.00 + reg scan 0.00 + gameplay hooks 0.00 + our work 1.23 = 11.12 ms (100% of the 11.11 ms display period)
+    yaw held: engine kept our written yaw on 0 of 120 frames (0%) - near 100 is gameplay, near 0 is something else driving the camera
+    frame budget: xrWaitFrame 9.73 (idle) + copy 0.02 + GObjects walk 0.00 + XR submit 0.00 + reg scan 0.00 + gameplay hooks 0.00 + our work 1.36 = 11.11 ms (100% of the 11.11 ms display period)
+    yaw held: engine kept our written yaw on 0 of 120 frames (0%) - near 100 is gameplay, near 0 is something else driving the camera
+    frame budget: xrWaitFrame 9.93 (idle) + copy 0.01 + GObjects walk 0.00 + XR submit 0.00 + reg scan 0.00 + gameplay hooks 0.00 + our work 1.15 = 11.10 ms (100% of the 11.11 ms display period)
+    yaw held: engine kept our written yaw on 0 of 120 frames (0%) - near 100 is gameplay, near 0 is something else driving the camera

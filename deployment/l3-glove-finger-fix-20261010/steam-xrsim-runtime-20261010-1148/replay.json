@@ -1,0 +1,212 @@
+{
+  "recording": "C:\\Users\\Trilex\\AppData\\Local\\SingularityVR\\vr_sessions\\session_2026-10-09_14-18-07.vrrec",
+  "source_samples": 5573,
+  "samples": 1420,
+  "stride": 4,
+  "recorded_duration_s": 80.641,
+  "replay_duration_s": 10.080125,
+  "events": {
+    "fire": 8,
+    "melee": 2,
+    "recenter": 1,
+    "ui_click": 6
+  },
+  "transitions": [
+    {
+      "frame": 285,
+      "from": "panel",
+      "to": "menu"
+    },
+    {
+      "frame": 296,
+      "from": "menu",
+      "to": "gameplay"
+    },
+    {
+      "frame": 4379,
+      "from": "gameplay",
+      "to": "menu"
+    },
+    {
+      "frame": 4502,
+      "from": "menu",
+      "to": "panel"
+    },
+    {
+      "frame": 5076,
+      "from": "panel",
+      "to": "menu"
+    },
+    {
+      "frame": 5090,
+      "from": "menu",
+      "to": "gameplay"
+    },
+    {
+      "frame": 5169,
+      "from": "gameplay",
+      "to": "menu"
+    },
+    {
+      "frame": 5408,
+      "from": "menu",
+      "to": "unknown"
+    },
+    {
+      "frame": 5410,
+      "from": "unknown",
+      "to": "gameplay"
+    },
+    {
+      "frame": 5417,
+      "from": "gameplay",
+      "to": "unknown"
+    },
+    {
+      "frame": 5418,
+      "from": "unknown",
+      "to": "gameplay"
+    },
+    {
+      "frame": 5446,
+      "from": "gameplay",
+      "to": "menu"
+    },
+    {
+      "frame": 5478,
+      "from": "menu",
+      "to": "gameplay"
+    },
+    {
+      "frame": 5499,
+      "from": "gameplay",
+      "to": "menu"
+    }
+  ],
+  "ui_button": "a",
+  "applied_batches": 1420,
+  "skipped_duplicate_batches": 0,
+  "first_frame": 1,
+  "last_frame": 5573,
+  "elapsed_wall_s": 47.88230869999097,
+  "final_cmd_seq": 13930,
+  "final_state": {
+    "pid": 23836,
+    "runtime": "dvr-xrsim",
+    "system": "Meta Quest 3",
+    "uptimeMs": 68672,
+    "frame": 4026,
+    "waitFrames": 4026,
+    "beginFrames": 4026,
+    "endFrames": 4026,
+    "frameOpen": false,
+    "framesDiscarded": 0,
+    "endsOutOfOrder": 0,
+    "sessionState": "FOCUSED",
+    "sessionRunning": true,
+    "actionsAttached": true,
+    "focusPolicy": "vdxr",
+    "focusNoRender": false,
+    "focusThrottleMs": 0,
+    "layeredFrames": 4026,
+    "paceMode": "free",
+    "refreshHz": 90.0,
+    "stepsPending": 0,
+    "idleBlockMs": 0,
+    "eventsDropped": 0,
+    "ipdMm": 63.0,
+    "fovDeg": {
+      "l": -54.0,
+      "r": 44.0,
+      "u": 55.0,
+      "d": -55.0
+    },
+    "head": {
+      "pos": [
+        -0.4642,
+        1.2141,
+        -0.4481
+      ],
+      "ypr": [
+        -84.83,
+        0.0,
+        -6.76
+      ],
+      "valid": true
+    },
+    "handL": {
+      "pos": [
+        -0.3772,
+        0.607,
+        -0.6739
+      ],
+      "ypr": [
+        -74.45,
+        -23.96,
+        11.53
+      ],
+      "valid": true,
+      "followsHead": false
+    },
+    "handR": {
+      "pos": [
+        -0.2177,
+        0.6141,
+        -0.2747
+      ],
+      "ypr": [
+        -89.38,
+        -21.22,
+        -21.53
+      ],
+      "valid": true,
+      "followsHead": false
+    },
+    "controls": {
+      "a": true,
+      "b": false,
+      "x": false,
+      "y": false,
+      "menu": false,
+      "clickL": false,
+      "clickR": false,
+      "restL": false,
+      "restR": false,
+      "trigL": 0.0,
+      "trigR": 0.0,
+      "gripL": 0.0,
+      "gripR": 0.0,
+      "stickL": [
+        0.218,
+        -0.976
+      ],
+      "stickR": [
+        0.0,
+        0.0
+      ]
+    },
+    "layersLastFrame": 1,
+    "projectionViews": 2,
+    "quadLayers": 0,
+    "quadAlphaPct": 0.0,
+    "capNonBlackL": 0,
+    "capNonBlackR": 0,
+    "eyeReleasedOnFrameL": 4026,
+    "eyeReleasedOnFrameR": 4026,
+    "eyeAgeL": 0,
+    "eyeAgeR": 0,
+    "eyeAgeMaxL": 0,
+    "eyeAgeMaxR": 0,
+    "eyeSameSwapchain": false,
+    "projSubmits": 4026,
+    "projMonoSubmits": 0,
+    "projStaleSubmits": 0,
+    "endPhaseMs": -0.264,
+    "captureSeq": 0,
+    "lastCapture": "",
+    "cmdSeq": 13930,
+    "lastCmd": "stick r 0.000000 0.000000",
+    "lastCmdError": "",
+    "errors": 0
+  }
+}

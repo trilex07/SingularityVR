@@ -1,0 +1,40 @@
+﻿    frame budget: xrWaitFrame 8.89 (idle) + copy 0.03 + GObjects walk 0.00 + XR submit 0.12 + reg scan 0.00 + gameplay hooks 0.45 + our work 1.62 = 11.10 ms (100% of the 11.11 ms display period)
+    gameplay hooks: mean 0.45 ms/frame, WORST SINGLE FRAME 1.03 ms | of which ResolveGameplayOffsets 0.03 ms total, WORST 0.00 ms. It walks GObjects on a miss and there is no pawn at a splash screen, so every attempt there is a walk that cannot succeed. (run 254)
+    gameplay hook breakdown (total ms this window / WORST single call): SolvePropertyLayout 0.0/0.0 | RefreshArmedState 53.3/1.0 | UpdateFgLatch 0.0/0.0 | ApplyMuzzleFxSuppression 0.0/0.0 (run 255)
+    yaw held: engine kept our written yaw on 120 of 120 frames (100%) - near 100 is gameplay, near 0 is something else driving the camera
+    frame budget: xrWaitFrame 6.61 (idle) + copy 0.02 + GObjects walk 0.00 + XR submit 0.10 + reg scan 0.00 + gameplay hooks 0.44 + our work 4.25 = 11.42 ms (103% of the 11.11 ms display period)
+    gameplay hooks: mean 0.44 ms/frame, WORST SINGLE FRAME 1.02 ms | of which ResolveGameplayOffsets 0.03 ms total, WORST 0.00 ms. It walks GObjects on a miss and there is no pawn at a splash screen, so every attempt there is a walk that cannot succeed. (run 254)
+    gameplay hook breakdown (total ms this window / WORST single call): SolvePropertyLayout 0.0/0.0 | RefreshArmedState 52.1/1.0 | UpdateFgLatch 0.0/0.0 | ApplyMuzzleFxSuppression 0.0/0.0 (run 255)
+    yaw held: engine kept our written yaw on 120 of 120 frames (100%) - near 100 is gameplay, near 0 is something else driving the camera
+    frame budget: xrWaitFrame 4.29 (idle) + copy 0.02 + GObjects walk 0.09 + XR submit 0.00 + reg scan 0.00 + gameplay hooks 0.63 + our work 18.30 = 23.33 ms (210% of the 11.11 ms display period)
+    gameplay hooks: mean 0.63 ms/frame, WORST SINGLE FRAME 1.02 ms | of which ResolveGameplayOffsets 0.03 ms total, WORST 0.00 ms. It walks GObjects on a miss and there is no pawn at a splash screen, so every attempt there is a walk that cannot succeed. (run 254)
+    gameplay hook breakdown (total ms this window / WORST single call): SolvePropertyLayout 0.0/0.0 | RefreshArmedState 75.1/1.0 | UpdateFgLatch 0.0/0.0 | ApplyMuzzleFxSuppression 0.0/0.0 (run 255)
+    yaw held: engine kept our written yaw on 118 of 120 frames (98%) - near 100 is gameplay, near 0 is something else driving the camera
+IndependentHandsAudit candidates=138 context=138 blocked=0/0/0/0/0/0/0/0/0/0 shader=0 section=0 map=0 palette=0 success=69 (cfg/mode/ride/gun/camera/offhand/position/window/animation/weapon)
+    video quads drawn per eye: 31 this second   <== DURING GAMEPLAY, this is a MISCLASSIFICATION
+    frame budget: xrWaitFrame 4.21 (idle) + copy 0.02 + GObjects walk 0.00 + XR submit 0.09 + reg scan 0.00 + gameplay hooks 0.52 + our work 17.35 = 22.19 ms (200% of the 11.11 ms display period)
+    gameplay hooks: mean 0.52 ms/frame, WORST SINGLE FRAME 1.15 ms | of which ResolveGameplayOffsets 0.03 ms total, WORST 0.00 ms. It walks GObjects on a miss and there is no pawn at a splash screen, so every attempt there is a walk that cannot succeed. (run 254)
+    gameplay hook breakdown (total ms this window / WORST single call): SolvePropertyLayout 0.0/0.0 | RefreshArmedState 54.0/1.0 | UpdateFgLatch 0.0/0.0 | ApplyMuzzleFxSuppression 8.8/0.5 (run 255)
+    yaw held: engine kept our written yaw on 120 of 120 frames (100%) - near 100 is gameplay, near 0 is something else driving the camera
+IndependentHandsAudit candidates=480 context=480 blocked=0/0/0/0/0/0/0/0/0/0 shader=0 section=0 map=0 palette=0 success=240 (cfg/mode/ride/gun/camera/offhand/position/window/animation/weapon)
+IndependentHandsAudit candidates=540 context=540 blocked=0/0/0/0/0/0/0/0/0/0 shader=0 section=0 map=0 palette=0 success=270 (cfg/mode/ride/gun/camera/offhand/position/window/animation/weapon)
+    frame budget: xrWaitFrame 7.22 (idle) + copy 0.02 + GObjects walk 0.00 + XR submit 0.00 + reg scan 0.00 + gameplay hooks 0.02 + our work 3.85 = 11.11 ms (100% of the 11.11 ms display period)
+    yaw held: engine kept our written yaw on 120 of 120 frames (100%) - near 100 is gameplay, near 0 is something else driving the camera
+IndependentHandsAudit candidates=540 context=540 blocked=0/0/0/0/0/0/0/0/0/0 shader=0 section=0 map=0 palette=0 success=270 (cfg/mode/ride/gun/camera/offhand/position/window/animation/weapon)
+    gameplay offsets all resolved - no further object-graph walks from this path.
+    frame budget: xrWaitFrame 7.18 (idle) + copy 0.02 + GObjects walk 0.00 + XR submit 0.09 + reg scan 0.00 + gameplay hooks 0.01 + our work 3.84 = 11.14 ms (100% of the 11.11 ms display period)
+    yaw held: engine kept our written yaw on 120 of 120 frames (100%) - near 100 is gameplay, near 0 is something else driving the camera
+IndependentHandsAudit candidates=540 context=540 blocked=0/0/0/0/0/0/0/0/0/0 shader=0 section=0 map=0 palette=0 success=270 (cfg/mode/ride/gun/camera/offhand/position/window/animation/weapon)
+    frame budget: xrWaitFrame 7.16 (idle) + copy 0.02 + GObjects walk 0.00 + XR submit 0.08 + reg scan 0.00 + gameplay hooks 0.00 + our work 3.82 = 11.08 ms (100% of the 11.11 ms display period)
+    yaw held: engine kept our written yaw on 120 of 120 frames (100%) - near 100 is gameplay, near 0 is something else driving the camera
+IndependentHandsAudit candidates=540 context=540 blocked=0/0/0/0/0/0/0/0/0/0 shader=0 section=0 map=0 palette=0 success=270 (cfg/mode/ride/gun/camera/offhand/position/window/animation/weapon)
+IndependentHandsAudit candidates=540 context=540 blocked=0/0/0/0/0/0/0/0/0/0 shader=0 section=0 map=0 palette=0 success=270 (cfg/mode/ride/gun/camera/offhand/position/window/animation/weapon)
+    frame budget: xrWaitFrame 7.08 (idle) + copy 0.02 + GObjects walk 0.00 + XR submit 0.00 + reg scan 0.00 + gameplay hooks 0.00 + our work 4.01 = 11.12 ms (100% of the 11.11 ms display period)
+    yaw held: engine kept our written yaw on 120 of 120 frames (100%) - near 100 is gameplay, near 0 is something else driving the camera
+IndependentHandsAudit candidates=540 context=540 blocked=0/0/0/0/0/0/0/0/0/0 shader=0 section=0 map=0 palette=0 success=270 (cfg/mode/ride/gun/camera/offhand/position/window/animation/weapon)
+    frame budget: xrWaitFrame 7.10 (idle) + copy 0.02 + GObjects walk 0.00 + XR submit 0.09 + reg scan 0.00 + gameplay hooks 0.00 + our work 3.92 = 11.13 ms (100% of the 11.11 ms display period)
+    yaw held: engine kept our written yaw on 120 of 120 frames (100%) - near 100 is gameplay, near 0 is something else driving the camera
+IndependentHandsAudit candidates=540 context=540 blocked=0/0/0/0/0/0/0/0/0/0 shader=0 section=0 map=0 palette=0 success=270 (cfg/mode/ride/gun/camera/offhand/position/window/animation/weapon)
+    frame budget: xrWaitFrame 6.93 (idle) + copy 0.03 + GObjects walk 0.00 + XR submit 0.00 + reg scan 0.00 + gameplay hooks 0.00 + our work 4.14 = 11.10 ms (100% of the 11.11 ms display period)
+    yaw held: engine kept our written yaw on 120 of 120 frames (100%) - near 100 is gameplay, near 0 is something else driving the camera
+IndependentHandsAudit candidates=540 context=540 blocked=0/0/0/0/0/0/0/0/0/0 shader=0 section=0 map=0 palette=0 success=270 (cfg/mode/ride/gun/camera/offhand/position/window/animation/weapon)

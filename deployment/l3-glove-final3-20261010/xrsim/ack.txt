@@ -1,0 +1,2 @@
+seq=12851 frame=20030 error=-
+last=shot glove-close

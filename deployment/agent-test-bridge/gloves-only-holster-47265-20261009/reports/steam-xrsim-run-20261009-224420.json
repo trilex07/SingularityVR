@@ -1,0 +1,23 @@
+{
+  "timestamp": "2026-10-09T22:44:20.6590483+02:00",
+  "finished": "2026-10-09T22:44:30.4869219+02:00",
+  "candidate": "gloves-only-holster-47265-20261009",
+  "candidate_dir": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-production\\deployment\\agent-test-bridge\\gloves-only-holster-47265-20261009",
+  "game_exe": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\Singularity.exe",
+  "dll_before": "4ABF8081CEC1FEFE4768C0C180CC704C85D399DB8A825105BFC2C715B1CBB2EC",
+  "dll_candidate": "47265B530E2DB21DED35A5BC8B94E3C92CD7B2F166A68DD6F93AE9546873C5D1",
+  "dll_after_install": "",
+  "launched": false,
+  "restored": false,
+  "error": "Unable to replace file (sharing, access, or path failure): C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\d3d9.dll\nLast operation: Access to the path is denied.\nopenfiles did not report an owner.",
+  "restore_error": "Unable to replace file (sharing, access, or path failure): C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\d3d9.dll\nLast operation: Access to the path is denied.\nopenfiles did not report an owner.",
+  "log_path": null,
+  "runtime_ready": false,
+  "process_exit": false,
+  "exit_code": null,
+  "missing_mouse_path": false,
+  "foreground_boundary": false,
+  "shadow_path": false,
+  "vfx_path": false,
+  "log_tail": ""
+}

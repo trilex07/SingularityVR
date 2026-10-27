@@ -1,0 +1,23 @@
+{
+    "timestamp":  "2026-10-09T20:11:14.9011405+02:00",
+    "finished":  "2026-10-09T20:11:24.7743040+02:00",
+    "candidate":  "vfx",
+    "candidate_dir":  "C:\\Users\\Trilex\\vr-mods\\SingularityVR-production\\deployment\\agent-test-bridge\\hotpath-caster-o2-20261009",
+    "game_exe":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\Singularity.exe",
+    "dll_before":  "4ABF8081CEC1FEFE4768C0C180CC704C85D399DB8A825105BFC2C715B1CBB2EC",
+    "dll_candidate":  "EDD070D27E3A559834B22941C7D1743A5C7D787236379CA298131B37EB9F0FB2",
+    "dll_after_install":  "",
+    "launched":  false,
+    "restored":  false,
+    "error":  "File is still locked: C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\d3d9.dll\nopenfiles did not report an owner.",
+    "restore_error":  "File is still locked: C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\d3d9.dll\nopenfiles did not report an owner.",
+    "log_path":  null,
+    "runtime_ready":  false,
+    "process_exit":  false,
+    "exit_code":  null,
+    "missing_mouse_path":  false,
+    "foreground_boundary":  false,
+    "shadow_path":  false,
+    "vfx_path":  false,
+    "log_tail":  ""
+}

@@ -1,0 +1,14 @@
+{
+  "runLog": "C:\\Users\\Trilex\\AppData\\Local\\SingularityVR\\view_matrix_2026-10-09_23-44-42.log",
+  "sha256": "C23E3474280D59B6E6D392A5572E2B17B404FE97FFC432E13279EACC215DF52D",
+  "mode": "NISSharpen",
+  "sharpness": 0.2,
+  "renderScale": 1.0,
+  "outputScale": 1.0,
+  "initializations": 1,
+  "measuredDispatchWindows": 7,
+  "windowsWithoutDispatch": 302,
+  "sample": "    NIS upscaling [MEASURED GPU]: mode NISSharpen sharp 0.20 renderScale 1.00 outScale 1.00 | eye in 2112x2304 -> out 2064x2208 | GPU mean 0.000 ms peak 0.000 | stage copy mean 0.001 ms | 1 frames | lifetimes: shaders 1, stage 1, outputs 1",
+  "interpretation": "Dispatch evidence only. GPU timing reported 0.000 ms and no image A/B was captured; do not claim image-quality or cost validation.",
+  "policyTest": "test-nis-upscale.exe: 167 passed, 0 failed"
+}

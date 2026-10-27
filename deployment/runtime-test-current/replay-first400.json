@@ -1,0 +1,152 @@
+{
+  "recording": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-production\\deployment\\runtime-test-current\\canonical-first400.vrrec",
+  "source_samples": 400,
+  "samples": 400,
+  "stride": 1,
+  "recorded_duration_s": 4.485,
+  "replay_duration_s": 2.2425,
+  "events": {
+    "fire": 0,
+    "melee": 1,
+    "recenter": 1,
+    "ui_click": 0
+  },
+  "transitions": [
+    {
+      "frame": 285,
+      "from": "panel",
+      "to": "menu"
+    },
+    {
+      "frame": 296,
+      "from": "menu",
+      "to": "gameplay"
+    }
+  ],
+  "ui_button": "a",
+  "applied_batches": 400,
+  "skipped_duplicate_batches": 0,
+  "first_frame": 1,
+  "last_frame": 400,
+  "elapsed_wall_s": 17.269033700002183,
+  "final_cmd_seq": 16512,
+  "final_state": {
+    "pid": 36088,
+    "runtime": "dvr-xrsim",
+    "system": "Meta Quest 3",
+    "uptimeMs": 97641,
+    "frame": 6626,
+    "waitFrames": 6626,
+    "beginFrames": 6626,
+    "endFrames": 6626,
+    "frameOpen": false,
+    "framesDiscarded": 0,
+    "endsOutOfOrder": 0,
+    "sessionState": "FOCUSED",
+    "sessionRunning": true,
+    "actionsAttached": true,
+    "focusPolicy": "vdxr",
+    "focusNoRender": false,
+    "focusThrottleMs": 0,
+    "layeredFrames": 6626,
+    "paceMode": "free",
+    "refreshHz": 90.0,
+    "stepsPending": 0,
+    "idleBlockMs": 0,
+    "eventsDropped": 0,
+    "ipdMm": 63.0,
+    "fovDeg": {
+      "l": -54.0,
+      "r": 44.0,
+      "u": 55.0,
+      "d": -55.0
+    },
+    "head": {
+      "pos": [
+        -0.4951,
+        1.2148,
+        -0.4953
+      ],
+      "ypr": [
+        -71.8,
+        -0.0,
+        -4.44
+      ],
+      "valid": true
+    },
+    "handL": {
+      "pos": [
+        -0.1578,
+        0.7488,
+        -0.6586
+      ],
+      "ypr": [
+        -100.81,
+        -3.82,
+        -25.95
+      ],
+      "valid": true,
+      "followsHead": false
+    },
+    "handR": {
+      "pos": [
+        -0.1491,
+        0.7835,
+        -0.5696
+      ],
+      "ypr": [
+        -31.56,
+        -2.15,
+        43.34
+      ],
+      "valid": true,
+      "followsHead": false
+    },
+    "controls": {
+      "a": false,
+      "b": false,
+      "x": false,
+      "y": false,
+      "menu": false,
+      "clickL": false,
+      "clickR": false,
+      "restL": false,
+      "restR": false,
+      "trigL": 0.0,
+      "trigR": 0.0,
+      "gripL": 0.0,
+      "gripR": 0.0,
+      "stickL": [
+        0.0,
+        0.0
+      ],
+      "stickR": [
+        0.0,
+        0.0
+      ]
+    },
+    "layersLastFrame": 1,
+    "projectionViews": 2,
+    "quadLayers": 0,
+    "quadAlphaPct": 0.0,
+    "capNonBlackL": 97,
+    "capNonBlackR": 97,
+    "eyeReleasedOnFrameL": 6626,
+    "eyeReleasedOnFrameR": 6626,
+    "eyeAgeL": 0,
+    "eyeAgeR": 0,
+    "eyeAgeMaxL": 0,
+    "eyeAgeMaxR": 0,
+    "eyeSameSwapchain": false,
+    "projSubmits": 6626,
+    "projMonoSubmits": 0,
+    "projStaleSubmits": 0,
+    "endPhaseMs": -9.675,
+    "captureSeq": 1,
+    "lastCapture": "C:\\Users\\Trilex\\vr-mods\\xrsim-scratch-run\\capture\\glove0-final",
+    "cmdSeq": 16512,
+    "lastCmd": "stick r 0.000000 0.000000",
+    "lastCmdError": "",
+    "errors": 0
+  }
+}

@@ -1,0 +1,12 @@
+with open('d3d9.cpp', 'rb') as f:
+    content = f.read()
+
+old = b'    const bool hotPathEnabled = GetPrivateProfileIntA("Render", "HotPathSampler", 0, path) != 0;\n    g_hotPathSampler.configure(hotPathEnabled);\n    if (hotPathEnabled)\n        Log("ini: HotPathSampler=1; collecting 1200 Present frames, 1/%u timing samples, then stopping",\n            hotpath::sample_stride);\n\n    if (GetPrivateProfileIntA("Render", "ResX", 0, path)) {'
+
+new = b'    const bool hotPathEnabled = GetPrivateProfileIntA("Render", "HotPathSampler", 0, path) != 0;\n    g_hotPathSampler.configure(hotPathEnabled);\n    if (hotPathEnabled)\n        Log("ini: HotPathSampler=1; collecting 1200 Present frames, 1/%u timing samples, then stopping",\n            hotpath::sample_stride);\n\n    // ---- Polish Localization initialization ----\n    // Initialize Polish localization manager and read PolishLanguage from INI\n    // Paths are relative to the game Binaries directory where the DLL lives\n    {\n        char polishTextPath[MAX_PATH];\n        char polishVoicePath[MAX_PATH];\n        char polishStoryPath[MAX_PATH];\n        char* slash = strrchr(path, "\\\\");\n        if (slash) {\n            *slash = "\\0";\n            _snprintf_s(polishTextPath, MAX_PATH, _TRUNCATE, "%s\\\\vr-assets\\\\localization\\\\pl\\\\polish_text.jsonl", path);\n            _snprintf_s(polishVoicePath, MAX_PATH, _TRUNCATE, "%s\\\\vr-assets\\\\localization\\\\pl\\\\polish_voice.jsonl", path);\n            _snprintf_s(polishStoryPath, MAX_PATH, _TRUNCATE, "%s\\\\vr-assets\\\\localization\\\\pl\\\\polish_story_voice.jsonl", path);\n            *slash = "\\\\";\n        }\n        bool polishInit = PolishLocalization::PL().Initialize(polishTextPath, polishVoicePath, polishStoryPath);\n        if (polishInit) {\n            LONG plLang = GetPrivateProfileIntA("Localization", "PolishLanguage", 0, path);\n            if (plLang != 0) PolishLocalization::PL().SetPolishLanguage(true);\n            LONG plFallback = GetPrivateProfileIntA("Localization", "PolishFallbackToEnglish", 1, path);\n            PolishLocalization::PL().SetFallbackToEnglish(plFallback != 0);\n            Log("ini: Polish localization %s (PolishLanguage=%ld, Fallback=%ld)", polishInit ? "initialized" : "FAILED", plLang, plFallback);\n        } else {\n            Log("ini: Polish localization FAILED to initialize");\n        }\n    }\n\n    if (GetPrivateProfileIntA("Render", "ResX", 0, path)) {'
+
+content = content.replace(old, new)
+
+with open('d3d9.cpp', 'wb') as f:
+    f.write(content)
+print('Done')

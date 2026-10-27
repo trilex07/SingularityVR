@@ -1,0 +1,2 @@
+seq=10 frame=12739 error=-
+last=shot left-moved

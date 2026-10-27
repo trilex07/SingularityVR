@@ -1,0 +1,120 @@
+      [1] SLOW frames (<=90 fps)   :   6360 fr | wall  13.20 | CPU  10.65 (user 9.22 kernel 1.42)
+    triggers: LEFT raw 0.00 (min 0.00 max 0.00, inactive 0/120) | RIGHT raw 0.00 (min 0.00 max 0.00, inactive 0/120) -> game receives LT 0 RT 0
+    trigger touch gate ON: LEFT NO SENSOR (values pass through unchanged), RIGHT NO SENSOR (values pass through unchanged) - vetoed 0/120 and 0/120 frames
+    round-trip split: gpu wait 0.36 ms (rendering - NOT recoverable) | transfer 0.00 + memcpy 0.00 + upload 0.02 = 0.02 ms RECOVERABLE -> zero-copy ceiling 11.08 ms/frame (90 fps)
+    shadow-sample: 120 draws while the projected map was bound, 120 mono, 0 dropped (ShadowMode=1: 0=full split 1=mono 2=drop)
+    menu watch: SetPause=4
+GloveCensus HEAD=UNKNOWN DLL_SHA=BUILD Frame=13042 Eye=shared WorldScale=80 CurrentPass=arms MenuState=0 mode=2 left=0/0 right=2/2
+perf: 90.0 fps (11.11 ms/frame) | draws/frame peak 1021, split 1020 (1020 with parallax, 0 flat), offscreen 0, mono-fallback 0, user-ptr 289, frames with NO identification 0 [TRUE STEREO ON]
+      pad ON , feed ON , controllers ON DESK : 81.1 fps | residual 5.75 | MISSED 5.5% of frames (worst 452 ms) | 850 draws/frame | 12971 frames [wait 6.57, submit 0.00]
+    ---- CPU by thread, bucketed by FRAME TIME (cumulative), ms per frame ----
+      [1] SLOW frames (<=90 fps)   :   6360 fr | wall  13.20 | CPU  10.65 (user 9.22 kernel 1.42)
+    triggers: LEFT raw 0.00 (min 0.00 max 0.00, inactive 0/120) | RIGHT raw 0.00 (min 0.00 max 0.00, inactive 0/120) -> game receives LT 0 RT 0
+    trigger touch gate ON: LEFT NO SENSOR (values pass through unchanged), RIGHT NO SENSOR (values pass through unchanged) - vetoed 0/120 and 0/120 frames
+    round-trip split: gpu wait 0.47 ms (rendering - NOT recoverable) | transfer 0.00 + memcpy 0.00 + upload 0.02 = 0.02 ms RECOVERABLE -> zero-copy ceiling 11.08 ms/frame (90 fps)
+    shadow-sample: 120 draws while the projected map was bound, 120 mono, 0 dropped (ShadowMode=1: 0=full split 1=mono 2=drop)
+    menu watch: SetPause=4
+GloveCensus HEAD=UNKNOWN DLL_SHA=BUILD Frame=13131 Eye=shared WorldScale=80 CurrentPass=arms MenuState=0 mode=2 left=0/0 right=2/2
+perf: 90.0 fps (11.11 ms/frame) | draws/frame peak 1021, split 1020 (1020 with parallax, 0 flat), offscreen 0, mono-fallback 0, user-ptr 289, frames with NO identification 0 [TRUE STEREO ON]
+      pad ON , feed ON , controllers ON DESK : 81.2 fps | residual 5.73 | MISSED 5.4% of frames (worst 452 ms) | 852 draws/frame | 13090 frames [wait 6.58, submit 0.00]
+    ---- CPU by thread, bucketed by FRAME TIME (cumulative), ms per frame ----
+      [1] SLOW frames (<=90 fps)   :   6480 fr | wall  13.16 | CPU  10.62 (user 9.21 kernel 1.41)
+    triggers: LEFT raw 0.00 (min 0.00 max 0.00, inactive 0/120) | RIGHT raw 0.00 (min 0.00 max 0.00, inactive 0/120) -> game receives LT 0 RT 0
+    trigger touch gate ON: LEFT NO SENSOR (values pass through unchanged), RIGHT NO SENSOR (values pass through unchanged) - vetoed 0/120 and 0/120 frames
+    round-trip split: gpu wait 0.31 ms (rendering - NOT recoverable) | transfer 0.00 + memcpy 0.00 + upload 0.02 = 0.02 ms RECOVERABLE -> zero-copy ceiling 11.09 ms/frame (90 fps)
+    shadow-sample: 120 draws while the projected map was bound, 120 mono, 0 dropped (ShadowMode=1: 0=full split 1=mono 2=drop)
+    menu watch: SetPause=4
+GloveCensus HEAD=UNKNOWN DLL_SHA=BUILD Frame=13222 Eye=shared WorldScale=80 CurrentPass=arms MenuState=0 mode=2 left=0/0 right=2/2
+GloveCensus HEAD=UNKNOWN DLL_SHA=BUILD Frame=13312 Eye=shared WorldScale=80 CurrentPass=arms MenuState=0 mode=2 left=0/0 right=2/2
+perf: 89.9 fps (11.12 ms/frame) | draws/frame peak 1019, split 1018 (1018 with parallax, 0 flat), offscreen 0, mono-fallback 0, user-ptr 289, frames with NO identification 0 [TRUE STEREO ON]
+      pad ON , feed ON , controllers ON DESK : 81.3 fps | residual 5.71 | MISSED 5.4% of frames (worst 452 ms) | 853 draws/frame | 13209 frames [wait 6.59, submit 0.00]
+    ---- CPU by thread, bucketed by FRAME TIME (cumulative), ms per frame ----
+      [1] SLOW frames (<=90 fps)   :   6600 fr | wall  13.12 | CPU  10.60 (user 9.20 kernel 1.40)
+    triggers: LEFT raw 0.00 (min 0.00 max 0.00, inactive 0/120) | RIGHT raw 0.00 (min 0.00 max 0.00, inactive 0/120) -> game receives LT 0 RT 0
+    trigger touch gate ON: LEFT NO SENSOR (values pass through unchanged), RIGHT NO SENSOR (values pass through unchanged) - vetoed 0/120 and 0/120 frames
+    round-trip split: gpu wait 0.45 ms (rendering - NOT recoverable) | transfer 0.00 + memcpy 0.00 + upload 0.02 = 0.02 ms RECOVERABLE -> zero-copy ceiling 11.10 ms/frame (90 fps)
+    shadow-sample: 120 draws while the projected map was bound, 120 mono, 0 dropped (ShadowMode=1: 0=full split 1=mono 2=drop)
+    menu watch: SetPause=4
+GloveCensus HEAD=UNKNOWN DLL_SHA=BUILD Frame=13402 Eye=shared WorldScale=80 CurrentPass=arms MenuState=0 mode=2 left=0/0 right=2/2
+perf: 90.1 fps (11.10 ms/frame) | draws/frame peak 1018, split 1017 (1017 with parallax, 0 flat), offscreen 0, mono-fallback 0, user-ptr 288, frames with NO identification 0 [TRUE STEREO ON]
+      pad ON , feed ON , controllers ON DESK : 81.3 fps | residual 5.70 | MISSED 5.3% of frames (worst 452 ms) | 855 draws/frame | 13328 frames [wait 6.59, submit 0.00]
+    ---- CPU by thread, bucketed by FRAME TIME (cumulative), ms per frame ----
+      [1] SLOW frames (<=90 fps)   :   6600 fr | wall  13.12 | CPU  10.60 (user 9.20 kernel 1.40)
+    triggers: LEFT raw 0.00 (min 0.00 max 0.00, inactive 0/120) | RIGHT raw 0.00 (min 0.00 max 0.00, inactive 0/120) -> game receives LT 0 RT 0
+    trigger touch gate ON: LEFT NO SENSOR (values pass through unchanged), RIGHT NO SENSOR (values pass through unchanged) - vetoed 0/120 and 0/120 frames
+    round-trip split: gpu wait 0.35 ms (rendering - NOT recoverable) | transfer 0.00 + memcpy 0.00 + upload 0.02 = 0.02 ms RECOVERABLE -> zero-copy ceiling 11.08 ms/frame (90 fps)
+    shadow-sample: 120 draws while the projected map was bound, 120 mono, 0 dropped (ShadowMode=1: 0=full split 1=mono 2=drop)
+    menu watch: SetPause=4
+GloveCensus HEAD=UNKNOWN DLL_SHA=BUILD Frame=13492 Eye=shared WorldScale=80 CurrentPass=arms MenuState=0 mode=2 left=0/0 right=2/2
+perf: 89.9 fps (11.12 ms/frame) | draws/frame peak 1019, split 1018 (1018 with parallax, 0 flat), offscreen 0, mono-fallback 0, user-ptr 289, frames with NO identification 0 [TRUE STEREO ON]
+      pad ON , feed ON , controllers ON DESK : 81.4 fps | residual 5.68 | MISSED 5.3% of frames (worst 452 ms) | 856 draws/frame | 13447 frames [wait 6.60, submit 0.00]
+    ---- CPU by thread, bucketed by FRAME TIME (cumulative), ms per frame ----
+      [1] SLOW frames (<=90 fps)   :   6720 fr | wall  13.08 | CPU  10.57 (user 9.19 kernel 1.38)
+    triggers: LEFT raw 0.00 (min 0.00 max 0.00, inactive 0/120) | RIGHT raw 0.00 (min 0.00 max 0.00, inactive 0/120) -> game receives LT 0 RT 0
+    trigger touch gate ON: LEFT NO SENSOR (values pass through unchanged), RIGHT NO SENSOR (values pass through unchanged) - vetoed 0/120 and 0/120 frames
+    round-trip split: gpu wait 0.34 ms (rendering - NOT recoverable) | transfer 0.00 + memcpy 0.00 + upload 0.02 = 0.02 ms RECOVERABLE -> zero-copy ceiling 11.10 ms/frame (90 fps)
+    shadow-sample: 120 draws while the projected map was bound, 120 mono, 0 dropped (ShadowMode=1: 0=full split 1=mono 2=drop)
+    menu watch: SetPause=4
+GloveCensus HEAD=UNKNOWN DLL_SHA=BUILD Frame=13582 Eye=shared WorldScale=80 CurrentPass=arms MenuState=0 mode=2 left=0/0 right=2/2
+GloveCensus HEAD=UNKNOWN DLL_SHA=BUILD Frame=13672 Eye=shared WorldScale=80 CurrentPass=arms MenuState=0 mode=2 left=0/0 right=2/2
+perf: 90.0 fps (11.11 ms/frame) | draws/frame peak 1019, split 1018 (1018 with parallax, 0 flat), offscreen 0, mono-fallback 0, user-ptr 288, frames with NO identification 0 [TRUE STEREO ON]
+      pad ON , feed ON , controllers ON DESK : 81.5 fps | residual 5.66 | MISSED 5.2% of frames (worst 452 ms) | 858 draws/frame | 13566 frames [wait 6.61, submit 0.00]
+    ---- CPU by thread, bucketed by FRAME TIME (cumulative), ms per frame ----
+      [1] SLOW frames (<=90 fps)   :   6720 fr | wall  13.08 | CPU  10.57 (user 9.19 kernel 1.38)
+    triggers: LEFT raw 0.00 (min 0.00 max 0.00, inactive 0/120) | RIGHT raw 0.00 (min 0.00 max 0.00, inactive 0/120) -> game receives LT 0 RT 0
+    trigger touch gate ON: LEFT NO SENSOR (values pass through unchanged), RIGHT NO SENSOR (values pass through unchanged) - vetoed 0/120 and 0/120 frames
+    round-trip split: gpu wait 0.45 ms (rendering - NOT recoverable) | transfer 0.00 + memcpy 0.00 + upload 0.02 = 0.02 ms RECOVERABLE -> zero-copy ceiling 11.09 ms/frame (90 fps)
+    shadow-sample: 120 draws while the projected map was bound, 120 mono, 0 dropped (ShadowMode=1: 0=full split 1=mono 2=drop)
+    menu watch: SetPause=4
+GloveCensus HEAD=UNKNOWN DLL_SHA=BUILD Frame=13762 Eye=shared WorldScale=80 CurrentPass=arms MenuState=0 mode=2 left=0/0 right=2/2
+perf: 90.1 fps (11.10 ms/frame) | draws/frame peak 1020, split 1019 (1019 with parallax, 0 flat), offscreen 0, mono-fallback 0, user-ptr 288, frames with NO identification 0 [TRUE STEREO ON]
+      pad ON , feed ON , controllers ON DESK : 81.6 fps | residual 5.64 | MISSED 5.2% of frames (worst 452 ms) | 859 draws/frame | 13685 frames [wait 6.61, submit 0.00]
+    ---- CPU by thread, bucketed by FRAME TIME (cumulative), ms per frame ----
+      [1] SLOW frames (<=90 fps)   :   6720 fr | wall  13.08 | CPU  10.57 (user 9.19 kernel 1.38)
+    triggers: LEFT raw 0.00 (min 0.00 max 0.00, inactive 0/120) | RIGHT raw 0.00 (min 0.00 max 0.00, inactive 0/120) -> game receives LT 0 RT 0
+    trigger touch gate ON: LEFT NO SENSOR (values pass through unchanged), RIGHT NO SENSOR (values pass through unchanged) - vetoed 0/120 and 0/120 frames
+    round-trip split: gpu wait 0.34 ms (rendering - NOT recoverable) | transfer 0.00 + memcpy 0.00 + upload 0.02 = 0.02 ms RECOVERABLE -> zero-copy ceiling 11.09 ms/frame (90 fps)
+    shadow-sample: 120 draws while the projected map was bound, 120 mono, 0 dropped (ShadowMode=1: 0=full split 1=mono 2=drop)
+    menu watch: SetPause=4
+GloveCensus HEAD=UNKNOWN DLL_SHA=BUILD Frame=13851 Eye=shared WorldScale=80 CurrentPass=arms MenuState=0 mode=2 left=0/0 right=2/2
+perf: 89.9 fps (11.12 ms/frame) | draws/frame peak 1018, split 1017 (1017 with parallax, 0 flat), offscreen 0, mono-fallback 0, user-ptr 289, frames with NO identification 0 [TRUE STEREO ON]
+      pad ON , feed ON , controllers ON DESK : 81.6 fps | residual 5.63 | MISSED 5.2% of frames (worst 452 ms) | 860 draws/frame | 13804 frames [wait 6.62, submit 0.00]
+    ---- CPU by thread, bucketed by FRAME TIME (cumulative), ms per frame ----
+      [1] SLOW frames (<=90 fps)   :   6840 fr | wall  13.05 | CPU  10.56 (user 9.19 kernel 1.38)
+    triggers: LEFT raw 0.00 (min 0.00 max 0.00, inactive 0/120) | RIGHT raw 0.00 (min 0.00 max 0.00, inactive 0/120) -> game receives LT 0 RT 0
+    trigger touch gate ON: LEFT NO SENSOR (values pass through unchanged), RIGHT NO SENSOR (values pass through unchanged) - vetoed 0/120 and 0/120 frames
+    round-trip split: gpu wait 0.50 ms (rendering - NOT recoverable) | transfer 0.00 + memcpy 0.00 + upload 0.02 = 0.02 ms RECOVERABLE -> zero-copy ceiling 11.10 ms/frame (90 fps)
+    shadow-sample: 120 draws while the projected map was bound, 120 mono, 0 dropped (ShadowMode=1: 0=full split 1=mono 2=drop)
+    menu watch: SetPause=4
+GloveCensus HEAD=UNKNOWN DLL_SHA=BUILD Frame=13942 Eye=shared WorldScale=80 CurrentPass=arms MenuState=0 mode=2 left=0/0 right=2/2
+GloveCensus HEAD=UNKNOWN DLL_SHA=BUILD Frame=14032 Eye=shared WorldScale=80 CurrentPass=arms MenuState=0 mode=2 left=0/0 right=2/2
+perf: 90.0 fps (11.11 ms/frame) | draws/frame peak 1014, split 1013 (1013 with parallax, 0 flat), offscreen 0, mono-fallback 0, user-ptr 289, frames with NO identification 0 [TRUE STEREO ON]
+      pad ON , feed ON , controllers ON DESK : 81.7 fps | residual 5.61 | MISSED 5.1% of frames (worst 452 ms) | 862 draws/frame | 13923 frames [wait 6.63, submit 0.00]
+    ---- CPU by thread, bucketed by FRAME TIME (cumulative), ms per frame ----
+      [1] SLOW frames (<=90 fps)   :   6840 fr | wall  13.05 | CPU  10.56 (user 9.19 kernel 1.38)
+    triggers: LEFT raw 0.00 (min 0.00 max 0.00, inactive 0/120) | RIGHT raw 0.00 (min 0.00 max 0.00, inactive 0/120) -> game receives LT 0 RT 0
+    trigger touch gate ON: LEFT NO SENSOR (values pass through unchanged), RIGHT NO SENSOR (values pass through unchanged) - vetoed 0/120 and 0/120 frames
+    round-trip split: gpu wait 0.35 ms (rendering - NOT recoverable) | transfer 0.00 + memcpy 0.00 + upload 0.02 = 0.02 ms RECOVERABLE -> zero-copy ceiling 11.09 ms/frame (90 fps)
+    shadow-sample: 120 draws while the projected map was bound, 120 mono, 0 dropped (ShadowMode=1: 0=full split 1=mono 2=drop)
+    menu watch: SetPause=4
+GloveCensus HEAD=UNKNOWN DLL_SHA=BUILD Frame=14122 Eye=shared WorldScale=80 CurrentPass=arms MenuState=0 mode=2 left=0/0 right=2/2
+perf: 90.0 fps (11.11 ms/frame) | draws/frame peak 1018, split 1017 (1017 with parallax, 0 flat), offscreen 0, mono-fallback 0, user-ptr 288, frames with NO identification 0 [TRUE STEREO ON]
+      pad ON , feed ON , controllers ON DESK : 81.7 fps | residual 5.60 | MISSED 5.1% of frames (worst 452 ms) | 863 draws/frame | 14042 frames [wait 6.63, submit 0.00]
+    ---- CPU by thread, bucketed by FRAME TIME (cumulative), ms per frame ----
+      [1] SLOW frames (<=90 fps)   :   6840 fr | wall  13.05 | CPU  10.56 (user 9.19 kernel 1.38)
+    triggers: LEFT raw 0.00 (min 0.00 max 0.00, inactive 0/120) | RIGHT raw 0.00 (min 0.00 max 0.00, inactive 0/120) -> game receives LT 0 RT 0
+    trigger touch gate ON: LEFT NO SENSOR (values pass through unchanged), RIGHT NO SENSOR (values pass through unchanged) - vetoed 0/120 and 0/120 frames
+    round-trip split: gpu wait 0.47 ms (rendering - NOT recoverable) | transfer 0.00 + memcpy 0.00 + upload 0.02 = 0.02 ms RECOVERABLE -> zero-copy ceiling 11.09 ms/frame (90 fps)
+    shadow-sample: 120 draws while the projected map was bound, 120 mono, 0 dropped (ShadowMode=1: 0=full split 1=mono 2=drop)
+    menu watch: SetPause=4
+GloveCensus HEAD=UNKNOWN DLL_SHA=BUILD Frame=14212 Eye=shared WorldScale=80 CurrentPass=arms MenuState=0 mode=2 left=0/0 right=2/2
+perf: 90.0 fps (11.11 ms/frame) | draws/frame peak 1019, split 1018 (1018 with parallax, 0 flat), offscreen 0, mono-fallback 0, user-ptr 288, frames with NO identification 0 [TRUE STEREO ON]
+      pad ON , feed ON , controllers ON DESK : 81.8 fps | residual 5.58 | MISSED 5.0% of frames (worst 452 ms) | 864 draws/frame | 14161 frames [wait 6.64, submit 0.00]
+    ---- CPU by thread, bucketed by FRAME TIME (cumulative), ms per frame ----
+      [1] SLOW frames (<=90 fps)   :   6840 fr | wall  13.05 | CPU  10.56 (user 9.19 kernel 1.38)
+    triggers: LEFT raw 0.00 (min 0.00 max 0.00, inactive 0/120) | RIGHT raw 0.00 (min 0.00 max 0.00, inactive 0/120) -> game receives LT 0 RT 0
+    trigger touch gate ON: LEFT NO SENSOR (values pass through unchanged), RIGHT NO SENSOR (values pass through unchanged) - vetoed 0/120 and 0/120 frames
+    round-trip split: gpu wait 0.33 ms (rendering - NOT recoverable) | transfer 0.00 + memcpy 0.00 + upload 0.02 = 0.02 ms RECOVERABLE -> zero-copy ceiling 11.09 ms/frame (90 fps)
+    shadow-sample: 120 draws while the projected map was bound, 120 mono, 0 dropped (ShadowMode=1: 0=full split 1=mono 2=drop)
+    menu watch: SetPause=4
+GloveCensus HEAD=UNKNOWN DLL_SHA=BUILD Frame=14302 Eye=shared WorldScale=80 CurrentPass=arms MenuState=0 mode=2 left=0/0 right=2/2

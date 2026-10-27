@@ -1,0 +1,152 @@
+{
+  "recording": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-production\\deployment\\runtime-test-current\\canonical-first400.vrrec",
+  "source_samples": 400,
+  "samples": 103,
+  "stride": 4,
+  "recorded_duration_s": 4.485,
+  "replay_duration_s": 4.485,
+  "events": {
+    "fire": 0,
+    "melee": 1,
+    "recenter": 1,
+    "ui_click": 0
+  },
+  "transitions": [
+    {
+      "frame": 285,
+      "from": "panel",
+      "to": "menu"
+    },
+    {
+      "frame": 296,
+      "from": "menu",
+      "to": "gameplay"
+    }
+  ],
+  "ui_button": "a",
+  "applied_batches": 103,
+  "skipped_duplicate_batches": 0,
+  "first_frame": 1,
+  "last_frame": 400,
+  "elapsed_wall_s": 6.39040930000192,
+  "final_cmd_seq": 928,
+  "final_state": {
+    "pid": 17348,
+    "runtime": "dvr-xrsim",
+    "system": "Meta Quest 3",
+    "uptimeMs": 62125,
+    "frame": 4851,
+    "waitFrames": 4851,
+    "beginFrames": 4851,
+    "endFrames": 4851,
+    "frameOpen": false,
+    "framesDiscarded": 0,
+    "endsOutOfOrder": 0,
+    "sessionState": "FOCUSED",
+    "sessionRunning": true,
+    "actionsAttached": true,
+    "focusPolicy": "vdxr",
+    "focusNoRender": false,
+    "focusThrottleMs": 0,
+    "layeredFrames": 4851,
+    "paceMode": "free",
+    "refreshHz": 90.0,
+    "stepsPending": 0,
+    "idleBlockMs": 0,
+    "eventsDropped": 0,
+    "ipdMm": 63.0,
+    "fovDeg": {
+      "l": -54.0,
+      "r": 44.0,
+      "u": 55.0,
+      "d": -55.0
+    },
+    "head": {
+      "pos": [
+        -0.4955,
+        1.2151,
+        -0.4948
+      ],
+      "ypr": [
+        -71.81,
+        0.0,
+        -4.44
+      ],
+      "valid": true
+    },
+    "handL": {
+      "pos": [
+        -0.1559,
+        0.7542,
+        -0.6549
+      ],
+      "ypr": [
+        -101.42,
+        -1.28,
+        -30.8
+      ],
+      "valid": true,
+      "followsHead": false
+    },
+    "handR": {
+      "pos": [
+        -0.151,
+        0.7793,
+        -0.5728
+      ],
+      "ypr": [
+        -31.85,
+        -0.62,
+        47.2
+      ],
+      "valid": true,
+      "followsHead": false
+    },
+    "controls": {
+      "a": false,
+      "b": false,
+      "x": false,
+      "y": false,
+      "menu": false,
+      "clickL": false,
+      "clickR": false,
+      "restL": false,
+      "restR": false,
+      "trigL": 0.0,
+      "trigR": 0.0,
+      "gripL": 0.0,
+      "gripR": 0.0,
+      "stickL": [
+        0.0,
+        0.0
+      ],
+      "stickR": [
+        0.0,
+        0.0
+      ]
+    },
+    "layersLastFrame": 1,
+    "projectionViews": 2,
+    "quadLayers": 0,
+    "quadAlphaPct": 0.0,
+    "capNonBlackL": 0,
+    "capNonBlackR": 0,
+    "eyeReleasedOnFrameL": 4851,
+    "eyeReleasedOnFrameR": 4851,
+    "eyeAgeL": 0,
+    "eyeAgeR": 0,
+    "eyeAgeMaxL": 0,
+    "eyeAgeMaxR": 0,
+    "eyeSameSwapchain": false,
+    "projSubmits": 4851,
+    "projMonoSubmits": 0,
+    "projStaleSubmits": 0,
+    "endPhaseMs": -9.789,
+    "captureSeq": 0,
+    "lastCapture": "",
+    "cmdSeq": 928,
+    "lastCmd": "stick r 0.000000 0.000000",
+    "lastCmdError": "",
+    "errors": 0
+  }
+}

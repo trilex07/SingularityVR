@@ -1,0 +1,35 @@
+﻿ini: MenuInsetPct=100 (initial/paused GFx menus; gameplay HUD unchanged)
+shadow sampling: ShadowMode=3 (0=full split 1=mono sample 2=drop sample 3=protect light-space; hub ADVANCED page)
+    frame budget: xrWaitFrame 1.41 (idle) + copy 0.02 + GObjects walk 0.10 + XR submit 0.00 + reg scan 0.00 + gameplay hooks 1.89 + our work 33.71 = 37.14 ms (334% of the 11.11 ms display period)
+    gameplay hooks: mean 1.89 ms/frame, WORST SINGLE FRAME 109.25 ms | of which ResolveGameplayOffsets 1.06 ms total, WORST 1.01 ms. It walks GObjects on a miss and there is no pawn at a splash screen, so every attempt there is a walk that cannot succeed. (run 254)
+    gameplay hook breakdown (total ms this window / WORST single call): SolvePropertyLayout 109.1/109.1 | RefreshArmedState 116.8/1.2 | UpdateFgLatch 0.0/0.0 | ApplyMuzzleFxSuppression 0.0/0.0 (run 255)
+    yaw held: engine kept our written yaw on 118 of 118 frames (100%) - near 100 is gameplay, near 0 is something else driving the camera
+    frame budget: xrWaitFrame 1.41 (idle) + copy 0.02 + GObjects walk 0.01 + XR submit 0.00 + reg scan 0.00 + gameplay hooks 1.00 + our work 34.79 = 37.22 ms (335% of the 11.11 ms display period)
+    gameplay hooks: mean 1.00 ms/frame, WORST SINGLE FRAME 1.04 ms | of which ResolveGameplayOffsets 0.05 ms total, WORST 0.01 ms. It walks GObjects on a miss and there is no pawn at a splash screen, so every attempt there is a walk that cannot succeed. (run 254)
+    gameplay hook breakdown (total ms this window / WORST single call): SolvePropertyLayout 0.0/0.0 | RefreshArmedState 119.4/1.0 | UpdateFgLatch 0.0/0.0 | ApplyMuzzleFxSuppression 0.0/0.0 (run 255)
+    yaw held: engine kept our written yaw on 120 of 120 frames (100%) - near 100 is gameplay, near 0 is something else driving the camera
+    frame budget: xrWaitFrame 1.40 (idle) + copy 0.02 + GObjects walk 0.01 + XR submit 0.09 + reg scan 0.00 + gameplay hooks 1.00 + our work 34.61 = 37.13 ms (334% of the 11.11 ms display period)
+    gameplay hooks: mean 1.00 ms/frame, WORST SINGLE FRAME 1.02 ms | of which ResolveGameplayOffsets 0.04 ms total, WORST 0.00 ms. It walks GObjects on a miss and there is no pawn at a splash screen, so every attempt there is a walk that cannot succeed. (run 254)
+    gameplay hook breakdown (total ms this window / WORST single call): SolvePropertyLayout 0.0/0.0 | RefreshArmedState 119.3/1.0 | UpdateFgLatch 0.0/0.0 | ApplyMuzzleFxSuppression 0.0/0.0 (run 255)
+    yaw held: engine kept our written yaw on 120 of 120 frames (100%) - near 100 is gameplay, near 0 is something else driving the camera
+    frame budget: xrWaitFrame 1.35 (idle) + copy 0.02 + GObjects walk 0.01 + XR submit 0.08 + reg scan 0.00 + gameplay hooks 0.65 + our work 34.72 = 36.82 ms (331% of the 11.11 ms display period)
+    gameplay hooks: mean 0.65 ms/frame, WORST SINGLE FRAME 1.01 ms | of which ResolveGameplayOffsets 0.04 ms total, WORST 0.00 ms. It walks GObjects on a miss and there is no pawn at a splash screen, so every attempt there is a walk that cannot succeed. (run 254)
+    gameplay hook breakdown (total ms this window / WORST single call): SolvePropertyLayout 0.0/0.0 | RefreshArmedState 77.3/1.0 | UpdateFgLatch 0.0/0.0 | ApplyMuzzleFxSuppression 0.0/0.0 (run 255)
+    yaw held: engine kept our written yaw on 120 of 120 frames (100%) - near 100 is gameplay, near 0 is something else driving the camera
+    frame budget: xrWaitFrame 1.31 (idle) + copy 0.02 + GObjects walk 0.01 + XR submit 0.06 + reg scan 0.00 + gameplay hooks 0.84 + our work 34.28 = 36.51 ms (329% of the 11.11 ms display period)
+    gameplay hooks: mean 0.84 ms/frame, WORST SINGLE FRAME 1.01 ms | of which ResolveGameplayOffsets 0.04 ms total, WORST 0.01 ms. It walks GObjects on a miss and there is no pawn at a splash screen, so every attempt there is a walk that cannot succeed. (run 254)
+    gameplay hook breakdown (total ms this window / WORST single call): SolvePropertyLayout 0.0/0.0 | RefreshArmedState 100.1/1.0 | UpdateFgLatch 0.0/0.0 | ApplyMuzzleFxSuppression 0.0/0.0 (run 255)
+    yaw held: engine kept our written yaw on 120 of 120 frames (100%) - near 100 is gameplay, near 0 is something else driving the camera
+    frame budget: xrWaitFrame 1.32 (idle) + copy 0.02 + GObjects walk 0.01 + XR submit 0.06 + reg scan 0.00 + gameplay hooks 1.00 + our work 34.69 = 37.10 ms (334% of the 11.11 ms display period)
+    gameplay hooks: mean 1.00 ms/frame, WORST SINGLE FRAME 1.03 ms | of which ResolveGameplayOffsets 0.03 ms total, WORST 0.00 ms. It walks GObjects on a miss and there is no pawn at a splash screen, so every attempt there is a walk that cannot succeed. (run 254)
+    gameplay hook breakdown (total ms this window / WORST single call): SolvePropertyLayout 0.0/0.0 | RefreshArmedState 120.4/1.0 | UpdateFgLatch 0.0/0.0 | ApplyMuzzleFxSuppression 0.0/0.0 (run 255)
+    yaw held: engine kept our written yaw on 120 of 120 frames (100%) - near 100 is gameplay, near 0 is something else driving the camera
+    frame budget: xrWaitFrame 1.36 (idle) + copy 0.02 + GObjects walk 0.01 + XR submit 0.07 + reg scan 0.00 + gameplay hooks 1.00 + our work 37.43 = 39.89 ms (359% of the 11.11 ms display period)
+    gameplay hooks: mean 1.00 ms/frame, WORST SINGLE FRAME 1.01 ms | of which ResolveGameplayOffsets 0.03 ms total, WORST 0.00 ms. It walks GObjects on a miss and there is no pawn at a splash screen, so every attempt there is a walk that cannot succeed. (run 254)
+    gameplay hook breakdown (total ms this window / WORST single call): SolvePropertyLayout 0.0/0.0 | RefreshArmedState 120.2/1.0 | UpdateFgLatch 0.0/0.0 | ApplyMuzzleFxSuppression 0.0/0.0 (run 255)
+    yaw held: engine kept our written yaw on 120 of 120 frames (100%) - near 100 is gameplay, near 0 is something else driving the camera
+IndependentHandsAudit candidates=4 context=4 blocked=0/0/0/0/0/0/0/0/0/0 shader=0 section=0 map=0 palette=0 success=2 (cfg/mode/ride/gun/camera/offhand/position/window/animation/weapon)
+    frame budget: xrWaitFrame 3.65 (idle) + copy 0.02 + GObjects walk 0.00 + XR submit 0.06 + reg scan 0.00 + gameplay hooks 0.62 + our work 21.94 = 26.29 ms (237% of the 11.11 ms display period)
+    gameplay hooks: mean 0.62 ms/frame, WORST SINGLE FRAME 1.02 ms | of which ResolveGameplayOffsets 0.04 ms total, WORST 0.01 ms. It walks GObjects on a miss and there is no pawn at a splash screen, so every attempt there is a walk that cannot succeed. (run 254)
+    gameplay hook breakdown (total ms this window / WORST single call): SolvePropertyLayout 0.0/0.0 | RefreshArmedState 73.9/1.0 | UpdateFgLatch 0.0/0.0 | ApplyMuzzleFxSuppression 0.0/0.0 (run 255)
+    yaw held: engine kept our written yaw on 120 of 120 frames (100%) - near 100 is gameplay, near 0 is something else driving the camera

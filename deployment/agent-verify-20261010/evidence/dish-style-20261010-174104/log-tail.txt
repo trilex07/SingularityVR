@@ -1,0 +1,8 @@
+﻿ini: MenuInsetPct=70 (initial/paused GFx menus; gameplay HUD unchanged)
+shadow sampling: ShadowMode=3 (0=full split 1=mono sample 2=drop sample 3=protect light-space; hub ADVANCED page)
+    frame budget: xrWaitFrame 1.20 (idle) + copy 0.02 + GObjects walk 0.09 + XR submit 0.00 + reg scan 0.00 + gameplay hooks 0.00 + our work 33.41 = 34.72 ms (313% of the 11.11 ms display period)
+    yaw held: engine kept our written yaw on 118 of 118 frames (100%) - near 100 is gameplay, near 0 is something else driving the camera
+    frame budget: xrWaitFrame 1.18 (idle) + copy 0.02 + GObjects walk 0.00 + XR submit 0.00 + reg scan 0.00 + gameplay hooks 0.00 + our work 34.35 = 35.55 ms (320% of the 11.11 ms display period)
+    yaw held: engine kept our written yaw on 120 of 120 frames (100%) - near 100 is gameplay, near 0 is something else driving the camera
+    frame budget: xrWaitFrame 1.23 (idle) + copy 0.02 + GObjects walk 0.00 + XR submit 0.11 + reg scan 0.00 + gameplay hooks 0.00 + our work 34.45 = 35.81 ms (322% of the 11.11 ms display period)
+    yaw held: engine kept our written yaw on 120 of 120 frames (100%) - near 100 is gameplay, near 0 is something else driving the camera

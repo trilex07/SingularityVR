@@ -1,0 +1,21 @@
+{
+    "timestamp":  "2026-10-09T18:31:25.3535652+02:00",
+    "finished":  "2026-10-09T18:32:59.5578743+02:00",
+    "candidate":  "desktop-hmd-current",
+    "candidate_dir":  "C:\\Users\\Trilex\\vr-mods\\deployment\\desktop-hmd-current-20261009",
+    "game_exe":  "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Singularity\\Binaries\\Singularity.exe",
+    "dll_before":  "ACF467E988FFEE115853EC8B9645B07E6D104889ECF9C87EDE2C907272F0F33C",
+    "dll_candidate":  "ACF467E988FFEE115853EC8B9645B07E6D104889ECF9C87EDE2C907272F0F33C",
+    "dll_after_install":  "ACF467E988FFEE115853EC8B9645B07E6D104889ECF9C87EDE2C907272F0F33C",
+    "launched":  true,
+    "restored":  false,
+    "error":  "",
+    "restore_error":  "",
+    "log_path":  null,
+    "runtime_ready":  false,
+    "missing_mouse_path":  false,
+    "foreground_boundary":  false,
+    "shadow_path":  false,
+    "vfx_path":  false,
+    "log_tail":  ""
+}

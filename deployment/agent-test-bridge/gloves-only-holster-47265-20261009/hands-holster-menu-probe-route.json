@@ -1,0 +1,21 @@
+{
+  "source": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-production\\deployment\\agent-test-bridge\\gloves-only-holster-47265-20261009\\hands-holster-isolation-route.vrrec",
+  "derived": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-production\\deployment\\agent-test-bridge\\gloves-only-holster-47265-20261009\\hands-holster-menu-probe-route.vrrec",
+  "samples": 3800,
+  "duration_s": 46.5,
+  "ui_select": {
+    "samples": [
+      800,
+      819
+    ],
+    "rising_edges": 1
+  },
+  "stationary_load_window_samples": 1000,
+  "right_grip_rising_edges": 2,
+  "left_grip_active_samples": 0,
+  "fire_trigger_samples": 0,
+  "stick_samples": 0,
+  "source_sha256": "E3911625F34B28CF095F3FC24E0134FDF4EE0466D16266D290D6C664FD928006",
+  "derived_sha256": "BC79BFB09B5DC602A4CAF1932467B57896C98FD2A3B7BCC332A1DDEFACCB939B",
+  "note": "The sole A/UI-select edge probes the documented main-menu Return path, but prior runtime evidence shows it may not leave the menu. Do not claim gameplay or holster coverage unless the live log confirms an equipped-hand draw."
+}

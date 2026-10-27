@@ -1,0 +1,4 @@
+recording=C:\Users\Trilex\AppData\Local\SingularityVR\vr_sessions\session_2026-10-09_14-18-07.vrrec
+samples=1420 source_samples=5573 stride=4 recorded_duration=80.641s replay_duration=10.080s speed=8
+events=fire:8, melee:2, recenter:1, ui_click:6
+transitions=285:panel->menu; 296:menu->gameplay; 4379:gameplay->menu; 4502:menu->panel; 5076:panel->menu; 5090:menu->gameplay; 5169:gameplay->menu; 5408:menu->unknown; 5410:unknown->gameplay; 5417:gameplay->unknown; 5418:unknown->gameplay; 5446:gameplay->menu; 5478:menu->gameplay; 5499:gameplay->menu

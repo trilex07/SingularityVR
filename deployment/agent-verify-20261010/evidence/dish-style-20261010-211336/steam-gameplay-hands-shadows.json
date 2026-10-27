@@ -1,0 +1,24 @@
+{
+  "name": "steam-gameplay-hands-shadows",
+  "frameIndex": 5127,
+  "displayTimeNs": 132627974643497,
+  "sessionState": "FOCUSED",
+  "width": 1032,
+  "height": 1104,
+  "pacing": {"mode": "free", "hz": 90.00, "creditsLeft": 0},
+  "gate": {"waited": 5127, "begun": 5127, "ended": 5127, "discarded": 0, "outOfOrder": 0},
+  "head": {"pos": [-0.48094, 1.23023, -0.54146], "quat": [-0.02406, -0.53236, 0.03820, 0.84531], "ypr": [-64.404, 0.000, -5.176]},
+  "views": [
+    {"eye": "left", "pos": [-0.49449, 1.22739, -0.56975], "fovDeg": {"l": -54.000, "r": 44.000, "u": 55.000, "d": -55.000}},
+    {"eye": "right", "pos": [-0.46739, 1.23307, -0.51317], "fovDeg": {"l": -44.000, "r": 54.000, "u": 55.000, "d": -55.000}}
+  ],
+  "handL": {"grip": [-0.35810, 0.68855, -0.63742], "aimYpr": [-69.762, -36.293, 32.182], "valid": true},
+  "handR": {"grip": [-0.17098, 0.72336, -0.47251], "aimYpr": [-62.120, -44.121, 17.061], "valid": true},
+  "controls": {"a": false, "b": false, "x": false, "y": false, "menu": false, "trigL": 0.000, "trigR": 0.000, "gripL": 0.000, "gripR": 0.000, "stickL": [0.000, 0.000], "stickR": [0.000, 0.000]},
+  "layerCount": 1,
+  "layers": [
+    {"i": 0, "type": "projection", "space": "local", "viewCount": 2, "fovDeg": {"l": -51.771, "r": 51.771, "u": 55.000, "d": -55.000}, "pixelsCoveredL": 1139328, "pixelsCoveredR": 1139328, "src": [{"w": 640, "h": 720, "image": 2, "releasedOnFrame": 5127, "nonBlackPct": 59.11, "alphaPct": 40.98, "bbox": [52, 108, 588, 716]}, {"w": 640, "h": 720, "image": 2, "releasedOnFrame": 5127, "nonBlackPct": 59.11, "alphaPct": 40.98, "bbox": [52, 108, 588, 716]}]}
+  ],
+  "derived": {"eyeSeparationM": 0.063000, "ipdM": 0.063000, "claimTanH": 1.26946, "eyeTanH": 1.17104, "claimRatioH": 1.08405, "aimRayDots": 0, "aimRayMaxDevDeg": 0.0000, "aimRayMeanDevDeg": 0.0000, "aimRayDotsL": 0, "aimRayMaxDevDegL": 0.0000, "aimRayDotsR": 0, "aimRayMaxDevDegR": 0.0000},
+  "stats": {"meanLumaL": 31.30, "meanLumaR": 32.22, "nonBlackPctL": 60.95, "nonBlackPctR": 60.99, "bboxL": [136, 165, 1031, 1103], "bboxR": [0, 165, 896, 1103], "bboxPctL": [86.8, 85.1], "bboxPctR": [86.9, 85.1]}
+}

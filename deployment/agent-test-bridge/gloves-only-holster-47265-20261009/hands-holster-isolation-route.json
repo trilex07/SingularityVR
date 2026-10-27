@@ -1,0 +1,57 @@
+{
+  "source": "C:\\Users\\Trilex\\vr-mods\\deployment\\agent-test-bridge\\20261009-221057\\session_2026-10-09_14-18-07.vrrec",
+  "source_sha256": "545f3b708f6eb8d1fdb50f3f494a0f525a0bbc0d3beab7cec4ed5426ecb00b41",
+  "derived": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-production\\deployment\\agent-test-bridge\\gloves-only-holster-47265-20261009\\hands-holster-isolation-route.vrrec",
+  "derived_sha256": "e3911625f34b28cf095f3fc24e0134fdf4ee0466d16266d290d6c664fd928006",
+  "samples": 2800,
+  "duration_s": 31.5,
+  "controls": "All triggers/sticks/UI/recenter cleared. Left grip cleared. Right-grip pulses store/draw at samples 1600/2600.",
+  "phases": [
+    {
+      "samples": "1500-1599",
+      "action": "settle to a fixed pose"
+    },
+    {
+      "samples": "1600-1623",
+      "action": "right grip pulse: store"
+    },
+    {
+      "samples": "1700-1939",
+      "action": "left hand moves alone; right hand fixed"
+    },
+    {
+      "samples": "2050-2289",
+      "action": "right hand moves alone; left hand fixed"
+    },
+    {
+      "samples": "2600-2623",
+      "action": "right grip pulse: draw"
+    }
+  ],
+  "flag_samples": {
+    "gameplay": 2800,
+    "menu": 295,
+    "panel": 284,
+    "holstered": 1000,
+    "two_hand": 0,
+    "fire": 0,
+    "melee": 0,
+    "recenter": 0
+  },
+  "right_grip_rising_edges": 2,
+  "left_grip_active_samples": 0,
+  "fire_trigger_samples": 0,
+  "stick_samples": 0,
+  "source_route_audit": {
+    "source_samples": 5573,
+    "historical_gameplay_samples": 5570,
+    "historical_weapon_values": [
+      5799
+    ],
+    "left_grip_samples": 112,
+    "right_grip_samples": 0,
+    "right_grip_rising_edges": 0,
+    "historical_holstered_flag_samples": 397,
+    "note": "vr_session_replay.py sends poses and grip values; it does not restore historical WeaponHolstered flags into game state."
+  }
+}

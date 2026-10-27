@@ -1,0 +1,24 @@
+{
+  "name": "look-chest2",
+  "frameIndex": 8045,
+  "displayTimeNs": 36897609297947,
+  "sessionState": "FOCUSED",
+  "width": 1032,
+  "height": 1104,
+  "pacing": {"mode": "free", "hz": 90.00, "creditsLeft": 0},
+  "gate": {"waited": 8045, "begun": 8045, "ended": 8045, "discarded": 0, "outOfOrder": 0},
+  "head": {"pos": [-0.48090, 1.23020, -0.54150], "quat": [-0.04246, -0.93873, 0.01546, 0.34167], "ypr": [-140.000, 0.000, -5.180]},
+  "views": [
+    {"eye": "left", "pos": [-0.45687, 1.22736, -0.56167], "fovDeg": {"l": -54.000, "r": 44.000, "u": 55.000, "d": -55.000}},
+    {"eye": "right", "pos": [-0.50493, 1.23304, -0.52133], "fovDeg": {"l": -44.000, "r": 54.000, "u": 55.000, "d": -55.000}}
+  ],
+  "handL": {"grip": [-0.35810, 0.68860, -0.63740], "aimYpr": [-69.753, -36.295, 32.189], "valid": true},
+  "handR": {"grip": [-0.17100, 0.72340, -0.47250], "aimYpr": [-62.123, -44.123, 17.060], "valid": true},
+  "controls": {"a": false, "b": false, "x": false, "y": false, "menu": false, "trigL": 0.000, "trigR": 0.000, "gripL": 0.000, "gripR": 0.000, "stickL": [0.000, 0.000], "stickR": [0.000, 0.000]},
+  "layerCount": 1,
+  "layers": [
+    {"i": 0, "type": "projection", "space": "local", "viewCount": 2, "fovDeg": {"l": -52.625, "r": 52.625, "u": 55.000, "d": -55.000}, "pixelsCoveredL": 1139328, "pixelsCoveredR": 1139328, "src": [{"w": 2112, "h": 2304, "image": 1, "releasedOnFrame": 8045, "nonBlackPct": 86.15, "alphaPct": 0.00, "bbox": [0, 0, 2108, 2300]}, {"w": 2112, "h": 2304, "image": 1, "releasedOnFrame": 8045, "nonBlackPct": 85.94, "alphaPct": 0.00, "bbox": [0, 0, 2108, 2300]}]}
+  ],
+  "derived": {"eyeSeparationM": 0.063000, "ipdM": 0.063000, "claimTanH": 1.30914, "eyeTanH": 1.17104, "claimRatioH": 1.11793, "aimRayDots": 0, "aimRayMaxDevDeg": 0.0000, "aimRayMeanDevDeg": 0.0000, "aimRayDotsL": 0, "aimRayMaxDevDegL": 0.0000, "aimRayDotsR": 0, "aimRayMaxDevDegR": 0.0000},
+  "stats": {"meanLumaL": 22.20, "meanLumaR": 19.95, "nonBlackPctL": 71.64, "nonBlackPctR": 69.55, "bboxL": [30, 0, 1031, 1103], "bboxR": [0, 0, 1001, 1103], "bboxPctL": [97.1, 100.0], "bboxPctR": [97.1, 100.0]}
+}

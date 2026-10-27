@@ -1,0 +1,22 @@
+{
+  "source": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-production\\deployment\\agent-test-bridge\\gloves-only-holster-47265-20261009\\hands-holster-isolation-route.vrrec",
+  "derived": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-production\\deployment\\agent-test-bridge\\gloves-only-holster-47265-20261009\\hands-holster-gameplay-route-v2.vrrec",
+  "samples": 3800,
+  "duration_s": 46.5,
+  "ui_select": {
+    "samples": [
+      800,
+      819
+    ],
+    "rising_edges": 1
+  },
+  "stationary_load_window_samples": 1000,
+  "right_grip_rising_edges": 2,
+  "left_grip_active_samples": 0,
+  "fire_trigger_samples": 0,
+  "stick_samples": 0,
+  "recenter_capture_edges": 1,
+  "source_sha256": "E3911625F34B28CF095F3FC24E0134FDF4EE0466D16266D290D6C664FD928006",
+  "derived_sha256": "DA023D8121ABE7F488EDF24CC0C3CAE651A477B26C66F5840C7B17BCE653C1B1",
+  "note": "The sole UI-select edge follows the documented Steam smoke route: Return at the main menu loaded gameplay. The user authorized a brief current-save run."
+}

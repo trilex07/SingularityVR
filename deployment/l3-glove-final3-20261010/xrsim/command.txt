@@ -1,0 +1,4 @@
+hand r grip pose -0.30 1.30 -0.30 0 0 0
+hand r aim pose -0.30 1.30 -0.30 0 0 0
+hand l grip pose -0.70 1.30 -0.30 0 0 0
+hand l aim pose -0.70 1.30 -0.30 0 0 0
