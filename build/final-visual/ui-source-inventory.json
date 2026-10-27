@@ -1,0 +1,26 @@
+{
+  "atlases": [
+    {
+      "file": "ui_atlas_neutral.png",
+      "source_sha256": "3EF1782696B4A5E1E9D93F409C5B0F6FF014B78CC42FAB06EC29110661981818",
+      "installed_sha256": null,
+      "installed_path": null
+    },
+    {
+      "file": "ui_atlas_localized_pl.png",
+      "source_sha256": "6436AA257F310F65A1F65C04D7435D9BF8343BFEFAB2EEE50A8A836F96FC83FD",
+      "installed_sha256": null,
+      "installed_path": null
+    },
+    {
+      "file": "ui_atlas_localized_en.png",
+      "source_sha256": "53B570C4787B834270CBCF0943622877613A7EE7E2AD07FA6A363DFE11A422BA",
+      "installed_sha256": null,
+      "installed_path": null
+    }
+  ],
+  "installed_flags": {},
+  "installed_dll_sha256": null,
+  "rendering_proven": false,
+  "note": "File identity/config only, not a live binding or pixel receipt"
+}

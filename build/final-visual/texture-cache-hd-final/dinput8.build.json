@@ -1,0 +1,50 @@
+﻿{
+    "builtAt":  "2026-10-26T10:09:54.1604103+01:00",
+    "branch":  "side/final-visual-20261026",
+    "commit":  "cbda85b9363112bc29a9bb45a13300503cb413d5",
+    "optimization":  "/O2",
+    "architecture":  "x86 PE32",
+    "sha256":  "E5DD01D13A9102A1CEF2E70C95FB1796E191277FB5086D697D0EE81E699394FA",
+    "diagnosticTiming":  false,
+    "inputs":  [
+                   {
+                       "name":  "texture_injector.cpp",
+                       "sha256":  "D5AFD4F846EAFC47B811E30A596C1C2E2784606B35D1DE0939BAA6EFBE1BCB78"
+                   },
+                   {
+                       "name":  "resource_native_cache.h",
+                       "sha256":  "DE3A5AC842000F491AD9907B3B30E7D2D33AE2D8EEEB4DDF5662E87BF50760BC"
+                   },
+                   {
+                       "name":  "resource_positive_cache.h",
+                       "sha256":  "B403E77A5118EB26ADAB98B3DDE7970D3CE0C4CF24ACDA429E46AD28A4ECDEB8"
+                   },
+                   {
+                       "name":  "remaster_scope.h",
+                       "sha256":  "D687C88AF47E5817A95F7B5D7446C4DFF3B6AA89D72D58DDCA6817C3F3402B9F"
+                   },
+                   {
+                       "name":  "texture_hook_timing.h",
+                       "sha256":  "44DF1A71527AAE35425EF968A46B1F61FC986F30FC4D16CC448AE4406A036496"
+                   },
+                   {
+                       "name":  "texture_groups.h",
+                       "sha256":  "D2D5EC7B9DDAFD7E4C7665C5AA8610E40B30875C4F37ACA8F7DA46CFB422A58F"
+                   },
+                   {
+                       "name":  "targets_generated.h",
+                       "sha256":  "14F7B7D4E808650A7314B4B76248CEE1D3395395B4E3A6E6E74EDD71BF7FC1C2"
+                   },
+                   {
+                       "name":  "dinput8.def",
+                       "sha256":  "CDD002F79BF5EF44B5C8500F21C8A7069CCFE6431C3514D28E752AF3070AD8A9"
+                   },
+                   {
+                       "name":  "../view_matrix/texture_bridge_contract.h",
+                       "sha256":  "427F1D4D8595E40629BCC70F2AEE16788124CE5E175773F6062A21216B6D3A15"
+                   }
+               ],
+    "trackedDiff":  [
+
+                    ]
+}

@@ -1,0 +1,105 @@
+{
+  "count": 66,
+  "best": [
+    {
+      "offset": "0x30d68000",
+      "correlation": 0.188843,
+      "compressed": 1708900
+    },
+    {
+      "offset": "0x3ba98000",
+      "correlation": 0.18741,
+      "compressed": 1798630
+    },
+    {
+      "offset": "0x335d0000",
+      "correlation": 0.172676,
+      "compressed": 1588068
+    },
+    {
+      "offset": "0x2c950000",
+      "correlation": 0.161696,
+      "compressed": 1523399
+    },
+    {
+      "offset": "0x3f780000",
+      "correlation": 0.152487,
+      "compressed": 1461984
+    },
+    {
+      "offset": "0x371b0000",
+      "correlation": 0.148793,
+      "compressed": 1848217
+    },
+    {
+      "offset": "0x36998000",
+      "correlation": 0.142727,
+      "compressed": 1291790
+    },
+    {
+      "offset": "0x46db8000",
+      "correlation": 0.129003,
+      "compressed": 1889225
+    },
+    {
+      "offset": "0x46470000",
+      "correlation": 0.117968,
+      "compressed": 1301703
+    },
+    {
+      "offset": "0x4a188000",
+      "correlation": 0.117149,
+      "compressed": 1690174
+    },
+    {
+      "offset": "0x314e0000",
+      "correlation": 0.1112,
+      "compressed": 1945395
+    },
+    {
+      "offset": "0x27cc8000",
+      "correlation": 0.102789,
+      "compressed": 1957040
+    },
+    {
+      "offset": "0x307c0000",
+      "correlation": 0.093712,
+      "compressed": 1637208
+    },
+    {
+      "offset": "0x2c3d8000",
+      "correlation": 0.068877,
+      "compressed": 1894070
+    },
+    {
+      "offset": "0x3dff8000",
+      "correlation": 0.060909,
+      "compressed": 1954517
+    },
+    {
+      "offset": "0x378c8000",
+      "correlation": 0.060692,
+      "compressed": 2044462
+    },
+    {
+      "offset": "0x3ea68000",
+      "correlation": 0.057023,
+      "compressed": 1801421
+    },
+    {
+      "offset": "0x2cc40000",
+      "correlation": 0.056463,
+      "compressed": 1988989
+    },
+    {
+      "offset": "0x46990000",
+      "correlation": 0.051882,
+      "compressed": 1936911
+    },
+    {
+      "offset": "0x3c890000",
+      "correlation": 0.050237,
+      "compressed": 1694190
+    }
+  ]
+}

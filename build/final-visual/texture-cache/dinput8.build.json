@@ -1,0 +1,48 @@
+{
+  "builtAt": "2026-10-26T09:08:42.8361162+01:00",
+  "branch": "side/final-visual-20261026",
+  "commit": "7548b1196047219ca2e51cad5616fd1650b0b6c6",
+  "optimization": "/O2",
+  "architecture": "x86 PE32",
+  "sha256": "1C4EFA71112CADEDA023FB35FE5091F55AE11F8892754E189ED5EFC106AC2027",
+  "diagnosticTiming": false,
+  "inputs": [
+    {
+      "name": "texture_injector.cpp",
+      "sha256": "1E6A081AB3E4D2DAF672D9EBE8F38D78DE4965AE6C1BA8F9B483C7FE42E5CCBD"
+    },
+    {
+      "name": "resource_native_cache.h",
+      "sha256": "DE3A5AC842000F491AD9907B3B30E7D2D33AE2D8EEEB4DDF5662E87BF50760BC"
+    },
+    {
+      "name": "resource_positive_cache.h",
+      "sha256": "B403E77A5118EB26ADAB98B3DDE7970D3CE0C4CF24ACDA429E46AD28A4ECDEB8"
+    },
+    {
+      "name": "remaster_scope.h",
+      "sha256": "24A66591BEE262B687DED286ED91340889EF9D5ED605F7F7BE24F5E36A4995AF"
+    },
+    {
+      "name": "texture_hook_timing.h",
+      "sha256": "44DF1A71527AAE35425EF968A46B1F61FC986F30FC4D16CC448AE4406A036496"
+    },
+    {
+      "name": "texture_groups.h",
+      "sha256": "D2D5EC7B9DDAFD7E4C7665C5AA8610E40B30875C4F37ACA8F7DA46CFB422A58F"
+    },
+    {
+      "name": "targets_generated.h",
+      "sha256": "0925F4EBD9F23D91353A7D20BD28600B0FABB7C2206CB5634D5643FAAEC7808C"
+    },
+    {
+      "name": "dinput8.def",
+      "sha256": "CDD002F79BF5EF44B5C8500F21C8A7069CCFE6431C3514D28E752AF3070AD8A9"
+    },
+    {
+      "name": "../view_matrix/texture_bridge_contract.h",
+      "sha256": "427F1D4D8595E40629BCC70F2AEE16788124CE5E175773F6062A21216B6D3A15"
+    }
+  ],
+  "trackedDiff": []
+}

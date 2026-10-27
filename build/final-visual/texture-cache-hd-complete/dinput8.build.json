@@ -1,0 +1,60 @@
+﻿{
+    "builtAt":  "2026-10-26T10:08:49.5055983+01:00",
+    "branch":  "side/final-visual-20261026",
+    "commit":  "22117405008b47cadae1416bff3feefa448188a7",
+    "optimization":  "/O2",
+    "architecture":  "x86 PE32",
+    "sha256":  "D8D0E7758567F080A055D56A63B587BF73FFAB29E179CB1348D04850831E8AA5",
+    "diagnosticTiming":  false,
+    "inputs":  [
+                   {
+                       "name":  "texture_injector.cpp",
+                       "sha256":  "D5AFD4F846EAFC47B811E30A596C1C2E2784606B35D1DE0939BAA6EFBE1BCB78"
+                   },
+                   {
+                       "name":  "resource_native_cache.h",
+                       "sha256":  "DE3A5AC842000F491AD9907B3B30E7D2D33AE2D8EEEB4DDF5662E87BF50760BC"
+                   },
+                   {
+                       "name":  "resource_positive_cache.h",
+                       "sha256":  "B403E77A5118EB26ADAB98B3DDE7970D3CE0C4CF24ACDA429E46AD28A4ECDEB8"
+                   },
+                   {
+                       "name":  "remaster_scope.h",
+                       "sha256":  "D687C88AF47E5817A95F7B5D7446C4DFF3B6AA89D72D58DDCA6817C3F3402B9F"
+                   },
+                   {
+                       "name":  "texture_hook_timing.h",
+                       "sha256":  "44DF1A71527AAE35425EF968A46B1F61FC986F30FC4D16CC448AE4406A036496"
+                   },
+                   {
+                       "name":  "texture_groups.h",
+                       "sha256":  "D2D5EC7B9DDAFD7E4C7665C5AA8610E40B30875C4F37ACA8F7DA46CFB422A58F"
+                   },
+                   {
+                       "name":  "targets_generated.h",
+                       "sha256":  "14F7B7D4E808650A7314B4B76248CEE1D3395395B4E3A6E6E74EDD71BF7FC1C2"
+                   },
+                   {
+                       "name":  "dinput8.def",
+                       "sha256":  "CDD002F79BF5EF44B5C8500F21C8A7069CCFE6431C3514D28E752AF3070AD8A9"
+                   },
+                   {
+                       "name":  "../view_matrix/texture_bridge_contract.h",
+                       "sha256":  "427F1D4D8595E40629BCC70F2AEE16788124CE5E175773F6062A21216B6D3A15"
+                   }
+               ],
+    "trackedDiff":  [
+                        " M docs/handoffs/final-visual-20261026.md",
+                        " M docs/textures/hires-first-person-manifest.json",
+                        " M spikes/texture_cache/remaster_scope.h",
+                        " M spikes/texture_cache/targets_generated.h",
+                        " M spikes/texture_cache/tests/test-effects-scope.cpp",
+                        " M spikes/texture_cache/tests/test-texture-hook-forwarding.cpp",
+                        " M spikes/texture_cache/texture_injector.cpp",
+                        " M tools/textures/prepare_hires_first_person.py",
+                        " M tools/textures/stage_first_hires_gate.py",
+                        " M tools/textures/tests/test_stage_first_hires_gate.py",
+                        " M tools/textures/verify_hires_set.py"
+                    ]
+}
