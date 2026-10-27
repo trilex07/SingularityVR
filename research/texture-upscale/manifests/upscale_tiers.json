@@ -1,0 +1,60 @@
+{
+  "tiers": {
+    "4": {
+      "inview_glove_d": {
+        "dims": [
+          4096,
+          4096
+        ],
+        "mips": 11,
+        "dds_bytes": 11184936,
+        "sha256": "217a4db3d1c9286d412c945b0935d82e3d0d6b23252a1a2c6f5f98599e842699"
+      },
+      "inview_glove_n": {
+        "dims": [
+          4096,
+          4096
+        ],
+        "mips": 11,
+        "dds_bytes": 11184936,
+        "sha256": "5210c5e0f3df22bccdb2caa6cdf1f24bd45bb63ce4b61bd501d1d2f0934cfe70"
+      },
+      "handgun_d": {
+        "dims": [
+          4096,
+          4096
+        ],
+        "mips": 11,
+        "dds_bytes": 22369744,
+        "sha256": "87d38c53dea7060971bc86e816ef31dc648524e9961d01f0123d84c4f2339fef"
+      },
+      "handgun_n": {
+        "dims": [
+          4096,
+          4096
+        ],
+        "mips": 11,
+        "dds_bytes": 11184936,
+        "sha256": "d8584097a87c087a1b2a81903b8a66ca7cb2ddad8dd3b416fc0eb3b58ee54cbe"
+      },
+      "revert_d2": {
+        "dims": [
+          8192,
+          8192
+        ],
+        "mips": 12,
+        "dds_bytes": 44739368,
+        "sha256": "fbd534954fac8dc07d2419842d90e7538a9015fd91aae3727989b7573d367325"
+      },
+      "revert_n2": {
+        "dims": [
+          8192,
+          8192
+        ],
+        "mips": 12,
+        "dds_bytes": 44739368,
+        "sha256": "4672d1f1e335e257c579410720e92fd280055ef8110e56f49eaa4d4a10c0d0e7"
+      }
+    }
+  }
+}

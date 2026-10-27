@@ -6,6 +6,8 @@ param(
     [switch]$Install,
     [ValidateSet("A", "B")]
     [string]$Variant = "A",
+    [ValidateSet("2x", "4K", "8K")]
+    [string]$Quality = "2x",
     [string]$GameBin = "C:\Program Files (x86)\Steam\steamapps\common\Singularity\Binaries",
     [string]$LocalRoot = "C:\Users\Trilex\vr-mods\SingularityVR-assets-local"
 )
@@ -42,7 +44,12 @@ try {
     if ($Install) {
         if (-not (Test-Path $GameBin)) { throw "game Binaries not found: $GameBin" }
 
-        $texDst = Join-Path $GameBin "texture-override"
+        # Tier layout: 2x lives directly in texture-override\ (unchanged default);
+        # 4K/8K live in texture-override-4K\ / texture-override-8K\. The injector
+        # picks the directory from [TextureQuality] at startup, so one deploy
+        # covers all hub options (missing tier files fall back to originals).
+        $texDirName = if ($Quality -eq "2x") { "texture-override" } else { "texture-override-$Quality" }
+        $texDst = Join-Path $GameBin $texDirName
         New-Item -ItemType Directory -Force -Path $texDst | Out-Null
         # clear old variant files so only the chosen one is present
         Get-ChildItem $texDst -Filter *.dds -ErrorAction SilentlyContinue | Remove-Item -Force
@@ -51,8 +58,12 @@ try {
         # lookup table). Stale candidates from earlier runs must never ship:
         # a file without a target either matches nothing or, worse, matches a
         # texture whose source was only a lower mip.
+        # Quality tiers: 2x is the full IBP/Lanczos set; 4K/8K are Lanczos-only
+        # proof sets (upscaled-4K / upscaled-8K). Higher tiers cost ~4x VRAM
+        # per step - see docs/TEXTURE_TIERS.md before deploying them blindly.
         $suffix = if ($Variant -eq "B") { "__B_ibp" } else { "__A_lanczos" }
-        $up = Join-Path $LocalRoot "textures\upscaled"
+        $upDir = if ($Quality -eq "2x") { "textures\upscaled" } else { "textures\upscaled-$Quality" }
+        $up = Join-Path $LocalRoot $upDir
         if (-not (Test-Path $up)) { throw "upscaled dir missing: $up (run the pipeline 'upscale' step first)" }
         $gen = Join-Path $here "targets_generated.h"
         if (-not (Test-Path $gen)) { throw "targets_generated.h missing (run the pipeline 'targets' step first)" }
@@ -72,7 +83,7 @@ try {
         }
         if ($count -eq 0) { throw "no '$suffix' candidates found in $up" }
         if ($missing.Count -gt 0) { Write-Warning ("missing candidates: " + ($missing -join ", ")) }
-        Write-Host "Variant: $Variant ($suffix), $count of $($wanted.Count) target(s) deployed"
+        Write-Host "Variant: $Variant ($suffix) Quality: $Quality, $count of $($wanted.Count) target(s) deployed"
 
         # forward to a local copy of the real dinput8 under a distinct name
         $sysDi8 = Join-Path ${env:windir} "SysWOW64\dinput8.dll"
@@ -82,8 +93,8 @@ try {
         Copy-Item (Join-Path $here "dinput8.dll") $GameBin -Force
         Copy-Item (Join-Path $here "texture_override.ini") $GameBin -Force
         Write-Host "Installed to: $GameBin"
-        Write-Host "  dinput8.dll + dinput8_orig.dll + texture_override.ini + texture-override\*.dds"
-        Write-Host "Restore vanilla: delete dinput8.dll, dinput8_orig.dll, texture_override.ini and texture-override\ from Binaries."
+        Write-Host "  dinput8.dll + dinput8_orig.dll + texture_override.ini + $texDirName\*.dds"
+        Write-Host "Restore vanilla: delete dinput8.dll, dinput8_orig.dll, texture_override.ini and texture-override*\ from Binaries."
     }
 } finally {
     Pop-Location

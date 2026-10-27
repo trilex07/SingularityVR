@@ -33,7 +33,9 @@ struct Target {
     D3DFORMAT fmt;
     uint64_t hash;       // FNV-1a 64 of original mip0
     const char* dds;     // replacement file inside TexturesDir
+    const char* group;   // TextureGroups key: hands/weapons/enemies/env/glyphs/fx
 };
+#include "texture_groups.h"
 // Target table is generated from the pipeline manifests (content hashes of the
 // original mip-0 DXT bytes). Replacement filenames are variant-agnostic:
 // build.ps1 -Variant A|B copies the chosen candidate into <name>.dds.
@@ -46,6 +48,7 @@ static HMODULE   g_self = nullptr;
 static bool      g_enabled = true;
 static bool      g_apply = true;              // false = log only
 static char      g_texturesDir[MAX_PATH] = "texture-override";
+static bool      g_groupOn[texgroups::GCount] = {true, true, true, true, true, true};
 static bool      g_capture = false;           // dump locked mip0 of larger DXT textures
 static char      g_capturesDir[MAX_PATH] = "capture";
 static UINT      g_captureMin = 512;
@@ -120,9 +123,29 @@ static void LoadConfig() {
     char mh[64] = "0";
     iniStr("general", "marker_hash", "0", mh, sizeof(mh), ini);
     g_markerHash = _strtoui64(mh, nullptr, 0);
+    // Per-group switches ([TextureGroups], missing key = ON). Read once at
+    // startup; the hub panel writes these keys (restart applies them).
+    for (int g = 0; g < texgroups::GCount; ++g)
+        g_groupOn[g] = iniInt("TextureGroups", texgroups::GroupName(g), 1, ini) != 0;
+    // Quality tier: 2x (full set, in texturesdir) or 4K/8K proof sets in
+    // texturesdir-4K/8K. Read once at startup; the hub writes the key and a
+    // restart applies it. Missing tier files fall back to the original game
+    // texture for that target (logged), never to another tier.
+    char quality[16] = "2x";
+    iniStr("TextureQuality", "Quality", "2x", quality, sizeof(quality), ini);
+    {
+        char suffixed[MAX_PATH];
+        _snprintf_s(suffixed, _TRUNCATE, "%s%s", g_texturesDir,
+                    texgroups::QualitySuffix(quality));
+        strcpy_s(g_texturesDir, suffixed);
+    }
     Log("config: enabled=%d apply=%d texturesDir=%s capture=%d min=%u marker=%016llX",
         g_enabled ? 1 : 0, g_apply ? 1 : 0, g_texturesDir, g_capture ? 1 : 0,
         g_captureMin, (unsigned long long)g_markerHash);
+    Log("groups: hands=%d weapons=%d enemies=%d env=%d glyphs=%d fx=%d",
+        g_groupOn[0] ? 1 : 0, g_groupOn[1] ? 1 : 0, g_groupOn[2] ? 1 : 0,
+        g_groupOn[3] ? 1 : 0, g_groupOn[4] ? 1 : 0, g_groupOn[5] ? 1 : 0);
+    Log("quality: %s (dir %s)", quality, g_texturesDir);
 }
 
 // ---------------------------------------------------------------------------
@@ -456,6 +479,11 @@ static HRESULT STDMETHODCALLTYPE HookSetTexture(IDirect3DDevice9* dev, DWORD sta
 
     uint64_t hash = 0; bool have = HashLevel0(t, desc, hash);
     const Target* hit = MatchTarget(desc, hash, have);
+    if (hit && !texgroups::GroupAllows(g_groupOn,
+            texgroups::GroupIndex(hit->group))) {
+        Log("group off: %s (%s)", hit->name, hit->group);
+        hit = nullptr;
+    }
 
     AcquireSRWLockExclusive(&g_cacheLock);
     e = CacheFind(t);
