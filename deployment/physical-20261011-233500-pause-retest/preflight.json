@@ -1,0 +1,10 @@
+{
+  "test": "pause-head-overlay physical retest",
+  "backupPath": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-pause-main\\deployment\\install-backups\\20261011-233500-pause-physical",
+  "baselineNote": "No verified copy of pre-Oct11 INI 44A3C4DB on disk; actual pre-test INI was smoke-preserve hash AA89218B62F268AC5EE84B80312F367C5FE65107DDD8A02C7D957FEB86B904C9",
+  "baselineDllSha256": "590788116C7C173737E285D6D1B9575544AD2517690003ECC24CE378FDD0BDAD",
+  "baselineIniSha256": "AA89218B62F268AC5EE84B80312F367C5FE65107DDD8A02C7D957FEB86B904C9",
+  "candidateDllSha256": "87D6817C06DEF6E06E1B8C31F3025FCF2F8B7C3ABE0193966FEB385F3CA9FD98",
+  "candidateIniSha256": "2039E20958C2B23322889C03436E29F7B68BAD8D6EAEAC7A77FA159F53D58D0A",
+  "getPrivateProfileIntA_PauseHeadMenu": 1
+}
