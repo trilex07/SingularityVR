@@ -5423,7 +5423,6 @@ void DrawLaserSight(IDirect3DDevice9* dev);
 void DrawWristHealth(IDirect3DDevice9* dev);   // ⭐ run 217: defined late, called from the copy
 void DrawHealthPlate(IDirect3DDevice9* dev);   // Katorga plate: gesture-gated, left glove
 void DrawAmmoPlate(IDirect3DDevice9* dev);     // Katorga ammo plate: held gun, hides on R3
-void DrawAmmoPlate(IDirect3DDevice9* dev);     // Katorga ammo plate: held gun, hides on R3
 void DrawWeaponWheel(IDirect3DDevice9* dev);
 void DrawVfxOverlay(IDirect3DDevice9* dev);    // VFX host, Present/backbuffer path
 void DrawVrContextPrompt(IDirect3DDevice9* dev); // PS icon overlay for a detected native context prompt
@@ -5459,7 +5458,6 @@ const CopySlot* CopyBackbufferToD3D11(IDirect3DDevice9* dev) {
     DrawLaserSight(dev);
     DrawWristHealth(dev);
     DrawHealthPlate(dev);
-    DrawAmmoPlate(dev);
     DrawAmmoPlate(dev);
     DrawWeaponWheel(dev);
     DrawVfxOverlay(dev);
@@ -7420,6 +7418,7 @@ inline int PanelRowId(int i) {
 // exactly, with no rebuild.
 volatile LONG g_startInVr = 1;      // ini [Render] StartInVr
 volatile LONG g_desktopMirrorEye = 0; // ini [Render] DesktopMirrorEye: 0 off, 1 left, 2 right
+volatile LONG g_desktopMirrorFill = 0; // ini [Render] DesktopMirrorFill: 1 = full backbuffer (Steam F12)
 // Diagnostic-only desktop HMD: exercise stereo/backbuffer hooks without an XR system.
 // This never changes normal PSVR2 startup behavior unless explicitly enabled in [Diagnostic].
 volatile LONG g_forceDesktopVr = 0; // ini [Diagnostic] ForceDesktopVr
@@ -29205,6 +29204,11 @@ void LoadIniSettings() {
         if (mirror < 0 || mirror > 2) mirror = 0;
         InterlockedExchange(&g_desktopMirrorEye, mirror);
         Log("ini: DesktopMirrorEye=%ld (0=SBS window, 1=left eye, 2=right eye; after XR submit)", mirror);
+    }
+    {
+        LONG fill = GetPrivateProfileIntA("Render", "DesktopMirrorFill", 0, path) ? 1 : 0;
+        InterlockedExchange(&g_desktopMirrorFill, fill);
+        Log("ini: DesktopMirrorFill=%ld (0=aspect-fit letterbox in backbuffer, 1=stretch eye to full backbuffer for desktop/Steam captures)", fill);
     }
     Log("ini: StartInVr=%ld (%s)", InterlockedCompareExchange(&g_startInVr, 0, 0),
         InterlockedCompareExchange(&g_startInVr, 0, 0)

@@ -9,6 +9,7 @@ void Log(_Printf_format_string_ const char* fmt, ...);
 extern volatile LONG g_dupDraws;
 extern volatile LONG g_swapEyes;
 extern volatile LONG g_desktopMirrorEye;
+extern volatile LONG g_desktopMirrorFill;
 extern bool g_scCropped;
 extern bool g_xrRunning;
 extern unsigned g_srcW;
@@ -288,12 +289,20 @@ inline void Apply(IDirect3DDevice9* dev, const RECT* presentSrc,
     Diag::lastWw = ww; Diag::lastWh = wh;
     CapturePlacement(window);
     RECT dst{};
-    LONG vx = 0, vy = 0, vw = (LONG)ww, vh = (LONG)wh;
-    const bool haveVis = VisibleClientBox(window, ww, wh, vx, vy, vw, vh);
-    const bool fitOk = haveVis
-        ? VisibleEyeDst(vx, vy, vw, vh, desc.Width, desc.Height, ww, wh,
-                        desc.Width / 2, desc.Height, dst)
-        : FitDestination(desc.Width, desc.Height, desc.Width / 2, desc.Height, ww, wh, dst);
+    const bool fillBackbuffer =
+        InterlockedCompareExchange(&g_desktopMirrorFill, 0, 0) != 0;
+    bool fitOk = fillBackbuffer;
+    if (fillBackbuffer) {
+        dst = { 0, 0, (LONG)desc.Width, (LONG)desc.Height };
+    } else {
+        LONG vx = 0, vy = 0, vw = (LONG)ww, vh = (LONG)wh;
+        const bool haveVis = VisibleClientBox(window, ww, wh, vx, vy, vw, vh);
+        fitOk = haveVis
+            ? VisibleEyeDst(vx, vy, vw, vh, desc.Width, desc.Height, ww, wh,
+                            desc.Width / 2, desc.Height, dst)
+            : FitDestination(desc.Width, desc.Height, desc.Width / 2, desc.Height,
+                ww, wh, dst);
+    }
     if (!fitOk) {
         back->Release();
         InterlockedIncrement(&Diag::failFit); EmitMaybe(); return;
