@@ -53,9 +53,14 @@ I/O/page-fault evidence remain necessary to name a root cause.
   two analyzer tests PASS.
 
 The benchmark measures only the probe on this machine. It is not a game FPS
-claim. No gameplay CPU optimization is proposed yet: a narrow edit to native
-firing, pickup, haptics or render work would be speculative with the available
-combat evidence. The accepted baseline is untouched.
+claim. The follow-up historical audit is in
+`docs/performance/historical-cpu-stall-audit-20261030.md`. It identifies one
+deterministic unnecessary cost: `MenuDrawTrace` was default ON and made
+synchronous D3D9 state queries during transition samples. This branch makes
+it opt-in through `[Diagnostic] MenuDrawTrace=1` and avoids its per-frame
+state work while disabled. No physical FPS improvement is claimed. The
+available evidence still does not justify changing native firing, pickup,
+haptics or effect behavior; the accepted Steam baseline is untouched.
 
 ## One controlled MAIN capture
 

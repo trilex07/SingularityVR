@@ -1,5 +1,12 @@
 # STATUS — session handoff
 
+## 2026-10-30 — SIDE: historical CPU stall audit and diagnostic overhead removal
+
+- Branch `performance/cpu-microstutter-root-cause`; Steam/PSVR2 untouched. Historical measurements, hashes, dated builds and current blocking paths are indexed in `docs/performance/historical-cpu-stall-audit-20261030.md`.
+- **CONFIRMED/FIXED at L2:** `MenuDrawTrace` was default ON; transition windows performed at least 16 synchronous D3D9 state queries per sampled draw. It is now default OFF, with explicit `[Diagnostic] MenuDrawTrace=1` to reactivate. No gameplay functionality was changed.
+- **L1_PASS:** menu trace/suppression, existing microstutter/hotpath/input tests, two analyzer tests. **L2_PASS:** `/O2` PE32 x86 DLL SHA256 `6885305B435EDD61A33A1D2BEB6C96B87AC515DFF04AC3AA6AAC61BF86362B15` (precommit worktree provenance).
+- **UNKNOWN:** current firing, damage and ordinary-pickup stall producer; no current event-correlated Steam/ETW sample. No FPS improvement or physical PASS claimed. Previously measured 75–76 ms DirectInput enumeration and repeated texture hash churn remain excluded for accepted post-cache behavior.
+
 ## 2026-10-29 — SIDE: bounded CPU microstutter capture candidate
 
 - Branch `performance/cpu-microstutter-root-cause` from accepted `origin/main` `a1b506b9`; Steam/PSVR2 untouched.
