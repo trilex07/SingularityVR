@@ -25,9 +25,12 @@ static void Run(const std::vector<unsigned char>& data,bool ex){
     assert(SUCCEEDED(ib->Lock(0,0,&p,0)));memcpy(p,data.data()+28+valkyriehd::Vertices*32,12834*6);assert(SUCCEEDED(ib->Unlock()));
     dev->SetStreamSource(0,vb,0,32);dev->SetIndices(ib);
     D3DVERTEXELEMENT9 el[]={{0,0,D3DDECLTYPE_FLOAT3,0,D3DDECLUSAGE_POSITION,0},
-        {0,12,D3DDECLTYPE_UBYTE4N,0,D3DDECLUSAGE_NORMAL,0},{0,16,D3DDECLTYPE_UBYTE4N,0,D3DDECLUSAGE_NORMAL,1},
+        {0,12,D3DDECLTYPE_UBYTE4,0,D3DDECLUSAGE_TANGENT,0},{0,16,D3DDECLTYPE_UBYTE4,0,D3DDECLUSAGE_NORMAL,0},
         {0,20,D3DDECLTYPE_UBYTE4,0,D3DDECLUSAGE_BLENDINDICES,0},{0,24,D3DDECLTYPE_UBYTE4N,0,D3DDECLUSAGE_BLENDWEIGHT,0},
-        {0,28,D3DDECLTYPE_FLOAT16_2,0,D3DDECLUSAGE_TEXCOORD,0},D3DDECL_END()};
+        {0,28,D3DDECLTYPE_FLOAT16_2,0,D3DDECLUSAGE_TEXCOORD,3},
+        {0,28,D3DDECLTYPE_FLOAT16_2,0,D3DDECLUSAGE_TEXCOORD,2},
+        {0,28,D3DDECLTYPE_FLOAT16_2,0,D3DDECLUSAGE_TEXCOORD,0},
+        {0,28,D3DDECLTYPE_FLOAT16_2,0,D3DDECLUSAGE_TEXCOORD,1},D3DDECL_END()};
     IDirect3DVertexDeclaration9* decl=nullptr;assert(SUCCEEDED(dev->CreateVertexDeclaration(el,&decl)));dev->SetVertexDeclaration(decl);
     float lo[3]={1e6f,1e6f,1e6f},hi[3]={-1e6f,-1e6f,-1e6f};
     for(unsigned i=0;i<valkyriehd::Vertices;++i){float pos[3];memcpy(pos,data.data()+28+i*32,12);for(unsigned j=0;j<3;++j){lo[j]=std::min(lo[j],pos[j]);hi[j]=std::max(hi[j],pos[j]);}}
@@ -72,6 +75,18 @@ static void Run(const std::vector<unsigned char>& data,bool ex){
     used=true;assert(SUCCEEDED(r.DrawNative(dev,[](unsigned v,unsigned){assert(v==11387);return S_OK;},used,foreign))&&!used);foreign->Release();
     dev->SetStreamSource(0,vb,0,16);used=true;
     assert(SUCCEEDED(r.DrawNative(dev,[](unsigned v,unsigned){assert(v==11387);return S_OK;},used))&&!used);
+    // Real failed Steam receipt: raw UBYTE4 tangent/normal and four UV aliases.
+    // Reproduce the prior normalized fixture: it must NOT qualify as Valkyrie.
+    el[1].Type=el[2].Type=D3DDECLTYPE_UBYTE4N;
+    IDirect3DVertexDeclaration9* normalized=nullptr;assert(SUCCEEDED(dev->CreateVertexDeclaration(el,&normalized)));
+    dev->SetStreamSource(0,vb,0,32);dev->SetVertexDeclaration(normalized);used=true;
+    assert(SUCCEEDED(r.DrawNative(dev,[](unsigned v,unsigned f){assert(v==11387&&f==12834);return S_OK;},used,ib))&&!used);
+    dev->SetVertexDeclaration(decl);normalized->Release();
+    el[1].Type=el[2].Type=D3DDECLTYPE_UBYTE4;el[6].UsageIndex=4;
+    IDirect3DVertexDeclaration9* wrongUv=nullptr;assert(SUCCEEDED(dev->CreateVertexDeclaration(el,&wrongUv)));
+    dev->SetVertexDeclaration(wrongUv);used=true;
+    assert(SUCCEEDED(r.DrawNative(dev,[](unsigned v,unsigned){assert(v==11387);return S_OK;},used,ib))&&!used);
+    dev->SetVertexDeclaration(decl);wrongUv->Release();
     dev->SetStreamSource(0,nullptr,0,0);dev->SetIndices(nullptr);dev->SetVertexDeclaration(nullptr);dev->SetVertexShader(nullptr);dev->SetPixelShader(nullptr);
     vb->Release();ib->Release();decl->Release();vertex->Release();pixel->Release();dev->Release();api->Release();DestroyWindow(w);
     printf("D3D9%s real SVVK stereo pixels=%u/%u; restore/failure/reset/fallback PASS\n",ex?"Ex":"",pixels[0],pixels[1]);

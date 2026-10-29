@@ -100,3 +100,23 @@ frequency, IB identity and full vertex declaration (first two attempts only).
 Additional streams include size/stride/frequency, without data readback/GPU sync.
 This distinguishes declaration layout from unrelated IB/stream causes. No
 visibility, tracking or renderer eligibility guard has been relaxed.
+
+## Native declaration correction — observed second Steam session
+
+Both eyes reported stream0 offset0/stride32/frequency1 and the exact expected
+source IB. The actual declaration is POSITION FLOAT3@0, TANGENT UBYTE4@12,
+NORMAL UBYTE4@16, BLENDINDICES UBYTE4@20, BLENDWEIGHT UBYTE4N@24, and four
+TEXCOORD FLOAT16_2 aliases@28 with semantic indices3,2,0,1. The first proven
+violation was the adapter expecting normalized tangent/normal elements.
+
+Valkyrie now validates that actual declaration, including semantic identities
+and all four UV aliases. Native shader, vertex bytes, materials and transforms
+are unchanged. Volk declaration policy is unchanged. The GPU fixture now uses
+the captured declaration, rejects the old normalized fixture and invalid UV
+semantics, and submits4502/4502 pixels in D3D9 and D3D9Ex. Volk regression
+submits5401/5401; both preserve bound state and fallback/reset behavior.
+Native replacement receipt and final HD headset acceptance remain PENDING.
+
+Queued next integrations: Kasimov802f099a then Centurion218e7652. Each follows
+this integration's actual rendering acceptance gate; private source assets are
+not redistributed or merged wholesale from asset branches.

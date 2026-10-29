@@ -9,10 +9,12 @@ constexpr unsigned SourceVertices=8297,SourceTriangles=10835,Vertices=12085,Tria
 inline unsigned Hash(const unsigned char* p,size_t n){unsigned h=2166136261u;while(n--)h=(h^*p++)*16777619u;return h;}
 struct VolkProfile {
     static constexpr unsigned SourceVertices=8297,SourceTriangles=10835,Vertices=12085,Triangles=12727,Slots=5,SourceVbHash=4146942701u,SourceIbHash=754008012u;
+    static constexpr bool NativePacked=false;
     static const char* Magic(){return "SVVH";}
 };
 struct ValkyrieProfile {
     static constexpr unsigned SourceVertices=11387,SourceTriangles=12834,Vertices=13965,Triangles=14116,Slots=6,SourceVbHash=3607008755u,SourceIbHash=615094726u;
+    static constexpr bool NativePacked=true;
     static const char* Magic(){return "SVVK";}
 };
 template<class Profile> struct NativeAsset {
@@ -89,17 +91,27 @@ public:
         bool compatible=SUCCEEDED(audit.streamHr)&&source&&stride==32&&offset==0&&
             SUCCEEDED(audit.indexHr)&&audit.expectedIb&&SUCCEEDED(audit.freqHr)&&freq==1&&
             SUCCEEDED(audit.declHr)&&decl;
-        unsigned mask=0;
+        unsigned mask=0,uvMask=0;
+        const BYTE packed=Profile::NativePacked?D3DDECLTYPE_UBYTE4:D3DDECLTYPE_UBYTE4N;
         for(unsigned i=0;compatible&&i<count&&elements[i].Stream!=0xff;++i){
             const auto& e=elements[i];if(e.Stream){compatible=false;break;}
+            if(Profile::NativePacked){
+                const BYTE usage=e.Offset==0?D3DDECLUSAGE_POSITION:e.Offset==12?D3DDECLUSAGE_TANGENT:
+                    e.Offset==16?D3DDECLUSAGE_NORMAL:e.Offset==20?D3DDECLUSAGE_BLENDINDICES:
+                    e.Offset==24?D3DDECLUSAGE_BLENDWEIGHT:D3DDECLUSAGE_TEXCOORD;
+                if(e.Method!=D3DDECLMETHOD_DEFAULT||e.Usage!=usage||
+                   (e.Offset==28?e.UsageIndex>3:e.UsageIndex!=0)){compatible=false;break;}
+                if(e.Offset==28)uvMask|=1u<<e.UsageIndex;
+            }
             if(e.Offset==0&&e.Type==D3DDECLTYPE_FLOAT3)mask|=1;
-            else if(e.Offset==12&&e.Type==D3DDECLTYPE_UBYTE4N)mask|=2;
-            else if(e.Offset==16&&e.Type==D3DDECLTYPE_UBYTE4N)mask|=4;
+            else if(e.Offset==12&&e.Type==packed)mask|=2;
+            else if(e.Offset==16&&e.Type==packed)mask|=4;
             else if(e.Offset==20&&e.Type==D3DDECLTYPE_UBYTE4)mask|=8;
             else if(e.Offset==24&&e.Type==D3DDECLTYPE_UBYTE4N)mask|=16;
             else if(e.Offset==28&&e.Type==D3DDECLTYPE_FLOAT16_2)mask|=32;
             else compatible=false;
         }
+        if(Profile::NativePacked&&uvMask!=15)compatible=false;
         audit.mask=mask;
         if(decl)decl->Release();
         HRESULT hr=D3D_OK;
