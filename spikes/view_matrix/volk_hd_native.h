@@ -171,24 +171,31 @@ using Renderer=volkhd::NativeRenderer<Profile>;
 // Independent idle-body witness: the existing reload witness starts only once
 // a cylinder animation is active. Do not require a reload before HD can render.
 struct IndexWitness {
-    IDirect3DIndexBuffer9* buffer=nullptr;
-    bool valid=false;unsigned attempts=0;
+    struct Entry {IDirect3DIndexBuffer9* buffer=nullptr;bool valid=false;};
+    Entry entries[8]{};
+    IDirect3DIndexBuffer9* buffer=nullptr; // borrowed from entries, never released separately
+    bool valid=false;unsigned attempts=0,count=0;
     ~IndexWitness(){Reset();}
-    void Reset(){if(buffer)buffer->Release();buffer=nullptr;valid=false;attempts=0;}
+    void Reset(){for(auto& e:entries){if(e.buffer)e.buffer->Release();e={};}
+        buffer=nullptr;valid=false;attempts=count=0;}
     bool Observe(IDirect3DDevice9* dev){
         IDirect3DIndexBuffer9* current=nullptr;
         if(FAILED(dev->GetIndices(&current))||!current)return false;
-        if(current!=buffer){
-            if(buffer)buffer->Release();buffer=current;current=nullptr;valid=false;
-            if(attempts++<4){
-                D3DINDEXBUFFER_DESC desc{};void* data=nullptr;
-                constexpr UINT bytes=SourceTriangles*6;
-                if(SUCCEEDED(buffer->GetDesc(&desc))&&desc.Format==D3DFMT_INDEX16&&desc.Size==bytes&&
-                   SUCCEEDED(buffer->Lock(0,bytes,&data,D3DLOCK_READONLY))){
-                    const bool match=data&&volkhd::Hash((const unsigned char*)data,bytes)==Profile::SourceIbHash;
-                    valid=SUCCEEDED(buffer->Unlock())&&match;
-                }
+        for(unsigned i=0;i<count;++i)if(entries[i].buffer==current){
+            buffer=current;valid=entries[i].valid;current->Release();return valid;
+        }
+        buffer=nullptr;valid=false;
+        // Bounded per-resource verification, not a budget consumed each time
+        // already verified engine IBs alternate between body/depth/reload draws.
+        if(count<8){
+            ++attempts;D3DINDEXBUFFER_DESC desc{};void* data=nullptr;
+            constexpr UINT bytes=SourceTriangles*6;
+            if(SUCCEEDED(current->GetDesc(&desc))&&desc.Format==D3DFMT_INDEX16&&desc.Size>=bytes&&
+               SUCCEEDED(current->Lock(0,bytes,&data,D3DLOCK_READONLY))){
+                const bool match=data&&volkhd::Hash((const unsigned char*)data,bytes)==Profile::SourceIbHash;
+                valid=SUCCEEDED(current->Unlock())&&match;
             }
+            entries[count++]={current,valid};buffer=current;current=nullptr;
         }
         if(current)current->Release();return valid;
     }

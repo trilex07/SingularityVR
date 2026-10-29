@@ -27,10 +27,10 @@ Pose FixturePose(const WeaponMount& mo,float roll=0.f) {
 
 #ifndef DIEGETIC_FIXTURE_INCLUDE_ONLY
 int main(){
-    const unsigned verts[]={5799,11387,8297};
-    const unsigned tris[]={6767,12834,10835};
+    const unsigned verts[]={5799,11387,8297,11389};
+    const unsigned tris[]={6767,12834,10835,12942};
     unsigned projections=0;
-    for(int w=0;w<3;++w){const auto* mo=MountForBodyDraw(0,0,verts[w],0,tris[w]);assert(mo);
+    for(int w=0;w<4;++w){const auto* mo=MountForBodyDraw(0,0,verts[w],0,tris[w]);assert(mo);
         assert(!MountForBodyDraw(1,0,verts[w],0,tris[w]));
         assert(!MountForBodyDraw(0,1,verts[w],0,tris[w]));
         assert(!MountForBodyDraw(0,0,verts[w],3,tris[w]));

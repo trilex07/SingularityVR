@@ -64,6 +64,7 @@ inline const WeaponMount* MountForVerts(long v) {
         { "centurion", 5799,  0, 115.3f, 2.6f, 0.45f, 1.8f, 18.0f, 2, 2, 0.0f, 43.5f, 1 },
         { "valkyrie",  11387, 1, 117.2f, 2.8f, 0.45f, 1.9f, 20.0f, 2, 3, 0.0f, 35.0f, 0 },
         { "spikeshot", 8297,  2, 116.8f, 2.8f, 0.45f, 1.9f, 15.0f, 2, 2, 0.0f, 42.0f, 2 },
+        { "kasimov", 11389, 3, 123.88921509f, 2.8f, 0.45f, 1.9f, 18.0f, 2, 2, 0.0f, 44.29321115f, 0 },
     };
     for (const auto& m : kMounts) if (m.verts == v) return &m;
     return nullptr; // TMD / seeker / unknown: no diegetic counter
@@ -77,6 +78,7 @@ inline const WeaponMount* MountForBodyDraw(int base, unsigned minIndex,
     if (verts == 5799 && triangles == 6767) return MountForVerts(5799);
     if ((verts == 11387 || verts == 11378) && triangles == 12834) return MountForVerts(11387);
     if (verts == 8297 && triangles == 10835) return MountForVerts(8297);
+    if (verts == 11389 && triangles == 12942) return MountForVerts(11389);
     return nullptr;
 }
 

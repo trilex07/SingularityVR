@@ -1,4 +1,5 @@
 #include "../seeker_slot_policy.h"
+#include "../kasimov_support_geometry.h"
 #include "../seeker_projectile_policy.h"
 #include <cassert>
 #include <cstdio>
@@ -17,6 +18,31 @@ int main(int argc,char** argv){
         std::printf("%.9g %.9g %.9g %.9g %.9g %.9g\n",double(p.x),double(p.y),double(p.z),double(a.x),double(a.y),double(a.z));
         return 0;
     }
+    // Source-derived Kasimov attachment through the actual shader/ride order.
+    unsigned kasCases=0;
+    for(float a:{0.f,.7f,-1.2f})for(float head:{-35.f,0.f,40.f}) {
+        Mat local=Identity();local.m[3][0]=head;local.m[3][1]=-100;
+        Mat skin=Identity();skin.m[3][2]=3;
+        seekergeometry::Witness w;
+        assert(seekergeometry::Capture(kasimovsupport::RootBind,skin,local,1,20,1000,w));
+        Mat gun=Identity();gun.m[0][0]=gun.m[1][1]=std::cos(a);
+        gun.m[0][1]=std::sin(a);gun.m[1][0]=-std::sin(a);gun.m[3][2]=12;
+        Mat wrist=Identity();wrist.m[3][0]=8;wrist.m[3][1]=90;
+        float gpu[3][4];armbind::ToGpu(skin,gpu);Mat target;
+        assert(seekergeometry::SupportTarget(kasimovsupport::LeftGrip,w,1,20,1100,wrist,gpu,local,gun,target));
+        const auto desired=seekergeometry::Product(seekergeometry::Product(kasimovsupport::LeftGrip,w.rootLocal),gun);
+        float delta[4][4],right[4][4],changed[3][4];
+        assert(skeletal::LocalDeltaPair(delta,right,local.m,gun.m,target.m,gun.m));
+        skeletal::TransformBone(changed,gpu,delta);Mat transformed;
+        assert(armbind::FromGpu(changed,transformed));
+        const auto final=seekergeometry::Product(seekergeometry::Product(seekergeometry::Product(wrist,transformed),local),gun);
+        Close(final,desired);
+        for(float e:{-1.6f,1.6f}) {Mat eye=Identity();eye.m[3][0]=e;
+            Close(seekergeometry::Product(final,eye),seekergeometry::Product(desired,eye));++kasCases;}
+        assert(!seekergeometry::SupportTarget(kasimovsupport::LeftGrip,w,1,21,1100,wrist,gpu,local,gun,target));
+        assert(!seekergeometry::SupportTarget(kasimovsupport::LeftGrip,w,1,20,1151,wrist,gpu,local,gun,target));
+    }
+    std::printf("PASS Kasimov support: %u final palette/ride/eye cases; identity + freshness retained\n",kasCases);
     using namespace seekerslot;
     State state;Snapshot s;s.valid=true;s.pawn=1;s.current=10;s.count=2;
     s.items[0]={10,1,0,false};s.items[1]={20,2,0,true};

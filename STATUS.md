@@ -1,3 +1,10 @@
+## 2026-10-30 — Kasimov/Centurion physical-test follow-up
+
+- Previous combined FB1DE1BC test: user reported reload failures, Centurion old-model fallback, poor Kasimov support, missing Kasimov mounted HUD and a crash after firing. General feedback does not establish individual haptics/scope PASS.
+- Follow-up: `fix/hd-kasimov-centurion-physical-followup`; L1/L2 PASS, physical acceptance PENDING. See `docs/handoffs/hd-physical-followup-20261030.md`.
+- Preserve accepted Volk/Valkyrie, PR70, TMD, OLED/NIS and WeaponLocker. User requests candidate retained in Steam for morning test, no timed restore, normal settings persistence. Do not launch gameplay this turn.
+- Crash: WER places failure in XAudio2_5.dll. A malformed installed Kasimov Vorbis header is independently proven and repaired; original crash call chain is unavailable, so crash resolution is NOT physically established.
+
 # STATUS — session handoff
 
 ## 2026-10-29 — MAIN: combined Kasimov / Centurion / shared-source integration

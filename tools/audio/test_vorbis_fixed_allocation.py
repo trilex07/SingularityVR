@@ -31,6 +31,13 @@ class FixedAllocationTests(unittest.TestCase):
         candidate=self.padded();old,a,_=_headers_and_audio(self.source);new,b,_=_headers_and_audio(candidate)
         self.assertGreater(len(new[1]),len(old[1]));self.assertEqual(old[0],new[0]);self.assertEqual(old[2],new[2])
         self.assertEqual([p[:18]+p[26:] for p in a],[p[:18]+p[26:] for p in b]);self.assertTrue(pages(candidate)[-1][5]&4)
+    def test_padding_preserves_short_vendor_and_existing_comments(self):
+        old,_,_=_headers_and_audio(self.source);new,_,_=_headers_and_audio(self.padded())
+        n=struct.unpack_from('<I',old[1],7)[0];m=struct.unpack_from('<I',new[1],7)[0]
+        self.assertEqual(old[1][11:11+n],new[1][11:11+m])
+        self.assertEqual(n,m)
+        self.assertIn(b'TRILEX_PADDING=',new[1])
+        self.assertEqual(struct.unpack_from('<I',new[1],11+m)[0],struct.unpack_from('<I',old[1],11+n)[0]+1)
     def test_actual_decoder_keeps_exact_timing_format(self):
         p=self.dir/'padded.ogg';p.write_bytes(self.padded());out=self.dir/'decoded.wav'
         subprocess.run([str(self.ff),'-v','error','-y','-i',str(p),'-c:a','pcm_s16le',str(out)],check=True,capture_output=True)

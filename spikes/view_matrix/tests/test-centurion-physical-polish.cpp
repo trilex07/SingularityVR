@@ -3,6 +3,7 @@
 #include "../centurion_native_reload.h"
 #include "../centurion_shells.h"
 #include "../centurion_clip_preview.h"
+#include "../arm_natural.h"
 #include <cassert>
 #include <cstdio>
 using namespace centurionphysical;
@@ -38,6 +39,17 @@ int main(){
         auto invalid=moving;invalid.m[0][0]=NAN;std::memcpy(before,palette,sizeof(before));
         assert(!hold.Apply(1,2,3,false,palette,45,right,invalid,tracking,newAim)&&!memcmp(before,palette,sizeof(before)));
         assert(!hold.Apply(1,2,4,false,palette,45,right,moving,tracking,newAim));++cases;
+    }
+    // Material-0 TMD wrist: use its actual bind and the final local*ride chain.
+    const auto& tmd=armnatural::TmdBind();assert(tmd.ready);
+    for(float angle:{-70.f,40.f}) {
+        auto skin=M({{2,-3,7},centurionclip::Degrees(angle,20,0)});
+        auto local=M({{30,-12,70},centurionclip::Degrees(5,angle,0)});
+        auto ride=M({{-9,20,5},centurionclip::Degrees(0,angle,30)});
+        Mat tracking;assert(TrackingMap({.1f,.3f,-.2f},.4f,-.8f,52.5f,tracking));
+        const auto chain=Product(local,ride);float gpu[3][4];armbind::ToGpu(skin,gpu);
+        Mat result,inv;assert(Grip(tmd.bind[9],gpu,chain,tracking,result));assert(Inverse(tracking,inv));
+        Near(result,Product(Product(Product(Product(PalmMount(),tmd.bind[9]),skin),chain),inv));
     }
     centurionnative::Gate gate;gate.Publish({true,1,2,1000});assert(gate.Arm(1,2,1000));
     assert(gate.Evaluate(2,2,1,2,1001,true)==centurionnative::Decision::Block); // immediate store revokes armed token
