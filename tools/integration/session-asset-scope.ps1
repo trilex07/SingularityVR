@@ -10,6 +10,7 @@ function Test-SessionAssetPath([string]$Relative) {
         'Binaries/vr-assets/reload/valkyrie/valkyrie_reload.svwa',
         'Binaries/vr-assets/reload/valkyrie/valkyrie_clip.svrk',
         'Binaries/vr-assets/reload/valkyrie/valkyrie_clip.svrt',
+        'Binaries/vr-assets/reload/centurion/centurion_hd.svct',
         'Binaries/vr-assets/reload/kasimov/kasimov_hd.svks',
         'Binaries/vr-assets/reload/kasimov/kasimov_reload.svwa',
         'Binaries/vr-assets/reload/kasimov/kasimov_clip.svrk',

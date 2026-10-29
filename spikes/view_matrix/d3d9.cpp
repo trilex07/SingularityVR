@@ -2394,6 +2394,9 @@ static bool g_valkyrieHdNativeModel=false;
 static valkyriehd::Renderer g_valkyrieHdRenderer;
 static bool g_kasimovHdNativeModel=false;
 static kasimovhd::Renderer g_kasimovHdRenderer;
+static bool g_centurionHdNativeModel=false;
+static centurionhd::Renderer g_centurionHdRenderer;
+static centurionhd::IndexWitness g_centurionHdIndices;
 static int g_nextRefillOnly=0; // default OFF; manual insertion -> audited native refill only
 static volatile LONG g_nextNativeMagazineDraws=0;
 static bool NextReloadEnabled(){return g_nextReload[0]||g_nextReload[1]||g_nextReload[2];}
@@ -6751,6 +6754,7 @@ volatile LONG g_lockerNativeTrace = 0; // [Diagnostic] LockerNativeTrace: read-o
 volatile LONG g_lockerAvailabilityTrace = 0; // [Diagnostic] LockerAvailabilityTrace: minimal +0x3E4/catalog/equip witness
 volatile LONG g_lockerRetainOrdinary = 0; // [Input] LockerRetainOrdinary: PopMenu destroyItem gate (requires KeepAcquiredWeapons)
 volatile LONG g_lockerOwnedDisplay = 0; // [Input] LockerOwnedDisplay: VR wheel owned tiles under WeaponLocker (requires KeepAcquiredWeapons)
+volatile LONG g_testGrantKasimovCenturion=0;
 volatile LONG g_lockerVrLoadout = 0; // [Input] LockerVrLoadout: compact VR LOADOUT + EQUIP ALL queue (requires KeepAcquiredWeapons)
 volatile LONG g_lockerVrLoadoutPreviewOnly = 0; // [Input] LockerVrLoadoutPreviewOnly: UI-only, never acquire
 volatile LONG g_publishedAvailableMask = 0;
@@ -21352,6 +21356,13 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
     float cylinderSaved[15][4];CenturionDrawReplay cylinderReplay;
     const int cylinderBase=t==D3DPT_TRIANGLELIST&&nSeg==1&&!boneRegN&&!independentRegs
         ?PrepareCenturionCylinder(dev,baseVertex,numVertices,startIndex,primCount,cylinderSaved,cylinderReplay):-1;
+    const bool centurionHdDraw=g_centurionHdNativeModel && t==D3DPT_TRIANGLELIST &&
+        numVertices==5799 && !baseVertex && !minIndex && !startIndex && primCount==6767 &&
+        nSeg==1 && segStart[0]==0 && segPrims[0]==6767 &&
+        g_thisDrawMoved==1 && FgMatchWindow() && Rd(g_rtIsScene) && !Rd(g_weaponHolstered) &&
+        !g_boundShaderLayout.shadow && g_boundShaderLayout.bones>=0 && g_boundShaderLayout.boneRegs>=15 &&
+        g_sceneMode.Current()==vrscene::Mode::GameplayStereo &&
+        !g_centurionHdRenderer.asset.bytes.empty() && g_centurionHdIndices.Observe(dev);
     // Original PSK SHA 4E18A25D...: muzzle_flash absolute bind position;
     // local +X is the barrel's +Z in cog_alt_pistol. Native Y reflects ActorX.
     // Cooked palette [57,53,56,55,58]: slot1 is cog_alt_pistol skin matrix.
@@ -21508,6 +21519,18 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
         g_nextReady[2] && g_nextIBVerified[2] && Rd(g_gunVerts)==11389 && !Rd(g_nextFault[2]) &&
         g_sceneMode.Current()==vrscene::Mode::GameplayStereo;
     const auto drawVolkOrSource=[&]()->HRESULT {
+        if(centurionHdDraw){
+            bool replaced=false;
+            const HRESULT h=g_centurionHdRenderer.DrawNative(dev,[&](UINT v,UINT f){
+                return g_origDrawIndexedPrim(dev,t,0,0,v,0,f);
+            },replaced,g_centurionHdIndices.buffer);
+            static unsigned receipts=0;
+            if(receipts++<8)Log("centurion-hd native: eye=%u replaced=%d vertices=%u triangles=%u hr=%08lX gate=%s cylinder=existing-native-palette",
+                eye,replaced?1:0,replaced?centurionhd::Vertices:5799,replaced?centurionhd::Triangles:6767,h,g_centurionHdRenderer.receipt);
+            if(receipts<=2&&!replaced){const auto& a=g_centurionHdRenderer.audit;
+                for(unsigned i=0;i<a.count&&a.elements[i].Stream!=0xff;++i){const auto& e=a.elements[i];Log("centurion-hd declaration: eye=%u element=%u offset=%u type=%u usage=%u index=%u",eye,i,e.Offset,e.Type,e.Usage,e.UsageIndex);}}
+            return h;
+        }
         if(kasimovHdDraw){
             bool replaced=false;
             const HRESULT h=g_kasimovHdRenderer.DrawNative(dev,[&](UINT v,UINT f){
@@ -21759,7 +21782,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
             });
         }
         for (int s = 0; s < nSeg; ++s) {
-            const HRESULT h = (volkHdDraw||valkyrieHdDraw||kasimovHdDraw)?drawVolkOrSource():g_origDrawIndexedPrim(dev, t, baseVertex, minIndex, numVertices,
+            const HRESULT h = (volkHdDraw||valkyrieHdDraw||kasimovHdDraw||centurionHdDraw)?drawVolkOrSource():g_origDrawIndexedPrim(dev, t, baseVertex, minIndex, numVertices,
                                                     segStart[s], segPrims[s]);
             if (FAILED(h) && SUCCEEDED(hr)) hr = h;      // keep the FIRST failure, not the last
             if(seekerStaged.valid&&nSeg==1&&segStart[s]==startIndex&&segPrims[s]==primCount&&SUCCEEDED(h))
@@ -21769,7 +21792,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
             bool restored=false;
             const bool ok=centurionvisual::Replay([&](const float (&palette)[15][4]){
                     return SUCCEEDED(g_origSetVSConstF(dev,cylinderBase,&palette[0][0],15));
-                },[&](){return SUCCEEDED(g_origDrawIndexedPrim(dev,t,baseVertex,minIndex,numVertices,startIndex,primCount));},
+                },[&](){return SUCCEEDED(centurionHdDraw?drawVolkOrSource():g_origDrawIndexedPrim(dev,t,baseVertex,minIndex,numVertices,startIndex,primCount));},
                 cylinderReplay.clip,cylinderReplay.attached,restored);
             if(!ok){g_centurionAnimationFault=true;hr=E_FAIL;}
             else InterlockedIncrement(&g_centurionSpareDraws);
@@ -24739,7 +24762,7 @@ HRESULT STDMETHODCALLTYPE Hook_CreateVertexBuffer(IDirect3DDevice9* dev, UINT le
 HRESULT STDMETHODCALLTYPE Hook_CreateIndexBuffer(IDirect3DDevice9* dev, UINT len, DWORD usage,
                                                  D3DFORMAT fmt, D3DPOOL pool,
                                                  IDirect3DIndexBuffer9** out, HANDLE* share) {
-    usage=centurionanim::ReadableUsage(g_centurionCylinderAnimation!=0,len,fmt==D3DFMT_INDEX16,usage,D3DUSAGE_WRITEONLY);
+    usage=centurionanim::ReadableUsage(g_centurionCylinderAnimation!=0||g_centurionHdNativeModel,len,fmt==D3DFMT_INDEX16,usage,D3DUSAGE_WRITEONLY);
     usage=weaponreload::ReadableUsage(NextReloadEnabled(),len,fmt==D3DFMT_INDEX16,usage,D3DUSAGE_WRITEONLY);
     if((g_seekerSupportGrip||g_seekerProjectileAim)&&len==seekergeometry::IndexBytes&&fmt==D3DFMT_INDEX16)
         usage&=~D3DUSAGE_WRITEONLY;
@@ -36509,6 +36532,8 @@ void LoadIniSettings() {
     if (LockerVrLoadout::PreviewOnly()) LockerVrLoadout::ClearPreviewQueue();
     Log("ini: LockerVrLoadoutPreviewOnly=%ld (default OFF; UI visible, acquisition blocked)",
         Rd(g_lockerVrLoadoutPreviewOnly));
+    InterlockedExchange(&g_testGrantKasimovCenturion,GetPrivateProfileIntA("Testing","GrantKasimovCenturion",0,path)==1?1:0);
+    if(Rd(g_testGrantKasimovCenturion))Log("test weapon grant: user-authorized Centurion/Kasimov only; native pickup after stable player; save checkpoint required");
     Log("ini: LockerVrLoadout=%ld (default OFF; compact VR LOADOUT on WYPOSAŻ + post-PopMenu pickup queue; requires KeepAcquiredWeapons=1)",
         Rd(g_lockerVrLoadout));
     if (Rd(g_lockerVrLoadout) && Rd(g_keepAcquiredWeapons)) LockerVrLoadout::TryInstallEarly();
@@ -37196,6 +37221,7 @@ void LoadIniSettings() {
     Log("ini: VolkAuthoredGrip=%d WeaponWheelObservedSelection=%d (default OFF)",g_volkAuthoredGrip,g_weaponWheelObserved);
     Log("ini: ValkyrieSingleGrip=%d (default OFF; one-hand right glove follows weapon delta)",g_valkyrieSingleGrip);
     g_valkyrieHdNativeModel=GetPrivateProfileIntA("Render","ValkyrieHdNativeModel",0,path)!=0;
+    g_centurionHdNativeModel=GetPrivateProfileIntA("Render","CenturionHdNativeModel",0,path)!=0;
     g_kasimovHdNativeModel=GetPrivateProfileIntA("Render","KasimovHdNativeModel",0,path)!=0;
     g_volkHdNativeModel=GetPrivateProfileIntA("Render","VolkHdNativeModel",0,path)!=0;
     g_reloadPalmGrip=GetPrivateProfileIntA("Input","ReloadPalmGrip",0,path)!=0;

@@ -49,7 +49,7 @@ def native_points(pos,world):
     return p[:,[0,2,1]]*52.5
 
 
-def prepare(package,cooked,baseline,output):
+def prepare(package,cooked,baseline,output,shared_root=None):
     verified=verify(package)
     names,parents,_,bind,points,weights,wedges,faces=read_psk(package/'ch_inview_sniper_mesh.psk')
     if len(names)!=80 or sum(len(w)==2 for w in weights.values())!=143:raise ValueError('original weighted skeleton')
@@ -73,7 +73,7 @@ def prepare(package,cooked,baseline,output):
     indices=np.array([f[:3] for f in faces],dtype='<u2')[:,[1,0,2]].copy().tobytes()
     if fnv(indices)!=906901468:raise ValueError('full lens/body index witness')
     indices=bytearray(indices[:12942*6]);source_ib=fnv(indices)
-    doc,access=read_glb(package/'kasimov_hd_animated.glb');world,ancestors=hierarchy(doc)
+    doc,access=read_glb(package/'kasimov_hd_animated.glb',shared_root);world,ancestors=hierarchy(doc)
     # Establish the complete coordinate convention against original body points.
     reference=points*[1,-1,1];rounded={tuple(p) for p in np.round(reference,3)};worst=0.
     for i,node in enumerate(doc['nodes']):
@@ -128,6 +128,7 @@ def prepare(package,cooked,baseline,output):
 if __name__=='__main__':
     p=argparse.ArgumentParser(description=__doc__)
     for name in ('package','cooked','baseline','output'):p.add_argument('--'+name,type=Path,required=True)
+    p.add_argument('--shared-root',type=Path)
     a=p.parse_args()
     if not a.output.resolve().is_relative_to((ROOT/'build/kasimov-hd').resolve()):p.error('private build/kasimov-hd output required')
-    print(json.dumps(prepare(a.package,a.cooked,a.baseline,a.output),indent=2))
+    print(json.dumps(prepare(a.package,a.cooked,a.baseline,a.output,a.shared_root),indent=2))

@@ -21,6 +21,8 @@ static void ReleaseNextReloadGPU(){
     g_volkHdRenderer.ReleaseGPU();
     g_valkyrieHdRenderer.ReleaseGPU();
     g_kasimovHdRenderer.ReleaseGPU();
+    g_centurionHdRenderer.ReleaseGPU();
+    g_centurionHdIndices.Reset();
     for(unsigned i=0;i<3;++i){
         g_nextClipRenderer[i].ReleaseGPU();hipknife::Release(g_nextIB[i]);
         g_nextIBVerified[i]=false;g_nextIBAttempts[i]=0;InterlockedExchange(&g_nextFault[i],0);
@@ -29,6 +31,17 @@ static void ReleaseNextReloadGPU(){
 }
 static void InitNextReload(){
     ReleaseNextReloadGPU();
+    if(g_centurionHdNativeModel){
+        char ini[MAX_PATH]{};std::vector<unsigned char> bytes;
+        bool loaded=false;
+        if(IniPath(ini)){
+            std::string directory(ini);const auto slash=directory.find_last_of("\\/");
+            if(slash!=std::string::npos){directory.resize(slash);
+                loaded=hipknife::Read(directory+"\\vr-assets\\reload\\centurion\\centurion_hd.svct",bytes,2*1024*1024)&&
+                    g_centurionHdRenderer.asset.Load(bytes.data(),bytes.size());}
+        }
+        Log("centurion-hd: CPU cache=%s original=5799/6767 final=8051/7927 native material/palette; no runtime proof",loaded?"READY":"INVALID (original retained)");
+    }
     for(unsigned i=0;i<3;++i){
         g_nextReady[i]=false;g_nextAnimation[i].ready=false;
         if(!g_nextReload[i])continue;

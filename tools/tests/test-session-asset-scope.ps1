@@ -1,6 +1,7 @@
 $ErrorActionPreference='Stop'
 . (Join-Path $PSScriptRoot '../integration/session-asset-scope.ps1')
 $allowed=@(
+ 'Binaries/vr-assets/reload/centurion/centurion_hd.svct',
  'Binaries/vr-assets/reload/kasimov/kasimov_hd.svks',
  'Binaries/vr-assets/reload/kasimov/kasimov_reload.svwa',
  'Binaries/vr-assets/reload/kasimov/kasimov_clip.svrk',
