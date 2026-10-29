@@ -10,4 +10,9 @@ inline bool OffhandFingers(const State& s) {
         !s.animated && s.nativeReady && s.gameplay && s.focused && s.tracked &&
         s.stereo && !s.paused && !s.menu && !s.cinematic;
 }
+inline bool NativeCuffDraw(bool independentPalette,bool poseCommitted,
+                           bool normalFree,bool knife,bool freeOffhand,bool exactSection) {
+    return independentPalette && poseCommitted && exactSection &&
+        (normalFree || knife || freeOffhand);
+}
 } // namespace freehandpose

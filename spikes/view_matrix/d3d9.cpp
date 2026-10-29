@@ -6634,6 +6634,7 @@ XrQuaternionf g_handAimOrientation[2]={{0,0,0,1},{0,0,0,1}};
 // pose, input buttons, holster state, or native skeletal palettes.
 static bool g_gloveExperiment=false,g_gloveCpuAttempted=false;
 static bool g_nativeGloveExperiment=false,g_nativeGlovePoseThisDraw=false;
+static bool g_nativeFreeOffhandPoseThisDraw=false;
 static nativegloves::Renderer g_nativeGloveRenderer;
 static glovecuffs::Renderer g_nativeCuffRenderer;
 static tmdgauntlet::Renderer g_tmdShortGauntletRenderer;
@@ -17994,6 +17995,7 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
                                   float saved[135][4], float shortSleeve[45][4], bool& shortSleeveReady) {
     shortSleeveReady=false;
     g_nativeGlovePoseThisDraw=false;
+    g_nativeFreeOffhandPoseThisDraw=false;
     hotpath::scope hotScope(g_hotPathSampler, hotpath::Family::bone_palette);
     if (g_hotPathSampler.active())
         InterlockedExchange64(&g_hotPaletteFrame, static_cast<LONG64>(g_hotPathSampler.frame_token()));
@@ -18578,6 +18580,7 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
         float physicalBlend[2]{g_gloveBlend[0],g_gloveBlend[1]};
         if(nativeCarry)physicalBlend[0]=nextCarry?weaponcarry::Curl(nextCarryVisual.kind):centurionphysical::Curl;
         g_nativeGlovePoseThisDraw=g_nativeGloveRenderer.Pose(changed,physicalBlend,joint?digits:nullptr,joint?held:-1,fingerMask,nativeCarry);
+        g_nativeFreeOffhandPoseThisDraw=nativeFreeOffhand&&g_nativeGlovePoseThisDraw;
         if(joint&&g_nativeGlovePoseThisDraw){
             const unsigned slot=held?1:18; // resolved exact cooked palette: right wrist51 / left9.
             g_knifeHandPoseThisDraw=armbind::FromGpu(reinterpret_cast<const float(*)[4]>(&changed[slot*3]),g_knifeHandWrist);
@@ -21204,9 +21207,11 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
         if (InterlockedCompareExchange(&reportedFaces, 1, 0) == 0)
             Log("GloveIsolation: drawing %u glove/cuff faces from audited noTMD section",gloveisolate::NativeHandFaceCount());
     }
-    const bool nativeCuff=independentRegs&&g_nativeGlovePoseThisDraw&&(NativeGlovesEligible()||NativeKnifeOffHandEligible())&&
+    const bool nativeCuff=freehandpose::NativeCuffDraw(independentRegs!=0,
+        g_nativeGlovePoseThisDraw,NativeGlovesEligible(),NativeKnifeOffHandEligible(),
+        g_nativeFreeOffhandPoseThisDraw,
         t==D3DPT_TRIANGLELIST&&(numVertices==3314||numVertices==2924)&&
-        startIndex==0&&primCount==4830&&nSeg==1&&segStart[0]==0&&segPrims[0]==4830;
+        startIndex==0&&primCount==4830&&nSeg==1&&segStart[0]==0&&segPrims[0]==4830);
     const bool tmdKnifeCuff=independentRegs&&!g_knifeTmdRoute.fallback&&
         g_knifeHandTmdThisDraw&&g_knifeHandPoseThisDraw&&
         t==D3DPT_TRIANGLELIST&&(numVertices==7444||numVertices==2626)&&
