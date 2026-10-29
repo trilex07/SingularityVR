@@ -1,5 +1,12 @@
 # STATUS — session handoff
 
+## 2026-10-29 — SIDE: bounded CPU microstutter capture candidate
+
+- Branch `performance/cpu-microstutter-root-cause` from accepted `origin/main` `a1b506b9`; Steam/PSVR2 untouched.
+- Default-OFF `[Diagnostic] CpuMicrostutterProbe=1` records focused-gameplay frame timing with exact fire/damage/weapon-switch events and a separately labelled Use/Grip attempt. Fixed ring and 100 ms asynchronous CSV drain; no hot-hook file I/O.
+- **L1_PASS**: probe/worker/CSV test, analyzer tests, accepted sampler and DirectInput enumeration regressions. **L2_PASS**: x86 PE32 `/O2` build; final DLL hash and complete details in `docs/performance/cpu-microstutter-root-cause.md`.
+- Actual firing/pickup root cause and any FPS improvement remain **UNKNOWN** until MAIN's event-correlated Steam/ETW capture. This diagnostic candidate is not a gameplay optimization or physical PASS.
+
 ## 2026-10-29 — MAIN: accepted Volk S4 native HD integration
 
 - Dedicated branch integration/volk-s4-hd-physical-reload; PR66 source tools plus native VB/IB integration.
