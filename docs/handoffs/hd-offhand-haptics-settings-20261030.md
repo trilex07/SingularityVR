@@ -78,3 +78,5 @@ MAIN checks `free offhand pose`, `weapon haptics witness`, TMD power receipts,
 `[Haptics Trace] SUBMIT/STOP`, native ammo and actual HD eye receipts. If vibration
 is absent, classify witness → pulse → gates → XR result → physical hardware;
 do not raise amplitude blindly. Verify restored baseline hashes after exit.
+
+Final build source: ba43ab7dd203950b4de6067e1782ae64f91bd23d. DLL: FB1DE1BC421904A17C13F3A3C582104D466D71DA8037268168EADE072C3F40B8. Candidate INI: 45C0EC22A07747D47282EBDD53A70698CD097EE2172E7F9FE677FDAF0CF3B02A. Mirrored deployment PRE/POST PASS. Physical acceptance PENDING. Preferred restored baseline INI: 3E27A4FD56A3DAE7E84EB370814658CBE2844BEB6A05A7E2D6FA4BFA889DE8F9.

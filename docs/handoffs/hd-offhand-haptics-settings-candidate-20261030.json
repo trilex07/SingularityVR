@@ -1,0 +1,15 @@
+{
+  "physical": "PENDING",
+  "candidate_renderer": "FB1DE1BC421904A17C13F3A3C582104D466D71DA8037268168EADE072C3F40B8",
+  "testSettings": "session-only; restore to preferred normal-save baseline",
+  "source": "ba43ab7dd203950b4de6067e1782ae64f91bd23d",
+  "steam_writes": false,
+  "baseline_renderer": "485FE0AF26925C0BD339DC0ACFBC9340742522FB4DC27C385401C4A603CAC537",
+  "preferences": "NISSharpen 1.00; OLED2 retained in baseline",
+  "candidate_ini": "45C0EC22A07747D47282EBDD53A70698CD097EE2172E7F9FE677FDAF0CF3B02A",
+  "baseline_ini": "3E27A4FD56A3DAE7E84EB370814658CBE2844BEB6A05A7E2D6FA4BFA889DE8F9",
+  "asset_count": 15,
+  "reviewedPr70Head": "83e0075570812a867a0afea41b8dc409d96c5e4c",
+  "offline": "PASS: x86 O2 PE32, actual factory ABI, haptics, native gloves, dual-TMD, DISPLAY persistence, mirrored deployment PRE/POST; two optional custom glove tests SKIPPED",
+  "sharedTexturePolicy": "HD source image deduplication preserved; no runtime FPS/VRAM gain claimed"
+}
