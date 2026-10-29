@@ -40,3 +40,9 @@ User requests fixes deployed and retained for morning testing; no launch or time
 4. Quick Volk/Valkyrie reload and TMD check only if a regression appears. Close normally and report failures. Native ammo must transfer once; offline tests do not certify this session.
 
 Deployment identities/backup paths are recorded in the final follow-up candidate JSON after build. `VrSettingsSessionOnly=0`, NIS Sharpen 100%, OLED Cinematic. Candidate remains installed without a timer, as explicitly requested.
+
+## PR71 follow-up optimization
+
+The exact MenuDrawTrace code/test delta from a9a6c635 is included on this branch, with its historical evidence index copied under docs/performance. Normal startup defaults to OFF and reads Diagnostic/MenuDrawTrace with default 0; explicit 1 enables the existing census. The disabled frame gate also avoids clearing the group table or querying menu tokens. The earlier independent microstutter capture subsystem (47c7b6af) is not part of this scoped integration; the copied historical report describes SIDE's branch, not enabled instrumentation here.
+
+Production-header test test-menu-trace-default-off.cpp executes 20,000 disabled calls without a D3D device and checks no token reads/table clears. Trace policy, suppression policy and sparse-flush tests also pass. This establishes the removed diagnostic work, not a current frame-time or FPS gain. Preserve the existing HD fixes, native audio repair and installed INI unchanged. The updated candidate receipt records the new combined binary and exact immediate rollback identity. No launch/automatic restore.

@@ -36621,6 +36621,8 @@ void LoadIniSettings() {
     g_cutsceneNativeCameraFix = GetPrivateProfileIntA("Render", "CutsceneNativeCameraFix", 1, path) ? 1 : 0;
     g_cutsceneWorldScreen=GetPrivateProfileIntA("Render","CutsceneWorldScreen",0,path)?1:0;
     g_menuAssetWitness=GetPrivateProfileIntA("Diagnostic","MenuAssetWitness",0,path)?1:0;
+    InterlockedExchange(&g_menuDrawTrace,
+        GetPrivateProfileIntA("Diagnostic","MenuDrawTrace",0,path)!=0);
     InterlockedExchange(&g_lockerNativeTrace,GetPrivateProfileIntA("Diagnostic","LockerNativeTrace",0,path)!=0);
     Log("ini: LockerNativeTrace=%ld (default OFF; bounded read-only WeaponLocker exec/pickup witness; no writes)",
         Rd(g_lockerNativeTrace));

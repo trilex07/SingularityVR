@@ -1,3 +1,9 @@
+## 2026-10-30 — PR71 scoped CPU optimization in retained HD candidate
+
+- Integrated the MenuDrawTrace default-OFF / INI opt-in delta from `a9a6c6359511379fb16c55e8f7c648adbe70751e`, preserving all HD follow-up code. The independent earlier microstutter capture subsystem from PR71 is not imported or enabled by this scoped integration.
+- Production-header regression: 20,000 disabled Frame+Record calls with a null device preserve the table and issue no menu-state reads; explicit ON advances state and OFF stops it. Existing trace/suppression and sparse-flush tests PASS.
+- Runtime/FPS/PSVR2 benefit remains PENDING. Do not attribute firing/damage/pickup stalls to this diagnostic without new measurements. `[Diagnostic] MenuDrawTrace=1` restores diagnostic opt-in; normal default is 0.
+
 ## 2026-10-30 — Kasimov/Centurion physical-test follow-up
 
 - Previous combined FB1DE1BC test: user reported reload failures, Centurion old-model fallback, poor Kasimov support, missing Kasimov mounted HUD and a crash after firing. General feedback does not establish individual haptics/scope PASS.
