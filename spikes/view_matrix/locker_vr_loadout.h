@@ -8,6 +8,7 @@
 #include "locker_vr_loadout_screen.h"
 #include "native_owned_inventory.h"
 #include "pause_rtt_probe.h"
+#include "test_weapon_grant_policy.h"
 #include <cstring>
 #include <intrin.h>
 
@@ -19,6 +20,8 @@ extern volatile LONG g_weaponWheelOpen;
 extern volatile LONG g_panelOpen;
 extern volatile LONG g_inCinematic;
 extern volatile LONG g_gamePaused;
+extern volatile LONG g_vrUiMenu;
+extern volatile LONG g_testGrantKasimovCenturion;
 extern uintptr_t g_textLo, g_textHi;
 void Log(_Printf_format_string_ const char* fmt, ...);
 
@@ -370,6 +373,25 @@ inline bool OnPointerSelect(float u, float v) {
 }
 
 inline void PollEngine() {
+    // This runs on the existing native input/engine thread, never XR/render.
+    // Opt-in only after MAIN has backed up saves; native pickup retains ammo
+    // authority. Persistence is confirmed by the game's next checkpoint/load.
+    static testweapongrant::Once testGrant;
+    if(!testGrant.done && testGrant.attempts<3 && InterlockedCompareExchange(&g_testGrantKasimovCenturion,0,0)){
+        const bool safe=!PreviewOnly() && InterlockedCompareExchange(&g_keepAcquiredWeapons,0,0) &&
+            !InterlockedCompareExchange(&g_inCinematic,0,0) && !InterlockedCompareExchange(&g_gamePaused,0,0) &&
+            !InterlockedCompareExchange(&g_vrUiMenu,0,0) && !InterlockedCompareExchange(&g_vrUiWeaponLocker,0,0) &&
+            !InterlockedCompareExchange(&g_panelOpen,0,0) && !InterlockedCompareExchange(&g_weaponWheelOpen,0,0) &&
+            NativeOwnedInventory::SnapshotNow();
+        const uint32_t before=safe?NativeOwnedInventory::Mask():0;
+        const auto missing=testGrant.Poll(true,safe,before,GetTickCount64(),safe?NativeOwnedInventory::SnapshotPawn():0);
+        if(missing){
+            LockerVrLoadoutAcquire::ApplyPendingMask(missing,before);
+            const bool refreshed=NativeOwnedInventory::SnapshotNow();
+            Log("test weapon grant: requested=0x%X before=0x%X after=0x%X attempt=%u native-pickup-only save-checkpoint=PENDING",
+                missing,before,refreshed?NativeOwnedInventory::Mask():0,testGrant.attempts);
+        }
+    }
     if (!Enabled()) return;
     TryInstallHooks();
     PublishFromEngine();

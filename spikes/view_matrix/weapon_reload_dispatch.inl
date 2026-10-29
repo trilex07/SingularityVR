@@ -20,6 +20,9 @@ static bool NextObject(uintptr_t object,weaponreload::Kind kind){
 static void ReleaseNextReloadGPU(){
     g_volkHdRenderer.ReleaseGPU();
     g_valkyrieHdRenderer.ReleaseGPU();
+    g_kasimovHdRenderer.ReleaseGPU();
+    g_centurionHdRenderer.ReleaseGPU();
+    g_centurionHdIndices.Reset();
     for(unsigned i=0;i<3;++i){
         g_nextClipRenderer[i].ReleaseGPU();hipknife::Release(g_nextIB[i]);
         g_nextIBVerified[i]=false;g_nextIBAttempts[i]=0;InterlockedExchange(&g_nextFault[i],0);
@@ -28,6 +31,17 @@ static void ReleaseNextReloadGPU(){
 }
 static void InitNextReload(){
     ReleaseNextReloadGPU();
+    if(g_centurionHdNativeModel){
+        char ini[MAX_PATH]{};std::vector<unsigned char> bytes;
+        bool loaded=false;
+        if(IniPath(ini)){
+            std::string directory(ini);const auto slash=directory.find_last_of("\\/");
+            if(slash!=std::string::npos){directory.resize(slash);
+                loaded=hipknife::Read(directory+"\\vr-assets\\reload\\centurion\\centurion_hd.svct",bytes,2*1024*1024)&&
+                    g_centurionHdRenderer.asset.Load(bytes.data(),bytes.size());}
+        }
+        Log("centurion-hd: CPU cache=%s original=5799/6767 final=8051/7927 native material/palette; no runtime proof",loaded?"READY":"INVALID (original retained)");
+    }
     for(unsigned i=0;i<3;++i){
         g_nextReady[i]=false;g_nextAnimation[i].ready=false;
         if(!g_nextReload[i])continue;
@@ -41,6 +55,11 @@ static void InitNextReload(){
             const bool loaded=hipknife::Read(directory+"valkyrie_hd.svvk",bytes,2*1024*1024)&&
                 g_valkyrieHdRenderer.asset.Load(bytes.data(),bytes.size());
             Log("valkyrie-hd: CPU cache=%s original=11387/12834 final=13965/14116 native palette/material; no runtime proof",loaded?"READY":"INVALID (original retained)");
+        }
+        if(i==2&&g_kasimovHdNativeModel){
+            const bool loaded=hipknife::Read(directory+"kasimov_hd.svks",bytes,2*1024*1024)&&
+                g_kasimovHdRenderer.asset.Load(bytes.data(),bytes.size());
+            Log("kasimov-hd: CPU cache=%s original=11389/12942 final=12637/13722 native weighted palette/material; lens original; no runtime proof",loaded?"READY":"INVALID (original retained)");
         }
         if(i==1&&g_volkHdNativeModel){
             const bool loaded=hipknife::Read(directory+"volk_hd.svvh",bytes,2*1024*1024)&&
@@ -458,6 +477,10 @@ static int PrepareNextReload(IDirect3DDevice9* dev,INT base,UINT min,UINT vertic
     if(g_valkyrieHdNativeModel && kind==weaponreload::Kind::Valkyrie &&
        !g_valkyrieHdRenderer.asset.bytes.empty() && g_nextRefillOnly &&
        !valkyriemechanics::Seat(g_nextAnimation[index],g_nextTiming[index],visual.phase,
+            visual.insertedMs,now,parentPalette,regs,changed))return 0;
+    if(g_kasimovHdNativeModel && kind==weaponreload::Kind::Kasimov &&
+       !g_kasimovHdRenderer.asset.bytes.empty() && g_nextRefillOnly &&
+       !kasimovmechanics::Seat(g_nextAnimation[index],g_nextTiming[index],visual.phase,
             visual.insertedMs,now,parentPalette,regs,changed))return 0;
     if(g_nextNativeMagazine){
         armbind::Mat world;

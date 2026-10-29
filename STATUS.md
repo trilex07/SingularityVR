@@ -1,5 +1,22 @@
 # STATUS — session handoff
 
+## 2026-10-29 — MAIN: combined Kasimov / Centurion / shared-source integration
+
+- User requested one combined candidate, superseding sequential Kasimov-only acceptance.
+- Centurion native 8051/7927 HD path and existing tracked-cylinder replay integrated; Kasimov weighted skin/lens and accepted Valkyrie preserved.
+- All four converters resolve SIDE lossless shared-image packages; native caches/DDS byte-identical. Source packaging saves 48.1%; no FPS/VRAM/loading claim.
+- Explicit default-OFF test grant for requested Kasimov/Centurion uses audited native pickup only; profile backed up, not edited. Native acquisition/checkpoint persistence PENDING.
+- L1 actual asset/geometry and D3D9/D3D9Ex pixel/state fixtures PASS. Optimized combined build and private guarded staging recorded in the handoff JSON. Steam/HMD/performance PENDING; no deployment yet.
+- Details: docs/handoffs/kasimov-centurion-shared-runtime-20261029.md.
+
+## 2026-10-29 — MAIN: Kasimov HD READY_FOR_PHYSICAL_ACCEPTANCE
+
+- Source7f795270, DLL B8E3A0FB; actual geometry, inherited-wire animation, D3D9/D3D9Ex, accepted weapons/hands/TMD/OLED/NIS/Locker regressions PASS.
+- Native143 dual-weighted points retained; separate168-face lens unchanged. Existing manual reload/native ammo ownership preserved.
+- Twelve-file private candidate ready; Steam unchanged. Runtime/HMD/performance PENDING. Centurion follows after this gate.
+- Evidence: docs/handoffs/kasimov-native-runtime-candidate-20261029.json.
+
+
 ## 2026-10-29 — MAIN: Valkyrie HD physical integration PASS
 
 - Source c9d67044; DLL F043D4F5; draft PR68. Native HD submitted13965/14116 in both eyes after correcting the observed raw packed declaration.

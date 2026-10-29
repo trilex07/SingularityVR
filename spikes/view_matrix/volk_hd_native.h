@@ -17,6 +17,16 @@ struct ValkyrieProfile {
     static constexpr bool NativePacked=true;
     static const char* Magic(){return "SVVK";}
 };
+struct KasimovProfile {
+    static constexpr unsigned SourceVertices=11389,SourceTriangles=12942,Vertices=12637,Triangles=13722,Slots=6,SourceVbHash=2571367080u,SourceIbHash=855862860u;
+    static constexpr bool NativePacked=true;
+    static const char* Magic(){return "SVKS";}
+};
+struct CenturionProfile {
+    static constexpr unsigned SourceVertices=5799,SourceTriangles=6767,Vertices=8051,Triangles=7927,Slots=5,SourceVbHash=483118394u,SourceIbHash=147026316u;
+    static constexpr bool NativePacked=true;
+    static const char* Magic(){return "SVCT";}
+};
 template<class Profile> struct NativeAsset {
     static constexpr unsigned SourceVertices=Profile::SourceVertices,SourceTriangles=Profile::SourceTriangles,Vertices=Profile::Vertices,Triangles=Profile::Triangles;
     std::vector<unsigned char> bytes;
@@ -140,5 +150,48 @@ constexpr unsigned SourceVertices=Profile::SourceVertices,SourceTriangles=Profil
 using Asset=volkhd::NativeAsset<Profile>;
 #ifdef _D3D9_H_
 using Renderer=volkhd::NativeRenderer<Profile>;
+#endif
+}
+
+namespace kasimovhd {
+using Profile=volkhd::KasimovProfile;
+constexpr unsigned SourceVertices=Profile::SourceVertices,SourceTriangles=Profile::SourceTriangles,Vertices=Profile::Vertices,Triangles=Profile::Triangles;
+using Asset=volkhd::NativeAsset<Profile>;
+#ifdef _D3D9_H_
+using Renderer=volkhd::NativeRenderer<Profile>;
+#endif
+}
+
+namespace centurionhd {
+using Profile=volkhd::CenturionProfile;
+constexpr unsigned SourceVertices=Profile::SourceVertices,SourceTriangles=Profile::SourceTriangles,Vertices=Profile::Vertices,Triangles=Profile::Triangles;
+using Asset=volkhd::NativeAsset<Profile>;
+#ifdef _D3D9_H_
+using Renderer=volkhd::NativeRenderer<Profile>;
+// Independent idle-body witness: the existing reload witness starts only once
+// a cylinder animation is active. Do not require a reload before HD can render.
+struct IndexWitness {
+    IDirect3DIndexBuffer9* buffer=nullptr;
+    bool valid=false;unsigned attempts=0;
+    ~IndexWitness(){Reset();}
+    void Reset(){if(buffer)buffer->Release();buffer=nullptr;valid=false;attempts=0;}
+    bool Observe(IDirect3DDevice9* dev){
+        IDirect3DIndexBuffer9* current=nullptr;
+        if(FAILED(dev->GetIndices(&current))||!current)return false;
+        if(current!=buffer){
+            if(buffer)buffer->Release();buffer=current;current=nullptr;valid=false;
+            if(attempts++<4){
+                D3DINDEXBUFFER_DESC desc{};void* data=nullptr;
+                constexpr UINT bytes=SourceTriangles*6;
+                if(SUCCEEDED(buffer->GetDesc(&desc))&&desc.Format==D3DFMT_INDEX16&&desc.Size==bytes&&
+                   SUCCEEDED(buffer->Lock(0,bytes,&data,D3DLOCK_READONLY))){
+                    const bool match=data&&volkhd::Hash((const unsigned char*)data,bytes)==Profile::SourceIbHash;
+                    valid=SUCCEEDED(buffer->Unlock())&&match;
+                }
+            }
+        }
+        if(current)current->Release();return valid;
+    }
+};
 #endif
 }

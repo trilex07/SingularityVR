@@ -194,9 +194,13 @@ class E2eRegression(unittest.TestCase):
         self.assertGreater(110, 2 * 42)
         self.assertGreater(105, 2 * 42)
 
-    def test_panel_anchor_moved_right(self):
+    def test_panel_anchor_uses_accepted_adjacent_projection(self):
         layout = LAYOUT_H.read_text(encoding="utf-8")
-        self.assertIn("kAnchorU=0.93f", layout.replace(" ", ""))
+        # The accepted visibility fix replaced the old absolute 0.93 anchor.
+        # Actual stereo/hit geometry is exercised by the C++ layout fixture.
+        self.assertIn("ProjectAdjacentAnchor(", layout)
+        self.assertIn("kNativeMenuGapPx", layout)
+        self.assertIn("else return false", layout)
         body = LOADOUT_H.read_text(encoding="utf-8")
         self.assertNotIn("kCu = 0.84f", body.replace(" ", ""))
         self.assertNotIn("kCu=", body.split("namespace Layout", 1)[1].split("} // namespace Layout", 1)[0])

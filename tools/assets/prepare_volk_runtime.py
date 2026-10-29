@@ -33,7 +33,16 @@ def verify(package):
     return manifest
 
 
-def read_glb(path):
+def read_glb(path, shared_root=None):
+    if shared_root is not None:
+        from shared_hd_gltf import load_shared
+        doc, raw = load_shared(path, shared_root)
+    else:
+        doc, raw = _read_glb_document(path)
+    return _accessors(doc, raw)
+
+
+def _read_glb_document(path):
     data = path.read_bytes()
     if struct.unpack_from('<III', data) != (0x46546c67, 2, len(data)):
         raise ValueError('GLB header')
@@ -46,6 +55,10 @@ def read_glb(path):
     if kind != 0x004e4942 or length != len(raw):
         raise ValueError('GLB BIN')
 
+    return doc, raw
+
+
+def _accessors(doc, raw):
     def accessor(i):
         a = doc['accessors'][i]
         v = doc['bufferViews'][a['bufferView']]
@@ -75,7 +88,7 @@ def unused_patch(wedges, faces, size=4096, tile=64):
     raise ValueError('no unoccupied native UV island for constant detail material')
 
 
-def prepare(package, cooked_path, output):
+def prepare(package, cooked_path, output, shared_root=None):
     verified = verify(package)
     psk = read_psk(package/'source/ch_inview_shotgun_mesh.psk')
     names, parents, _, bind, points, weights, wedges, faces = psk
@@ -110,7 +123,7 @@ def prepare(package, cooked_path, output):
         raise ValueError('original IB changed')
     x,y,tile=unused_patch(wedges,faces)
     detail_uv=((x+tile/2)/4096,(y+tile/2)/4096)
-    doc,accessor=read_glb(package/'volk_s4_hd_animated.glb')
+    doc,accessor=read_glb(package/'volk_s4_hd_animated.glb', shared_root)
     mapping={'weapon_body_machined_fasteners':'cog_shotgun',
              'moving_reload_part_machined_fasteners':'Slide',
              'magazine_machined_fasteners':'clip',
@@ -190,7 +203,8 @@ def prepare(package, cooked_path, output):
 if __name__=='__main__':
     p=argparse.ArgumentParser(description=__doc__)
     for n in ('package','cooked','output'):p.add_argument('--'+n,type=Path,required=True)
+    p.add_argument('--shared-root',type=Path)
     a=p.parse_args()
     if not a.output.resolve().is_relative_to((ROOT/'build/volk-hd').resolve()):
         p.error('output must remain in the private build/volk-hd lab')
-    print(json.dumps(prepare(a.package,a.cooked,a.output),indent=2))
+    print(json.dumps(prepare(a.package,a.cooked,a.output,a.shared_root),indent=2))

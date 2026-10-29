@@ -1,0 +1,39 @@
+# HD weapons and VR pipeline: offline performance handoff
+
+Branch: `performance/hd-weapons-vr-optimization`. Private candidate: `C:/Users/Trilex/vr-mods/hd_weapon_performance/shared_texture_candidate/`. Audit captured 2026-10-29. This is an offline asset and source audit; it is not a 90 FPS, SteamVR, GPU-time, or PSVR2 result.
+
+## Completed optimization: shared PBR images across weapon/detachable pairs
+
+**Problem.** Each of the four detachable magazine/cylinder GLBs embeds byte-identical albedo, normal, and packed material images already embedded in its full animated weapon GLB. The source pairs carry six embedded images for three unique payloads. This is duplicated disk and file-read work. It does not prove duplicate GPU residency in the current runtime.
+
+**Evidence.** `tools/perf/audit_hd_weapon_packages.py` inventories the private packages and SHA-256 matches each pair's three embedded images. Full source pair sizes were Volk S4 78,658,112 bytes; Valkyrie AR9 31,116,588; Kasimov SNV-E99 26,717,708; Centurion 81,907,196. Image payloads dominate these GLBs. The source animated GLBs have 7,927–14,124 indexed triangles (Centurion to Valkyrie); their detachable assets have 770–1,584. No unused material slots were found. The mechanical-only GLBs are below 0.4 MB each and should stay in the source handoff, not a future runtime payload.
+
+**Fix.** `tools/perf/build_shared_texture_gltf.py` creates private lossless glTF sidecars: one shared image file per unique image, one geometry/animation binary per GLB, and unchanged source GLBs. It preserves source node, material, mesh, UV, accessor, animation and skin data. This is a packaging candidate for MAIN's eventual asset loader. The current D3D9 runtime source does not load these weapon GLBs; no runtime asset or DLL was modified.
+
+**Before/after benchmark.** The four source animated/detachable pairs total **218,399,604 bytes**. The shared-texture sidecars total **113,253,954 bytes**, saving **105,145,650 bytes (48.1%)**. By pair: Volk 38,449,331; Valkyrie 14,550,434; Kasimov 11,820,174; Centurion 40,325,711 bytes saved. This is a deterministic file-size result, not frame-time gain. `tools/perf/verify_shared_texture_gltf.py` verified every non-image buffer view and every image payload byte-for-byte, plus all structural arrays. Blender 5.2.2 LTS independently imported all eight original and candidate files with equal mesh, triangle, UV-bearing mesh, action, and image counts: `OFFLINE_BLENDER_PASS`. Private evidence: `baseline.json`, `shared_texture_candidate/shared_texture_report.json`, `lossless_validation.json`, `blender_validation.json`.
+
+`tools/perf/blender_benchmark_shared_texture.py` also ran five alternating warm-cache Blender imports per file. Median source/candidate imports ranged from 13–266 ms and changed in both directions; for example, Volk animated was 88.48/85.89 ms and Kasimov animated was 264.06/266.04 ms. This does **not** establish a consistent import-time gain. The full per-file samples are private in `blender_import_benchmark.json`; no game loading time was measured.
+
+**Risk/status.** `PASS` for offline lossless conversion and Blender import. `MAIN REVIEW` before native use: external image URIs require a loader that resolves sibling files and deliberately shares one decoded/uploaded GPU resource by identity. The existing runtime does neither for these GLBs. No FPS or VRAM saving is claimed.
+
+## Asset budgets and remaining opportunities
+
+The embedded sets are three 4096×4096 images each for Volk and Centurion, and three 4096×2048 images each for Valkyrie and Kasimov. If all four *unique* sets were uploaded as RGBA8 with full mip chains, the calculated allocation would be about **768 MiB**. If each detachable were independently uploaded with duplicate textures, the calculated upper scenario is **1,536 MiB**. Neither number is measured VRAM; current runtime GLB residency is unproven and may be zero. PNG file size is not GPU allocation size.
+
+For a future native D3D9 material route, DXT1/BC1 albedo and DXT5/BC3 material data have defined D3D9 equivalents. BC5 normal maps require an ATI2 capability check; BC7 has no D3D9 equivalent. [Microsoft Direct3D block compression formats](https://learn.microsoft.com/en-us/windows/desktop/direct3d11/texture-block-compression-in-direct3d-11), [D3D9 D3DFORMAT](https://learn.microsoft.com/en-us/windows/win32/direct3d9/d3dformat). A hypothetical one-BC1/two-BC3 full-mip set across these four unique atlases would be about 160 MiB, but lossy quality, tangent orientation, alpha use, mip filtering, and loader support need visual and device validation before changing the assets. No 2K downsample or BC replacement was shipped because close VR quality has not been compared.
+
+Independent moving parts create 2–11 mesh primitives per displayed weapon. Combining cylinder, magazine, hammer, trigger, slide or release with the body would break physical reload and source animation contracts. No geometry or draw merging was attempted. There is no evidence yet that these small primitive counts are a frame bottleneck. Kasimov has many animated source nodes; removing them would change original rig semantics.
+
+## Rendering pipeline triage for MAIN
+
+The source path in `spikes/view_matrix/d3d9.cpp` already distinguishes D3D9Ex shared-surface `StretchRect` plus GPU fence (around lines 6142–6200) from the CPU `GetRenderTargetData`/LockRect/memcpy/upload fallback (around 6222–6270). It then copies to OpenXR swapchain images via D3D11 (around 13713–13761). The code includes timing scopes for copy, fence, `xrWaitFrame` and XR submission (around 5260–5290 and 34650–34675); `xrWaitFrame` time is compositor pacing, not work to optimize away. The current source has an opt-in zero-copy path and an immediate CPU fallback, plus explicit stereo pose-stamping constraints. The in-source diegetic weapon HUD comment at line 32322 explicitly says its runtime representation is atlas PNG quads with no GLB/model loading; a repository search found no HD weapon GLB path consumed by this renderer. No safe source change was justified by this offline audit.
+
+At the requested 5264×2684 SBS target, a single RGBA8 frame is **56,514,304 bytes (53.90 MiB)**; one such transfer each 90 Hz is **5.09 GB/s** before synchronization or additional copies. This is a bandwidth arithmetic estimate, not observed throughput or GPU time. Prior repository profiling notes contain older scene/resolution measurements and must not be extrapolated into a current 90 FPS claim. MAIN should first capture a same-build representative frame window with separate CPU game/mod time, GPU time, copy mode, `xrWaitFrame`, swapchain waits, actual draw count and resource identity. Only then should stereo duplication, copy route, resource caching or D3D9 state changes be considered. Existing accepted behavior and visual correctness take priority over a speculative frame-time change.
+
+## Prioritized integration gates
+
+1. **MAIN REVIEW:** Decide whether a future HD weapon loader should consume the lossless shared-texture glTF sidecars and cache image uploads across the weapon/detachable pair. Validate URI resolution, reset/lifetime behavior, the original bind/socket contract and actual VRAM counters. No runtime asset was replaced here.
+2. **MAIN MEASUREMENT:** Profile the actual 5K SBS scene on the accepted build before altering D3D9/D3D11/OpenXR work. Separate CPU, GPU and compositor waits; preserve stereo and controller pose timing.
+3. **VISUAL GATE:** Only if VRAM is measured as limiting, compare 4K and 2K or BC-compressed candidate maps at equal lighting in close VR view, including normals, grip text, chamber markings and mip transitions. Keep source originals and verify D3D9 format support.
+
+There is no measured runtime FPS saved in this SIDE task. No Steam, deployment, DLL, INI, game asset, or MAIN worktree changes occurred.
