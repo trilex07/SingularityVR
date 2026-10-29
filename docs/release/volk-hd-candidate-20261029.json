@@ -1,0 +1,31 @@
+{
+  "schema": "volk-hd-integration-candidate-v1",
+  "branch": "integration/volk-s4-hd-physical-reload",
+  "source_commit": "7fbbe97ae241442888c2797126e18e2933b91fab",
+  "dll_sha256": "485FE0AF26925C0BD339DC0ACFBC9340742522FB4DC27C385401C4A603CAC537",
+  "architecture": "x86 PE32",
+  "optimization": "/O2",
+  "private_asset_hashes": {
+    "AR_shotgun_d.dds": "98cac7ab6f68ea2beef6f160d138282bf32778f5b0ff0375cef8775dcf8cfa24",
+    "AR_shotgun_n.dds": "925d1753a984aec8ed06b65cf881abffd64333b8b712a29057a34203716ad7b7",
+    "volk_hd.svvh": "1be0338d0925fd9102fa6a0eb190cd5bac5946f058da9c85e8939e94c5025ebf"
+  },
+  "offline": {
+    "asset_source_geometry": "PASS: 1892 faces, six source OBJs, max 4.92105468e-6 UU",
+    "mechanics": "PASS: 3002 samples, native root/static parts retained",
+    "d3d9_d3d9ex": "PASS: 5401/5401 pixels per API, buffers/state/reset/fallback",
+    "critical_gameplay_oled_locker": "PASS",
+    "accepted_profile_guard": "PASS: 38 cases"
+  },
+  "steam": {
+    "status": "INSTALLED_HASH_VERIFIED_NOT_LAUNCHED",
+    "asset_files": 6,
+    "baseline_backup": "deployment/install-backups/20261029-224430",
+    "asset_backup": "build/next-weapon-reload/volk-hd-20261029/asset-backup",
+    "retained": true
+  },
+  "physical_psvr2": "PENDING",
+  "runtime_receipts": "NOT_RUN",
+  "frame_timing_comparison": "NOT_RUN",
+  "material_limit": "Native UE3 shader; no glTF metallic/roughness/height interpretation; original shadow geometry retained"
+}

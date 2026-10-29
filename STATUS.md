@@ -4,7 +4,7 @@
 
 - Dedicated branch integration/volk-s4-hd-physical-reload; PR66 source tools plus native VB/IB integration.
 - Existing reload FSM, wrist/palm and ammo acknowledgment retained; source-endpoint normalized seat/Slide.
-- Actual asset, x86 and D3D9/D3D9Ex pixel/state tests PASS; Steam/HMD/performance PENDING.
+- Actual asset, x86 and D3D9/D3D9Ex pixel/state tests PASS; Steam installed/hash-verified on user request. NOT launched; HMD/performance PENDING.
 - Details: docs/handoffs/volk-s4-native-runtime-integration-20261029.md.
 
 
@@ -5352,4 +5352,3 @@ Toggle with **F6**.
   get cycled past unseen.
 - **Doc errors become code bugs.** `ENGINE_NOTES` recorded the backbuffer as `X8R8G8B8`; it is
   `A8R8G8B8`, and that mistake propagated straight into a `D3DERR_INVALIDCALL`.
-

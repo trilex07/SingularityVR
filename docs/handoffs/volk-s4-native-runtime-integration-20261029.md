@@ -90,3 +90,24 @@ counts, fire again, cancel one reload. Compare usual frame times to accepted
 baseline and check TMD/other weapon briefly. Stop for stereo/depth/tracking failure
 or repeatable performance regression; restore and hash-check. User requested
 Steam installation at the end of preparation; launch remains user-controlled.
+
+## Final installed candidate
+
+- Source `7fbbe97a`, clean x86 PE32 /O2; DLL SHA256
+  `485FE0AF26925C0BD339DC0ACFBC9340742522FB4DC27C385401C4A603CAC537`.
+- Exact cache/DDS identities and evidence levels: `docs/release/volk-hd-candidate-20261029.json`.
+- MAIN installed on explicit user request at 2026-10-29 22:44; retained, NOT launched.
+  Full accepted-profile Post PASS, six asset SHA matches, original bridge and
+  texture INI unchanged. Runtime backup `deployment/install-backups/20261029-224430`;
+  six-file backup `build/next-weapon-reload/volk-hd-20261029/asset-backup`.
+- Existing reload assets were absent and are restored from verified original
+  backup; no other weapon assets were copied. Only INI change: Render/VolkHdNativeModel=1.
+- Initial post-install asset-only verifier expected the pre-install DLL and
+  refused (without writes) after the runtime install succeeded. The complete
+  accepted-profile Post check and six explicit hashes subsequently passed.
+  Asset-only ValidateLive belongs BEFORE runtime installation; preserve original
+  manifest hash for later rollback. No weakening of either production guard.
+- Private `build/volk-hd/restore-session.ps1` performs production DLL/INI rollback
+  FIRST, then six-file rollback and exact baseline hash confirmation. Not run
+  because no gameplay failure occurred and user requested candidate installation.
+- Physical PSVR2/material/depth/muzzle/reload/frame-time acceptance remains PENDING.

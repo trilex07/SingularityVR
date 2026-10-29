@@ -25,4 +25,3 @@ int main(int argc,char** argv){
     d.kind=weaponreload::Kind::Valkyrie;float a[60]{},out[60]{};assert(!volkmechanics::Palette(d,weaponreload::Phase::NeedAmmo,1,0,1,a,15,out));
     printf("Volk mechanics: endpoint matrix max-abs error %.9g; 3002 timeline/controller samples PASS\n",maximum);
 }
-
