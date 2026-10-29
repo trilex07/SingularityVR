@@ -207,6 +207,7 @@ static XrTime g_hotPredictedDisplayTime = 0;
 #include "startup_crash_capture.h"
 #endif
 #include "async_log.h"
+#include "microstutter_probe.h"
 #include "vr_session_recorder.h"
 #include "nis_upscale.h"   // research/nvidia-vr-upscaling: pure mode/resolution math (no D3D)
 #include <intrin.h>       // _ReturnAddress, for the XInput caller census
@@ -2783,6 +2784,7 @@ static void RefreshArmedState() {
                 const LONG wl = (LONG)w;
                 if (w && wl != Rd(g_weaponObj) && Rd(g_weaponObj) != 0) {
                     InterlockedExchange(&g_weaponSwapped, 1);
+                    microstutter::Mark(microstutter::WeaponSwitch);
                     // A holster belongs to one equipped weapon. The next XR
                     // sample will also reset the pure state object by identity.
                     InterlockedExchange(&g_weaponHolstered, 0);
@@ -11340,6 +11342,13 @@ void SyncXRInput(XrTime displayTime) {
     const bool rawSupportGrip = getGrip(OffHand());
     bool sampledButtons[kPadButtonCount]{};
     for(int i=0;i<kPadButtonCount;++i)sampledButtons[i]=getBool(g_padButtons[i].action);
+    // The raw Use/grip edge is an interaction ATTEMPT, not a pickup receipt.
+    // It is sampled before reload/support routing can consume the same grip.
+    if(InterlockedCompareExchange(&microstutter::enabled,0,0)==1){
+        static bool previousUse=false;
+        if(sampledButtons[2]&&!previousUse)microstutter::Mark(microstutter::InteractionAttempt);
+        previousUse=sampledButtons[2];
+    }
     InterlockedExchange(&g_rawImpulsePressed,
         g_impulseBtnIdx>=0&&g_impulseBtnIdx<kPadButtonCount&&sampledButtons[g_impulseBtnIdx]?1:0);
     if(Rd(g_dualHandPoseProbe)||g_tmdBeamAgeProbe)InterlockedExchange(&g_rawAgePressed,
@@ -27419,7 +27428,7 @@ void __fastcall Hook_ProcessEvent(void* self, void* edx, void* Stack, void* Resu
     const bool cineWatch = InterlockedCompareExchange(&g_cutsceneAuto, 0, 0) != 0 &&
                            FnIdx(kFnSetCinematic) >= 0;
     int32_t fnIdx = -1;
-    if ((censusOn || routeTwo || cineWatch || Rd(g_cinematicSceneProbe) || Rd(g_cinematicEventBridge) || nativefx::Probe() || g_centurionReloadProbe || Rd(g_keepAcquiredWeapons) || singularity_gore::enabled) && Stack) {
+    if ((censusOn || routeTwo || cineWatch || Rd(g_cinematicSceneProbe) || Rd(g_cinematicEventBridge) || nativefx::Probe() || g_centurionReloadProbe || Rd(g_keepAcquiredWeapons) || singularity_gore::enabled || InterlockedCompareExchange(&microstutter::enabled,0,0)==1) && Stack) {
         fnIdx = ScriptFuncNameIdx(Stack);
         InterlockedIncrement(&g_peSeen);
         if (fnIdx < 0) InterlockedIncrement(&g_peUnnamed);
@@ -27912,12 +27921,20 @@ void __fastcall Hook_ProcessEvent(void* self, void* edx, void* Stack, void* Resu
         }
     }
 
+    const bool microProbe = InterlockedCompareExchange(&microstutter::enabled,0,0)==1;
+    const bool microFire = microProbe && fnIdx>=0 && FnIdx(kFnFireFirst)>=0 && fnIdx==FnIdx(kFnFireFirst) &&
+        reinterpret_cast<uintptr_t>(self)==static_cast<uintptr_t>(static_cast<uint32_t>(Rd(g_weaponObj)));
+    const bool microDamage = microProbe && fnIdx>=0 && FnIdx(kFnGoreDamage)>=0 && fnIdx==FnIdx(kFnGoreDamage);
+    const std::uint64_t microNativeStart = (microFire||microDamage) ? microstutter::Qpc() : 0;
+    if(microFire) microstutter::Mark(microstutter::Fire);
+    if(microDamage) microstutter::Mark(microstutter::Damage);
     {
         singularity_gore::DamageScope gore((uintptr_t)self,
             fnIdx>=0&&FnIdx(kFnGoreDamage)>=0&&fnIdx==FnIdx(kFnGoreDamage));
         if (!NativeOwnedInventory::InvokeRetained(self,edx,Stack,Result,fnIdx,(int)Rd(g_nodeOffset),g_origProcessEvent))
             g_origProcessEvent(self, edx, Stack, Result);
     }
+    if(microNativeStart) microstutter::NativeDuration(microFire?microstutter::Fire:microstutter::Damage,microNativeStart);
     if(fnIdx>=0&&fnIdx==FnIdx(kFnPlayerTick)&&
        (uintptr_t)self==(uintptr_t)(uint32_t)Rd(g_ctlForXi))NativeScopeTick();
 
@@ -32788,6 +32805,9 @@ static void StartupReadinessFrame(IDirect3DDevice9* dev){
 }
 
 HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const RECT* b, HWND c, const RGNDATA* d) {
+    microstutter::Begin(InGameplay() && g_xrRunning &&
+        g_xrSessionState==XR_SESSION_STATE_FOCUSED && !Rd(g_gamePaused) &&
+        g_sceneMode.Current()==vrscene::Mode::GameplayStereo);
     shadowfix::Poll(g_logPath);
     worldshadowfix::Poll(g_logPath);
     projectorfix::Poll();
@@ -36050,6 +36070,7 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
     static double realPresentSum=0, realPresentMax=0;
     static unsigned realPresentSamples=0;
     const double realPresentMs = MsSince(realPresentBegin);
+    const std::uint32_t microPresentUs = static_cast<std::uint32_t>(realPresentMs*1000.0);
     realPresentSum+=realPresentMs; if(realPresentMs>realPresentMax)realPresentMax=realPresentMs;
     if(++realPresentSamples==600) {
         Log("PerformanceBuild1 real D3D9 Present: frames=600 avg_ms=%.4f max_ms=%.4f",realPresentSum/600,realPresentMax);
@@ -36081,6 +36102,7 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
     else if(g_hotPathSampler.active() && g_hotPathSampler.completed_frames()>0 &&
             g_hotPathSampler.completed_frames()%240==0) ReportHotPathSampler(false);
     FinishCinemaExitHotPath();
+    microstutter::Finish(microPresentUs);
     return presentResult;
 }
 
@@ -36417,6 +36439,8 @@ void LoadIniSettings() {
     g_cutsceneNativeCameraFix = GetPrivateProfileIntA("Render", "CutsceneNativeCameraFix", 1, path) ? 1 : 0;
     g_cutsceneWorldScreen=GetPrivateProfileIntA("Render","CutsceneWorldScreen",0,path)?1:0;
     g_menuAssetWitness=GetPrivateProfileIntA("Diagnostic","MenuAssetWitness",0,path)?1:0;
+    InterlockedExchange(&g_menuDrawTrace,
+        GetPrivateProfileIntA("Diagnostic","MenuDrawTrace",0,path)!=0);
     InterlockedExchange(&g_lockerNativeTrace,GetPrivateProfileIntA("Diagnostic","LockerNativeTrace",0,path)!=0);
     Log("ini: LockerNativeTrace=%ld (default OFF; bounded read-only WeaponLocker exec/pickup witness; no writes)",
         Rd(g_lockerNativeTrace));
@@ -37009,6 +37033,9 @@ void LoadIniSettings() {
                         GetPrivateProfileIntA("Render", "CutsceneCinemaMask", 1, path) ? 1 : 0);
     g_armPaletteTraceFrames=GetPrivateProfileIntA("Diagnostic","ArmPaletteTraceFrames",0,path);    if(g_armPaletteTraceFrames<0)g_armPaletteTraceFrames=0;
     g_frameSpikeReport=GetPrivateProfileIntA("Diagnostic","FrameSpikeReport",0,path)?1:0;
+    if(GetPrivateProfileIntA("Diagnostic","CpuMicrostutterProbe",0,path)!=0)
+        Log("cpu microstutter probe: %s (max 9000 frames; CSV in LocalAppData/SingularityVR)",
+            microstutter::Start(g_logPath)?"armed":"unavailable");
     if(g_armPaletteTraceFrames>64)g_armPaletteTraceFrames=64;
     Log("arm palette trace=%ld frame(s), exact TMD sections only; 0=off (default)",Rd(g_armPaletteTraceFrames));
     g_cameraTranslationEvidence=GetPrivateProfileIntA("Diagnostic","CameraTranslationEvidence",0,path)?1:0;

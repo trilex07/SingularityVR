@@ -1,5 +1,19 @@
 # STATUS — session handoff
 
+## 2026-10-30 — SIDE: historical CPU stall audit and diagnostic overhead removal
+
+- Branch `performance/cpu-microstutter-root-cause`; Steam/PSVR2 untouched. Historical measurements, hashes, dated builds and current blocking paths are indexed in `docs/performance/historical-cpu-stall-audit-20261030.md`.
+- **CONFIRMED/FIXED at L2:** `MenuDrawTrace` was default ON; transition windows performed at least 16 synchronous D3D9 state queries per sampled draw. It is now default OFF, with explicit `[Diagnostic] MenuDrawTrace=1` to reactivate. No gameplay functionality was changed.
+- **L1_PASS:** menu trace/suppression, existing microstutter/hotpath/input tests, two analyzer tests. **L2_PASS:** `/O2` PE32 x86 DLL SHA256 `6885305B435EDD61A33A1D2BEB6C96B87AC515DFF04AC3AA6AAC61BF86362B15` (precommit worktree provenance).
+- **UNKNOWN:** current firing, damage and ordinary-pickup stall producer; no current event-correlated Steam/ETW sample. No FPS improvement or physical PASS claimed. Previously measured 75–76 ms DirectInput enumeration and repeated texture hash churn remain excluded for accepted post-cache behavior.
+
+## 2026-10-29 — SIDE: bounded CPU microstutter capture candidate
+
+- Branch `performance/cpu-microstutter-root-cause` from accepted `origin/main` `a1b506b9`; Steam/PSVR2 untouched.
+- Default-OFF `[Diagnostic] CpuMicrostutterProbe=1` records focused-gameplay frame timing with exact fire/damage/weapon-switch events and a separately labelled Use/Grip attempt. Fixed ring and 100 ms asynchronous CSV drain; no hot-hook file I/O.
+- **L1_PASS**: probe/worker/CSV test, analyzer tests, accepted sampler and DirectInput enumeration regressions. **L2_PASS**: x86 PE32 `/O2` build; final DLL hash and complete details in `docs/performance/cpu-microstutter-root-cause.md`.
+- Actual firing/pickup root cause and any FPS improvement remain **UNKNOWN** until MAIN's event-correlated Steam/ETW capture. This diagnostic candidate is not a gameplay optimization or physical PASS.
+
 ## 2026-10-29 — MAIN: accepted Volk S4 native HD integration
 
 - Dedicated branch integration/volk-s4-hd-physical-reload; PR66 source tools plus native VB/IB integration.
