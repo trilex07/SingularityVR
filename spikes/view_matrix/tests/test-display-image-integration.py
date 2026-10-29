@@ -1,5 +1,6 @@
 """Offline wiring regression for the five-row DISPLAY IMAGE page and XR pipeline."""
 from pathlib import Path
+import re
 
 root = Path(__file__).resolve().parents[1]
 cpp = (root / "d3d9.cpp").read_text(encoding="utf-8")
@@ -8,7 +9,10 @@ oled = (root / "oled_grading.h").read_text(encoding="utf-8")
 page = "{ PR_NIS_SHARPEN, PR_NIS_STRENGTH, PR_OLED_PRESET, PR_TEXTURES, PR_BACK }"
 assert page in cpp
 assert "PR_VFXLOOK, PR_GOTO_NIS, PR_BACK" in cpp
-assert "{ 13, 10, 5, 13, 10, 7, 10, 6, 8, 6, 3, 9, 5 }" in cpp
+counts = re.search(r"kPageCount\[kPanelPages\]\s*=\s*\{([^}]+)\}", cpp)
+assert counts
+counts = [int(v.strip()) for v in counts[1].split(',')]
+assert len(counts) == 13 and counts[12] == 5  # unrelated pages may gain controls
 assert "g_panelImageParent=g_panelPage; g_panelPage=12" in cpp
 assert "g_panelPage == 12 ? g_panelImageParent : 0" in cpp
 assert 'WritePrivateProfileStringA("OLED", "Preset", v, path)' in cpp

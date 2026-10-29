@@ -28,6 +28,12 @@ inline float Blend(float analog,bool active,float deadzone=.08f){
     if(!active||!std::isfinite(analog)||!std::isfinite(deadzone)||deadzone<0||deadzone>=1)return 0;
     return std::max(0.f,std::min(1.f,(analog-deadzone)/(1.f-deadzone)));
 }
+inline float SmoothGrip(float previous,float analog,bool active,bool tracked){
+    // An invalid action/pose cannot keep ownership of a prior closed fist.
+    if(!active||!tracked||!std::isfinite(previous))return 0.f;
+    const float target=Blend(analog,true);
+    return previous+(target-previous)*.45f;
+}
 template<class Binding,class Action>
 inline unsigned WithoutOptional(Binding* bindings,unsigned count,Action pose,Action squeeze){
     unsigned kept=0;
