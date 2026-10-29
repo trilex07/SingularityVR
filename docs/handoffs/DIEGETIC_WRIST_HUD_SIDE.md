@@ -58,6 +58,7 @@ EquipmentWristRollDeg=0
 - `tools/tests/test-hud-live.ps1`: PASS, including HP full/half/zero/invalid, independent count policy, stale pose, source lifecycle, two-eye depth clear, wrist placement, visibility hysteresis, and synthetic stereo projection/rotation.
 - `tools/hud/render_wrist_equipment_fixture.py`: PASS as a synthetic SBS layout receipt.
 - Synthetic class-change microbenchmark (`test-wrist-equipment-source.cpp`, optimized build): approximately 370 ns per simulated reflection lookup versus 0.6 ns for a cached identity check. This isolates the changed code path; it is not an end-to-end frame-time measurement. The renderer also builds invariant normalized glyph/quad geometry once per frame and projects the same list for both eyes, with fixed-capacity thread-local buffers and no frame allocation.
+- PR #70 coexistence: a disposable merge with PR #70 head `83e00755` required two manual joins in `d3d9.cpp` at `ProcessEvent` (function-name gate and post-return observers). The joined source passed the optimized x86 build, HUD test suite and `test-independent-hands-shot-haptics.ps1`. This proves offline coexistence after resolution; the two branches do not auto-merge. PR #73 does not incorporate PR #70's source.
 - Runtime HUD field updates, natural TMD maximum getter frequency and return ABI, actual native wrist inward normal, glove/TMD clipping, scene-depth occlusion, GPU/CPU frame cost, Steam/OpenXR/PSVR2 comfort: **NOT RUN / BLOCKED on SIDE**.
 
 ## MAIN integration gates
