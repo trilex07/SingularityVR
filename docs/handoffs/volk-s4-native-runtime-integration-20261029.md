@@ -111,3 +111,13 @@ Steam installation at the end of preparation; launch remains user-controlled.
   FIRST, then six-file rollback and exact baseline hash confirmation. Not run
   because no gameplay failure occurred and user requested candidate installation.
 - Physical PSVR2/material/depth/muzzle/reload/frame-time acceptance remains PENDING.
+
+## User acceptance and main promotion — 2026-10-29
+
+After the installed candidate was offered for PSVR2 testing, Trilex replied
+"gites wrzuc na maina" and explicitly authorized main promotion. This records
+general user acceptance of the installed Volk integration, not independently
+measured frame timing or an invented per-feature test checklist. Keep the exact
+installed DLL and asset hashes above; documentation-only acceptance changes
+require no rebuild or Steam replacement. Candidate remains installed; backup
+remains available. Earlier PENDING entries describe pre-acceptance evidence.

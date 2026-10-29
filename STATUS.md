@@ -1,10 +1,11 @@
 # STATUS — session handoff
 
-## 2026-10-29 — MAIN: Volk S4 native HD candidate
+## 2026-10-29 — MAIN: accepted Volk S4 native HD integration
 
 - Dedicated branch integration/volk-s4-hd-physical-reload; PR66 source tools plus native VB/IB integration.
 - Existing reload FSM, wrist/palm and ammo acknowledgment retained; source-endpoint normalized seat/Slide.
 - Actual asset, x86 and D3D9/D3D9Ex pixel/state tests PASS; Steam installed/hash-verified on user request. NOT launched; HMD/performance PENDING.
+- Trilex accepted the installed candidate ("gites wrzuc na maina") and authorized main promotion. General physical acceptance; no measured performance claim. DLL/assets retained unchanged.
 - Details: docs/handoffs/volk-s4-native-runtime-integration-20261029.md.
 
 
