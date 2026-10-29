@@ -1,0 +1,18 @@
+{
+  "status": "OFFLINE_MECHANICAL_PASS",
+  "hashes_sha256": {
+    "source/ch_inview_machinegun_mesh.psk": "b445a4a2c27e9eedfc487a2cd5358b6db1bd755b184cafd663c4a2454991b442",
+    "source/valkyrie_reload.svwa": "97de1b7b37c733dcb35a8b15ea5ae6ff778a1fb1917305acf70322c32c30e9dd",
+    "valkyrie_mechanical_rig.glb": "2f8ab70cddf7e8caf5b5b02061cf4b9d6b33d639ed11d252a7d4eedec037ddb8",
+    "animation_socket_manifest.json": "0f4311928b9cb16ecc4dab9a741e8faa1fd742e09074da1a46119840efff50e5",
+    "blender_mechanical_validation.json": "45599060348d7001c064a4cf9fc41d2df0e044f70f94021bd1f8ea34bd3f5c0e",
+    "valkyrie_mechanical_blender_roundtrip.glb": "8e0958eb74bd371b2ea2b1d152619929dbc0d8ac013003c098d9a534f8c1c15d",
+    "valkyrie_mechanical_preview.png": "a76f1abde8acf1f744825a8668d811fbe44212bfe5bc5fc69a179b3b1c448616"
+  },
+  "source_bones": 80,
+  "source_faces": 12842,
+  "source_reload_frames": 52,
+  "root_animation_channels": 0,
+  "blender_import_export": "PASS",
+  "original_psa_file": "UNAVAILABLE; validated PSA-derived SVWA included"
+}
