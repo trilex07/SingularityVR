@@ -159,6 +159,7 @@ static unsigned g_startupTimeoutMs=5000,g_startupMinVisibleMs=3000;
 #include <tlhelp32.h>    // Thread32First, for the per-thread CPU census
 #include <d3d9.h>
 #include "glove_renderer.h"
+#include "free_hand_pose_policy.h"
 #include "xr_capture_alpha.h"
 #include "glove_native.h"
 #include "native_glove_cuffs.h"
@@ -174,6 +175,7 @@ static void BuildTmdAssemblyC(float C[4][4]);
 #include "psvr2_trigger.h"
 #include "psvr2_trigger_config.h"
 #include "trigger_shot.h"
+#include "weapon_shot_haptics.h"
 #include "psvr2_client.h"
 #include <d3d11.h>
 #include <dinput.h>
@@ -771,6 +773,9 @@ LONG PackStick(int16_t x, int16_t y) {
 // high-frequency one. Sending each to the hand of the same name keeps that asymmetry meaningful
 // rather than averaging it away.
 volatile LONG g_rumbleL = 0, g_rumbleR = 0;   // 0..65535, as the game sends them
+static volatile LONG g_weaponShotHaptics = 0; // opt-in until physical PSVR2 acceptance
+static SRWLOCK g_weaponHapticsLock = SRWLOCK_INIT;
+static weaponhaptics::Engine g_weaponHaptics;
 
 DWORD WINAPI Hook_XInputSetState(DWORD idx, XiVibration* v) {
     const int64_t diagStart = g_diagEnabled ? DiagQpc() : 0;
@@ -4991,7 +4996,12 @@ void PumpXR() {
         if (ev.type == XR_TYPE_EVENT_DATA_SESSION_STATE_CHANGED) {
             auto* s = reinterpret_cast<XrEventDataSessionStateChanged*>(&ev);
             g_xrSessionState = s->state;
-            if (s->state != XR_SESSION_STATE_FOCUSED) NativeTmdHaptics::ClearAll();
+            if (s->state != XR_SESSION_STATE_FOCUSED) {
+                NativeTmdHaptics::ClearAll();
+                AcquireSRWLockExclusive(&g_weaponHapticsLock);
+                g_weaponHaptics.Clear();
+                ReleaseSRWLockExclusive(&g_weaponHapticsLock);
+            }
             if (s->state == XR_SESSION_STATE_READY) {
                 XrSessionBeginInfo bi{ XR_TYPE_SESSION_BEGIN_INFO };
                 bi.primaryViewConfigurationType = XR_VIEW_CONFIGURATION_TYPE_PRIMARY_STEREO;
@@ -10967,7 +10977,6 @@ void SyncXRInput(XrTime displayTime) {
     const LONG diagMode = InterlockedCompareExchange(&g_diagMode, 0, 0);
     const bool pollOff = InterlockedCompareExchange(&g_diagPollOff, 0, 0) != 0;
     g_glovePoseValid[0]=g_glovePoseValid[1]=false;
-    g_gloveBlend[0]=g_gloveBlend[1]=0;
     const bool feedGame = !pollOff && InterlockedCompareExchange(&g_xrInputOff, 0, 0) == 0 && diagMode != 2 && diagMode != 3;
     InterlockedExchange(&g_opticalHudHidden,0); // clear on focus/menu/early return
     const bool hapticsAllowed = feedGame && diagMode != 1;
@@ -11274,11 +11283,16 @@ void SyncXRInput(XrTime displayTime) {
         XrActionStateGetInfo gi{XR_TYPE_ACTION_STATE_GET_INFO};
         gi.action=g_actGloveSqueeze;gi.subactionPath=g_handSubPath[i];
         XrActionStateFloat st{XR_TYPE_ACTION_STATE_FLOAT};
+        bool validSqueeze = false;
         if(g_actGloveSqueeze!=XR_NULL_HANDLE) {
             g_hotPathSampler.count(hotpath::Counter::xr_action_state);
-            if(XR_SUCCEEDED(xrGetActionStateFloat(g_xrSession,&gi,&st)))
-                g_gloveBlend[i]=gloves::Blend(st.currentState,st.isActive!=XR_FALSE);
+            if(XR_SUCCEEDED(xrGetActionStateFloat(g_xrSession,&gi,&st)) && st.isActive!=XR_FALSE) {
+                validSqueeze=true;
+            }
         }
+        // A failed action or lost tracking must release its previous finger pose.
+        g_gloveBlend[i]=gloves::SmoothGrip(g_gloveBlend[i],st.currentState,
+            validSqueeze,g_handTracked[i]&&g_handPositionValid[i]);
         XrSpaceLocation loc{XR_TYPE_SPACE_LOCATION};
         constexpr XrSpaceLocationFlags needed=XR_SPACE_LOCATION_POSITION_VALID_BIT|
             XR_SPACE_LOCATION_POSITION_TRACKED_BIT|XR_SPACE_LOCATION_ORIENTATION_VALID_BIT|
@@ -11293,6 +11307,7 @@ void SyncXRInput(XrTime displayTime) {
             }
         }
     }
+    if(pollOff)g_gloveBlend[0]=g_gloveBlend[1]=0.0f;
     for (int i = 0; i < 2; ++i) {
         bool touched = false, haveTouch = false;
         if (g_actGrasp != XR_NULL_HANDLE) {
@@ -12657,7 +12672,16 @@ void SyncXRInput(XrTime displayTime) {
                 overlay = NativeTmdHaptics::Overlay(tmdGates);
             }
             const LONG lvl = Rd(g_hapticLevel) < 0 ? 0 : (Rd(g_hapticLevel) > 2 ? 2 : Rd(g_hapticLevel));
-            const float merged = tmdhaptics::Merge(nativeAmp, overlay, tmdHand,
+            if (hand == AimHand() && Rd(g_weaponShotHaptics)) {
+                const bool shotGates = hapticsAllowed && handTracked && !Rd(g_gamePaused) &&
+                    !Rd(g_inCinematic) && !uiMenu && !Rd(g_panelOpen) &&
+                    g_xrSessionState == XR_SESSION_STATE_FOCUSED;
+                AcquireSRWLockExclusive(&g_weaponHapticsLock);
+                const float shotAmp = g_weaponHaptics.Sample(shotGates, nativeAmp, GetTickCount64());
+                ReleaseSRWLockExclusive(&g_weaponHapticsLock);
+                if (shotAmp > overlay) overlay = shotAmp;
+            }
+            const float merged = tmdhaptics::Merge(nativeAmp, overlay, tmdHand || hand == AimHand(),
                 tmdhaptics::Config{ Rd(g_hapticsEnabled) != 0, (tmdhaptics::Level)lvl, Rd(g_tmdPulses) != 0 });
             const float amp = (hapticsAllowed && handTracked) ? merged : 0.0f;
             const bool changed = fabsf(amp - lastAmp[hand]) > 0.02f;
@@ -18523,15 +18547,28 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
         }
     }
     // Exact free noTMD draw, or off-hand knife grip while aiming a weapon one-handed.
-    // Original GPU skin, UVs and material remain; when aiming a weapon, only the off-hand
-    // fingers/thumb are posed while the weapon hand keeps its native grip fingers.
+    // The free off-hand also needs its own finger palette while a gun is held:
+    // NativeGlovesEligible intentionally rejects held guns, so without this
+    // branch the game's old two-hand grip animation owns its fingers forever.
+    // Only the off-hand fingers are posed; the weapon hand keeps native grip.
     const bool nativeBoth = wristAnchor && NativeGlovesEligible();
+    const bool nativeFreeOffhand=freehandpose::OffhandFingers({
+        wristAnchor,weaponInHand,supportGrip,
+        nativeOffKnife||g_hipKnifeState.held>=0,
+        nativeCarry||g_nextOwnsGrip||g_centurionOwnsGrip||
+            (g_centurionReload&&g_centurionConfig.cylinderGestures&&
+             centurionreload::Active(g_centurionState.phase)),
+        NativeAnimatedHandsNow(),g_gloveExperiment&&g_nativeGloveExperiment&&g_nativeGloveRenderer.Ready(),
+        g_sceneMode.Current()==vrscene::Mode::GameplayStereo,
+        g_xrSessionState==XR_SESSION_STATE_FOCUSED,handValid[OffHand()],
+        Rd(g_dupDraws)!=0&&g_haveEyes&&g_eyePositionsValid,
+        Rd(g_gamePaused)!=0,Rd(g_vrUiMenu)!=0,Rd(g_inCinematic)!=0});
     if (nativeOffKnife) {
         static LONG saidOffKnife = 0;
         if (InterlockedCompareExchange(&saidOffKnife, 1, 0) == 0)
             Log("PrepareIndependentLeft: nativeOffKnife active (joint glove+knife pose while weapon held)");
     }
-    if(gloves&&(nativeBoth||nativeOffKnife||nativeCarry)&&slots==(int)gloveisolate::kNoTmdCookedPaletteCount&&
+    if(gloves&&(nativeBoth||nativeFreeOffhand||nativeOffKnife||nativeCarry)&&slots==(int)gloveisolate::kNoTmdCookedPaletteCount&&
        g_nativeGloveRenderer.Ensure(dev)){
         const bool joint=!KnifeDisabledByTmd()&&g_knifeHandGrip&&g_knifeHandAssetReady&&g_hipKnifeReady&&g_hipKnifeVisible&&
             (g_hipKnifeState.held==0||g_hipKnifeState.held==1);
@@ -27502,7 +27539,7 @@ void __fastcall Hook_ProcessEvent(void* self, void* edx, void* Stack, void* Resu
     const bool cineWatch = InterlockedCompareExchange(&g_cutsceneAuto, 0, 0) != 0 &&
                            FnIdx(kFnSetCinematic) >= 0;
     int32_t fnIdx = -1;
-    if ((censusOn || routeTwo || cineWatch || Rd(g_cinematicSceneProbe) || Rd(g_cinematicEventBridge) || nativefx::Probe() || g_centurionReloadProbe || Rd(g_keepAcquiredWeapons) || singularity_gore::enabled) && Stack) {
+    if ((censusOn || routeTwo || cineWatch || Rd(g_cinematicSceneProbe) || Rd(g_cinematicEventBridge) || nativefx::Probe() || g_centurionReloadProbe || Rd(g_keepAcquiredWeapons) || singularity_gore::enabled || Rd(g_weaponShotHaptics)) && Stack) {
         fnIdx = ScriptFuncNameIdx(Stack);
         InterlockedIncrement(&g_peSeen);
         if (fnIdx < 0) InterlockedIncrement(&g_peUnnamed);
@@ -27995,11 +28032,45 @@ void __fastcall Hook_ProcessEvent(void* self, void* edx, void* Stack, void* Resu
         }
     }
 
+    int shotBefore=-1, shotOffset=-1;
+    const uintptr_t shotWeapon=(uintptr_t)self;
+    const bool localShot=Rd(g_weaponShotHaptics) && fnIdx>=0 && FnIdx(kFnFireFirst)>=0 &&
+        fnIdx==FnIdx(kFnFireFirst) && shotWeapon!=0 &&
+        shotWeapon==(uintptr_t)(uint32_t)Rd(g_weaponObj) &&
+        !Rd(g_weaponHolstered) && Rd(g_hapticsEnabled);
+    if(localShot && Readable(self,OBJ_CLASS+sizeof(uintptr_t))){
+        const uintptr_t cls=*reinterpret_cast<const uintptr_t*>(shotWeapon+OBJ_CLASS);
+        static thread_local uintptr_t cachedShotClass=0;
+        static thread_local int cachedShotOffset=-1;
+        if(cls && Readable((const void*)cls,0x40) && cls!=cachedShotClass){
+            cachedShotClass=cls;
+            cachedShotOffset=PropOffsetInChain(cls,"mShotCount");
+        }
+        shotOffset=(cls==cachedShotClass)?cachedShotOffset:-1;
+        if(shotOffset>=0 && shotOffset<0x1000 && Readable((const void*)(shotWeapon+shotOffset),4))
+            shotBefore=*reinterpret_cast<const int32_t*>(shotWeapon+shotOffset);
+    }
     {
         singularity_gore::DamageScope gore((uintptr_t)self,
             fnIdx>=0&&FnIdx(kFnGoreDamage)>=0&&fnIdx==FnIdx(kFnGoreDamage));
         if (!NativeOwnedInventory::InvokeRetained(self,edx,Stack,Result,fnIdx,(int)Rd(g_nodeOffset),g_origProcessEvent))
             g_origProcessEvent(self, edx, Stack, Result);
+    }
+    int shotAfter=-1;bool shotPulseArmed=false;
+    if(localShot && shotBefore>=0 && shotOffset>=0 &&
+       shotWeapon==(uintptr_t)(uint32_t)Rd(g_weaponObj) &&
+       Readable((const void*)(shotWeapon+shotOffset),4)){
+        shotAfter=*reinterpret_cast<const int32_t*>(shotWeapon+shotOffset);
+        const auto weapon=weaponhaptics::FromVertices((unsigned)Rd(g_gunVerts));
+        AcquireSRWLockExclusive(&g_weaponHapticsLock);
+        shotPulseArmed=g_weaponHaptics.OnNativeReturn(shotBefore,shotAfter,weapon,GetTickCount64());
+        ReleaseSRWLockExclusive(&g_weaponHapticsLock);
+    }
+    if(localShot){
+        static volatile LONG receipts=0;
+        const LONG n=InterlockedIncrement(&receipts);
+        if(n<=12)Log("weapon haptics witness [%ld/12]: weapon=%08X verts=%ld shotOffset=%d count=%d->%d armed=%d",
+            n,(unsigned)shotWeapon,Rd(g_gunVerts),shotOffset,shotBefore,shotAfter,shotPulseArmed?1:0);
     }
     if(fnIdx>=0&&fnIdx==FnIdx(kFnPlayerTick)&&
        (uintptr_t)self==(uintptr_t)(uint32_t)Rd(g_ctlForXi))NativeScopeTick();
@@ -36346,9 +36417,11 @@ void LoadIniSettings() {
     InterlockedExchange(&g_hapticsEnabled,GetPrivateProfileIntA("Haptics","Enabled",1,path)!=0);
     InterlockedExchange(&g_hapticLevel,GetPrivateProfileIntA("Haptics","Level",1,path));
     InterlockedExchange(&g_tmdPulses,GetPrivateProfileIntA("Haptics","TmdPulses",0,path)!=0);
+    InterlockedExchange(&g_weaponShotHaptics,
+        GetPrivateProfileIntA("Haptics","WeaponShotPulses",0,path)!=0);
     ApplyHapticConfig();
-    Log("ini: Haptics Enabled=%ld Level=%ld TmdPulses=%ld (defaults 1/1/0 = unchanged native rumble)",
-        Rd(g_hapticsEnabled),Rd(g_hapticLevel),Rd(g_tmdPulses));
+    Log("ini: Haptics Enabled=%ld Level=%ld TmdPulses=%ld WeaponShotPulses=%ld (shot fallback default OFF)",
+        Rd(g_hapticsEnabled),Rd(g_hapticLevel),Rd(g_tmdPulses),Rd(g_weaponShotHaptics));
     Log("ini: VrSettingsMinimal=%d ReloadHints=%ld (optional PL/EN reload instructions)",
         g_vrSettingsMinimal,Rd(g_reloadHintsEnabled));
     InterlockedExchange(&g_contextCursorSuppress,
