@@ -33,3 +33,7 @@ Build tools/uedecompress/unpack_chunks.cpp using its existing x86 host toolchain
 python tools/assets/prepare_kasimov_runtime.py --package ../kasimov_snv_e99/final_handoff --cooked build/kasimov-hd/loader.u --baseline ../dependencies/Singularity/Binaries/texture-override-remaster --output build/kasimov-hd/runtime
 
 Run tools/tests/test-kasimov-hd-runtime.ps1. Private inputs/output are never public release assets without the established distribution workflow. No game package repacking.
+
+Optimized x86 PE32 source7f7952706c91db25fc043dce9cfded82993f54c2; clean source provenance. DLL SHA-256 B8E3A0FB53583D1CD3355EE442BBEB2D244BA6BA43162FF6BD4275AC355ACD8F. Candidate INI72F54A2E7A20DEDB21BF35EAF3166768714FD35DDBDEDECCC9E73ADAD00D41E7 enables only the two reviewed Valkyrie/Kasimov HD flags relative to accepted Volk. Twelve private files staged and verified, NOT installed. Accepted baseline485FE0AF /5D1C4A1A protected. Original game core/EXE/bridge and texture configuration untouched.
+
+Volk/Valkyrie geometry/mechanics/GPU, dual-TMD/hands/reload/WeaponLocker/OLED and NIS regressions PASS. Actual compiled factory ABI eax+20Ch preserved. Final native Kasimov submission, scope appearance, physical magazine, HMD comfort and performance remain PENDING. No physical claim from offline passes. Source/lens scope pipeline was not redesigned.
