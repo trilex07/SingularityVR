@@ -55,6 +55,11 @@ int main() {
     free.cinematic=false;free.paused=true;assert(!freehandpose::OffhandFingers(free));
     free.paused=false;free.tracked=false;assert(!freehandpose::OffhandFingers(free));
     free.tracked=true;assert(freehandpose::OffhandFingers(free));
+    assert(freehandpose::NativeCuffDraw(true,true,false,false,true,true));
+    assert(!freehandpose::NativeCuffDraw(true,false,false,false,true,true));
+    assert(!freehandpose::NativeCuffDraw(true,true,false,false,true,false));
+    assert(!freehandpose::NativeCuffDraw(false,true,false,false,true,true));
+    assert(!freehandpose::NativeCuffDraw(true,true,false,false,false,true));
     assert(tmdhaptics::ProfileFor(tmdhaptics::Power::Impulse).startAmp>
            tmdhaptics::ProfileFor(tmdhaptics::Power::Age).startAmp);
     return 0;
