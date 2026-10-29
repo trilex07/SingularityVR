@@ -1,0 +1,15 @@
+{
+  "source": "e7e7b5f1267c3c1aefa3fcc124a39a6009d238e0",
+  "dll_sha256": "0AAEAFAC7B230C80F922BD2EC533FDF711258524BD2BF35CAC4013F11E56DE0C",
+  "optimization_source": "a9a6c6359511379fb16c55e8f7c648adbe70751e",
+  "previous_dll_sha256": "63CCFF6A95B4F4AABCD0ABDDBCCFBA121891B09DF6E1378730010768B5F4FE19",
+  "ini_sha256": "cbc6a8e5485ceb77d7ec3b9c7e9b3cde3155e75746994dc38c7dc5483c6acfbf",
+  "asset_verification": "16/16 previous asset hashes preserved",
+  "backup": "deployment/install-backups/20261030-004807",
+  "installed": "DLL hash verified; no game launch; no automatic restore",
+  "tests": "x86 PE32 /O2 PASS; production-header 20000 disabled calls PASS; trace/suppression/sparse-flush PASS",
+  "physical": "PENDING",
+  "fps_gain": "NOT_MEASURED",
+  "prior_hd_acceptance": "PENDING as before; no new physical claim",
+  "pr71_scope": "MenuDrawTrace default OFF/INI opt-in only; prior optional microstutter probe not imported"
+}

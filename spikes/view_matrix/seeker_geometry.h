@@ -32,25 +32,32 @@ struct Witness {
         return valid&&p&&w&&p==pawn&&w==weapon&&now>=tick&&now-tick<=150&&armbind::Finite(rootLocal);
     }
 };
-inline bool Capture(const Mat& skin,const Mat& local,uint32_t pawn,uint32_t weapon,uint64_t now,Witness& out){
+inline bool Capture(const Mat& rootBind,const Mat& skin,const Mat& local,uint32_t pawn,uint32_t weapon,uint64_t now,Witness& out){
     if(!pawn||!weapon||!handanchor::Affine(skin.m)||!handanchor::Affine(local.m))return false;
-    const auto root=Product(Product(RootBind,skin),local);
+    const auto root=Product(Product(rootBind,skin),local);
     Mat inv;if(!skeletal::Inverse(inv.m,root.m)||!armbind::Finite(root))return false;
     out={true,pawn,weapon,now,root};return true;
 }
+inline bool Capture(const Mat& skin,const Mat& local,uint32_t pawn,uint32_t weapon,uint64_t now,Witness& out){
+    return Capture(RootBind,skin,local,pawn,weapon,now,out);
+}
 // Solve a complete target C, not an additive guess: wrist * local * C =
 // authored left-wrist-relative-to-gun * current gun-root * current BuildGunC.
-inline bool SupportTarget(const Witness& w,uint32_t pawn,uint32_t weapon,uint64_t now,
+inline bool SupportTarget(const Mat& leftGrip,const Witness& w,uint32_t pawn,uint32_t weapon,uint64_t now,
         const Mat& wristBind,const float skin[3][4],const Mat& local,const Mat& gun,Mat& out){
     if(!w.Current(pawn,weapon,now)||!handanchor::Affine(gun.m)||!handanchor::Affine(local.m))return false;
     Mat wrist,inverse;
     if(!armbind::CurrentJoint(wristBind,skin,wrist))return false;
     const auto source=Product(wrist,local);
     if(!skeletal::Inverse(inverse.m,source.m))return false;
-    const auto desired=Product(Product(LeftGrip,w.rootLocal),gun);
+    const auto desired=Product(Product(leftGrip,w.rootLocal),gun);
     const auto result=Product(inverse,desired);
     if(!handanchor::Affine(result.m))return false;
     out=result;return true;
+}
+inline bool SupportTarget(const Witness& w,uint32_t pawn,uint32_t weapon,uint64_t now,
+        const Mat& wristBind,const float skin[3][4],const Mat& local,const Mat& gun,Mat& out){
+    return SupportTarget(LeftGrip,w,pawn,weapon,now,wristBind,skin,local,gun,out);
 }
 // Independent Seeker-only budget: earlier ordinary/TMD draws cannot exhaust it.
 struct SupportProbeBudget {

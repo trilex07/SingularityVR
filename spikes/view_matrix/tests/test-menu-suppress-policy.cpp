@@ -1,8 +1,8 @@
 // Policy helper for the proposed menu-suppression early-out.
 //
 // The production draw hooks call MenuDrawTraceRecord and SuppressCapturedVrMenuDraw on every
-// draw.  MenuDrawTraceRecord must NOT be bypassed: g_menuDrawTrace defaults to 1 and MAIN uses
-// the 8-frame sampling window after menu transitions for pause-menu investigation.
+// draw. MenuDrawTraceRecord remains independent of suppression and is opt-in via
+// [Diagnostic] MenuDrawTrace=1 for the 8-frame pause-menu investigation.
 //
 // SuppressCapturedVrMenuDraw, however, already returns false when no menu is focused and no
 // menu source is bound.  Moving that guard one level higher avoids the SyncVrMenuCaptureState

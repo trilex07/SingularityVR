@@ -11,7 +11,7 @@ class Wiring(unittest.TestCase):
         for key in ('ReloadPalmGrip', 'WeaponTraceRigidOrigin'):
             self.assertIn(f'GetPrivateProfileIntA("Input","{key}",0,path)', source)
         dispatch = (ROOT/'spikes/view_matrix/weapon_reload_dispatch.inl').read_text(encoding='utf8')
-        self.assertIn('weaponcarry::Matrix(kind,wrist.tracking,carried)', dispatch)
+        self.assertIn('weaponcarry::Matrix(kind,stableTracking,carried)', dispatch)
         self.assertIn('weaponreload::SparePalette(g_nextAnimation[index],carried,local,controller,world', dispatch)
         self.assertIn('if(g_nextNativeMagazine)return;', dispatch)
 
@@ -29,7 +29,7 @@ class Wiring(unittest.TestCase):
         self.assertIn('weaponcarry::CarrySectionEligible(nextCarryVisual.kind,gloves)', source)
         self.assertIn('weaponcarry::Source(nextCarryVisual.kind,nextCarry,gloves,tmdGloves,', source)
         dispatch = (ROOT/'spikes/view_matrix/weapon_reload_dispatch.inl').read_text(encoding='utf8')
-        self.assertIn('weaponcarry::Matrix(kind,wrist.tracking,carried)', dispatch)
+        self.assertIn('weaponcarry::Matrix(kind,stableTracking,carried)', dispatch)
         self.assertIn('kind==weaponreload::Kind::Valkyrie', dispatch)
 
     def test_probe_preserves_accepted_vfx_and_no_custom_substitute(self):

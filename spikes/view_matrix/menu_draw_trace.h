@@ -2,7 +2,7 @@
 // Diagnostic only: fixed storage, no file I/O/readback/allocations in draw callbacks.
 // Samples eight complete frames per native movie generation. Counts describe sampled
 // frames, not the whole session. Resource addresses identify THIS process only.
-volatile LONG g_menuDrawTrace=1, g_menuDrawTraceDump=0;
+volatile LONG g_menuDrawTrace=0, g_menuDrawTraceDump=0;
 static unsigned g_menuTraceFrame=0,g_menuTraceOrdinal=0,g_menuTracePath=0;
 struct MenuTracePath {
     unsigned previous;
@@ -51,7 +51,12 @@ static void MenuDrawTraceState() {
     }
     if(InterlockedExchange(&g_menuDrawTraceDump,0))MenuDrawTraceFlush();
 }
-static void MenuDrawTraceFrame(){++g_menuTraceFrame;g_menuTraceOrdinal=0;MenuDrawTraceState();}
+static void MenuDrawTraceFrame(){
+    // The census is diagnostic-only. In normal gameplay even a state change
+    // must not clear its large group table or query the native menu token.
+    if(!Rd(g_menuDrawTrace))return;
+    ++g_menuTraceFrame;g_menuTraceOrdinal=0;MenuDrawTraceState();
+}
 static void MenuDrawTraceRecord(IDirect3DDevice9* dev,unsigned kind,D3DPRIMITIVETYPE t,
         UINT primitives,UINT vertices,UINT start,UINT minIndex,INT base,const void* data,UINT stride,bool suppressed=false) {
     if(!Rd(g_menuDrawTrace))return;

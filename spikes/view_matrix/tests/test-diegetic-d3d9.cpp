@@ -60,7 +60,7 @@ static void Run(bool ex) {
             assert(SUCCEEDED(dev->CreateRenderTarget(width,height,D3DFMT_A8R8G8B8,D3DMULTISAMPLE_NONE,0,FALSE,&target,nullptr)));
             assert(SUCCEEDED(dev->GetRenderTarget(0,&original)));
             D3DVIEWPORT9 savedVp{3,4,100,50,0,1};RECT savedScissor{9,11,23,29};
-            for(long mesh:{5799L,11387L,8297L})for(float roll:{0.f,.785398f,1.570796f}) {
+            for(long mesh:{5799L,11387L,8297L,11389L})for(float roll:{0.f,.785398f,1.570796f}) {
                 const auto& mo=*MountForVerts(mesh);Quad3D q[16];const int n=BuildFixtureQuads3D(mo,6,24,q,16);
                 const auto plan=Project(q,n,FixturePose(mo,roll),width,height,100);assert(plan.ready);
                 std::vector<DWORD> reference;
@@ -129,6 +129,6 @@ static void Run(bool ex) {
         if(!cycle){if(ex)assert(SUCCEEDED(devEx->ResetEx(&pp,nullptr)));else assert(SUCCEEDED(dev->Reset(&pp)));}
     }
     dev->Release();api->Release();DestroyWindow(window);
-    printf("PASS D3D9%s: %u actual-atlas pixel cases, 3 weapons, 3 rolls, 3 resolutions, hostile state/restoration, failure paths, Reset\n",ex?"Ex":"",cases);
+    printf("PASS D3D9%s: %u actual-atlas pixel cases, 4 weapons, 3 rolls, 3 resolutions, hostile state/restoration, failure paths, Reset\n",ex?"Ex":"",cases);
 }
 int main(){assert(SUCCEEDED(CoInitializeEx(nullptr,COINIT_MULTITHREADED)));Run(false);Run(true);CoUninitialize();}

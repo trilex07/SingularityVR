@@ -26,7 +26,14 @@ static void Run(const std::vector<unsigned char>& data,bool ex){
     dev->SetStreamSource(0,vb,0,32);dev->SetIndices(ib);
     centurionhd::IndexWitness witness;assert(witness.Observe(dev));assert(witness.buffer==ib);
     assert(witness.Observe(dev));assert(witness.attempts==1);witness.Reset();assert(witness.Observe(dev));
-    witness.Reset();
+    // Actual D3D resources: revisit validated buffers more than four times.
+    IDirect3DIndexBuffer9* alternate=nullptr;
+    assert(SUCCEEDED(dev->CreateIndexBuffer(6767*6,0,D3DFMT_INDEX16,D3DPOOL_DEFAULT,&alternate,0)));
+    assert(SUCCEEDED(alternate->Lock(0,0,&p,0)));
+    memcpy(p,data.data()+28+centurionhd::Vertices*32,6767*6);assert(SUCCEEDED(alternate->Unlock()));
+    for(unsigned pass=0;pass<24;++pass){dev->SetIndices(pass%2?alternate:ib);assert(witness.Observe(dev));}
+    assert(witness.attempts==2&&witness.count==2);
+    witness.Reset();dev->SetIndices(ib);alternate->Release();
 
     D3DVERTEXELEMENT9 el[]={{0,0,D3DDECLTYPE_FLOAT3,0,D3DDECLUSAGE_POSITION,0},
         {0,12,D3DDECLTYPE_UBYTE4,0,D3DDECLUSAGE_TANGENT,0},{0,16,D3DDECLTYPE_UBYTE4,0,D3DDECLUSAGE_NORMAL,0},

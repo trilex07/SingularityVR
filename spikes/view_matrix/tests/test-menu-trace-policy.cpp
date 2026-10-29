@@ -29,17 +29,19 @@ static int g_failures = 0;
 // Minimal model of MenuDrawTraceRecord's gate and a single fixed-size group counter.
 // In production the real function returns at line 55 when g_menuDrawTrace == 0.
 struct TraceModel {
-    bool enabled = true;
+    bool enabled = false;
     int frame = 0;
     int startFrame = 0;
     unsigned long long state = 0;
     unsigned long long lastState = ~0ull;
     int groupsRecorded = 0;
     int queriesSimulated = 0;
+    int stateReads = 0;
 
     void setEnabled(bool v) { enabled = v; }
 
     void onStateChange(unsigned long long newState) {
+        ++stateReads;
         if (newState != lastState) {
             // Flush implied; reset for next sampling window.
             groupsRecorded = 0;
@@ -66,18 +68,23 @@ struct TraceModel {
     }
 
     void advanceFrame() { ++frame; }
+    void onFrame(unsigned long long newState) {
+        if (!enabled) return; // Same early gate as production MenuDrawTraceFrame.
+        advanceFrame();
+        onStateChange(newState);
+    }
 };
 
 static void test_disabled_trace_records_nothing() {
     TraceModel t;
-    t.setEnabled(false);
-    t.onStateChange(12345);
+    CHECK(!t.enabled, "diagnostic census must default off");
     for (int i = 0; i < 40; ++i) {
-        t.advanceFrame();
+        t.onFrame(12345);
         t.recordDraw();
     }
     CHECK(t.groupsRecorded == 0, "disabled trace must record zero groups");
     CHECK(t.queriesSimulated == 0, "disabled trace must issue zero D3D queries");
+    CHECK(t.stateReads == 0, "disabled trace must avoid menu token/state work");
 }
 
 static void test_enabled_trace_records_in_window_only() {
@@ -109,14 +116,12 @@ static void test_state_change_resets_window() {
 }
 
 static void test_disabled_preserves_state_machine() {
-    // Even when disabled, the state-transition machinery (token invalidation,
-    // flush on change) must remain cheap and not crash.
+    // Disabled diagnostic must not process unrelated native menu transitions.
     TraceModel t;
-    t.setEnabled(false);
-    t.onStateChange(1);
-    t.onStateChange(2);
-    t.onStateChange(3);
-    CHECK(t.lastState == 3, "state tracking must work when trace is disabled");
+    t.onFrame(1);
+    t.onFrame(2);
+    t.onFrame(3);
+    CHECK(t.stateReads == 0, "disabled trace must not read menu state");
     CHECK(t.groupsRecorded == 0, "no groups recorded while disabled");
 }
 

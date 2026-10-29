@@ -1,0 +1,28 @@
+{
+  "source": "e2cbf313036b5c611a5988818e8af8683b157586",
+  "dll_sha256": "63ccff6a95b4f4aabcd0abddbccfba121891b09df6e1378730010768b5f4fe19",
+  "ini_sha256": "cbc6a8e5485ceb77d7ec3b9c7e9b3cde3155e75746994dc38c7dc5483c6acfbf",
+  "asset_count": 16,
+  "automatic_restore": false,
+  "game_launch": false,
+  "physical": "PENDING",
+  "audio_crash_causality": "INFERRED, not confirmed in game",
+  "preferences": "NISSharpen 1.00 / OLED2 / VrSettingsSessionOnly0",
+  "status": "INSTALLED_NOT_LAUNCHED_RETAINED",
+  "asset_verification": "16/16 deployed and backup hashes PASS; protected dependencies PASS",
+  "runtime_backup": "deployment/install-backups/20261030-004355",
+  "asset_backup": "build/next-weapon-reload/physical-followup-20261030/asset-backup",
+  "frame_timing": "NOT_RUN",
+  "native_crash_free": "PENDING",
+  "tests": {
+    "centurion_d3d9_ex": "PASS",
+    "kasimov_d3d9_ex": "PASS",
+    "hud_d3d9_ex": "PASS",
+    "support_palette_cases": 18,
+    "dual_tmd": "PASS",
+    "hands_haptics": "PASS",
+    "deployment_guard": "38 PASS",
+    "vorbis": "10 PASS, 1 optional skipped; actual native header and actual bank roundtrip separately PASS"
+  },
+  "audio_bank_sha256": "41dc6fe2034688a7110e528bea113ccfaf386994932e8b8eb297cdc5e8b68198"
+}

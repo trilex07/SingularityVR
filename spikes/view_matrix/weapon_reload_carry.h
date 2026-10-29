@@ -6,15 +6,15 @@ using Mat=armbind::Mat;
 using Kind=weaponreload::Kind;
 enum class WristSource { None, NoTmd, Tmd };
 inline bool CarrySectionEligible(Kind kind,bool noTmdGlove){
-    return noTmdGlove||kind==Kind::Valkyrie||kind==Kind::Volk;
+    return noTmdGlove||weaponreload::Index(kind)<3;
 }
-// Both box magazines use the same original TMD material-0 wrist when TMD is
-// owned. Keep Kasimov on its existing route until separately measured.
+// All three existing magazine mounts are wrist-local. The original TMD
+// material-0 publishes that same physical left wrist after stereo submission.
 inline WristSource Source(Kind kind,bool carrying,bool noTmdGlove,bool tmdGlove,
                           bool noTmdPosed,bool leftTracked,unsigned wristBone){
     if(!carrying)return WristSource::None;
     if(noTmdGlove&&noTmdPosed)return WristSource::NoTmd;
-    if((kind==Kind::Volk||kind==Kind::Valkyrie)&&tmdGlove&&leftTracked&&wristBone==9u)
+    if(weaponreload::Index(kind)<3&&tmdGlove&&leftTracked&&wristBone==9u)
         return WristSource::Tmd;
     return WristSource::None;
 }

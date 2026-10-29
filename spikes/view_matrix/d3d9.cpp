@@ -20,6 +20,7 @@ static texbridge::Bind g_textureBridgeBind=nullptr;
 #include "support_grip.h"
 #include "weapon_holster.h"
 #include "seeker_slot_policy.h"
+#include "kasimov_support_geometry.h"
 #include "seeker_index_identity.h"
 #include "knife_renderer.h"
 #include "centurion_reload.h"
@@ -2447,6 +2448,7 @@ static int g_nextInsertRadiusCm[2]{18,18}; // Valkyrie, Volk; native clip-joint 
 static volatile LONG g_seekerBackSlot=0,g_seekerBackRequest=0,g_seekerBackAvailable=0;
 static int g_seekerSupportGrip=0,g_seekerProjectileAim=0;
 static seekergeometry::Witness g_seekerPose;
+static seekergeometry::Witness g_kasimovSupportPose;
 static seekergeometry::SupportFrame g_seekerSupportFrame;
 static seekergeometry::IndexIdentity g_seekerIndices;
 static weaponcarry::Wrist g_nextWrist,g_nextWristStaged;
@@ -18205,7 +18207,7 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
             Rd(g_vrUiMenu)!=0,Rd(g_gamePaused)!=0,g_sceneMode.Current()==vrscene::Mode::GameplayStereo));
     CenturionVisual physicalVisual;bool physicalActive=false;
     const auto physicalNow=g_centurionPhysicalPolish?GetTickCount64():0;
-    if(g_centurionPhysicalPolish&&gloves&&TryAcquireSRWLockShared(&g_centurionVisualLock)){
+    if(g_centurionPhysicalPolish&&(gloves||tmdGloves)&&TryAcquireSRWLockShared(&g_centurionVisualLock)){
         physicalVisual=g_centurionVisual;ReleaseSRWLockShared(&g_centurionVisualLock);
         physicalActive=!Rd(g_weaponHolstered)&&centurionclip::Current(physicalVisual.clip,(uint32_t)g_playerPawn,(uint32_t)Rd(g_weaponObj),physicalNow)&&
             centurionvisual::Time((centurionreload::Phase)physicalVisual.phase,physicalVisual.since,physicalVisual.closed,physicalNow,g_centurionRefillOnly!=0).active;
@@ -18297,10 +18299,11 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
     const float (*leftTarget)[4] = off;
     if (supportGrip) {
         const bool authoredPairAvailable = AuthoredLeftSupport(supportGunVerts);
-        if (SeekerSupportActive()) {
+        if (SeekerSupportActive() || (supportGunVerts==11389 && g_kasimovAuthoredGrip)) {
+            const bool kasimov=supportGunVerts==11389;
             seekergeometry::Witness witness;
             if(TryAcquireSRWLockShared(&g_nextVisualLock)) {
-                witness=g_seekerPose;ReleaseSRWLockShared(&g_nextVisualLock);
+                witness=kasimov?g_kasimovSupportPose:g_seekerPose;ReleaseSRWLockShared(&g_nextVisualLock);
             }
             armbind::Mat sourceLocal,gun,target;
             memcpy(sourceLocal.m,local,sizeof(local));BuildGunC(gun.m);
@@ -18311,24 +18314,24 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
             if(gloves){if(!haveNoTmd)haveNoTmd=armbind::BuildReference(bindassets::noTmd,90,noTmd);
                 if(haveNoTmd)bind=&noTmd[9];}
             const auto pawn=(uint32_t)g_playerPawn,weapon=(uint32_t)Rd(g_weaponObj),frame=(uint32_t)Rd(g_sceneModeFrame);
-            bool ready=bind&&wrist>=0&&seekergeometry::SupportTarget(witness,pawn,weapon,GetTickCount64(),
+            bool ready=bind&&wrist>=0&&seekergeometry::SupportTarget(kasimov?kasimovsupport::LeftGrip:seekergeometry::LeftGrip,witness,pawn,weapon,GetTickCount64(),
                 *bind,reinterpret_cast<const float(*)[4]>(saved+wrist*3),sourceLocal,gun,target);
-            if(ready)g_seekerSupportFrame={true,pawn,weapon,frame,sourceLocal,target};
-            else if(tmdBase||tmdExtra)ready=g_seekerSupportFrame.Read(pawn,weapon,frame,sourceLocal,target);
+            if(ready&&!kasimov)g_seekerSupportFrame={true,pawn,weapon,frame,sourceLocal,target};
+            else if(!kasimov&&(tmdBase||tmdExtra))ready=g_seekerSupportFrame.Read(pawn,weapon,frame,sourceLocal,target);
             if(tmdGloves) {
                 static int previous=-1;static unsigned transitions=0;
                 if(transitions<12&&previous!=int(ready)) {
                     previous=int(ready);++transitions;
                     const auto now=GetTickCount64();
-                    Log("Seeker support target: ready=%d source=%s bind=%d wristSlot=%d witness=%d age=%llums frame=%u [fallback=independent-controller]",
-                        ready?1:0,gloves?"noTMD":"TMD",bind?1:0,wrist,
+                    Log("source support target: gun=%ld ready=%d source=%s bind=%d wristSlot=%d witness=%d age=%llums frame=%u [fallback=independent-controller]",
+                        supportGunVerts,ready?1:0,gloves?"noTMD":"TMD",bind?1:0,wrist,
                         witness.Current(pawn,weapon,now)?1:0,
                         (unsigned long long)(now>=witness.tick?now-witness.tick:0),frame);
                 }
             }
             if(ready){
                 memcpy(offWeapon,target.m,sizeof(offWeapon));leftTarget=offWeapon;weaponDeltaUsed=true;
-                static unsigned notes=0;if(notes++<4)Log("Seeker support: original idle wrist relative to rendered cog; shared glove/device target");
+                static unsigned notes=0;if(notes++<4)Log("source support: gun=%ld original idle wrist relative to rendered cog",supportGunVerts);
             } // no witness: independent controller, never an invented fore-end offset
         } else if (authoredPairAvailable) {
             // Same rigid delta as the aim hand. The live palette already contains the
@@ -18354,7 +18357,7 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
         }
     }
     memcpy(changed,saved,regs*4*sizeof(float));
-    if(SeekerSupportActive()&&weaponDeltaUsed){
+    if((SeekerSupportActive()||supportGunVerts==11389)&&weaponDeltaUsed){
         // Invert the ride StereoPair actually submits, not a controller proxy.
         if(g_thisDrawMoved==1)BuildGunC(base);
         else if(g_thisDrawMoved==2)BuildTmdC(base);
@@ -18630,6 +18633,7 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
         std::memcpy(actualLocal.m,local,sizeof(local));
         if(g_thisDrawMoved==1)BuildGunC(actualBase.m);
         else if(g_thisDrawMoved==2)BuildTmdC(actualBase.m);
+        else if(g_thisDrawMoved==3)BuildTmdAssemblyC(actualBase.m);
         skeletal::Multiply(chain.m,actualLocal.m,actualBase.m);
         if(wristBind&&weaponreload::TrackingMap({g_centrePos[0],g_centrePos[1],g_centrePos[2]},g_centreYaw,
              g_baseYaw*(6.2831853f/65536.f),MetresToUU(),tracking)&&
@@ -18643,24 +18647,26 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
             g_nextWristStagedFromTmd=carrySource==weaponcarry::WristSource::Tmd;
         }
     }
-    if(physicalActive&&gloves&&slots==(int)gloveisolate::kNoTmdCookedPaletteCount){
+    if(physicalActive&&((gloves&&slots==(int)gloveisolate::kNoTmdCookedPaletteCount)||
+        (tmdGloves&&handValid[0]&&wristBone[0]==9u&&armnatural::TmdBind().ready))){
         armbind::Mat tracking;
         armbind::Mat actualLocal,actualBase=centurionvisual::Identity();
         std::memcpy(actualLocal.m,local,sizeof(local));
         if(g_thisDrawMoved==1)BuildGunC(actualBase.m);
         else if(g_thisDrawMoved==2)BuildTmdC(actualBase.m);
+        else if(g_thisDrawMoved==3)BuildTmdAssemblyC(actualBase.m);
         if(centurionvisual::TrackingMap({g_centrePos[0],g_centrePos[1],g_centrePos[2]},g_centreYaw,
             g_baseYaw*(6.2831853f/65536.f),MetresToUU(),tracking)){
             const auto chain=centurionvisual::Product(actualLocal,actualBase);
-            bool right[45]{};for(int i=0;i<slots;++i)right[i]=gloveisolate::NoTmdCookedHandSide(sectionMap[i])==1;
+            bool right[45]{};if(gloves)for(int i=0;i<slots;++i)right[i]=gloveisolate::NoTmdCookedHandSide(sectionMap[i])==1;
             const bool capture=physicalVisual.phase!=(int)centurionreload::Phase::WaitingNative&&
                 physicalVisual.phase!=(int)centurionreload::Phase::Cooldown;
-            if(!centurionvisual::ReleaseNative(g_centurionRefillOnly!=0,physicalVisual.closed)&&
+            if(gloves&&!centurionvisual::ReleaseNative(g_centurionRefillOnly!=0,physicalVisual.closed)&&
                g_centurionRightHand.Apply(physicalVisual.clip.pawn,physicalVisual.clip.weapon,physicalVisual.transaction,
                 capture,changed,(unsigned)slots,right,chain,tracking,physicalVisual.aim))InterlockedIncrement(&g_centurionRightHeld);
-            if(centurionCarry&&g_nativeGlovePoseThisDraw&&wristSlot[0]>=0){
+            if(centurionCarry&&((gloves&&g_nativeGlovePoseThisDraw)||tmdGloves)&&wristSlot[0]>=0){
                 armbind::Mat desired;
-                if(centurionphysical::Grip(g_nativeGloveRenderer.WristReference(0),
+                if(centurionphysical::Grip(tmdGloves?armnatural::TmdBind().bind[9]:g_nativeGloveRenderer.WristReference(0),
                     reinterpret_cast<const float(*)[4]>(changed+wristSlot[0]*3),chain,tracking,desired)){
                     const auto point=centurionvisual::Point({},desired);
                     g_centurionGripStaged={{physicalVisual.clip.pawn,physicalVisual.clip.weapon,physicalVisual.transaction,physicalNow,point,true},desired};
@@ -21411,6 +21417,16 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
         !g_boundShaderLayout.shadow && g_boundShaderLayout.bones>=0 && g_boundShaderLayout.boneRegs>=15 &&
         g_sceneMode.Current()==vrscene::Mode::GameplayStereo &&
         !g_centurionHdRenderer.asset.bytes.empty() && g_centurionHdIndices.Observe(dev);
+    if(g_centurionHdNativeModel&&numVertices==5799&&!startIndex&&primCount==6767&&
+       !g_boundShaderLayout.shadow&&Rd(g_rtIsScene)){
+        static int lastRoute=-1;static unsigned transitions=0;
+        if(transitions<16&&lastRoute!=int(centurionHdDraw)){
+            lastRoute=int(centurionHdDraw);++transitions;
+            Log("centurion-hd route: active=%d moved=%d segments=%d min=%u boneRegs=%d witness=%d resources=%u cylinderReplay=%d",
+                centurionHdDraw?1:0,g_thisDrawMoved,nSeg,minIndex,g_boundShaderLayout.boneRegs,
+                g_centurionHdIndices.valid?1:0,g_centurionHdIndices.count,cylinderBase>=0?1:0);
+        }
+    }
     // Original PSK SHA 4E18A25D...: muzzle_flash absolute bind position;
     // local +X is the barrel's +Z in cog_alt_pistol. Native Y reflects ActorX.
     // Cooked palette [57,53,56,55,58]: slot1 is cog_alt_pistol skin matrix.
@@ -21449,6 +21465,20 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
            SUCCEEDED(dev->GetVertexShaderConstantF(g_boundShaderLayout.local,&local.m[0][0],4)))
             seekergeometry::Capture(skin,local,(uint32_t)g_playerPawn,(uint32_t)Rd(g_weaponObj),GetTickCount64(),seekerStaged);
     }
+    seekergeometry::Witness kasimovSupportStaged;
+    unsigned kasimovSupportEyes=0;
+    if(g_kasimovAuthoredGrip&&t==D3DPT_TRIANGLELIST&&numVertices==11389&&
+       !baseVertex&&!minIndex&&!startIndex&&primCount==12942&&g_thisDrawMoved==1&&
+       !g_boundShaderLayout.shadow&&Rd(g_rtIsScene)&&!Rd(g_weaponHolstered)&&
+       g_boundShaderLayout.bones>=0&&g_boundShaderLayout.boneRegs>=18&&g_boundShaderLayout.local>=0&&
+       g_nextIBVerified[2]){
+        float palette[3][4];armbind::Mat skin,local;
+        if(SUCCEEDED(dev->GetVertexShaderConstantF(g_boundShaderLayout.bones,&palette[0][0],3))&&
+           armbind::FromGpu(palette,skin)&&
+           SUCCEEDED(dev->GetVertexShaderConstantF(g_boundShaderLayout.local,&local.m[0][0],4)))
+            seekergeometry::Capture(kasimovsupport::RootBind,skin,local,(uint32_t)g_playerPawn,
+                (uint32_t)Rd(g_weaponObj),GetTickCount64(),kasimovSupportStaged);
+    }
     // Diegetic 3D HUD: capture the live weapon transform (skin * local * controller)
     // for Centurion (5799), Valkyrie AR9 (11387), and Spikeshot/Volk (8297).
     if (Rd(g_diegeticHud) && t == D3DPT_TRIANGLELIST &&
@@ -21466,7 +21496,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
                 camera=&g_camMats[i];break;
             }
         if(mo && !camera) {
-            static unsigned cameraRejects[3]{};
+            static unsigned cameraRejects[4]{};
             if(cameraRejects[mo->plate]++<2)
                 Log("diegetic hud: body camera unavailable %s vp=c%d tracked=%d; refusing unrelated Present camera",
                     mo->name,g_boundShaderLayout.viewProjection,g_camMatUsed);
@@ -21835,6 +21865,8 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
             if (FAILED(h) && SUCCEEDED(hr)) hr = h;      // keep the FIRST failure, not the last
             if(seekerStaged.valid&&nSeg==1&&segStart[s]==startIndex&&segPrims[s]==primCount&&SUCCEEDED(h))
                 ++seekerEyeDraws;
+            if(kasimovSupportStaged.valid&&nSeg==1&&segStart[s]==startIndex&&segPrims[s]==primCount&&SUCCEEDED(h))
+                ++kasimovSupportEyes;
         }
         if(SUCCEEDED(hr)&&cylinderBase>=0&&cylinderReplay.spare){
             bool restored=false;
@@ -21933,15 +21965,15 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
        g_nextWristStaged.valid&&TryAcquireSRWLockExclusive(&g_nextVisualLock)){
         g_nextWrist=g_nextWristStaged;ReleaseSRWLockExclusive(&g_nextVisualLock);
         if(g_nextWristStagedFromTmd){
-            static LONG reportedTmdWrist[2]{};
-            const unsigned wristProfile=g_nextWristStaged.kind==weaponreload::Kind::Valkyrie?0u:1u;
+            static LONG reportedTmdWrist[3]{};
+            const unsigned wristProfile=weaponreload::Index(g_nextWristStaged.kind);
             if(InterlockedCompareExchange(&reportedTmdWrist[wristProfile],1,0)==0)
                 Log("next carry wrist: kind=%d TMD material-0 published after stereo draw, wrist bone=9, segments=%d",
                     int(g_nextWristStaged.kind),nSeg);
         }
     }
     if(g_centurionPhysicalPolish&&independentRegs&&SUCCEEDED(dhr)&&SUCCEEDED(nativeRestore)&&SUCCEEDED(handRestore)&&
-       g_centurionGripStaged.identity.valid&&TryAcquireSRWLockExclusive(&g_centurionGripLock)){
+       nSeg>0&&g_centurionGripStaged.identity.valid&&TryAcquireSRWLockExclusive(&g_centurionGripLock)){
         g_centurionGrip=g_centurionGripStaged;ReleaseSRWLockExclusive(&g_centurionGripLock);
         InterlockedIncrement(&g_centurionPalmPublished);
     }
@@ -21983,6 +22015,10 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
         if(r.frame==poseSource.frame&&r.call==poseSource.call){
             r.ibRestore=nativeRestore;r.paletteRestore=FAILED(handRestore)?handRestore:nextRestore;
         }
+    }
+    if(kasimovSupportStaged.valid&&kasimovSupportEyes==2&&SUCCEEDED(dhr)&&SUCCEEDED(nextRestore)&&
+       SUCCEEDED(nativeRestore)&&SUCCEEDED(handRestore)&&TryAcquireSRWLockExclusive(&g_nextVisualLock)){
+        g_kasimovSupportPose=kasimovSupportStaged;ReleaseSRWLockExclusive(&g_nextVisualLock);
     }
     if(seekerStaged.valid&&seekerEyeDraws==2&&SUCCEEDED(dhr)&&SUCCEEDED(nextRestore)&&
        SUCCEEDED(nativeRestore)&&SUCCEEDED(handRestore)&&TryAcquireSRWLockExclusive(&g_nextVisualLock)){
@@ -29957,7 +29993,7 @@ void ReleaseWristResources() {
     g_tmdShortGauntletRenderer.ReleaseGPU();
     g_tmdAttachmentIdentity.Reset();
     g_seekerIndices.Reset();g_seekerSupportFrame={};
-    AcquireSRWLockExclusive(&g_nextVisualLock);g_seekerPose={};ReleaseSRWLockExclusive(&g_nextVisualLock);
+    AcquireSRWLockExclusive(&g_nextVisualLock);g_seekerPose={};g_kasimovSupportPose={};ReleaseSRWLockExclusive(&g_nextVisualLock);
     InterlockedExchange(&g_tmdShortSuccessfulFrame,-1);
     InterlockedExchange(&g_tmdShortSuccessfulDraw,-1);
     g_gloveRenderer.ReleaseGPU();g_gloveReplacementSeen=false;
@@ -32160,7 +32196,7 @@ static int g_ammoOffClip = -2, g_ammoOffBin = -2, g_ammoOffSize = -2;
 volatile LONG g_diegeticHud = 0;
 static IDirect3DTexture9* g_diegeticAtlas = nullptr;
 static volatile LONG g_diegeticArtState = 0; // 0 unloaded, 1 ready, -1 failed
-static volatile LONG g_diegeticDrew[3] = { 0, 0, 0 }; // per legacy plate 0..2, per frame:
+static volatile LONG g_diegeticDrew[4] = { 0, 0, 0, 0 }; // per legacy plate 0..3, per frame:
                               // bit0 = counter drawn into the left half, bit1 = right half,
                               // cleared at the start of every diegetic frame and set ONLY
                               // after actual draw submission in that eye. This is the
@@ -32292,7 +32328,7 @@ void DrawAmmoPlate(IDirect3DDevice9* dev) {
     // this frame (per-plate latch set by DrawDiegeticCenturion, which now
     // runs immediately before this function). Turning the gate OFF restores
     // these verbatim plates unconditionally (independent rollback).
-    if (plate >= 0 && plate <= 2 && Rd(g_diegeticHud) != 0 &&
+    if (plate >= 0 && plate <= 3 && Rd(g_diegeticHud) != 0 &&
         (InterlockedCompareExchange(&g_diegeticDrew[plate], 0, 0) & 3) == 3) return;
     // HUD sampler: offsets BY NAME per HUD class (round-9 probe verdict).
     const uintptr_t hud = FindHudObject();
@@ -32498,6 +32534,7 @@ static void DrawDiegeticCenturion(IDirect3DDevice9* dev) {
     InterlockedExchange(&g_diegeticDrew[0], 0);
     InterlockedExchange(&g_diegeticDrew[1], 0);
     InterlockedExchange(&g_diegeticDrew[2], 0);
+    InterlockedExchange(&g_diegeticDrew[3], 0);
     if (handhud::HideAmmo(Rd(g_opticalHudHidden) != 0)) return;
     const bool hudGameplay = g_sceneMode.Current() == vrscene::Mode::GameplayStereo &&
         !Rd(g_inCinematic) && !CutsceneNativeCameraArmed();
@@ -32588,7 +32625,7 @@ static void DrawDiegeticCenturion(IDirect3DDevice9* dev) {
         [&](const diegetichud::ScreenVertex* vertices){return g_origDrawPrimUP(dev,
             D3DPT_TRIANGLESTRIP,2,vertices,sizeof(diegetichud::ScreenVertex));});
     back->Release();
-    if(mo->plate>=0 && mo->plate<=2)InterlockedExchange(&g_diegeticDrew[mo->plate],result.handledEyes);
+    if(mo->plate>=0 && mo->plate<=3)InterlockedExchange(&g_diegeticDrew[mo->plate],result.handledEyes);
 
     // Six bounded receipts per weapon/session, plus state changes. No readback,
     // shader dump or GPU synchronization in the production draw path.
@@ -36584,6 +36621,8 @@ void LoadIniSettings() {
     g_cutsceneNativeCameraFix = GetPrivateProfileIntA("Render", "CutsceneNativeCameraFix", 1, path) ? 1 : 0;
     g_cutsceneWorldScreen=GetPrivateProfileIntA("Render","CutsceneWorldScreen",0,path)?1:0;
     g_menuAssetWitness=GetPrivateProfileIntA("Diagnostic","MenuAssetWitness",0,path)?1:0;
+    InterlockedExchange(&g_menuDrawTrace,
+        GetPrivateProfileIntA("Diagnostic","MenuDrawTrace",0,path)!=0);
     InterlockedExchange(&g_lockerNativeTrace,GetPrivateProfileIntA("Diagnostic","LockerNativeTrace",0,path)!=0);
     Log("ini: LockerNativeTrace=%ld (default OFF; bounded read-only WeaponLocker exec/pickup witness; no writes)",
         Rd(g_lockerNativeTrace));

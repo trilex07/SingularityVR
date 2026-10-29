@@ -1,6 +1,6 @@
 """Fixed-allocation Vorbis replacement; no export relocation or runtime hooks.
 
-Padding is a valid Vorbis vendor comment, never bytes after EOS. Original audio
+Padding is a valid Vorbis user comment, never a padded vendor or bytes after EOS. Original audio
 packets/granules remain byte-identical. Refuse unfamiliar/multiplexed streams.
 """
 import struct
@@ -83,8 +83,24 @@ def pad_to_allocation(source,target_size):
     require(audio,'no audio pages')
     vendor_size=struct.unpack_from('<I',headers[1],7)[0]
     require(11+vendor_size<len(headers[1]),'invalid vendor comment')
+    # The shipped UE3 Vorbis decoder rejects the long vendor strings emitted by
+    # the old allocator (OV_EBADHEADER). Preserve the producer identifier and
+    # put allocation padding in an ordinary length-delimited user comment.
+    vendor=headers[1][11:11+vendor_size].rstrip(b' ')
+    tail=headers[1][11+vendor_size:]
+    require(len(tail)>=5,'invalid comment list')
+    count=struct.unpack_from('<I',tail)[0];at=4
+    require(count<=65535,'invalid comment count')
+    for _ in range(count):
+        require(at+4<=len(tail),'truncated comment length')
+        size=struct.unpack_from('<I',tail,at)[0];at+=4+size
+        require(at<=len(tail),'truncated comment')
+    require(tail[at:]==b'\x01','invalid comment framing')
+    prefix=headers[1][:7]+struct.pack('<I',len(vendor))+vendor+struct.pack('<I',count+1)+tail[4:at]
+    label=b'TRILEX_PADDING='
+    base_comment=prefix+struct.pack('<I',len(label))+label+b'\x01'
     def build(padding):
-        comment=headers[1][:7]+struct.pack('<I',vendor_size+padding)+headers[1][11:11+vendor_size]+b' '*padding+headers[1][11+vendor_size:]
+        comment=prefix+struct.pack('<I',len(label)+padding)+label+b' '*padding+b'\x01'
         out=[]
         for packet_index,packet in enumerate([headers[0],comment,headers[2]]):
             lacing=[255]*(len(packet)//255)+[len(packet)%255];at=0;continued=False
@@ -101,9 +117,9 @@ def pad_to_allocation(source,target_size):
     while lo<hi:
         mid=(lo+hi+1)//2
         # Avoid repeated CRC of long audio pages during size search.
-        packet_len=len(headers[1])+mid
+        packet_len=len(base_comment)+mid
         lace_count=packet_len//255+1
-        old_len=len(headers[1]);old_laces=old_len//255+1
+        old_len=len(base_comment);old_laces=old_len//255+1
         n=len(base)+mid+lace_count-old_laces+27*((lace_count+254)//255-(old_laces+254)//255)
         if n<=target_size:lo=mid
         else:hi=mid-1
