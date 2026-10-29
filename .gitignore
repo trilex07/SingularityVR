@@ -135,3 +135,6 @@ offline-deliverables/
 
 /build/texture-ini-lease/
 /build/volk-reload-mechanics/
+
+# Private source-derived Volk runtime cache, DDS, cooked export and local evidence.
+/build/volk-hd/

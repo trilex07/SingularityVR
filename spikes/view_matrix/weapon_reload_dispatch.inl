@@ -18,6 +18,7 @@ static bool NextObject(uintptr_t object,weaponreload::Kind kind){
         (!strncmp(name,"Shared_",7)&&!strcmp(name+7,bare));
 }
 static void ReleaseNextReloadGPU(){
+    g_volkHdRenderer.ReleaseGPU();
     for(unsigned i=0;i<3;++i){
         g_nextClipRenderer[i].ReleaseGPU();hipknife::Release(g_nextIB[i]);
         g_nextIBVerified[i]=false;g_nextIBAttempts[i]=0;InterlockedExchange(&g_nextFault[i],0);
@@ -35,6 +36,11 @@ static void InitNextReload(){
         const auto kind=weaponreloadproto::profiles[i].kind;const std::string stem=weaponreload::Stem(kind);
         directory.resize(slash);directory+="\\vr-assets\\reload\\"+stem+"\\";
         std::vector<unsigned char> bytes,mesh,albedo;const auto& original=weaponreload::originalAssets[i];
+        if(i==1&&g_volkHdNativeModel){
+            const bool loaded=hipknife::Read(directory+"volk_hd.svvh",bytes,2*1024*1024)&&
+                g_volkHdRenderer.asset.Load(bytes.data(),bytes.size());
+            Log("volk-hd: CPU cache=%s original=8297/10835 final=12085/12727 native palette/material; no runtime proof",loaded?"READY":"INVALID (original retained)");
+        }
         g_nextReady[i]=hipknife::Read(directory+stem+"_reload.svwa",bytes,256*1024)&&
             weaponreload::Hash(bytes.data(),(unsigned)bytes.size())==original.animation&&
             weaponreloadanim::Decode(bytes.data(),bytes.size(),kind,g_nextAnimation[i])&&
@@ -439,6 +445,10 @@ static int PrepareNextReload(IDirect3DDevice9* dev,INT base,UINT min,UINT vertic
             if(!weaponreload::SeatingPalette(g_nextAnimation[index],frame,parentPalette,regs,changed))return 0;
         }else if(!weaponreload::Palette(g_nextAnimation[index],frame,weaponreload::Absent(visual.phase),parentPalette,regs,changed))return 0;
     }else std::memcpy(changed,parentPalette,regs*4*sizeof(float));
+    if(g_volkHdNativeModel && kind==weaponreload::Kind::Volk &&
+       !g_volkHdRenderer.asset.bytes.empty() &&
+       !volkmechanics::Palette(g_nextAnimation[index],visual.phase,visual.since,
+            visual.insertedMs,now,parentPalette,regs,changed))return 0;
     if(g_nextNativeMagazine){
         armbind::Mat world;
         if(!weaponreload::TrackingMap({g_centrePos[0],g_centrePos[1],g_centrePos[2]},g_centreYaw,

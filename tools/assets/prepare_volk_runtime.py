@@ -1,0 +1,196 @@
+"""Convert the private final handoff to the EXISTING UE3 skin/material path.
+
+No GLB/PBR loader in the game. Original cooked vertices/indices remain byte exact;
+six rigid detail groups use the same five-slot palette. Outputs stay private.
+"""
+import argparse
+import hashlib
+import json
+import struct
+import sys
+from pathlib import Path
+
+import numpy as np
+from PIL import Image, ImageDraw
+
+ROOT = Path(__file__).resolve().parents[2]
+sys.path[:0] = [str(ROOT/'tools/reload'), str(ROOT/'tools/title'), str(ROOT/'tools/textures')]
+from prepare_centurion import read_psk
+from prepare_weapon_animation import cooked_layout, SPECS, fnv
+from ue3_layout import inspect
+from dds_io import save_dds, read_dds_header
+
+
+def sha(path):
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def verify(package):
+    manifest = json.loads((package/'final_handoff_manifest.json').read_text())
+    for name, expected in manifest['files_sha256'].items():
+        if sha(package/name) != expected:
+            raise ValueError('handoff SHA mismatch: '+name)
+    return manifest
+
+
+def read_glb(path):
+    data = path.read_bytes()
+    if struct.unpack_from('<III', data) != (0x46546c67, 2, len(data)):
+        raise ValueError('GLB header')
+    size, kind = struct.unpack_from('<II', data, 12)
+    if kind != 0x4e4f534a:
+        raise ValueError('GLB JSON')
+    doc = json.loads(data[20:20+size])
+    length, kind = struct.unpack_from('<II', data, 20+size)
+    raw = data[28+size:]
+    if kind != 0x004e4942 or length != len(raw):
+        raise ValueError('GLB BIN')
+
+    def accessor(i):
+        a = doc['accessors'][i]
+        v = doc['bufferViews'][a['bufferView']]
+        dtype = np.dtype({5126:'<f4', 5125:'<u4', 5123:'<u2'}[a['componentType']])
+        n = {'VEC3':3, 'VEC4':4, 'VEC2':2, 'SCALAR':1}[a['type']]
+        stride = v.get('byteStride', n*dtype.itemsize)
+        offset = v.get('byteOffset', 0)+a.get('byteOffset', 0)
+        if a.get('sparse') or stride < n*dtype.itemsize or offset+(a['count']-1)*stride+n*dtype.itemsize > len(raw):
+            raise ValueError('GLB accessor bounds')
+        return np.ndarray((a['count'],n), dtype, raw, offset, (stride,dtype.itemsize)).copy()
+    return doc, accessor
+
+
+def unused_patch(wedges, faces, size=4096, tile=64):
+    # Only new detail UVs use this constant-material island. Preserve every
+    # original UV and pixel outside it; include a two-texel safety expansion.
+    mask = Image.new('1',(size,size))
+    d = ImageDraw.Draw(mask)
+    uv = np.array([[w[1],w[2]] for w in wedges])*size
+    for f in faces:
+        d.polygon([tuple(uv[i]) for i in f[:3]], fill=1)
+    occupied = np.array(mask)
+    for y in range(tile,size-tile,tile):
+        for x in range(tile,size-tile,tile):
+            if not occupied[y-2:y+tile+2,x-2:x+tile+2].any():
+                return x,y,tile
+    raise ValueError('no unoccupied native UV island for constant detail material')
+
+
+def prepare(package, cooked_path, output):
+    verified = verify(package)
+    psk = read_psk(package/'source/ch_inview_shotgun_mesh.psk')
+    names, parents, _, bind, points, weights, wedges, faces = psk
+    data = cooked_path.read_bytes()
+    exp = next(e for e in inspect(cooked_path,include_all=True)['exports'] if e['name']=='ch_inview_shotgun_mesh')
+    layout = cooked_layout(data,SPECS['volk'],exp['offset'],exp['offset']+exp['size'])
+    palette = layout['chunks'][0]['palette']
+    if [names[i] for i in palette] != ['clip','Slide','cog_shotgun','release','Trigger']:
+        raise ValueError('native palette changed')
+    expected = points[[w[0] for w in wedges]]*[1,-1,1]
+    needle = struct.pack('<3f',*expected[0])
+    candidates=[]
+    for at in range(exp['offset'],exp['offset']+exp['size']-len(wedges)*32+1):
+        if data[at:at+12] == needle and np.array_equal(np.ndarray((8297,3),'<f4',data,at,(32,4)),expected):
+            candidates.append(at)
+    if len(candidates)!=1:
+        raise ValueError('complete native VB identity not unique')
+    at=candidates[0]
+    source=data[at:at+8297*32]
+    uv=np.ndarray((8297,2),'<f2',source,28,(32,2))
+    if not np.allclose(uv,[[w[1],w[2]] for w in wedges],rtol=0,atol=.0005):
+        raise ValueError('native UV format not established')
+    slots=np.ndarray((8297,4),'u1',source,20,(32,1))
+    blends=np.ndarray((8297,4),'u1',source,24,(32,1))
+    for i,(point,_,_) in enumerate(wedges):
+        expected_weights=sorted((b,w) for w,b in weights[point] if w)
+        actual=sorted((palette[int(b)],w/255) for b,w in zip(slots[i],blends[i]) if w)
+        if len(actual)!=len(expected_weights) or any(a[0]!=b[0] or abs(a[1]-b[1])>1/255+.00001 for a,b in zip(actual,expected_weights)):
+            raise ValueError('native weights differ')
+    original_indices=np.array([f[:3] for f in faces],dtype='<u2')[:,[1,0,2]].copy().tobytes()
+    if fnv(original_indices)!=754008012:
+        raise ValueError('original IB changed')
+    x,y,tile=unused_patch(wedges,faces)
+    detail_uv=((x+tile/2)/4096,(y+tile/2)/4096)
+    doc,accessor=read_glb(package/'volk_s4_hd_animated.glb')
+    mapping={'weapon_body_machined_fasteners':'cog_shotgun',
+             'moving_reload_part_machined_fasteners':'Slide',
+             'magazine_machined_fasteners':'clip',
+             'magazine_rib_lower':'clip','magazine_rib_middle':'clip','magazine_rib_upper':'clip'}
+    assembly=json.loads((package/'assembly_manifest.json').read_text())
+    # bind from read_psk is native UE3 row-vector; GLB locals are original
+    # ActorX metres. Reflect local Y once, then multiply original native bind.
+    vb=bytearray(source);indices=bytearray(original_indices);counts={}
+    for mesh in doc['meshes']:
+        name=mesh['name']
+        if name not in mapping:
+            continue
+        p=mesh['primitives'][0]
+        if len(mesh['primitives'])!=1 or p.get('mode',4)!=4 or p['material']!=0:
+            raise ValueError('detail material topology')
+        b=names.index(mapping[name]);slot=palette.index(b)
+        pos=accessor(p['attributes']['POSITION']).astype(float)*52.5
+        normal=accessor(p['attributes']['NORMAL']).astype(float)
+        pos*= [1,-1,1];normal*= [1,-1,1]
+        pos=np.c_[pos,np.ones(len(pos))]@bind[b]
+        normal=normal@bind[b,:3,:3]
+        normal/=np.linalg.norm(normal,axis=1)[:,None]
+        fs=accessor(p['indices']).reshape(-1,3)[:,[1,0,2]]
+        if not np.isfinite(pos).all() or not np.isfinite(normal).all() or fs.max()>=len(pos):
+            raise ValueError('detail geometry')
+        base=len(vb)//32
+        for point,n in zip(pos,normal):
+            axis=np.eye(3)[np.argmin(np.abs(n))]
+            tangent=np.cross(axis,n);tangent/=np.linalg.norm(tangent)
+            pack=lambda xyz,w: bytes(np.r_[np.clip(np.rint((xyz+1)*127.5),0,255),w].astype('u1'))
+            vb+=struct.pack('<3f',*point[:3])+pack(tangent,127)+pack(n,255)+bytes([slot,0,0,0,255,0,0,0])+struct.pack('<2e',*detail_uv)
+        indices+=(fs.astype('<u2')+base).astype('<u2').tobytes()
+        counts[name]=len(fs)
+    if set(counts)!=set(mapping) or sum(counts.values())!=1892 or len(vb)//32>=65536:
+        raise ValueError('HD detail accounting')
+    for name,count in counts.items():
+        if count!=assembly['details'][name]['triangles']:
+            raise ValueError('source detail triangle count')
+    output.mkdir(parents=True,exist_ok=True)
+    payload=bytes(vb)+bytes(indices)
+    blob=struct.pack('<4s6I',b'SVVH',1,len(vb)//32,len(indices)//2,8297,754008012,fnv(payload))+payload
+    (output/'volk_hd.svvh').write_bytes(blob)
+    # Do not feed glTF's green-flipped normal into UE3. Verify its inverse
+    # conversion byte-exact against the supplied native encoding instead.
+    a=np.array(Image.open(package/'maps/volk_s4_hd_normal_gltf_4k.png').convert('RGBA'))
+    a[:,:,1]=255-a[:,:,1]
+    native_normal=Image.fromarray(a)
+    albedo=Image.open(package/'maps/volk_s4_hd_albedo_4k.png').convert('RGBA')
+    rig=package.parent/'clean/rig_manifest.json'
+    if sha(rig)!=assembly['visual_manifest_sha256']:
+        raise ValueError('original texture provenance manifest changed')
+    original_path=package.parent/'source/AR_shotgun_d_source.dds'
+    if sha(original_path)!=json.loads(rig.read_text())['source_diffuse_sha256']:
+        raise ValueError('native alpha texture changed')
+    original=Image.open(original_path).convert('RGBA')
+    # Native alpha is material data, not glTF opacity. Preserve it for all
+    # original faces instead of replacing it with the opaque preview alpha.
+    albedo.putalpha(original.getchannel('A').resize(albedo.size,Image.Resampling.BILINEAR))
+    detail=doc['materials'][0]['pbrMetallicRoughness']['baseColorFactor']
+    d=ImageDraw.Draw(albedo);d.rectangle((x,y,x+tile-1,y+tile-1),fill=tuple(round(c*255) for c in detail))
+    ImageDraw.Draw(native_normal).rectangle((x,y,x+tile-1,y+tile-1),fill=(128,128,255,255))
+    save_dds(output/'AR_shotgun_d.dds',albedo,'DXT5')
+    save_dds(output/'AR_shotgun_n.dds',native_normal,'DXT1')
+    report=dict(schema='volk-native-runtime-v1',source_glb=sha(package/'volk_s4_hd_animated.glb'),
+        handoff_verified_files=len(verified['files_sha256']),cooked_sha256=sha(cooked_path),
+        original_vertices_byte_exact=True,original_indices_byte_exact=True,
+        original_vertices=8297,original_triangles=10835,detail_triangles=counts,
+        vertices=len(vb)//32,triangles=len(indices)//6,palette=[names[i] for i in palette],
+        native_uv_empty_patch=[x,y,tile],native_vb_fnv=fnv(source),
+        material_translation='native AR_Shotgun shader; detail baseColor baked in unused UV island, neutral normal. PBR metallic/roughness are NOT native shader inputs.',
+        files_sha256={p.name:sha(p) for p in output.iterdir() if p.suffix in ('.svvh','.dds')},
+        physical_acceptance='PENDING')
+    (output/'runtime_manifest.json').write_text(json.dumps(report,indent=2)+'\n')
+    return report
+
+
+if __name__=='__main__':
+    p=argparse.ArgumentParser(description=__doc__)
+    for n in ('package','cooked','output'):p.add_argument('--'+n,type=Path,required=True)
+    a=p.parse_args()
+    if not a.output.resolve().is_relative_to((ROOT/'build/volk-hd').resolve()):
+        p.error('output must remain in the private build/volk-hd lab')
+    print(json.dumps(prepare(a.package,a.cooked,a.output),indent=2))

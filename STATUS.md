@@ -1,5 +1,13 @@
 # STATUS — session handoff
 
+## 2026-10-29 — MAIN: Volk S4 native HD candidate
+
+- Dedicated branch integration/volk-s4-hd-physical-reload; PR66 source tools plus native VB/IB integration.
+- Existing reload FSM, wrist/palm and ammo acknowledgment retained; source-endpoint normalized seat/Slide.
+- Actual asset, x86 and D3D9/D3D9Ex pixel/state tests PASS; Steam/HMD/performance PENDING.
+- Details: docs/handoffs/volk-s4-native-runtime-integration-20261029.md.
+
+
 ## 2026-10-26 — MAIN: Trilex accepts V7 as first-release baseline
 
 - User PSVR2 feedback: "wszystko wydaje się dobrze"; explicitly requested main,
@@ -5344,3 +5352,4 @@ Toggle with **F6**.
   get cycled past unseen.
 - **Doc errors become code bugs.** `ENGINE_NOTES` recorded the backbuffer as `X8R8G8B8`; it is
   `A8R8G8B8`, and that mistake propagated straight into a `D3DERR_INVALIDCALL`.
+

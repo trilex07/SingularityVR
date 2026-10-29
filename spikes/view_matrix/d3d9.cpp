@@ -34,6 +34,8 @@ static texbridge::Bind g_textureBridgeBind=nullptr;
 #include "native_refill_only.h"
 #include "weapon_reload_runtime.h"
 #include "weapon_reload_carry.h"
+#include "volk_hd_native.h"
+#include "volk_mechanics.h"
 #include "weapon_trace_math.h"
 #include "weapon_muzzle_geometry.h"
 #include "weapon_accuracy_policy.h"
@@ -2384,6 +2386,8 @@ static void DrawCenturionReload(IDirect3DDevice9* dev);
 // Independent, default-OFF three-weapon path; Centurion remains untouched.
 static int g_nextReload[3]{};
 static int g_nextNativeMagazine=0; // independent default-OFF native material/depth replay
+static bool g_volkHdNativeModel=false;
+static volkhd::Renderer g_volkHdRenderer;
 static int g_nextRefillOnly=0; // default OFF; manual insertion -> audited native refill only
 static volatile LONG g_nextNativeMagazineDraws=0;
 static bool NextReloadEnabled(){return g_nextReload[0]||g_nextReload[1]||g_nextReload[2];}
@@ -21474,7 +21478,27 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
             r.boundOk=ok?1:0;g_dualPoseMask|=1u<<poseIndex;
             if(ok)g_dualPoseStages[r.part]|=4;
         }
-        const auto drawEye=[&]()->HRESULT {
+    // Source identity was established by PrepareNextReload before any binding.
+    // Reuse this SAME replacement for attached, carried and dropped palettes.
+    const bool volkHdDraw=g_volkHdNativeModel && t==D3DPT_TRIANGLELIST &&
+        numVertices==8297 && !baseVertex && !minIndex && !startIndex && primCount==10835 &&
+        nSeg==1 && segStart[0]==0 && segPrims[0]==10835 &&
+        g_thisDrawMoved==1 && FgMatchWindow() && Rd(g_rtIsScene) &&
+        !g_boundShaderLayout.shadow && g_boundShaderLayout.boneRegs>=15 &&
+        g_nextReady[1] && g_nextIBVerified[1] && Rd(g_gunVerts)==8297 && !Rd(g_nextFault[1]) &&
+        g_sceneMode.Current()==vrscene::Mode::GameplayStereo;
+    const auto drawVolkOrSource=[&]()->HRESULT {
+        if(!volkHdDraw)return g_origDrawIndexedPrim(dev,t,baseVertex,minIndex,numVertices,startIndex,primCount);
+        bool replaced=false;
+        const HRESULT h=g_volkHdRenderer.DrawNative(dev,[&](UINT v,UINT f){
+            return g_origDrawIndexedPrim(dev,t,0,0,v,0,f);
+        },replaced,g_nextIB[1]);
+        static unsigned receipts=0;
+        if(receipts++<8)Log("volk-hd native: eye=%u replaced=%d vertices=%u triangles=%u hr=%08lX gate=%s native-material=1 root=controller reload=existing",
+            eye,replaced?1:0,replaced?volkhd::Vertices:8297,replaced?volkhd::Triangles:10835,h,g_volkHdRenderer.receipt);
+        return h;
+    };
+    const auto drawEye=[&]()->HRESULT {
         HRESULT hr = D3D_OK;
         if (shortTmdTail) return hr; // audited 17-face right forearm tail, no hardware
         // Bounded receipts from the ACTUALLY BOUND draw, before restoration.
@@ -21675,7 +21699,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
             });
         }
         for (int s = 0; s < nSeg; ++s) {
-            const HRESULT h = g_origDrawIndexedPrim(dev, t, baseVertex, minIndex, numVertices,
+            const HRESULT h = volkHdDraw?drawVolkOrSource():g_origDrawIndexedPrim(dev, t, baseVertex, minIndex, numVertices,
                                                     segStart[s], segPrims[s]);
             if (FAILED(h) && SUCCEEDED(hr)) hr = h;      // keep the FIRST failure, not the last
             if(seekerStaged.valid&&nSeg==1&&segStart[s]==startIndex&&segPrims[s]==primCount&&SUCCEEDED(h))
@@ -21711,7 +21735,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
             bool restored=false;
             const bool ok=weaponreload::Replay([&](const float* palette){
                     return SUCCEEDED(g_origSetVSConstF(dev,nextReg,palette,nextReplay.regs));
-                },[&](){return SUCCEEDED(g_origDrawIndexedPrim(dev,t,baseVertex,minIndex,numVertices,startIndex,primCount));},
+                },[&](){return SUCCEEDED(drawVolkOrSource());},
                 nextReplay.spare[copy],nextReplay.attached,restored);
             if(probeDraw){
                 Log("reload carry render: submitted frame=%ld eye=%u kindIndex=%u transaction=%llu copies=%u hr=%d paletteRestored=%d rt=%p depth=%p texture=%p z=%lu write=%lu blend=%lu alpha=%lu cull=%lu",
@@ -37111,6 +37135,7 @@ void LoadIniSettings() {
     g_weaponWheelObserved = GetPrivateProfileIntA("Input", "WeaponWheelObservedSelection", 0, path) ? 1 : 0;
     Log("ini: VolkAuthoredGrip=%d WeaponWheelObservedSelection=%d (default OFF)",g_volkAuthoredGrip,g_weaponWheelObserved);
     Log("ini: ValkyrieSingleGrip=%d (default OFF; one-hand right glove follows weapon delta)",g_valkyrieSingleGrip);
+    g_volkHdNativeModel=GetPrivateProfileIntA("Render","VolkHdNativeModel",0,path)!=0;
     g_reloadPalmGrip=GetPrivateProfileIntA("Input","ReloadPalmGrip",0,path)!=0;
     g_reloadCarryTrackedContinuity=GetPrivateProfileIntA("Render","ReloadCarryTrackedContinuity",0,path)!=0;
     Log("ini: ReloadCarryTrackedContinuity=%d (measured wrist + live tracked pose, <=350ms; default OFF)",
