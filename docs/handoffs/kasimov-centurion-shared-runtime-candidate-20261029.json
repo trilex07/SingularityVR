@@ -1,0 +1,132 @@
+{
+  "schema": "singularityvr-combined-hd-candidate-v1",
+  "branch": "integration/kasimov-centurion-hd-shared-assets",
+  "sourceCommit": "da5c9055bc8a74c02b32f64b08f36f7f9d707993",
+  "rendererSha256": "9990BD47F3BDD2B1130D08C8DF32746C0B58B97DDDAE6E403C93B84F63F3BB9B",
+  "architecture": "x86 PE32",
+  "optimization": "/O2",
+  "cleanSource": true,
+  "iniSha256": "CB9E8458407DEE33233B57186121B40295822232144244E3F1184B7E3738E829",
+  "baselineRendererSha256": "485FE0AF26925C0BD339DC0ACFBC9340742522FB4DC27C385401C4A603CAC537",
+  "baselineIniSha256": "5D1C4A1AB0C47CDF7643ABA941BD117FC1F39B3F08304DA5E67DB229022B86D7",
+  "assets": [
+    {
+      "path": "Binaries/vr-assets/reload/valkyrie/valkyrie_hd.svvk",
+      "before": null,
+      "after": "1ae4f536b1a82ba75afb9fa9a5fb491910486117a18bfcafca7a927d67730364"
+    },
+    {
+      "path": "Binaries/texture-override-remaster/AR_E99Rifle_alt_d.dds",
+      "before": "a0cdc3dd8528f6b278ef814c77c8f81e7efa708a12c6d32a30c69b7dc3b59ee9",
+      "after": "a2417f1463b20e507a317e54114b41df5d30c7e9c287b8dfb4ec24dc1f11bd4d"
+    },
+    {
+      "path": "Binaries/texture-override-remaster/AR_E99Rifle_n.dds",
+      "before": "54d47f3b7f15ee63410f321b945acb310dbc95d94346cc006ffd2d7460d06fee",
+      "after": "7b88b292c010a27a6152a5281eb5dea659d19d17eb08e50027ab0e01fbf7e0f2"
+    },
+    {
+      "path": "Binaries/vr-assets/reload/valkyrie/valkyrie_reload.svwa",
+      "before": null,
+      "after": "97de1b7b37c733dcb35a8b15ea5ae6ff778a1fb1917305acf70322c32c30e9dd"
+    },
+    {
+      "path": "Binaries/vr-assets/reload/valkyrie/valkyrie_clip.svrk",
+      "before": null,
+      "after": "c6420d9a1c96e09c73c23ec4fb86cb45f4f91c51fd37533f6b365dea2d5756d0"
+    },
+    {
+      "path": "Binaries/vr-assets/reload/valkyrie/valkyrie_clip.svrt",
+      "before": null,
+      "after": "248760b3a25dd51b02b0bc132dff711315b44144bea6a9d07629a0b5bd321155"
+    },
+    {
+      "path": "Binaries/vr-assets/reload/kasimov/kasimov_hd.svks",
+      "before": null,
+      "after": "57ca2ab092101f3334e1c789dd667ddea2dbd950d426a9e70fabbed637948d6e"
+    },
+    {
+      "path": "Binaries/texture-override-remaster/ar_sniper_rifle_d.dds",
+      "before": "61e4cc32ed2ded5e369076c5e4ccf4f099d09ea52f63def76e9669b4ed40b7a8",
+      "after": "d4bfddc881e456bd186cf6b575bda13c88a69d8515344ed2e751d2bad889c072"
+    },
+    {
+      "path": "Binaries/texture-override-remaster/ar_sniper_rifle_n.dds",
+      "before": "37ea2c1a3c368e1a2b7428490d5a36d9673ab0244dfc5af013ac604c17daed77",
+      "after": "a6dc350cbe29487a1992a36d6766c4487fe9717452df1e1a67f74949b4ae93a0"
+    },
+    {
+      "path": "Binaries/vr-assets/reload/kasimov/kasimov_reload.svwa",
+      "before": null,
+      "after": "112ceabefe13a203094847dcb4fdd441edaad774f0bef28eb6091b09e065e47f"
+    },
+    {
+      "path": "Binaries/vr-assets/reload/kasimov/kasimov_clip.svrk",
+      "before": null,
+      "after": "b9387a88e9bb50d898ef28a1ffba1c9e4e59e474ca92f90120f252cf931191d1"
+    },
+    {
+      "path": "Binaries/vr-assets/reload/kasimov/kasimov_clip.svrt",
+      "before": null,
+      "after": "99a9935447d0ecdf47e2a6211f4405cb445f8e768901a522d21f11d04918ef50"
+    },
+    {
+      "path": "Binaries/vr-assets/reload/centurion/centurion_hd.svct",
+      "before": null,
+      "after": "42460e79504d085f246191ac682dd50092b14b20c1ad40eb8b7e8741e01587c4"
+    },
+    {
+      "path": "Binaries/texture-override-remaster/handgun_d.dds",
+      "before": "3590579edf7f67ed49675b0104798ea6d66818e9b2663c5bcccffe3dfe618e9c",
+      "after": "bd4f97afafbd06596288842eb7ab465c62725a42dbb4891c079387264e70bd6b"
+    },
+    {
+      "path": "Binaries/texture-override-remaster/handgun_n.dds",
+      "before": "ed70b5eb67e85bcca99b305865c574f7023da622d0ec8e9a41dc1f352d67e255",
+      "after": "cf15fa5f26f9e5dc9a7c6ce324876e595dddd6520c7f52c58ffe136b4ed77a5b"
+    }
+  ],
+  "sharedSourceOptimization": {
+    "runtimeFilesByteIdentical": "PASS",
+    "vramGain": "NOT_MEASURED",
+    "sideCommit": "cc80e72bfd7b4bc018afc356ec24855b556ace56",
+    "sourceBytes": 218399604,
+    "scope": "offline native-converter shared input; runtime texture/material replay already shares resources, no FPS or VRAM claim",
+    "candidateBytes": 113253954,
+    "savedBytes": 105145650,
+    "fpsGain": "NOT_MEASURED"
+  },
+  "testGrant": {
+    "saveBackupSha256": "551C5E5F337D6006B87C51189777B7218458ECE10614A0DAA0C1FE487105249E",
+    "option": "Testing/GrantKasimovCenturion",
+    "requestedVrMask": "0x9",
+    "acquisition": "PENDING",
+    "checkpointPersistence": "PENDING",
+    "default": 0,
+    "saveEdited": false,
+    "candidate": 1
+  },
+  "offline": {
+    "centurionD3D9": "PASS 6109/6109 pixels, state/failure/reset/fallback",
+    "nis": "PASS pixel/eye/lifetime and 3 unit tests",
+    "lockerCompiledAbi": "PASS literal [eax+20Ch], FName argument setup in exact final DLL",
+    "oled": "PASS D3D11 presets CPU comparison max 1LSB",
+    "centurionGeometry": "PASS 79 bones, byte-exact original prefix, 1160 HD faces",
+    "profile": "PASS private mirrored PRE/POST, all intended DLL/INI/asset identities",
+    "regressions": "PASS 26 optimized x86 fixtures; existing dedicated fixed-base MinHook runner reused",
+    "centurionD3D9Ex": "PASS 6109/6109 pixels, state/failure/reset/fallback",
+    "lockerSource": "PASS 29 assertions, updated stale pre-visibility-fix anchor assertion",
+    "assetScope": "PASS 34 paths and escape/foreign rejection",
+    "sharedSidecars": "PASS 8 actual animated/detached pairs, missing/corrupt/escape rejection",
+    "volkValkyrieKasimov": "PASS actual assets, animation and both D3D9 APIs"
+  },
+  "runtime": {
+    "saveLoad": "NOT_RUN",
+    "physicalAcceptance": "PENDING",
+    "gameLaunched": false,
+    "steamModified": false,
+    "frameTiming": "NOT_RUN"
+  },
+  "stagingDirectory": "build/next-weapon-reload/kasimov-centurion-hd-20261029",
+  "handoff": "docs/handoffs/kasimov-centurion-shared-runtime-20261029.md"
+}

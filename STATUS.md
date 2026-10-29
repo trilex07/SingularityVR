@@ -5378,4 +5378,3 @@ Toggle with **F6**.
   get cycled past unseen.
 - **Doc errors become code bugs.** `ENGINE_NOTES` recorded the backbuffer as `X8R8G8B8`; it is
   `A8R8G8B8`, and that mistake propagated straight into a `D3DERR_INVALIDCALL`.
-
