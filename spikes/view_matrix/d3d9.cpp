@@ -21506,6 +21506,22 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
             static unsigned receipts=0;
             if(receipts++<8)Log("valkyrie-hd native: eye=%u replaced=%d vertices=%u triangles=%u hr=%08lX gate=%s native-material=1 root=controller reload=existing attachment=original",
                 eye,replaced?1:0,replaced?valkyriehd::Vertices:11387,replaced?valkyriehd::Triangles:12834,h,g_valkyrieHdRenderer.receipt);
+            if(receipts<=2&&!replaced){
+                const auto& a=g_valkyrieHdRenderer.audit;
+                Log("valkyrie-hd source: streamHr=%08lX indexHr=%08lX freqHr=%08lX declHr=%08lX offset=%u stride=%u freq=%u expectedIB=%d mask=%u count=%u",
+                    a.streamHr,a.indexHr,a.freqHr,a.declHr,a.offset,a.stride,a.freq,a.expectedIb?1:0,a.mask,a.count);
+                for(unsigned i=0;i<a.count&&a.elements[i].Stream!=0xff;++i){const auto& e=a.elements[i];
+                    Log("valkyrie-hd declaration: eye=%u element=%u stream=%u offset=%u type=%u method=%u usage=%u index=%u",
+                        eye,i,e.Stream,e.Offset,e.Type,e.Method,e.Usage,e.UsageIndex);
+                    if(e.Stream && e.Stream<16){IDirect3DVertexBuffer9* vb=nullptr;UINT offset=0,stride=0,freq=0;
+                        const HRESULT hr=dev->GetStreamSource(e.Stream,&vb,&offset,&stride);
+                        const HRESULT fr=dev->GetStreamSourceFreq(e.Stream,&freq);D3DVERTEXBUFFER_DESC desc{};
+                        const HRESULT dr=vb?vb->GetDesc(&desc):E_FAIL;
+                        Log("valkyrie-hd extra-stream: stream=%u hr=%08lX freqHr=%08lX descHr=%08lX offset=%u stride=%u freq=%u bytes=%u",
+                            e.Stream,hr,fr,dr,offset,stride,freq,desc.Size);if(vb)vb->Release();
+                    }
+                }
+            }
             return h;
         }
         if(!volkHdDraw)return g_origDrawIndexedPrim(dev,t,baseVertex,minIndex,numVertices,startIndex,primCount);

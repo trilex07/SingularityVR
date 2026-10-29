@@ -49,6 +49,12 @@ template<class Profile> class NativeRenderer {
 public:
     NativeAsset<Profile> asset;
     const char* receipt="not-drawn";
+    struct SourceAudit {
+        UINT offset=0,stride=0,freq=0,count=0,mask=0;
+        bool expectedIb=false;
+        HRESULT streamHr=E_FAIL,indexHr=E_FAIL,freqHr=E_FAIL,declHr=E_FAIL;
+        D3DVERTEXELEMENT9 elements[MAXD3DDECLLENGTH]{};
+    } audit;
     void ReleaseGPU(){if(vb)vb->Release();if(ib)ib->Release();vb=nullptr;ib=nullptr;failed=false;}
     ~NativeRenderer(){ReleaseGPU();}
     bool Ensure(IDirect3DDevice9* dev){
@@ -70,9 +76,19 @@ public:
         IDirect3DVertexBuffer9* source=nullptr;IDirect3DIndexBuffer9* indices=nullptr;
         IDirect3DVertexDeclaration9* decl=nullptr;UINT offset=0,stride=0,freq=0,count=MAXD3DDECLLENGTH;
         D3DVERTEXELEMENT9 elements[MAXD3DDECLLENGTH]{};
-        bool compatible=SUCCEEDED(dev->GetStreamSource(0,&source,&offset,&stride))&&source&&stride==32&&offset==0&&
-            SUCCEEDED(dev->GetIndices(&indices))&&indices&&(!expectedIndices||indices==expectedIndices)&&SUCCEEDED(dev->GetStreamSourceFreq(0,&freq))&&freq==1&&
-            SUCCEEDED(dev->GetVertexDeclaration(&decl))&&decl&&SUCCEEDED(decl->GetDeclaration(elements,&count));
+        audit={};
+        audit.streamHr=dev->GetStreamSource(0,&source,&offset,&stride);
+        audit.indexHr=dev->GetIndices(&indices);
+        audit.freqHr=dev->GetStreamSourceFreq(0,&freq);
+        audit.declHr=dev->GetVertexDeclaration(&decl);
+        if(SUCCEEDED(audit.declHr)&&decl)audit.declHr=decl->GetDeclaration(elements,&count);
+        audit.offset=offset;audit.stride=stride;audit.freq=freq;
+        audit.expectedIb=indices&&(!expectedIndices||indices==expectedIndices);
+        audit.count=SUCCEEDED(audit.declHr)?std::min(count,UINT(MAXD3DDECLLENGTH)):0;
+        memcpy(audit.elements,elements,audit.count*sizeof(elements[0]));
+        bool compatible=SUCCEEDED(audit.streamHr)&&source&&stride==32&&offset==0&&
+            SUCCEEDED(audit.indexHr)&&audit.expectedIb&&SUCCEEDED(audit.freqHr)&&freq==1&&
+            SUCCEEDED(audit.declHr)&&decl;
         unsigned mask=0;
         for(unsigned i=0;compatible&&i<count&&elements[i].Stream!=0xff;++i){
             const auto& e=elements[i];if(e.Stream){compatible=false;break;}
@@ -84,6 +100,7 @@ public:
             else if(e.Offset==28&&e.Type==D3DDECLTYPE_FLOAT16_2)mask|=32;
             else compatible=false;
         }
+        audit.mask=mask;
         if(decl)decl->Release();
         HRESULT hr=D3D_OK;
         receipt=(!compatible||mask!=63)?"source-layout-or-IB":asset.bytes.empty()?"missing-cache":"GPU-unavailable";

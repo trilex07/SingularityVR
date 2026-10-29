@@ -84,3 +84,19 @@ One grouped PSVR2 check: inspect Valk HD and both hands; turn/roll gun and head;
 fire and grip with two hands; Circle eject, acquire behind left shoulder, carry,
 insert, confirm exactly one native refill and fire again; cancel once. Check
 Volk/TMD briefly for regression. Physical visual/performance acceptance PENDING.
+
+## First real Steam session — E9133DBA
+
+Trilex reported "chyba okej działa". General reload/handling appears acceptable;
+not a per-feature acceptance statement. OpenXR rendering/submission was active.
+Actual bounded receipts show BOTH Volk and Valkyrie original-body fallback:
+`replaced=0 gate=source-layout-or-IB`. Thus HD geometry runtime acceptance FAILED,
+even though CPU cache READY and offline GPU tests passed. MAIN restored exact
+accepted Volk DLL485FE0AF, INI5D1C4A1A and all six asset preimages, verified.
+Do not call geometry integrated/physically verified from this session.
+
+Next bounded observation expands this exact refusal into actual offset, stride,
+frequency, IB identity and full vertex declaration (first two attempts only).
+Additional streams include size/stride/frequency, without data readback/GPU sync.
+This distinguishes declaration layout from unrelated IB/stream causes. No
+visibility, tracking or renderer eligibility guard has been relaxed.
