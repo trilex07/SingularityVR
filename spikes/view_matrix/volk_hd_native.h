@@ -7,18 +7,27 @@
 namespace volkhd {
 constexpr unsigned SourceVertices=8297,SourceTriangles=10835,Vertices=12085,Triangles=12727;
 inline unsigned Hash(const unsigned char* p,size_t n){unsigned h=2166136261u;while(n--)h=(h^*p++)*16777619u;return h;}
-struct Asset {
+struct VolkProfile {
+    static constexpr unsigned SourceVertices=8297,SourceTriangles=10835,Vertices=12085,Triangles=12727,Slots=5,SourceVbHash=4146942701u,SourceIbHash=754008012u;
+    static const char* Magic(){return "SVVH";}
+};
+struct ValkyrieProfile {
+    static constexpr unsigned SourceVertices=11387,SourceTriangles=12834,Vertices=13965,Triangles=14116,Slots=6,SourceVbHash=3607008755u,SourceIbHash=615094726u;
+    static const char* Magic(){return "SVVK";}
+};
+template<class Profile> struct NativeAsset {
+    static constexpr unsigned SourceVertices=Profile::SourceVertices,SourceTriangles=Profile::SourceTriangles,Vertices=Profile::Vertices,Triangles=Profile::Triangles;
     std::vector<unsigned char> bytes;
     bool Load(const unsigned char* p,size_t n){
         const size_t size=28+Vertices*32+Triangles*6;
-        if(!p||n!=size||memcmp(p,"SVVH",4))return false;
+        if(!p||n!=size||memcmp(p,Profile::Magic(),4))return false;
         unsigned h[6];memcpy(h,p+4,24);
-        if(h[0]!=1||h[1]!=Vertices||h[2]!=Triangles*3||h[3]!=SourceVertices||h[4]!=754008012u||Hash(p+28,n-28)!=h[5])return false;
-        if(Hash(p+28,SourceVertices*32)!=4146942701u||Hash(p+28+Vertices*32,SourceTriangles*6)!=754008012u)return false;
+        if(h[0]!=1||h[1]!=Vertices||h[2]!=Triangles*3||h[3]!=SourceVertices||h[4]!=Profile::SourceIbHash||Hash(p+28,n-28)!=h[5])return false;
+        if(Hash(p+28,SourceVertices*32)!=Profile::SourceVbHash||Hash(p+28+Vertices*32,SourceTriangles*6)!=Profile::SourceIbHash)return false;
         for(unsigned i=0;i<Vertices;++i){
             const auto* v=p+28+i*32;float xyz[3];memcpy(xyz,v,12);
             for(float x:xyz)if(!std::isfinite(x)||fabsf(x)>1000)return false;
-            unsigned sum=0;for(unsigned j=0;j<4;++j){if(v[20+j]>=5)return false;sum+=v[24+j];}
+            unsigned sum=0;for(unsigned j=0;j<4;++j){if(v[20+j]>=Profile::Slots)return false;sum+=v[24+j];}
             if(sum!=255)return false;
         }
         for(unsigned i=0;i<Triangles*3;++i){uint16_t index;memcpy(&index,p+28+Vertices*32+i*2,2);if(index>=Vertices)return false;}
@@ -27,18 +36,21 @@ struct Asset {
     }
 };
 
+using Asset=NativeAsset<VolkProfile>;
+
 #ifdef _D3D9_H_
 // Keeps original declaration, shaders, constants, texture stages, RT/depth,
 // blend/cull and viewport. Only stream0/IB change, scoped to a source draw.
-class Renderer {
+template<class Profile> class NativeRenderer {
+    static constexpr unsigned SourceVertices=Profile::SourceVertices,SourceTriangles=Profile::SourceTriangles,Vertices=Profile::Vertices,Triangles=Profile::Triangles;
     IDirect3DVertexBuffer9* vb=nullptr;
     IDirect3DIndexBuffer9* ib=nullptr;
     bool failed=false;
 public:
-    Asset asset;
+    NativeAsset<Profile> asset;
     const char* receipt="not-drawn";
     void ReleaseGPU(){if(vb)vb->Release();if(ib)ib->Release();vb=nullptr;ib=nullptr;failed=false;}
-    ~Renderer(){ReleaseGPU();}
+    ~NativeRenderer(){ReleaseGPU();}
     bool Ensure(IDirect3DDevice9* dev){
         if(failed||asset.bytes.empty())return false;
         if(vb&&ib)return true;
@@ -89,5 +101,15 @@ public:
         return replaced?hr:draw(SourceVertices,SourceTriangles);
     }
 };
+using Renderer=NativeRenderer<VolkProfile>;
+#endif
+}
+
+namespace valkyriehd {
+using Profile=volkhd::ValkyrieProfile;
+constexpr unsigned SourceVertices=Profile::SourceVertices,SourceTriangles=Profile::SourceTriangles,Vertices=Profile::Vertices,Triangles=Profile::Triangles;
+using Asset=volkhd::NativeAsset<Profile>;
+#ifdef _D3D9_H_
+using Renderer=volkhd::NativeRenderer<Profile>;
 #endif
 }

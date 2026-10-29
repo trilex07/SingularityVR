@@ -138,3 +138,5 @@ offline-deliverables/
 
 # Private source-derived Volk runtime cache, DDS, cooked export and local evidence.
 /build/volk-hd/
+
+/build/valkyrie-hd/

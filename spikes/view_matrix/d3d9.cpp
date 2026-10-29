@@ -35,6 +35,7 @@ static texbridge::Bind g_textureBridgeBind=nullptr;
 #include "weapon_reload_runtime.h"
 #include "weapon_reload_carry.h"
 #include "volk_hd_native.h"
+#include "valkyrie_mechanics.h"
 #include "volk_mechanics.h"
 #include "weapon_trace_math.h"
 #include "weapon_muzzle_geometry.h"
@@ -2388,6 +2389,8 @@ static int g_nextReload[3]{};
 static int g_nextNativeMagazine=0; // independent default-OFF native material/depth replay
 static bool g_volkHdNativeModel=false;
 static volkhd::Renderer g_volkHdRenderer;
+static bool g_valkyrieHdNativeModel=false;
+static valkyriehd::Renderer g_valkyrieHdRenderer;
 static int g_nextRefillOnly=0; // default OFF; manual insertion -> audited native refill only
 static volatile LONG g_nextNativeMagazineDraws=0;
 static bool NextReloadEnabled(){return g_nextReload[0]||g_nextReload[1]||g_nextReload[2];}
@@ -21487,7 +21490,24 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
         !g_boundShaderLayout.shadow && g_boundShaderLayout.boneRegs>=15 &&
         g_nextReady[1] && g_nextIBVerified[1] && Rd(g_gunVerts)==8297 && !Rd(g_nextFault[1]) &&
         g_sceneMode.Current()==vrscene::Mode::GameplayStereo;
+    const bool valkyrieHdDraw=g_valkyrieHdNativeModel && t==D3DPT_TRIANGLELIST &&
+        numVertices==11387 && !baseVertex && !minIndex && !startIndex && primCount==12834 &&
+        nSeg==1 && segStart[0]==0 && segPrims[0]==12834 &&
+        g_thisDrawMoved==1 && FgMatchWindow() && Rd(g_rtIsScene) &&
+        !g_boundShaderLayout.shadow && g_boundShaderLayout.boneRegs>=18 &&
+        g_nextReady[0] && g_nextIBVerified[0] && Rd(g_gunVerts)==11387 && !Rd(g_nextFault[0]) &&
+        g_sceneMode.Current()==vrscene::Mode::GameplayStereo;
     const auto drawVolkOrSource=[&]()->HRESULT {
+        if(valkyrieHdDraw){
+            bool replaced=false;
+            const HRESULT h=g_valkyrieHdRenderer.DrawNative(dev,[&](UINT v,UINT f){
+                return g_origDrawIndexedPrim(dev,t,0,0,v,0,f);
+            },replaced,g_nextIB[0]);
+            static unsigned receipts=0;
+            if(receipts++<8)Log("valkyrie-hd native: eye=%u replaced=%d vertices=%u triangles=%u hr=%08lX gate=%s native-material=1 root=controller reload=existing attachment=original",
+                eye,replaced?1:0,replaced?valkyriehd::Vertices:11387,replaced?valkyriehd::Triangles:12834,h,g_valkyrieHdRenderer.receipt);
+            return h;
+        }
         if(!volkHdDraw)return g_origDrawIndexedPrim(dev,t,baseVertex,minIndex,numVertices,startIndex,primCount);
         bool replaced=false;
         const HRESULT h=g_volkHdRenderer.DrawNative(dev,[&](UINT v,UINT f){
@@ -21699,7 +21719,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
             });
         }
         for (int s = 0; s < nSeg; ++s) {
-            const HRESULT h = volkHdDraw?drawVolkOrSource():g_origDrawIndexedPrim(dev, t, baseVertex, minIndex, numVertices,
+            const HRESULT h = (volkHdDraw||valkyrieHdDraw)?drawVolkOrSource():g_origDrawIndexedPrim(dev, t, baseVertex, minIndex, numVertices,
                                                     segStart[s], segPrims[s]);
             if (FAILED(h) && SUCCEEDED(hr)) hr = h;      // keep the FIRST failure, not the last
             if(seekerStaged.valid&&nSeg==1&&segStart[s]==startIndex&&segPrims[s]==primCount&&SUCCEEDED(h))
@@ -37135,6 +37155,7 @@ void LoadIniSettings() {
     g_weaponWheelObserved = GetPrivateProfileIntA("Input", "WeaponWheelObservedSelection", 0, path) ? 1 : 0;
     Log("ini: VolkAuthoredGrip=%d WeaponWheelObservedSelection=%d (default OFF)",g_volkAuthoredGrip,g_weaponWheelObserved);
     Log("ini: ValkyrieSingleGrip=%d (default OFF; one-hand right glove follows weapon delta)",g_valkyrieSingleGrip);
+    g_valkyrieHdNativeModel=GetPrivateProfileIntA("Render","ValkyrieHdNativeModel",0,path)!=0;
     g_volkHdNativeModel=GetPrivateProfileIntA("Render","VolkHdNativeModel",0,path)!=0;
     g_reloadPalmGrip=GetPrivateProfileIntA("Input","ReloadPalmGrip",0,path)!=0;
     g_reloadCarryTrackedContinuity=GetPrivateProfileIntA("Render","ReloadCarryTrackedContinuity",0,path)!=0;

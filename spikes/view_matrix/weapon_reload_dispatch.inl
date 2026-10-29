@@ -19,6 +19,7 @@ static bool NextObject(uintptr_t object,weaponreload::Kind kind){
 }
 static void ReleaseNextReloadGPU(){
     g_volkHdRenderer.ReleaseGPU();
+    g_valkyrieHdRenderer.ReleaseGPU();
     for(unsigned i=0;i<3;++i){
         g_nextClipRenderer[i].ReleaseGPU();hipknife::Release(g_nextIB[i]);
         g_nextIBVerified[i]=false;g_nextIBAttempts[i]=0;InterlockedExchange(&g_nextFault[i],0);
@@ -36,6 +37,11 @@ static void InitNextReload(){
         const auto kind=weaponreloadproto::profiles[i].kind;const std::string stem=weaponreload::Stem(kind);
         directory.resize(slash);directory+="\\vr-assets\\reload\\"+stem+"\\";
         std::vector<unsigned char> bytes,mesh,albedo;const auto& original=weaponreload::originalAssets[i];
+        if(i==0&&g_valkyrieHdNativeModel){
+            const bool loaded=hipknife::Read(directory+"valkyrie_hd.svvk",bytes,2*1024*1024)&&
+                g_valkyrieHdRenderer.asset.Load(bytes.data(),bytes.size());
+            Log("valkyrie-hd: CPU cache=%s original=11387/12834 final=13965/14116 native palette/material; no runtime proof",loaded?"READY":"INVALID (original retained)");
+        }
         if(i==1&&g_volkHdNativeModel){
             const bool loaded=hipknife::Read(directory+"volk_hd.svvh",bytes,2*1024*1024)&&
                 g_volkHdRenderer.asset.Load(bytes.data(),bytes.size());
@@ -448,6 +454,10 @@ static int PrepareNextReload(IDirect3DDevice9* dev,INT base,UINT min,UINT vertic
     if(g_volkHdNativeModel && kind==weaponreload::Kind::Volk &&
        !g_volkHdRenderer.asset.bytes.empty() &&
        !volkmechanics::Palette(g_nextAnimation[index],visual.phase,visual.since,
+            visual.insertedMs,now,parentPalette,regs,changed))return 0;
+    if(g_valkyrieHdNativeModel && kind==weaponreload::Kind::Valkyrie &&
+       !g_valkyrieHdRenderer.asset.bytes.empty() && g_nextRefillOnly &&
+       !valkyriemechanics::Seat(g_nextAnimation[index],g_nextTiming[index],visual.phase,
             visual.insertedMs,now,parentPalette,regs,changed))return 0;
     if(g_nextNativeMagazine){
         armbind::Mat world;

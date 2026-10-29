@@ -1,11 +1,15 @@
 # Exact release asset ownership only; no DLL/config, arbitrary packages or MP.
 function Test-SessionAssetPath([string]$Relative) {
     if($Relative -cmatch '^(Binaries/vr-assets/audio/polish/story/[A-Za-z0-9_.-]+\.wav|Binaries/vr-assets/localization/pl/polish_(text|story_voice)\.jsonl|Binaries/texture-override-remaster/revert_[dn]2\.dds|RvGame/CookedPC/[sS][pP]_[A-Za-z0-9_]+_LOC_INT\.xxx|Binaries/vr-assets/ui/remaster/[A-Za-z0-9_.-]+\.png|Binaries/vr-assets/hud/diegetic/[A-Za-z0-9_.-]+\.png)$') { return $true }
-    # Exactly one private, validated Volk runtime mesh; no arbitrary reload assets.
+    # Exact private validated weapon runtime caches; no arbitrary reload assets.
     if($Relative -cin @('Binaries/vr-assets/reload/volk/volk_hd.svvh',
         'Binaries/vr-assets/reload/volk/volk_reload.svwa',
         'Binaries/vr-assets/reload/volk/volk_clip.svrk',
-        'Binaries/vr-assets/reload/volk/volk_clip.svrt')){return $true}
+        'Binaries/vr-assets/reload/volk/volk_clip.svrt',
+        'Binaries/vr-assets/reload/valkyrie/valkyrie_hd.svvk',
+        'Binaries/vr-assets/reload/valkyrie/valkyrie_reload.svwa',
+        'Binaries/vr-assets/reload/valkyrie/valkyrie_clip.svrk',
+        'Binaries/vr-assets/reload/valkyrie/valkyrie_clip.svrt')){return $true}
     $nativeBanks=@(
         'UI_SinglePlayer_SF.xxx',
         # RvGame.xxx is deliberately excluded. All current modified versions
