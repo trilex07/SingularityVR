@@ -18591,6 +18591,12 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
         if(nativeCarry)physicalBlend[0]=nextCarry?weaponcarry::Curl(nextCarryVisual.kind):centurionphysical::Curl;
         g_nativeGlovePoseThisDraw=g_nativeGloveRenderer.Pose(changed,physicalBlend,joint?digits:nullptr,joint?held:-1,fingerMask,nativeCarry);
         g_nativeFreeOffhandPoseThisDraw=nativeFreeOffhand&&g_nativeGlovePoseThisDraw;
+        if(nativeFreeOffhand){
+            static unsigned freePoseReceipts=0;
+            if(freePoseReceipts++<6)Log("free offhand pose: committed=%d section=%u/%u physicalHand=%d blend=%.3f nativeCuff=%d support=%d carry=%d",
+                g_nativeFreeOffhandPoseThisDraw?1:0,verts,triangles,OffHand(),g_gloveBlend[OffHand()],
+                g_nativeCuffClosure?1:0,supportGrip?1:0,nativeCarry?1:0);
+        }
         if(joint&&g_nativeGlovePoseThisDraw){
             const unsigned slot=held?1:18; // resolved exact cooked palette: right wrist51 / left9.
             g_knifeHandPoseThisDraw=armbind::FromGpu(reinterpret_cast<const float(*)[4]>(&changed[slot*3]),g_knifeHandWrist);

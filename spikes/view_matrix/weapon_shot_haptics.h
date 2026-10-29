@@ -25,7 +25,7 @@ inline Weapon FromVertices(unsigned v) {
 }
 inline bool ShotCountAdvanced(int before, int after) {
     // A single synchronous native FireAmmunition call may only account for one shot.
-    return before >= 0 && after == before + 1;
+    return before >= 0 && std::int64_t(after) == std::int64_t(before) + 1;
 }
 class Engine {
     std::uint64_t end_ = 0;

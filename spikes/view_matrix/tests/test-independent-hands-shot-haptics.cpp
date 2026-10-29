@@ -17,6 +17,7 @@ int main() {
     assert(e.Sample(true,0,100)==0);
     assert(!e.OnNativeReturn(-1,1,Weapon::Pistol,100)); // no native witness
     assert(!e.OnNativeReturn(1,3,Weapon::Pistol,100)); // unrelated state change
+    assert(!ShotCountAdvanced(2147483647, -2147483647-1)); // no signed-overflow false witness
     assert(!e.OnNativeReturn(1,2,Weapon::Other,100));  // unknown weapon
     assert(e.OnNativeReturn(1,2,Weapon::Pistol,100));
     assert(e.Sample(true,0,100)==For(Weapon::Pistol).amplitude);
