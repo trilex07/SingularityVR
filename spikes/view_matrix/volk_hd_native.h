@@ -17,6 +17,11 @@ struct ValkyrieProfile {
     static constexpr bool NativePacked=true;
     static const char* Magic(){return "SVVK";}
 };
+struct KasimovProfile {
+    static constexpr unsigned SourceVertices=11389,SourceTriangles=12942,Vertices=12637,Triangles=13722,Slots=6,SourceVbHash=2571367080u,SourceIbHash=855862860u;
+    static constexpr bool NativePacked=true;
+    static const char* Magic(){return "SVKS";}
+};
 template<class Profile> struct NativeAsset {
     static constexpr unsigned SourceVertices=Profile::SourceVertices,SourceTriangles=Profile::SourceTriangles,Vertices=Profile::Vertices,Triangles=Profile::Triangles;
     std::vector<unsigned char> bytes;
@@ -136,6 +141,15 @@ using Renderer=NativeRenderer<VolkProfile>;
 
 namespace valkyriehd {
 using Profile=volkhd::ValkyrieProfile;
+constexpr unsigned SourceVertices=Profile::SourceVertices,SourceTriangles=Profile::SourceTriangles,Vertices=Profile::Vertices,Triangles=Profile::Triangles;
+using Asset=volkhd::NativeAsset<Profile>;
+#ifdef _D3D9_H_
+using Renderer=volkhd::NativeRenderer<Profile>;
+#endif
+}
+
+namespace kasimovhd {
+using Profile=volkhd::KasimovProfile;
 constexpr unsigned SourceVertices=Profile::SourceVertices,SourceTriangles=Profile::SourceTriangles,Vertices=Profile::Vertices,Triangles=Profile::Triangles;
 using Asset=volkhd::NativeAsset<Profile>;
 #ifdef _D3D9_H_

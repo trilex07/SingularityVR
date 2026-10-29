@@ -36,6 +36,7 @@ static texbridge::Bind g_textureBridgeBind=nullptr;
 #include "weapon_reload_carry.h"
 #include "volk_hd_native.h"
 #include "valkyrie_mechanics.h"
+#include "kasimov_mechanics.h"
 #include "volk_mechanics.h"
 #include "weapon_trace_math.h"
 #include "weapon_muzzle_geometry.h"
@@ -2391,6 +2392,8 @@ static bool g_volkHdNativeModel=false;
 static volkhd::Renderer g_volkHdRenderer;
 static bool g_valkyrieHdNativeModel=false;
 static valkyriehd::Renderer g_valkyrieHdRenderer;
+static bool g_kasimovHdNativeModel=false;
+static kasimovhd::Renderer g_kasimovHdRenderer;
 static int g_nextRefillOnly=0; // default OFF; manual insertion -> audited native refill only
 static volatile LONG g_nextNativeMagazineDraws=0;
 static bool NextReloadEnabled(){return g_nextReload[0]||g_nextReload[1]||g_nextReload[2];}
@@ -21497,7 +21500,28 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
         !g_boundShaderLayout.shadow && g_boundShaderLayout.boneRegs>=18 &&
         g_nextReady[0] && g_nextIBVerified[0] && Rd(g_gunVerts)==11387 && !Rd(g_nextFault[0]) &&
         g_sceneMode.Current()==vrscene::Mode::GameplayStereo;
+    const bool kasimovHdDraw=g_kasimovHdNativeModel && t==D3DPT_TRIANGLELIST &&
+        numVertices==11389 && !baseVertex && !minIndex && !startIndex && primCount==12942 &&
+        nSeg==1 && segStart[0]==0 && segPrims[0]==12942 &&
+        g_thisDrawMoved==1 && FgMatchWindow() && Rd(g_rtIsScene) &&
+        !g_boundShaderLayout.shadow && g_boundShaderLayout.boneRegs>=18 &&
+        g_nextReady[2] && g_nextIBVerified[2] && Rd(g_gunVerts)==11389 && !Rd(g_nextFault[2]) &&
+        g_sceneMode.Current()==vrscene::Mode::GameplayStereo;
     const auto drawVolkOrSource=[&]()->HRESULT {
+        if(kasimovHdDraw){
+            bool replaced=false;
+            const HRESULT h=g_kasimovHdRenderer.DrawNative(dev,[&](UINT v,UINT f){
+                return g_origDrawIndexedPrim(dev,t,0,0,v,0,f);
+            },replaced,g_nextIB[2]);
+            static unsigned receipts=0;
+            if(receipts++<8)Log("kasimov-hd native: eye=%u replaced=%d vertices=%u triangles=%u hr=%08lX gate=%s native-material=1 root=controller reload=existing lens=original",
+                eye,replaced?1:0,replaced?kasimovhd::Vertices:11389,replaced?kasimovhd::Triangles:12942,h,g_kasimovHdRenderer.receipt);
+            if(receipts<=2&&!replaced){const auto& a=g_kasimovHdRenderer.audit;
+                Log("kasimov-hd source: streamHr=%08lX indexHr=%08lX freqHr=%08lX declHr=%08lX offset=%u stride=%u freq=%u expectedIB=%d mask=%u count=%u",a.streamHr,a.indexHr,a.freqHr,a.declHr,a.offset,a.stride,a.freq,a.expectedIb?1:0,a.mask,a.count);
+                for(unsigned i=0;i<a.count&&a.elements[i].Stream!=0xff;++i){const auto& e=a.elements[i];Log("kasimov-hd declaration: eye=%u element=%u stream=%u offset=%u type=%u method=%u usage=%u index=%u",eye,i,e.Stream,e.Offset,e.Type,e.Method,e.Usage,e.UsageIndex);}
+            }
+            return h;
+        }
         if(valkyrieHdDraw){
             bool replaced=false;
             const HRESULT h=g_valkyrieHdRenderer.DrawNative(dev,[&](UINT v,UINT f){
@@ -21735,7 +21759,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
             });
         }
         for (int s = 0; s < nSeg; ++s) {
-            const HRESULT h = (volkHdDraw||valkyrieHdDraw)?drawVolkOrSource():g_origDrawIndexedPrim(dev, t, baseVertex, minIndex, numVertices,
+            const HRESULT h = (volkHdDraw||valkyrieHdDraw||kasimovHdDraw)?drawVolkOrSource():g_origDrawIndexedPrim(dev, t, baseVertex, minIndex, numVertices,
                                                     segStart[s], segPrims[s]);
             if (FAILED(h) && SUCCEEDED(hr)) hr = h;      // keep the FIRST failure, not the last
             if(seekerStaged.valid&&nSeg==1&&segStart[s]==startIndex&&segPrims[s]==primCount&&SUCCEEDED(h))
@@ -37172,6 +37196,7 @@ void LoadIniSettings() {
     Log("ini: VolkAuthoredGrip=%d WeaponWheelObservedSelection=%d (default OFF)",g_volkAuthoredGrip,g_weaponWheelObserved);
     Log("ini: ValkyrieSingleGrip=%d (default OFF; one-hand right glove follows weapon delta)",g_valkyrieSingleGrip);
     g_valkyrieHdNativeModel=GetPrivateProfileIntA("Render","ValkyrieHdNativeModel",0,path)!=0;
+    g_kasimovHdNativeModel=GetPrivateProfileIntA("Render","KasimovHdNativeModel",0,path)!=0;
     g_volkHdNativeModel=GetPrivateProfileIntA("Render","VolkHdNativeModel",0,path)!=0;
     g_reloadPalmGrip=GetPrivateProfileIntA("Input","ReloadPalmGrip",0,path)!=0;
     g_reloadCarryTrackedContinuity=GetPrivateProfileIntA("Render","ReloadCarryTrackedContinuity",0,path)!=0;
