@@ -28,7 +28,7 @@ def unit(x):
     return x / np.linalg.norm(x)
 
 
-def render(parts, texture, path, eye, target, title, selected=None):
+def render(parts, texture, path, eye, target, title, selected=None, span_override=None):
     forward = unit(np.array(target)-np.array(eye))
     up0 = np.array([0., 1., 0.])
     right = unit(np.cross(forward, up0))
@@ -41,14 +41,17 @@ def render(parts, texture, path, eye, target, title, selected=None):
         rel = v - target
         xy = np.c_[rel @ right, rel @ up]
         depth = rel @ forward
-        uv_mean = uv[faces].mean(axis=1)
-        px = np.clip((uv_mean[:, 0] * (tex.shape[1]-1)).astype(int), 0, tex.shape[1]-1)
-        py = np.clip(((1-uv_mean[:, 1]) * (tex.shape[0]-1)).astype(int), 0, tex.shape[0]-1)
+        if len(uv):
+            uv_mean = uv[faces].mean(axis=1)
+            px = np.clip((uv_mean[:, 0] * (tex.shape[1]-1)).astype(int), 0, tex.shape[1]-1)
+            py = np.clip(((1-uv_mean[:, 1]) * (tex.shape[0]-1)).astype(int), 0, tex.shape[0]-1)
         shade = np.clip(0.62 + 0.38*np.abs(np.cross(v[faces[:,1]]-v[faces[:,0]], v[faces[:,2]]-v[faces[:,0]]) @ forward) /
                         (np.linalg.norm(np.cross(v[faces[:,1]]-v[faces[:,0]], v[faces[:,2]]-v[faces[:,0]]), axis=1)+1e-9), .55, 1)
         # Display exposure compensates for the unusually dark source atlas;
         # it does not alter the packaged texture.
-        col = np.clip(tex[py, px, :3].astype(float) * shade[:, None] * 2.0, 0, 255).astype(np.uint8)
+        base = tex[py, px, :3].astype(float) if len(uv) else np.full((len(faces),3),(53,58,57),float)
+        # One fixed display exposure and geometric light for both comparison views.
+        col = np.clip(np.sqrt(base/255.0)*255.0*shade[:, None]*1.05, 0, 255).astype(np.uint8)
         polys.extend(xy[faces]); colors.extend(col / 255); depths.extend(depth[faces].mean(axis=1))
     order = np.argsort(depths)[::-1]
     fig, ax = plt.subplots(figsize=(14, 8), dpi=150)
@@ -58,7 +61,7 @@ def render(parts, texture, path, eye, target, title, selected=None):
     all_xy = np.array(polys).reshape(-1, 2)
     lo, hi = all_xy.min(axis=0), all_xy.max(axis=0)
     mid = (lo+hi)/2
-    span = max((hi-lo).max()*1.15, 1)
+    span = span_override or max((hi-lo).max()*1.15, 1)
     ax.set_xlim(mid[0]-span/2, mid[0]+span/2)
     ax.set_ylim(mid[1]-span/2*8/14, mid[1]+span/2*8/14)
     ax.set_aspect("equal"); ax.axis("off")
@@ -89,6 +92,35 @@ def main():
     for filename, eye, target, title, selected in views:
         render(parts, tex, root/"previews"/filename, eye, target, title, selected)
         print(filename)
+    hd_map=root/"textures"/"volk_s4_hd_albedo_4k.png"
+    if hd_map.exists():
+        from PIL import ImageOps, ImageDraw
+        original_tex=Image.open(root/"source"/"AR_shotgun_d_source.dds").convert("RGB")
+        hd_parts=dict(parts)
+        for n in ("weapon_body", "magazine", "moving_reload_part"):
+            hd_parts[n+"_fasteners"]=load_obj(root/"clean"/f"{n}_machined_fasteners.obj")
+        for n in ("magazine_rib_lower", "magazine_rib_middle", "magazine_rib_upper"):
+            hd_parts[n]=load_obj(root/"clean"/f"{n}.obj")
+        hd_tex=Image.open(hd_map).convert("RGB")
+        for filename, eye, target, title, selected in views:
+            hd_selected=None if selected is None else set(selected)|{
+                n for n in hd_parts if (n.endswith("_fasteners") and n.removesuffix("_fasteners") in selected)
+                or (n.startswith("magazine_rib_") and "magazine" in selected)}
+            render(hd_parts,hd_tex,root/"previews"/("hd_"+filename),eye,target,
+                   title.replace("Volk S4", "Volk S4 HD"),hd_selected)
+        comparison_views=[
+            ("side",center+[-distance,0,.05*distance],center,None),
+            ("reload_close",center+[-.75*distance,-.25*distance,0],np.array([0.,108.,57.]),29),
+        ]
+        for label,eye,target,span in comparison_views:
+            original=root/"previews"/f"compare_{label}_original.png"
+            remaster=root/"previews"/f"compare_{label}_hd.png"
+            render(parts,original_tex,original,eye,target,"Original",span_override=span)
+            render(hd_parts,hd_tex,remaster,eye,target,"HD remaster",span_override=span)
+            im1=Image.open(original).convert("RGB"); im2=Image.open(remaster).convert("RGB")
+            w=max(im1.width,im2.width); h=max(im1.height,im2.height)
+            pair=Image.new("RGB",(2*w,h),(24,27,28));pair.paste(im1,(0,0));pair.paste(im2,(w,0))
+            pair.save(root/"previews"/f"original_vs_hd_{label}.png")
 
 
 if __name__ == "__main__":
