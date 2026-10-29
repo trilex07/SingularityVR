@@ -79,8 +79,8 @@ class Buffer:
                     {np.dtype('<f4'): 5126, np.dtype('<u2'): 5123}[a.dtype],
                     'count': len(a), 'type': {1:'SCALAR', 2:'VEC2', 3:'VEC3', 4:'VEC4'}[width]}
         if kind in ('POSITION', 'times'):
-            accessor['min'] = a.min(axis=0).tolist()
-            accessor['max'] = a.max(axis=0).tolist()
+            accessor['min'] = [float(a.min())] if a.ndim == 1 else a.min(axis=0).tolist()
+            accessor['max'] = [float(a.max())] if a.ndim == 1 else a.max(axis=0).tolist()
         self.accessors.append(accessor)
         return len(self.accessors)-1
 
