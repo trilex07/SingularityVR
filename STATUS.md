@@ -1,5 +1,7 @@
 ## 2026-10-30 — PR71 scoped CPU optimization in retained HD candidate
 
+- Latest installed DLL: `0AAEAFAC7B230C80F922BD2EC533FDF711258524BD2BF35CAC4013F11E56DE0C`; source `e7e7b5f1267c3c1aefa3fcc124a39a6009d238e0`. Exact backup/verification in `docs/handoffs/hd-physical-followup-pr71-candidate-20261030.json`; supersedes 63CCFF6A, keeps all 16 assets and INI unchanged.
+
 - Integrated the MenuDrawTrace default-OFF / INI opt-in delta from `a9a6c6359511379fb16c55e8f7c648adbe70751e`, preserving all HD follow-up code. The independent earlier microstutter capture subsystem from PR71 is not imported or enabled by this scoped integration.
 - Production-header regression: 20,000 disabled Frame+Record calls with a null device preserve the table and issue no menu-state reads; explicit ON advances state and OFF stops it. Existing trace/suppression and sparse-flush tests PASS.
 - Runtime/FPS/PSVR2 benefit remains PENDING. Do not attribute firing/damage/pickup stalls to this diagnostic without new measurements. `[Diagnostic] MenuDrawTrace=1` restores diagnostic opt-in; normal default is 0.
