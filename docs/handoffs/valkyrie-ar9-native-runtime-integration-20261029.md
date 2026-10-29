@@ -120,3 +120,25 @@ Native replacement receipt and final HD headset acceptance remain PENDING.
 Queued next integrations: Kasimov802f099a then Centurion218e7652. Each follows
 this integration's actual rendering acceptance gate; private source assets are
 not redistributed or merged wholesale from asset branches.
+
+## Corrected real Steam submission — F043D4F5
+
+Source c9d67044; optimized x86 PE32 build; exact DLL SHA-256
+F043D4F57E78B2B4EDC13613FA953C73D94E486135BA4630B7BEBF0DB73804E1.
+Real Steam session20261029-231800 confirms eye0 AND eye1 replaced=1,
+vertices13965 triangles14116 hr00000000, native-material1/controller root.
+OpenXR shouldRender1/haveEyes1 with successful capture/submission. This proves
+actual HD native draw submission; final headset appearance and performance
+remain separate gates. Full evidence archived by the guard after normal exit.
+
+Next packages inventoried: Kasimov18 SHA-256 entries and Centurion41 entries
+match their local manifests. Neither package has yet been integrated into this
+candidate. Preserve weighted Kasimov wire chain and separate168-face lens path;
+preserve native Centurion cylinder/socket and79-bone hierarchy.
+
+Final physical result: Trilex confirmed all four requested points correct:
+HD appearance, magazine, firing and two-hand grip. Current corrected session
+also records eject -> grab-fresh -> inserted/request -> native-ammo-ack,
+0/72 ->30/42, consumed1/nativePermits1. Guard restored accepted485FE0AF DLL,
+5D1C4A1A INI and six asset preimages with all profile pins verified. No measured
+frame-time comparison; unvisited features are not asserted PASS.

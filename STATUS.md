@@ -1,5 +1,13 @@
 # STATUS — session handoff
 
+## 2026-10-29 — MAIN: Valkyrie HD physical integration PASS
+
+- Source c9d67044; DLL F043D4F5; draft PR68. Native HD submitted13965/14116 in both eyes after correcting the observed raw packed declaration.
+- Trilex confirmed appearance, magazine, firing and two-hand grip. Native reload0/72 ->30/42, one permit; existing FSM retained.
+- Steam baseline and six asset preimages restored with hashes verified. No measured performance claim, no main merge.
+- Evidence: docs/handoffs/valkyrie-ar9-native-runtime-candidate-20261029.json. Next: Kasimov then Centurion, sequential acceptance.
+
+
 ## 2026-10-29 — MAIN: accepted Volk S4 native HD integration
 
 - Dedicated branch integration/volk-s4-hd-physical-reload; PR66 source tools plus native VB/IB integration.
