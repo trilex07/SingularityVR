@@ -82,7 +82,8 @@ static void Run(IDirect3D9* api,IDirect3D9Ex* apiEx,bool ex){
             Check(seekerpreload::Ready(call.dev,index,call.original)==seekerpreload::gpu[index],
                 "Seeker separate Present thread accepts immutable prepared pair");
             unsigned scalar=unsigned(index);call.original->SetPrivateData(texbridge::seekerId,&scalar,sizeof(scalar),0);
-            Check(SUCCEEDED(SingularityTextureBridgeV1(call.dev,0,call.original,Forward,1,0)),"Seeker cross-thread real bridge submission");
+            Check(SingularityTextureBridgeV1(call.dev,0,call.original,Forward,1,0)==E_ACCESSDENIED,
+                "Seeker cross-thread bridge preserves synthetic failing forward HRESULT");
             IDirect3DBaseTexture9* bound=nullptr;call.dev->GetTexture(0,&bound);
             Check(bound==seekerpreload::gpu[index],"Seeker cross-thread actual bound GPU resource");
             if(bound)bound->Release();call.dev->SetTexture(0,nullptr);
