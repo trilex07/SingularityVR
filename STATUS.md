@@ -5,7 +5,8 @@
 - D3D9/D3D9Ex occlusion pixel fixtures and HUD/gameplay/OLED/WeaponLocker regressions PASS. This does not establish headset occlusion or performance.
 - Source SVNC/SVTG measurement yields candidate panel-only normal offset -62 mm; no hand pose offsets are changed.
 - Legacy health suppression remains OFF. Optional live E99/supplies/energy and final depth-aware physical acceptance remain PENDING.
-- See `docs/handoffs/left-wrist-occlusion-20261030.md`; final build/install identities follow in its candidate receipt. No promotion or merge.
+- Installed controlled candidate `3FE6FE8E…`, source `c5c3b11c`; verified backup `20261030-102916` and 45 protected files unchanged. No launch, timer, promotion or merge.
+- Details: `docs/handoffs/left-wrist-occlusion-20261030.md`; exact identities: `docs/handoffs/left-wrist-occlusion-candidate-20261030.json`.
 
 ## 2026-10-30 — MAIN PR73 wrist HUD integration on retained HD + PR71
 

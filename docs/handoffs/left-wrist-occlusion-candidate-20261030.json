@@ -1,0 +1,238 @@
+{
+  "schema": "wrist-hud-occlusion-main-candidate-v1",
+  "source": {
+    "builtAt": "2026-10-30T10:28:19.2870945+01:00",
+    "repository": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-centurion-runtime",
+    "branch": "integration/left-wrist-hud-retained-hd",
+    "commit": "c5c3b11c9bcf06db9450c408c4ef503acbf15536",
+    "workingTreeStatus": [],
+    "optimization": "/O2",
+    "performanceInstrumentation": false,
+    "architecture": "x86 PE32",
+    "machine": "0x014C",
+    "optionalHeaderMagic": "0x010B",
+    "sha256": "3FE6FE8EAEAF8D74C4256A8E76306B33302F84FD5C047550CE35D8D9BAA9C87F"
+  },
+  "installedDllSha256": "3FE6FE8EAEAF8D74C4256A8E76306B33302F84FD5C047550CE35D8D9BAA9C87F",
+  "installedIniSha256": "2793671F654CBB5174A4E23009CD56F04B41ABC5F932C0E99D82C5A1205E17F5",
+  "backupPath": "deployment\\install-backups\\20261030-102916",
+  "backupDllSha256": "71F7254B871EE8C079196A6D02AAC3DB26A9D8517BDE6F255D780F4F4B42AEB2",
+  "backupIniSha256": "FB58219E802795F081965CABF193C3074E08471E9A3353207AAB020D1A916CE9",
+  "deploymentReport": "deployment/install-reports/20261030-102917.json",
+  "protectedFilesVerifiedUnchanged": [
+    {
+      "path": "Binaries/dinput8.dll",
+      "sha256": "F58CB3A805E46C3D3F7E88137BD605AF21A8A8106C289385132F677A968E95FD"
+    },
+    {
+      "path": "Binaries/dinput8_orig.dll",
+      "sha256": "2A746CCF3922AECCED0387F3C6E21E55C6DF786DF8164C482F2A2E6165EDD395"
+    },
+    {
+      "path": "Binaries/vr-assets/hud/katorga/glove-animation/native_hands.svni",
+      "sha256": "B4564A69AF904DDE7BE9077EBBC96677D93B42E104DEDD93F94B6BF8ACE46C04"
+    },
+    {
+      "path": "Binaries/vr-assets/hud/katorga/glove-animation/hand_thumb.svnt",
+      "sha256": "E841FF6F5F482D6D687F0461EDBC7E2DD4F0F45703911FD8F39D1DA78F304A3F"
+    },
+    {
+      "path": "Binaries/vr-assets/hud/katorga/glove-animation/native_cuffs.svnc",
+      "sha256": "1C9E5F618B8C3688A619BC866F47F2C7F853CEBCA7C6F8DDA425C3F13942259B"
+    },
+    {
+      "path": "Binaries/vr-assets/knife/knife.svrk",
+      "sha256": "1FDA9130A3DA3A2CBCCE3F1EC5F9CE45C0C7DD0948E5A46B8D2FD6126EF0F0AC"
+    },
+    {
+      "path": "Binaries/vr-assets/knife/knife.svrt",
+      "sha256": "D4686DE723CD4550C6387D274A08A3C88AFFB8C6B3F039165F6E6BCAAA4494F2"
+    },
+    {
+      "path": "Binaries/vr-assets/knife/knife_hand.svng",
+      "sha256": "891D8243843A72FBD2F0180CB1703DB33ACF1995C820FE2B538070173C974E9C"
+    },
+    {
+      "path": "Binaries/vr-assets/knife/knife.svnl",
+      "sha256": "DD2EDF6C661C6F03D71AAD57C68D5FA20A53774086180E38404642A01BE898D6"
+    },
+    {
+      "path": "Binaries/vr-assets/knife/knife_normal.svrt",
+      "sha256": "B711D8EC97744080F7A742782F8867043F5D19E6A4D02BBAD535309E1B9C99C1"
+    },
+    {
+      "path": "Binaries/vr-assets/knife/knife_specular.svrt",
+      "sha256": "BDC06EB79C91CC18FC8D9272A817C47E82380E33766588C0D46DAECE05822802"
+    },
+    {
+      "path": "Binaries/vr-assets/localization/pl/polish_text.jsonl",
+      "sha256": "7C3875BC35422896979EF3AEE97A024D92373CB54FBEEB1F9D1D20D4270D2F40"
+    },
+    {
+      "path": "Binaries/vr-assets/localization/pl/polish_voice.jsonl",
+      "sha256": "0D632BF4D02440B9F577F3ECF60E0416096D4AC4D4C49D68980FD693E03D68F2"
+    },
+    {
+      "path": "Binaries/vr-assets/localization/pl/polish_story_voice.jsonl",
+      "sha256": "579C82AE3C97DA76A5829E8E019FBEBBDD0454C99E0435C4B592E5159D8AF5BF"
+    },
+    {
+      "path": "RvGame/CookedPC/RvGame.xxx",
+      "sha256": "4153C4889C90635069ED226D918CDB76BE618F46B1BAEA152AC10CFFDF59E9EF"
+    },
+    {
+      "path": "RvGame/CookedPC/wp_SP_ARShotgun_SF.xxx",
+      "sha256": "57E8E5A37B667A4CB0A4EC4C2095DDDA3782063E92A7AA559CF314D4B84F33A4"
+    },
+    {
+      "path": "Binaries/Singularity.exe",
+      "sha256": "BD459ACD87D4B82693928DEE4ED437C086D5928A8E0428F3AD54B6FC114C0F51"
+    },
+    {
+      "sha256": "6BD63F5291EFEDB8F7419067EEC909541982EBD6FF38F8E386765213244AB6C5",
+      "path": "Binaries/texture_override.ini"
+    },
+    {
+      "sha256": "1be0338d0925fd9102fa6a0eb190cd5bac5946f058da9c85e8939e94c5025ebf",
+      "path": "Binaries/vr-assets/reload/volk/volk_hd.svvh"
+    },
+    {
+      "sha256": "98cac7ab6f68ea2beef6f160d138282bf32778f5b0ff0375cef8775dcf8cfa24",
+      "path": "Binaries/texture-override-remaster/AR_shotgun_d.dds"
+    },
+    {
+      "sha256": "925d1753a984aec8ed06b65cf881abffd64333b8b712a29057a34203716ad7b7",
+      "path": "Binaries/texture-override-remaster/AR_shotgun_n.dds"
+    },
+    {
+      "sha256": "cdb998651dea731cc552cb9c59836c0804a9678fce2f20c18daf792551d4d750",
+      "path": "Binaries/vr-assets/reload/volk/volk_reload.svwa"
+    },
+    {
+      "sha256": "9029fda62d9179cddc9d2dda8c16f882fe69d03c43d2c016be797ff854ebdae6",
+      "path": "Binaries/vr-assets/reload/volk/volk_clip.svrk"
+    },
+    {
+      "sha256": "87c6418a4d491a19bf00fba2053194ea78d2afce3ecb768a8aab8063d8211708",
+      "path": "Binaries/vr-assets/reload/volk/volk_clip.svrt"
+    },
+    {
+      "path": "Binaries/vr-assets/reload/centurion/centurion_clip.svrk",
+      "sha256": "F21961145D6645EE93A8A2C73AE89380535D918352BABB1FD4F811C67422D89B"
+    },
+    {
+      "path": "Binaries/vr-assets/reload/centurion/centurion_clip.svrt",
+      "sha256": "17A3355AD6CC7E2F35A03883FDF4B314577FEE908773262C5BC199C006C6CD60"
+    },
+    {
+      "path": "Binaries/vr-assets/reload/centurion/centurion_reload.svca",
+      "sha256": "85ABCDDE7C9F1971C7B3BD5457672D69987FF332F8EC8C52953604505A945EA6"
+    },
+    {
+      "path": "Binaries/vr-assets/reload/centurion/centurion_shell.svrk",
+      "sha256": "AB61034E9E35D2C5BEAC937E3E3BB90D15272828FF2BBBE2CD26ED443E5E5CAC"
+    },
+    {
+      "path": "Binaries/vr-assets/reload/centurion/centurion_shell.svrt",
+      "sha256": "F804945B8160EC47C6C5B5C94844C9A8B8CCE43E28499799606051B5909FE8D0"
+    },
+    {
+      "sha256": "1ae4f536b1a82ba75afb9fa9a5fb491910486117a18bfcafca7a927d67730364",
+      "path": "Binaries/vr-assets/reload/valkyrie/valkyrie_hd.svvk"
+    },
+    {
+      "sha256": "a2417f1463b20e507a317e54114b41df5d30c7e9c287b8dfb4ec24dc1f11bd4d",
+      "path": "Binaries/texture-override-remaster/AR_E99Rifle_alt_d.dds"
+    },
+    {
+      "sha256": "7b88b292c010a27a6152a5281eb5dea659d19d17eb08e50027ab0e01fbf7e0f2",
+      "path": "Binaries/texture-override-remaster/AR_E99Rifle_n.dds"
+    },
+    {
+      "sha256": "97de1b7b37c733dcb35a8b15ea5ae6ff778a1fb1917305acf70322c32c30e9dd",
+      "path": "Binaries/vr-assets/reload/valkyrie/valkyrie_reload.svwa"
+    },
+    {
+      "sha256": "c6420d9a1c96e09c73c23ec4fb86cb45f4f91c51fd37533f6b365dea2d5756d0",
+      "path": "Binaries/vr-assets/reload/valkyrie/valkyrie_clip.svrk"
+    },
+    {
+      "sha256": "248760b3a25dd51b02b0bc132dff711315b44144bea6a9d07629a0b5bd321155",
+      "path": "Binaries/vr-assets/reload/valkyrie/valkyrie_clip.svrt"
+    },
+    {
+      "sha256": "57ca2ab092101f3334e1c789dd667ddea2dbd950d426a9e70fabbed637948d6e",
+      "path": "Binaries/vr-assets/reload/kasimov/kasimov_hd.svks"
+    },
+    {
+      "sha256": "d4bfddc881e456bd186cf6b575bda13c88a69d8515344ed2e751d2bad889c072",
+      "path": "Binaries/texture-override-remaster/ar_sniper_rifle_d.dds"
+    },
+    {
+      "sha256": "a6dc350cbe29487a1992a36d6766c4487fe9717452df1e1a67f74949b4ae93a0",
+      "path": "Binaries/texture-override-remaster/ar_sniper_rifle_n.dds"
+    },
+    {
+      "sha256": "112ceabefe13a203094847dcb4fdd441edaad774f0bef28eb6091b09e065e47f",
+      "path": "Binaries/vr-assets/reload/kasimov/kasimov_reload.svwa"
+    },
+    {
+      "sha256": "b9387a88e9bb50d898ef28a1ffba1c9e4e59e474ca92f90120f252cf931191d1",
+      "path": "Binaries/vr-assets/reload/kasimov/kasimov_clip.svrk"
+    },
+    {
+      "sha256": "99a9935447d0ecdf47e2a6211f4405cb445f8e768901a522d21f11d04918ef50",
+      "path": "Binaries/vr-assets/reload/kasimov/kasimov_clip.svrt"
+    },
+    {
+      "sha256": "42460e79504d085f246191ac682dd50092b14b20c1ad40eb8b7e8741e01587c4",
+      "path": "Binaries/vr-assets/reload/centurion/centurion_hd.svct"
+    },
+    {
+      "sha256": "bd4f97afafbd06596288842eb7ab465c62725a42dbb4891c079387264e70bd6b",
+      "path": "Binaries/texture-override-remaster/handgun_d.dds"
+    },
+    {
+      "sha256": "cf15fa5f26f9e5dc9a7c6ce324876e595dddd6520c7f52c58ffe136b4ed77a5b",
+      "path": "Binaries/texture-override-remaster/handgun_n.dds"
+    },
+    {
+      "path": "RvGame/CookedPC/wp_SP_ARSniperRifle_SF.xxx",
+      "sha256": "41dc6fe2034688a7110e528bea113ccfaf386994932e8b8eb297cdc5e8b68198"
+    }
+  ],
+  "changedIni": {
+    "Render/EquipmentWristOcclusion": "1",
+    "Render/EquipmentWristTextQuarterTurn": "1",
+    "Render/EquipmentWristOffsetXmm": "-62"
+  },
+  "preservedSafetyIni": {
+    "Render/EquipmentWristPreviewNoDepth": "1",
+    "Render/EquipmentWristSuppressHealth": "0"
+  },
+  "testEvidence": {
+    "HUD and two-depth D3D9/D3D9Ex pixels": {
+      "status": "PASS",
+      "privateLog": "build\\wrist-main\\hud-tests-final.log",
+      "sha256": "8A233A50344FEAABDFFF625D714E8CB60AF13E0B29155FEF93B3946CC631B467"
+    },
+    "Mounted ammo HUD pixels": {
+      "status": "PASS",
+      "privateLog": "build\\wrist-main\\ammo-hud-tests.log",
+      "sha256": "F1541A89EF33AA3795B26FF1C62457FB14C1EADDAC3FA55D4D868BBE07F8CBD7"
+    },
+    "Dual TMD, grip/reload, OLED, Locker, independent haptics": {
+      "status": "PASS",
+      "privateLog": "build\\wrist-main\\regressions-occlusion.log",
+      "sha256": "535F370703A574E473FEEDEF7DBFF02B791E1381D3E8651395A566ABAE1B2EA6"
+    }
+  },
+  "compiledFactoryAbi": "PASS literal [eax+20Ch] in final PE32 /O2 DLL",
+  "runtime": "NOT_RUN",
+  "physicalAcceptance": "PENDING",
+  "liveOptionalFields": "NOT_VERIFIED",
+  "performance": "NOT_MEASURED",
+  "autoRollback": false,
+  "gameLaunched": false,
+  "healthSuppression": false
+}
