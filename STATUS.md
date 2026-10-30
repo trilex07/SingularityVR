@@ -1,3 +1,8 @@
+## 2026-10-30 — Wrist live counter ownership correction
+
+- Actual diagnostic reason=4 proved duplicate Pawn lookup rejected the local player before counter reads. Reused validated native reciprocal player resolver; no guessed offsets or fake values.
+- L1/L2 and x86 PE32 /O2 PASS. Source b239bf30, DLL 147C3297; guarded Steam deployment and hash verification complete, backup 20261030-151337. Legacy health displays disabled as requested.
+- READY_FOR_PHYSICAL_ACCEPTANCE; live E99/health-pack values PENDING. Handoff: docs/handoffs/wrist-counts-wheel-followup-20261030.md.
 ## 2026-10-30 — Wrist physical acceptance; larger panel/E99/Seeker wheel
 
 - Wrist 06609B2D: PHYSICALLY_VERIFIED by user; VFX acceptance preserved.
