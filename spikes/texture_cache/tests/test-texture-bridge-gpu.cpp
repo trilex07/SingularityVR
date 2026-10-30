@@ -55,7 +55,46 @@ static void Run(IDirect3D9* api,IDirect3D9Ex* apiEx,bool ex){
     Check(texpositive::Store(source,replacement),"metadata restored for destruction check");
     Check(source->Release()==0,"cache does not pin original lifetime");
     Check(replacement->Release()==0,"source destruction releases replacement ownership");
-    dev->Release();DestroyWindow(window);
+    // Exercise the actual Seeker lifecycle with bounded synthetic full chains.
+    seekerpreload::mode=2;seekerpreload::loaded=true;seekerpreload::thread=GetCurrentThreadId();
+    for(unsigned k=0;k<2;++k){auto& c=seekerpreload::cpu[k];c={};c.w=4096;c.h=2048;c.levels=13;
+        c.fmt=k?D3DFMT_DXT1:D3DFMT_DXT5;
+        for(unsigned level=0;level<13;++level){size_t bytes=size_t((((std::max)(1u,c.w>>level))+3)/4)*((((std::max)(1u,c.h>>level))+3)/4)*(k?8:16);
+            c.mip.emplace_back(bytes);for(size_t n=0;n<bytes;n+=k?8:16){auto* block=c.mip.back().data()+n;
+                if(!k){block[0]=block[1]=255;block+=8;}block[0]=block[2]=0;block[1]=block[3]=0xf8;}}
+        Check(seekerpreload::Validate(c,k),"Seeker bounded full mip chain");}
+    Check(!seekerpreload::Pinned("this-private-fixture-does-not-exist.dds",seekerSha[0]),"missing preload file refused");
+    const auto normalFormat=seekerpreload::cpu[1].fmt;
+    seekerpreload::cpu[1].fmt=D3DFMT_UNKNOWN;
+    Check(!seekerpreload::Validate(seekerpreload::cpu[1],1),"incompatible normal encoding refused");
+    seekerpreload::Lifecycle(dev,2);
+    Check(!seekerpreload::gpu[0]&&!seekerpreload::gpu[1],"second upload failure publishes neither resource");
+    seekerpreload::cpu[1].fmt=normalFormat;
+    seekerpreload::Lifecycle(dev,2);
+    Check(seekerpreload::gpu[0]&&seekerpreload::gpu[1],"Seeker pair atomically uploaded outside bind");
+    IDirect3DTexture9* marker=nullptr;dev->CreateTexture(4,4,1,0,D3DFMT_DXT1,ex?D3DPOOL_DEFAULT:D3DPOOL_MANAGED,&marker,nullptr);
+    const unsigned reads=seekerpreload::reads,uploads=seekerpreload::uploads;
+    for(unsigned k=0;k<2;++k){marker->SetPrivateData(texbridge::seekerId,&k,sizeof(k),0);
+        for(unsigned eye=0;eye<2;++eye){SingularityTextureBridgeV1(dev,eye,marker,Forward,1,0);
+            IDirect3DBaseTexture9* current=nullptr;dev->GetTexture(eye,&current);
+            Check(current==seekerpreload::gpu[k],"Seeker both-eye stages use prepared resource");if(current)current->Release();dev->SetTexture(eye,nullptr);}
+        Check(ReadPixel(dev,seekerpreload::gpu[k],0xff0000),"Seeker native uploaded pixel");}
+    for(unsigned mode=0;mode<2;++mode){seekerpreload::mode=int(mode);
+        Check(seekerpreload::Ready(dev,0,marker)==marker,"Seeker OFF/log-only original forwarding");}
+    seekerpreload::mode=2;
+    for(unsigned n=0;n<10000;++n)SingularityTextureBridgeV1(dev,0,marker,Forward,1,0);
+    dev->SetTexture(0,nullptr);
+    Check(reads==seekerpreload::reads&&uploads==seekerpreload::uploads,"10000 Seeker binds: zero file reads or uploads");
+    texbridge::Invalidate(marker);unsigned index=0;DWORD size=sizeof(index);
+    Check(FAILED(marker->GetPrivateData(texbridge::seekerId,&index,&size)),"Seeker source write invalidates scalar identity");
+    marker->Release();seekerpreload::Lifecycle(dev,1);
+    Check(!seekerpreload::gpu[0]&&!seekerpreload::owner,"Seeker pre-reset releases pair");
+    Check(SUCCEEDED(ex?devEx->ResetEx(&pp,nullptr):dev->Reset(&pp)),"Seeker Reset/ResetEx");
+    seekerpreload::Lifecycle(dev,2);Check(seekerpreload::gpu[0]&&ReadPixel(dev,seekerpreload::gpu[0],0xff0000),"Seeker recreate from immutable CPU cache");
+    seekerpreload::Lifecycle(dev,1);seekerpreload::loaded=false;seekerpreload::Lifecycle(dev,2);
+    Check(!seekerpreload::gpu[0],"failed preload never uploads or delays into bind");
+    seekerpreload::mode=0;seekerpreload::cpu[0]={};seekerpreload::cpu[1]={};
+    Check(dev->Release()==0,"device destruction has no Seeker COM leak");DestroyWindow(window);
 }
 int main(){
     Check(remasterscope::Contains("AR_shotgun_d")&&remasterscope::Contains("inview_glove_n"),"exact remaster material scope");

@@ -10,6 +10,7 @@
 #include "texture_bridge_contract.h"
 static LONG g_textureBridgeOwned=0;
 static texbridge::Bind g_textureBridgeBind=nullptr;
+static texbridge::Lifecycle g_seekerTextureLifecycle=nullptr;
 #include "camera_translation_evidence.h"
 #include "arm_ik.h"
 #include "arm_bind.h"
@@ -37057,22 +37058,28 @@ static void GuardResetSize(D3DPRESENT_PARAMETERS* pp) {
             cw, ch, d.w, d.h);
 }
 HRESULT STDMETHODCALLTYPE Hook_ResetDevice(IDirect3DDevice9* dev, D3DPRESENT_PARAMETERS* pp) {
+    if(g_seekerTextureLifecycle)g_seekerTextureLifecycle(dev,1);
     InterlockedIncrement(&g_diagResetCount);
     if(pp){InterlockedExchange(&g_diagResetRequestW,LONG(pp->BackBufferWidth));InterlockedExchange(&g_diagResetRequestH,LONG(pp->BackBufferHeight));}
     if (pp && dev) GuardResetSize(pp);
     ReleaseWristResources();
     ReleaseCutsceneMonoResources(); // DEFAULT-pool compose surface; rebuilt lazily
     ReleaseVfxHost(); // drawer VB + atlas are device-bound; rebuilt lazily
-    return g_origResetDevice(dev,pp);
+    const HRESULT hr=g_origResetDevice(dev,pp);
+    if(SUCCEEDED(hr)&&g_seekerTextureLifecycle)g_seekerTextureLifecycle(dev,2);
+    return hr;
 }
 HRESULT STDMETHODCALLTYPE Hook_ResetDeviceEx(IDirect3DDevice9Ex* dev, D3DPRESENT_PARAMETERS* pp, D3DDISPLAYMODEEX* dm) {
+    if(g_seekerTextureLifecycle)g_seekerTextureLifecycle(dev,1);
     InterlockedIncrement(&g_diagResetCount);
     if(pp){InterlockedExchange(&g_diagResetRequestW,LONG(pp->BackBufferWidth));InterlockedExchange(&g_diagResetRequestH,LONG(pp->BackBufferHeight));}
     if (pp && dev) GuardResetSize(pp);
     ReleaseWristResources();
     ReleaseCutsceneMonoResources(); // DEFAULT-pool compose surface; rebuilt lazily
     ReleaseVfxHost(); // drawer VB + atlas are device-bound; rebuilt lazily
-    return g_origResetDeviceEx(dev,pp,dm);
+    const HRESULT hr=g_origResetDeviceEx(dev,pp,dm);
+    if(SUCCEEDED(hr)&&g_seekerTextureLifecycle)g_seekerTextureLifecycle(dev,2);
+    return hr;
 }
 PFN_CreateDevice g_origCreateDevice = nullptr;
 typedef HRESULT (WINAPI *PFN_DInputCreate)(HINSTANCE,DWORD,REFIID,void**,IUnknown*);
@@ -38823,6 +38830,8 @@ HRESULT STDMETHODCALLTYPE Hook_CreateDevice(IDirect3D9* self, UINT ad, D3DDEVTYP
             g_origUpdateTexture = (PFN_UpdateTexture)PatchVTable(*out,31,(void*)&Hook_UpdateTexture);
             HMODULE injector=GetModuleHandleW(L"dinput8.dll");
             g_textureBridgeBind=injector?reinterpret_cast<texbridge::Bind>(GetProcAddress(injector,"SingularityTextureBridgeV1")):nullptr;
+            g_seekerTextureLifecycle=injector?reinterpret_cast<texbridge::Lifecycle>(GetProcAddress(injector,"SingularitySeekerLifecycleV1")):nullptr;
+            if(g_seekerTextureLifecycle)g_seekerTextureLifecycle(*out,0);
             Log("texture bridge: slot65 MAIN owner; callback=%p originalForward=%p updateForward=%p",
                 (void*)g_textureBridgeBind,(void*)g_origSetTexture,(void*)g_origUpdateTexture);
         }

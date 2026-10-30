@@ -22,6 +22,18 @@ def main(worktree, private):
     if dll.is_file():
         shutil.copy2(dll, runtime / 'd3d9.offline-candidate.dll')
         shutil.copy2(worktree / 'spikes/view_matrix/d3d9.build.json', runtime / 'd3d9.build.json')
+    bridge=private/'texture-build/dinput8.dll'
+    if bridge.is_file():
+        shutil.copy2(bridge,runtime/'dinput8.offline-candidate.dll')
+        shutil.copy2(private/'texture-build/dinput8.build.json',runtime/'dinput8.build.json')
+    for name in ('AR_Steerable_d.dds','AR_Steerable_n.dds'):
+        shutil.copy2(handoff/'native_textures'/name,runtime/name)
+    shutil.copy2(private/'native_identity/identity.json',handoff/'source/native_texture_identity.json')
+    reports=handoff/'validation_reports'
+    reports.mkdir(exist_ok=True)
+    for name in ('texture-build.log','main-bridge-tests.log','seeker-tests.log','seeker-native-tests.log','all-reload-tests.log','build.log','blender-validation.log'):
+        if (private/name).is_file():shutil.copy2(private/name,reports/name)
+    shutil.copy2(worktree/'docs/handoffs/seeker-native-texture-preload.md',handoff/'MAIN_INTEGRATION.md')
     gates = validate(handoff)
     (handoff / 'validation.json').write_text(json.dumps(gates, indent=2) + '\n')
     manifest = {str(p.relative_to(handoff)).replace('\\', '/'): sha(p)

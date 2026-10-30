@@ -70,11 +70,12 @@ def validate(root):
     for name in ('AR_Steerable_d.dds', 'AR_Steerable_n.dds'):
         header = read_dds_header(root/'native_textures'/name)
         assert header['width'] == 4096 and header['height'] == 2048
-        assert header['fourcc'] == 'DXT5' and header['mip_count'] > 1
+        assert header['fourcc'] == ('DXT1' if name.endswith('_n.dds') else 'DXT5') and header['mip_count'] > 1
     return {'rig': 'PASS', 'source_animation': 'PASS', 'detached_magazine': 'PASS',
             'pbr_maps': 'PASS', 'icon_atlas': 'PASS', 'native_ammo': 'NOT VERIFIED',
             'blender_roundtrip': 'PASS', 'hd_visual_acceptance': 'OFFLINE PASS',
-            'native_dds': 'OFFLINE PASS', 'native_hd_material_binding': 'NOT VERIFIED',
+            'native_dds': 'OFFLINE PASS', 'native_hd_material_binding': 'OFFLINE BRIDGE PASS',
+            'native_PBR': 'NOT IMPLEMENTED', 'native_mesh_replacement': 'NOT REQUIRED',
             'Steam_PSVR2': 'NOT RUN'}
 
 
