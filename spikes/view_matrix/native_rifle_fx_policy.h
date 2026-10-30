@@ -1,6 +1,11 @@
 #pragma once
 #include "weapon_muzzle_geometry.h"
 namespace riflefx {
+inline bool SpawnDirection(bool enabled,bool scoped,bool exactCaller,
+    std::uint32_t pawn,std::uint32_t weapon,std::uint64_t now,
+    const weaponmuzzle::Witness& witness,hipknife::V& result){
+    return enabled&&scoped&&exactCaller&&witness.Direction(pawn,weapon,now,result);
+}
 // Native PlayMuzzleFX takes (const FVector&, UBOOL), not (bool, vector).
 // Valkyrie follow-through is unchanged. Optional measured pistol/sniper spawn
 // correction uses this same native FVector argument. AI,

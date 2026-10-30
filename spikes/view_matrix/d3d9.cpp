@@ -2497,6 +2497,7 @@ static sniperscope::Mount g_sniperScopeMount;
 static sniperscope::State g_sniperScopeState; // input thread only
 static int g_nativeWeaponMuzzle=0; // opt-in measured Kasimov/Centurion native spawn origin
 static int g_nativeMuzzleCodeCapture=0; // bounded private pre-hook RE evidence only
+static int g_nativeWeaponMuzzleDirection=0; // audited native one-shot cosmetic direction only
 static int g_nativeRifleMuzzle=0; // 0 unchanged, 1 observe, 2 native Valkyrie origin
 static bool g_nativeRifleTracer=false; // exact native visual source getter, default OFF
 static int g_sniperPip=0;
@@ -37358,6 +37359,7 @@ void LoadIniSettings() {
         nativefx::ConfigureProbeGun((unsigned)GetPrivateProfileIntA("Diagnostic","NativeMuzzleProbeGunVerts",0,path));
         g_nativeWeaponMuzzle=GetPrivateProfileIntA("Render","NativeWeaponMuzzleOrigin",0,path)?1:0;
         g_nativeMuzzleCodeCapture=GetPrivateProfileIntA("Diagnostic","NativeMuzzleCodeCapture",0,path)?1:0;
+        g_nativeWeaponMuzzleDirection=GetPrivateProfileIntA("Render","NativeWeaponMuzzleDirection",0,path)?1:0;
         Log("ini: NativeWeaponMuzzleOrigin=%d (measured Kasimov/Centurion spawn only)",g_nativeWeaponMuzzle);
         g_nativeRifleMuzzle=(int)GetPrivateProfileIntA("Diagnostic","NativeRifleMuzzleOrigin",0,path);
         if(g_nativeRifleMuzzle<0||g_nativeRifleMuzzle>3)g_nativeRifleMuzzle=0;

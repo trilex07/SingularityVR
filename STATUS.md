@@ -1,3 +1,9 @@
+## 2026-10-30 — Combined wrist gate + native muzzle direction correction
+
+- Authorized Steam diagnostic captured original native code; full-body analysis proves the one-shot helper uses a separate native aim vector for emitter rotation. Existing measured-origin forwarding did not propagate the rendered barrel direction.
+- Added default-OFF, exact-caller/owner/freshness-gated cosmetic direction forwarding for Valkyrie/Kasimov/Centurion. Volk remains unchanged. Inward wrist inspection hysteresis retained; no hand, aim, grip, reload or shader changes.
+- Native code/optimized DLL ABI checks, 1000 x86 stack forwarding calls, muzzle regressions and compiled WeaponLocker ABI PASS. PE32 /O2 build PASS; combined physical HUD/VFX acceptance PENDING.
+- Handoff: docs/handoffs/wrist-and-native-muzzle-direction-20261030.md. Deployment identity recorded separately; no physical/FPS claim.
 ## 2026-10-30 — Inner wrist inspection gate; VFX still BROKEN
 
 - Physical 8EEC46A2: HUD visible; activation should require inward wrist rotation. VFX offset FAIL except Volk PASS.
@@ -5442,3 +5448,4 @@ Toggle with **F6**.
   get cycled past unseen.
 - **Doc errors become code bugs.** `ENGINE_NOTES` recorded the backbuffer as `X8R8G8B8`; it is
   `A8R8G8B8`, and that mistake propagated straight into a `D3DERR_INVALIDCALL`.
+

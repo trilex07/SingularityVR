@@ -5,6 +5,16 @@ int main(){
     using hipknife::V;
     weaponmuzzle::Witness w{true,weaponreload::Kind::Valkyrie,1,2,100,{5,6,7}};
     V out{99,99,99};
+    w.forward={0,1,0};
+    assert(riflefx::SpawnDirection(true,true,true,1,2,110,w,out)&&out.y==1&&out.x==0);
+    assert(!riflefx::SpawnDirection(false,true,true,1,2,110,w,out));
+    assert(!riflefx::SpawnDirection(true,false,true,1,2,110,w,out));
+    assert(!riflefx::SpawnDirection(true,true,false,1,2,110,w,out));
+    assert(!riflefx::SpawnDirection(true,true,true,3,2,110,w,out));
+    assert(!riflefx::SpawnDirection(true,true,true,1,3,110,w,out));
+    assert(!riflefx::SpawnDirection(true,true,true,1,2,251,w,out));
+    w.forward={2,0,0};assert(!riflefx::SpawnDirection(true,true,true,1,2,110,w,out));
+    w.forward={0,1,0};
     assert(riflefx::Origin(2,true,true,2,1,2,110,w,{100,200,300},{100,200,300},out));
     assert(out.x==105&&out.y==206&&out.z==307);
     assert(riflefx::Origin(3,true,true,2,1,2,110,w,{100,200,300},{100,200,300},out));
