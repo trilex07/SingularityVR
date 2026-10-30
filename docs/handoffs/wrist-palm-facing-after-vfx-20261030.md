@@ -19,3 +19,7 @@ Falsifier: panel remains invisible when the palm faces the headset despite fresh
 ## Validation
 
 HUD policy/projection/source/placement and 12 final-palette integration fixtures pass. Actual D3D9/D3D9Ex pixel tests and optimized build results are recorded with the final candidate below. Steam retains accepted B7481E52 until an explicitly prepared HUD test. No game launch for this correction.
+
+## Candidate receipt
+
+Source 8c323ebd; optimized x86 PE32 /O2 build PASS. DLL SHA256 06609B2D64E4000EBCCD2D76EDACB569AC8A8A45E1467FAEA3B20D5E6CB46657. D3D9 and D3D9Ex actual pixel/occlusion/state/Reset fixtures PASS; full HUD suite PASS. VFX source paths unchanged from physically accepted 72a18713. No deployment, no game launch, wrist physical acceptance PENDING. Candidate staged privately at build/next-weapon-reload/wrist-palm-after-vfx-20261030. Installed DLL remains B7481E52; INI A6A80E686A4F799F99301B9D5F179C6386AF1832993438B3F6769E48CAC3CF22 unchanged.
