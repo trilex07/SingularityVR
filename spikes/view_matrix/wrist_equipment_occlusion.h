@@ -36,10 +36,43 @@ inline HRESULT CompositeEye(IDirect3DDevice9* dev,DrawUP draw,int eye,UINT width
     if(!CompatibleW(world,foreground))return D3DERR_INVALIDCALL;
     RECT clip{LONG(eye*width/2),0,LONG((eye+1)*width/2),LONG(height)};
     if(FAILED(dev->SetScissorRect(&clip)))return D3DERR_INVALIDCALL;
+    // UVs already denote pixels in a screen-space mask. Perspective-correct
+    // interpolation would apply W a second time and sample unrelated/empty
+    // mask pixels on a tilted wrist. Z remains the native projected depth.
     struct V{float x,y,z,rhw,u,v;};V v[4];
-    for(int k=0;k<4;++k){const auto& a=foreground[k];const auto& b=world[k];v[k]={a.x,a.y,a.z,a.rhw,b.u,b.v};}
+    for(int k=0;k<4;++k){const auto& a=foreground[k];const auto& b=world[k];v[k]={a.x,a.y,a.z,1.f,b.u,b.v};}
     return draw(dev,D3DPT_TRIANGLESTRIP,2,v,sizeof(V));
 }
+// Bounded, asynchronous visibility evidence. Never flushes or waits for GPU.
+// Stage 0 counts world-visible mask samples; stage 1 counts nontransparent
+// composite samples surviving foreground Z. One measured HUD submission/run.
+struct PixelWitness {
+    IDirect3DQuery9* q[2][2]{};DWORD pixels[2][2]{};
+    bool issued[2][2]{},complete[2][2]{},started=false,done=false;unsigned polls=0;
+    void Release(){for(auto& phase:q)for(auto& query:phase){if(query)query->Release();query=nullptr;}}
+    bool Start(IDirect3DDevice9* dev,bool enabled){
+        if(!enabled||started||done)return false;started=true;
+        for(auto& phase:q)for(auto& query:phase)
+            if(FAILED(dev->CreateQuery(D3DQUERYTYPE_OCCLUSION,&query))){Release();done=true;return false;}
+        return true;
+    }
+    void Begin(int phase,int eye){if(q[phase][eye])issued[phase][eye]=SUCCEEDED(q[phase][eye]->Issue(D3DISSUE_BEGIN));}
+    void End(int phase,int eye){if(q[phase][eye]&&issued[phase][eye])
+        issued[phase][eye]=SUCCEEDED(q[phase][eye]->Issue(D3DISSUE_END));}
+    // Call once at a later Present; flags=0 explicitly excludes D3DGETDATA_FLUSH.
+    bool Poll(){
+        if(!started||done)return false;bool all=true;
+        for(int p=0;p<2;++p)for(int e=0;e<2;++e){
+            if(!issued[p][e]){done=true;Release();return false;}
+            if(!complete[p][e]){const auto hr=q[p][e]->GetData(&pixels[p][e],sizeof(DWORD),0);
+                if(FAILED(hr)){done=true;Release();return false;}complete[p][e]=hr==S_OK;}
+            all=all&&complete[p][e];
+        }
+        if(all){done=true;Release();return true;}
+        if(++polls>=120){done=true;Release();}return false;
+    }
+};
+static PixelWitness pixelWitness;
 struct State {
     IDirect3DSurface9 *world=nullptr,*foreground=nullptr,*maskSurface=nullptr;
     IDirect3DTexture9* mask=nullptr;

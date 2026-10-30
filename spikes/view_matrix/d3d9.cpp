@@ -2378,9 +2378,8 @@ static centurionphysical::RightHold g_centurionRightHand;
 static SRWLOCK g_centurionGripLock=SRWLOCK_INIT;
 static centurionphysical::GripWitness g_centurionGrip,g_centurionGripStaged;
 static volatile LONG g_centurionRightHeld=0,g_centurionPalmPublished=0,g_centurionPalmReplays=0;
-static IDirect3DIndexBuffer9* g_centurionAnimationIB=nullptr;
-static bool g_centurionAnimationIBValid=false,g_centurionAnimationFault=false;
-static unsigned g_centurionAnimationIBAttempts=0;
+static centurionhd::IndexWitness g_centurionAnimationIndices;
+static bool g_centurionAnimationFault=false;
 static volatile LONG g_centurionAnimationDraws=0,g_centurionAnimationWitness=0;
 static hipknife::Renderer g_centurionShellRenderer;
 static bool g_centurionShellReady=false,g_centurionShellFault=false,g_centurionShellWarmed=false;
@@ -10233,7 +10232,7 @@ bool InitXRInput() {
     g_centurionAnimation={};g_centurionNativeAnimation={};g_centurionAnimationFault=false;g_centurionRootHold={};g_centurionTrackedRoot={};
     g_centurionRightHand={};g_centurionGripStaged={};
     if(TryAcquireSRWLockExclusive(&g_centurionGripLock)){g_centurionGrip={};ReleaseSRWLockExclusive(&g_centurionGripLock);}
-    hipknife::Release(g_centurionAnimationIB);g_centurionAnimationIBValid=false;g_centurionAnimationIBAttempts=0;
+    g_centurionAnimationIndices.Reset();
     if(g_centurionReload&&g_centurionCylinderAnimation){
         char path[MAX_PATH]{};
         if(IniPath(path)){
@@ -20762,25 +20761,14 @@ static int PrepareCenturionCylinder(IDirect3DDevice9* dev,INT baseVertex,UINT ve
         centurionvisual::Time((centurionreload::Phase)visual.phase,visual.since,visual.closed,now,g_centurionRefillOnly!=0):
         centurionanim::Time((centurionreload::Phase)visual.phase,visual.since,now);
     if(!time.active)return -1;
-    IDirect3DIndexBuffer9* ib=nullptr;
-    if(FAILED(dev->GetIndices(&ib))||!ib)return -1;
-    if(ib!=g_centurionAnimationIB){
-        InterlockedExchange(&g_centurionShellSeenGun,0);
-        hipknife::Release(g_centurionAnimationIB);g_centurionAnimationIB=ib;ib->AddRef();
-        g_centurionAnimationIBValid=false;
-        if(g_centurionAnimationIBAttempts<4){
-            ++g_centurionAnimationIBAttempts;
-            D3DINDEXBUFFER_DESC desc{};void* data=nullptr;
-            constexpr UINT bytes=6767*3*2;
-            if(SUCCEEDED(ib->GetDesc(&desc))&&desc.Format==D3DFMT_INDEX16&&desc.Size>=bytes&&
-               SUCCEEDED(ib->Lock(0,bytes,&data,D3DLOCK_READONLY))){
-                const bool matches=data&&centurionanim::Hash((const unsigned char*)data,bytes)==g_centurionAnimation.indexHash;
-                g_centurionAnimationIBValid=SUCCEEDED(ib->Unlock())&&matches;
-            }
-            InterlockedExchange(&g_centurionAnimationWitness,g_centurionAnimationIBValid?1:-1);
-        }
+    // The animation and HD body use the same original cooked index stream.
+    // Cache by retained COM resource identity: alternating known IBs must not
+    // exhaust a four pointer-change budget and permanently drop the cylinder.
+    if(g_centurionAnimation.indexHash!=centurionhd::Profile::SourceIbHash||
+       !g_centurionAnimationIndices.Observe(dev)){
+        InterlockedExchange(&g_centurionAnimationWitness,-1);return -1;
     }
-    ib->Release();if(!g_centurionAnimationIBValid)return -1;
+    InterlockedExchange(&g_centurionAnimationWitness,1);
     float changed[15][4];
     if(FAILED(dev->GetVertexShaderConstantF(layout.bones,&saved[0][0],15))){
         InterlockedExchange(&g_centurionShellSeenGun,0);return -1;
@@ -30223,8 +30211,7 @@ void ReleaseWristResources() {
     g_gloveRenderer.ReleaseGPU();g_gloveReplacementSeen=false;
     g_hipKnifeRenderer.ReleaseGPU();
     g_centurionClipRenderer.ReleaseGPU();g_centurionClipFault=false;
-    hipknife::Release(g_centurionAnimationIB);g_centurionAnimationIBValid=false;
-    g_centurionAnimationIBAttempts=0;g_centurionAnimationFault=false;g_centurionRootHold={};g_centurionTrackedRoot={};
+    g_centurionAnimationIndices.Reset();g_centurionAnimationFault=false;g_centurionRootHold={};g_centurionTrackedRoot={};
     g_centurionRightHand={};g_centurionGripStaged={};
     if(TryAcquireSRWLockExclusive(&g_centurionGripLock)){g_centurionGrip={};ReleaseSRWLockExclusive(&g_centurionGripLock);}
     g_centurionShellRenderer.ReleaseGPU();g_centurionShellFault=false;g_centurionShellWarmed=false;
@@ -30233,6 +30220,8 @@ void ReleaseWristResources() {
     g_centurionPresentationSafety.Reset();
     hipknife::Release(g_centurionMarkerState);
     wristdepth::state.Release();
+    wristdepth::pixelWitness.Release();
+    if(wristdepth::pixelWitness.started)wristdepth::pixelWitness.done=true;
     wristtrace::Reset();
     AcquireSRWLockExclusive(&g_equipmentWristLock);g_equipmentWrist={};g_equipmentWristStaged={};ReleaseSRWLockExclusive(&g_equipmentWristLock);
     InterlockedExchange(&g_equipmentHudDrew,0);
@@ -32318,6 +32307,10 @@ static void EquipmentGateReceipt(unsigned gate,const char* reason){
 }
 void DrawEquipmentWrist(IDirect3DDevice9* dev){
     static bool shown=false;
+    if(wristdepth::pixelWitness.Poll()){
+        const auto& p=wristdepth::pixelWitness.pixels;
+        Log("wrist HUD pixels: worldMask=%lu,%lu foregroundComposite=%lu,%lu (GPU samples, alpha>0; no flush/wait)",p[0][0],p[0][1],p[1][0],p[1][1]);
+    }
     InterlockedExchange(&g_equipmentHudDrew,0);
     InterlockedExchange(&g_equipmentHudVisible,0);
     // Scene depth is cleared before the first-person pass; there is no
@@ -32488,6 +32481,11 @@ void DrawEquipmentWrist(IDirect3DDevice9* dev){
     bool projectFailed=false;
     bool maskClear=true;
     if(occluded)maskClear=SUCCEEDED(shadowNativeClear(dev,0,nullptr,D3DCLEAR_TARGET,0,1.f,0));
+    const bool pixelSample=occluded&&wristdepth::pixelWitness.Start(dev,Rd(g_equipmentHudTrace)!=0);
+    if(pixelSample)for(int eye=0;eye<2;++eye){
+        const auto& n=depthCorners[0][eye][0];const auto& f=depthCorners[1][eye][0];
+        Log("wrist HUD projection: frame=%u eye=%d xrUV=%.6f,%.6f nativeUV=%.6f,%.6f worldZ=%.9g fgZ=%.9g rhw=%.9g",wristdepth::state.frame,eye,projected[eye][0].u,projected[eye][0].v,n.u*2-eye,n.v,n.z,f.z,n.rhw);
+    }
     int drew=0;
     for(int eye=0;eye<2;++eye){
         const auto* p=projected[eye];
@@ -32548,7 +32546,9 @@ void DrawEquipmentWrist(IDirect3DDevice9* dev){
             verts[n++]=vertex(q.x0,q.y1,q.color);verts[n++]=vertex(q.x1,q.y0,q.color);
             verts[n++]=vertex(q.x1,q.y1,q.color);verts[n++]=vertex(q.x0,q.y1,q.color);
         }
+        if(pixelSample)wristdepth::pixelWitness.Begin(0,eye);
         if(n&&maskClear&&!projectFailed&&SUCCEEDED(g_origDrawPrimUP(dev,D3DPT_TRIANGLELIST,n/3,verts,sizeof(V))))drew|=1<<eye;
+        if(pixelSample)wristdepth::pixelWitness.End(0,eye);
     }
     if(occluded&&drew==3){
         // The mask contains only world-visible HUD pixels. Reproject that
@@ -32572,9 +32572,13 @@ void DrawEquipmentWrist(IDirect3DDevice9* dev){
         dev->SetSamplerState(0,D3DSAMP_ADDRESSV,D3DTADDRESS_CLAMP);
         dev->SetRenderState(D3DRS_ALPHABLENDENABLE,TRUE);
         dev->SetFVF(D3DFVF_XYZRHW|D3DFVF_TEX1);
+        if(pixelSample){dev->SetRenderState(D3DRS_ALPHATESTENABLE,TRUE);
+            dev->SetRenderState(D3DRS_ALPHAFUNC,D3DCMP_GREATER);dev->SetRenderState(D3DRS_ALPHAREF,0);}
         for(int eye=0;eye<2&&bound;++eye){
+            if(pixelSample)wristdepth::pixelWitness.Begin(1,eye);
             if(SUCCEEDED(wristdepth::CompositeEye(dev,g_origDrawPrimUP,eye,desc.Width,desc.Height,
                 depthCorners[0][eye],depthCorners[1][eye])))drew|=1<<eye;
+            if(pixelSample)wristdepth::pixelWitness.End(1,eye);
         }
         dev->SetTexture(0,nullptr);
     }

@@ -1,3 +1,11 @@
+## 2026-10-30 — Wrist/Centurion physical failure follow-up
+
+- Physical `3FE6FE8E`: wrist HUD BROKEN (invisible), carried Centurion cylinder flickers, Centurion firing crashes in XAudio2_5.dll +4DE73. Reload/native ammunition acknowledgement works. Save ownership is not a proven cause.
+- Proven malformed Centurion Vorbis header repaired without changing audio samples; native decoder -133 -> 0, independent package roundtrip and identical PCM PASS. Crash resolution remains PENDING.
+- Corrected screen-mask double perspective interpolation; retained-resource cylinder index validation replaces the exhausted pointer-change budget. D3D9/D3D9Ex pixel/cache tests PASS; physical fixes not yet established.
+- One bounded asynchronous GPU visibility receipt distinguishes the remaining wrist depth/projection hypotheses. No guessed pose changes, health suppression or saves changed.
+- Evidence and grouped acceptance: `docs/handoffs/wrist-centurion-followup-20261030.md`. No gameplay launch or physical PASS this turn.
+
 ## 2026-10-30 — MAIN wrist orientation / retained world + foreground depth candidate
 
 - Physical preview: visible; text orientation and glove/magazine overlap FAILED. Session log archived with exact SHA.

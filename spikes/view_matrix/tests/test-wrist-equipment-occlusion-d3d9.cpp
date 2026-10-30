@@ -62,10 +62,12 @@ static void Run(bool ex){
     s.Eye(d,1,0,m,0,vp);s.Eye(d,1,1,m,0,vp);assert(s.Ready());
     s.Bind(d,world);IDirect3DSurface9* bound=nullptr;d->GetDepthStencilSurface(&bound);assert(bound==s.foreground);bound->Release();
     s.Bind(d,shadow);d->GetDepthStencilSurface(&bound);assert(bound==shadow);bound->Release();s.Bind(d,world);
+    wristdepth::PixelWitness witness;assert(!witness.Start(nullptr,false));assert(witness.Start(d,true));
     // Use actual preserved native depth to generate the HUD world visibility mask.
     s.internal=true;d->SetDepthStencilSurface(nullptr);d->SetRenderTarget(0,s.maskSurface);d->SetDepthStencilSurface(world);
     d->SetViewport(&vp);d->Clear(0,0,D3DCLEAR_TARGET,0,1,0);d->SetRenderState(D3DRS_ZWRITEENABLE,FALSE);
-    for(int eye=0;eye<2;++eye)Quad(d,float(eye*128),float((eye+1)*128),.5f,0xFFFFFFFF);
+    for(int eye=0;eye<2;++eye){witness.Begin(0,eye);
+        Quad(d,float(eye*128),float((eye+1)*128),.5f,0xFFFFFFFF);witness.End(0,eye);}
     d->SetDepthStencilSurface(nullptr);d->SetRenderTarget(0,back);d->SetDepthStencilSurface(s.foreground);d->SetViewport(&vp);
     d->SetTexture(0,s.mask);d->SetFVF(D3DFVF_XYZRHW|D3DFVF_TEX1);
     d->SetTextureStageState(0,D3DTSS_COLORARG1,D3DTA_TEXTURE);d->SetTextureStageState(0,D3DTSS_ALPHAARG1,D3DTA_TEXTURE);
@@ -75,7 +77,7 @@ static void Run(bool ex){
     d->SetRenderState(D3DRS_SRCBLEND,D3DBLEND_SRCALPHA);d->SetRenderState(D3DRS_DESTBLEND,D3DBLEND_INVSRCALPHA);
     for(int eye=0;eye<2;++eye){wristdepth::Projected p[4];
         for(int k=0;k<4;++k){float v[3]{-1.f+float(eye)+(k&1),1.f-2.f*(k>>1),.5f};assert(s.Project(0,eye,v,p[k]));}
-        assert(SUCCEEDED(wristdepth::CompositeEye(d,Draw,eye,256,128,p,p)));
+        witness.Begin(1,eye);assert(SUCCEEDED(wristdepth::CompositeEye(d,Draw,eye,256,128,p,p)));witness.End(1,eye);
     }
     // State blocks alone cannot undo the viewport reset caused by RT0 restore.
     // Check the explicit restore ordering used by the runtime on real drivers.
@@ -91,8 +93,39 @@ static void Run(bool ex){
         DWORD c=*(DWORD*)((char*)lr.pBits+64*lr.Pitch+(eye*128+region*32+16)*4)&0xFFFFFF;
         const DWORD expect[4]{0x202020,0x404040,0x606060,0xFFFFFF};assert(c==expect[region]);
     }
+    read->UnlockRect();
+    // Submit offline work, then poll WITHOUT FLUSH exactly as runtime does.
+    assert(SUCCEEDED(d->Present(nullptr,nullptr,nullptr,nullptr)));
+    bool reported=false;for(unsigned wait=0;wait<100&&!reported;++wait){reported=witness.Poll();if(!reported)Sleep(1);}
+    assert(reported&&witness.done&&!witness.q[0][0]);
+    for(int e=0;e<2;++e)assert(witness.pixels[0][e]>0&&witness.pixels[1][e]>0);
+    // Tilted wrist: the sampled texture is already a screen-space mask.
+    // Varying native W must not perspective-warp its UVs a second time.
+    assert(SUCCEEDED(d->BeginScene()));d->SetTexture(0,nullptr);
+    d->SetDepthStencilSurface(nullptr);d->SetRenderTarget(0,s.maskSurface);d->SetViewport(&vp);States(d);
+    d->SetRenderState(D3DRS_ZENABLE,FALSE);d->Clear(0,0,D3DCLEAR_TARGET,0,1,0);
+    const DWORD stripes[4]{0xFFAA1100,0xFF00BB22,0xFF2200CC,0xFFDDDD00};
+    for(int eye=0;eye<2;++eye)for(int region=0;region<4;++region)
+        Quad(d,float(eye*128+region*32),float(eye*128+(region+1)*32),.5f,stripes[region]);
+    d->SetRenderTarget(0,back);d->SetViewport(&vp);d->SetTexture(0,s.mask);
+    d->SetFVF(D3DFVF_XYZRHW|D3DFVF_TEX1);
+    d->SetTextureStageState(0,D3DTSS_COLORARG1,D3DTA_TEXTURE);
+    d->SetTextureStageState(0,D3DTSS_ALPHAARG1,D3DTA_TEXTURE);
+    d->SetRenderState(D3DRS_SCISSORTESTENABLE,TRUE);
+    for(int eye=0;eye<2;++eye){wristdepth::Projected p[4];
+        for(int k=0;k<4;++k){const float x=float(eye*128+(k&1)*128);
+            p[k]={x-.5f,float((k>>1)*128)-.5f,.5f,(k&1)?.15f:1.f,x/256.f,float(k>>1)};}
+        assert(SUCCEEDED(wristdepth::CompositeEye(d,Draw,eye,256,128,p,p)));
+    }
+    assert(SUCCEEDED(d->EndScene()));assert(SUCCEEDED(d->GetRenderTargetData(back,read)));
+    assert(SUCCEEDED(read->LockRect(&lr,0,D3DLOCK_READONLY)));
+    for(int eye=0;eye<2;++eye)for(int region=0;region<4;++region){
+        const DWORD c=*(DWORD*)((char*)lr.pBits+64*lr.Pitch+(eye*128+region*32+16)*4)&0xFFFFFF;
+        assert(c==(stripes[region]&0xFFFFFF));
+    }
     read->UnlockRect();read->Release();d->SetTexture(0,nullptr);
-    s.internal=false;s.NewFrame(d);assert(!s.active&&!s.Ready());d->GetDepthStencilSurface(&bound);assert(bound==world);bound->Release();d->SetViewport(&vp);
+
+    d->SetDepthStencilSurface(s.foreground);s.internal=false;s.NewFrame(d);assert(!s.active&&!s.Ready());d->GetDepthStencilSurface(&bound);assert(bound==world);bound->Release();d->SetViewport(&vp);
     s.Eye(d,0,0,m,0,vp);s.Eye(d,0,1,m,0,vp);s.native=FailBind;
     assert(!s.BeforeClear(d,true,0,D3DCLEAR_ZBUFFER)); // stencil preservation gate
     assert(!s.BeforeClear(d,true,0,D3DCLEAR_ZBUFFER|D3DCLEAR_STENCIL)&&s.failed&&!s.Ready());s.native=Bind;s.Release();
