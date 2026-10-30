@@ -26,3 +26,12 @@ One session: read the enlarged inward-wrist panel, verify E99 Tech against the n
 - Staged: build/next-weapon-reload/wrist-e99-seeker-20261030. Profile/change-plan WhatIf preflight PASS; no Steam writes or launch.
 - Installed baseline remains 06609B2D64E4000EBCCD2D76EDACB569AC8A8A45E1467FAEA3B20D5E6CB46657. Installed INI has no explicit scale override, so 110 percent default applies on deployment.
 - New changes: READY_FOR_PHYSICAL_ACCEPTANCE. Actual E99 balance updates and Seeker wheel appearance/retrieval remain PENDING.
+
+## MAIN combined deployment — 2026-10-30 14:48
+- Imported SIDE c00c2a4f as be246643: native first-menu button polish only, no runtime source change. Reused the exact source-built DLL b9f7f42e / 57840426.
+- Private package CDA63308054F63B14496CBDF95989CB4F73A303082559288F08E8FA43FCA47EF replaces exact installed preimage 9482BCC00BA91377E5D7AECC18DC3EE35EA1ED37BBD0BEE4C696D19F7D8ACC9A.
+- Reran three MAIN tests including actual private logical package delta: PASS. Native actions/timelines/hit bounds preserved. No imported-font or physical menu PASS claimed.
+- User explicitly requested Steam deployment. Guarded DLL install backup: deployment/install-backups/20261030-144817; report deployment/install-reports/20261030-144818.json.
+- Menu backup and receipt: build/next-weapon-reload/wrist-e99-seeker-20261030/menu-backup. Asset ValidateLive PASS for installed files and backups. INI unchanged.
+- Candidate retained; no game launch or timer. Physical size/E99/Seeker/menu acceptance PENDING.
+- Test: Start button with laser/R2; inward wrist panel size and actual E99 balance; owned Seeker through R3 then ordinary weapon; exit normally. Existing VFX preserved.
