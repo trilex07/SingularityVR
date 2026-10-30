@@ -6,6 +6,10 @@
 int main(){
     using wristhud::SourceCurrent;
     constexpr std::uintptr_t ctl=0x1000,pawn=0x2000,hud=0x3000,klass=0x4000;
+    assert(wristhud::SourceOwner(ctl,pawn,ctl,pawn));
+    assert(!wristhud::SourceOwner(ctl,0,ctl,pawn));
+    assert(!wristhud::SourceOwner(ctl,pawn,ctl+4,pawn));
+    assert(!wristhud::SourceOwner(ctl,pawn,ctl,pawn+4));
     assert(SourceCurrent(ctl,pawn,hud,klass,1000,ctl,pawn,klass,1100));
     assert(!SourceCurrent(ctl,pawn,hud,klass,1000,ctl,pawn,klass,1251));
     assert(!SourceCurrent(ctl,pawn,hud,klass,1000,ctl,0x2004,klass,1100));
