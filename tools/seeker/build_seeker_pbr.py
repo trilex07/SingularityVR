@@ -10,8 +10,13 @@ import json
 from pathlib import Path
 import numpy as np
 from PIL import Image, ImageDraw, ImageFilter
+import sys
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'reload'))
+from prepare_centurion import read_psk
 
 SOURCE = {'diffuse': 'ecb0b1f9245505115407503ea0cab7f2262e50325aaee73886a8e60196d26aeb'}
+SOURCE_PSK = '9ac2af6884610789cab9d65e685222a04f33d51d9eca6bfa04c62977d7947816'
 SIZE = (4096, 2048)
 
 
@@ -24,7 +29,27 @@ def save(array, path):
     return sha(path)
 
 
-def build(diffuse, normal, specular, output):
+def magazine_mask(psk_path):
+    if sha(psk_path) != SOURCE_PSK:
+        raise ValueError('unexpected source PSK for magazine UV mask')
+    _, _, _, _, _, weights, wedges, faces = read_psk(psk_path)
+    image = Image.new('L', SIZE, 0)
+    draw = ImageDraw.Draw(image)
+    covered = 0
+    for face in faces:
+        bones = {weights[wedges[w][0]][0][1] for w in face[:3]}
+        if bones != {57}:
+            continue
+        poly = [(round(wedges[w][1] * (SIZE[0] - 1)),
+                 round(wedges[w][2] * (SIZE[1] - 1))) for w in face[:3]]
+        draw.polygon(poly, fill=255)
+        covered += 1
+    if covered != 200:
+        raise ValueError('source clip UV topology changed')
+    return np.asarray(image, dtype=np.float32) / 255
+
+
+def build(diffuse, normal, specular, psk, output):
     if sha(diffuse) != SOURCE['diffuse']:
         raise ValueError('diffuse does not match audited Seeker source')
     output.mkdir(parents=True, exist_ok=True)
@@ -50,22 +75,31 @@ def build(diffuse, normal, specular, output):
                   fill=int(rng.integers(105, 152)), width=1)
     height = np.asarray(height.filter(ImageFilter.GaussianBlur(.32)), dtype=np.float32)
     height = (height - 128) * metal
+    # Source clip faces only: shallow diagonal stamped grip, produced in the
+    # original UV islands. It stays with the clip during native animation.
+    clip_uv = magazine_mask(psk)
+    yy, xx = np.ogrid[:SIZE[1], :SIZE[0]]
+    stamp = np.cos((xx + yy * .45) * (2 * np.pi / 21))
+    stamp = np.maximum(stamp - .65, 0).astype(np.float32) * clip_uv * 18
+    height += stamp
     noise = rng.normal(0, 1.0, size=height.shape).astype(np.float32) * valid
     # Small authored machining/wear response; broad original color variation
     # remains intact, while roughness and normals now carry 4K-only structure.
     detail = height * .16 + noise * .58
-    albedo = np.clip(albedo + detail[:, :, None] * (.35 + .65 * metal[:, :, None]), 0, 255)
+    albedo = np.clip(albedo + detail[:, :, None] * (.35 + .65 * metal[:, :, None])
+                     - stamp[:, :, None] * .20, 0, 255)
     base_hash = save(albedo, output / 'seeker_albedo_4k.png')
     original_normal = np.asarray(norm.resize(SIZE, Image.Resampling.BICUBIC), dtype=np.float32)
     normal_xy = (original_normal[:, :, :2] - 127.5) / 127.5
-    dy, dx = np.gradient(height * .006 + noise * .0015)
+    dy, dx = np.gradient(height * .025 + noise * .0015)
     normal_xy[:, :, 0] -= dx
     normal_xy[:, :, 1] -= dy
     nz = np.sqrt(np.maximum(1 - np.minimum(np.sum(normal_xy**2, axis=2), .98), .02))
     vector = np.dstack((normal_xy, nz))
     vector /= np.linalg.norm(vector, axis=2, keepdims=True)
     normal_hash = save((vector * .5 + .5) * 255, output / 'seeker_normal_dx_4k.png')
-    roughness = np.clip((.79 - .41 * shine) * 255 + noise * 4 - height * .25, 32, 235)
+    roughness = np.clip((.79 - .41 * shine) * 255 + noise * 4 - height * .25
+                        + clip_uv * 12, 32, 235)
     rough_hash = save(roughness, output / 'seeker_roughness_4k.png')
     metallic = np.where(metal > .48, 228, np.where(metal > .18, 126, 12)).astype(np.uint8)
     metal_hash = save(metallic, output / 'seeker_metallic_4k.png')
@@ -73,6 +107,8 @@ def build(diffuse, normal, specular, output):
               'size': SIZE, 'uv': 'original PSK upper-left V',
               'normal': 'DirectX tangent Y; source n map preserved and 4K micro-height composed',
               'authored_detail': {'seed': 0x5EEC0, 'machining_marks': 10500,
+                                  'source_clip_uv_triangles': 200,
+                                  'clip_grip_stamp_period_texels': 21,
                                   'gated_to_visible_specular_regions': True},
               'maps': {'albedo': base_hash, 'normal_dx': normal_hash,
                        'roughness': rough_hash, 'metallic': metal_hash},
@@ -83,7 +119,7 @@ def build(diffuse, normal, specular, output):
 
 if __name__ == '__main__':
     p = argparse.ArgumentParser(description=__doc__)
-    for k in ('diffuse', 'normal', 'specular', 'output'):
+    for k in ('diffuse', 'normal', 'specular', 'psk', 'output'):
         p.add_argument('--' + k, required=True, type=Path)
     a = p.parse_args()
-    print(json.dumps(build(a.diffuse, a.normal, a.specular, a.output), indent=2))
+    print(json.dumps(build(a.diffuse, a.normal, a.specular, a.psk, a.output), indent=2))
