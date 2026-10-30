@@ -4,6 +4,12 @@
 #include <cstdint>
 
 namespace wristhud {
+// VrModeOn is the draw-duplication flag itself. Never reject duplication
+// separately after requiring VR: doing so makes preview unreachable.
+inline bool RuntimeAllowed(bool stereo,bool eyes,bool paused,bool menu,bool panel,
+                           bool cinematic,bool support,bool gameplay){
+    return stereo&&eyes&&!paused&&!menu&&!panel&&!cinematic&&!support&&gameplay;
+}
 struct Values {
     bool health=false,energy=false,tech=false,packs=false,vials=false;
     float hp=0,maxHp=0,tmd=0,maxTmd=0;

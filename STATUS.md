@@ -1,3 +1,11 @@
+## 2026-10-30 — MAIN PR73 wrist HUD integration on retained HD + PR71
+
+- Branch `integration/left-wrist-hud-retained-hd`, pinned SIDE `ce163a15`; existing PR70, HD follow-up and MenuDrawTrace default OFF preserved.
+- Fixed unreachable stereo preview, missing moved=3 assembly ride and both-eye publication gate; no reload/grip/input changes.
+- Added bounded one-frame read-only depth/pose trace and bounded live-value/natural maximum receipts. No depth copies or speculative production occlusion.
+- Preview keeps the legacy health display. Production depth/live-data/PSVR2/performance remain PENDING until the specific focused stereo trace and final overlap check.
+- Details and consolidated physical dependency: `docs/handoffs/left-wrist-main-integration-20261030.md`. Exact candidate/install identity follows in its JSON receipt; older blocks below are historical.
+
 ## 2026-10-30 — PR71 scoped CPU optimization in retained HD candidate
 
 - Latest installed DLL: `0AAEAFAC7B230C80F922BD2EC533FDF711258524BD2BF35CAC4013F11E56DE0C`; source `e7e7b5f1267c3c1aefa3fcc124a39a6009d238e0`. Exact backup/verification in `docs/handoffs/hd-physical-followup-pr71-candidate-20261030.json`; supersedes 63CCFF6A, keeps all 16 assets and INI unchanged.
