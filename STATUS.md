@@ -5,6 +5,7 @@
 - Corrected screen-mask double perspective interpolation; retained-resource cylinder index validation replaces the exhausted pointer-change budget. D3D9/D3D9Ex pixel/cache tests PASS; physical fixes not yet established.
 - One bounded asynchronous GPU visibility receipt distinguishes the remaining wrist depth/projection hypotheses. No guessed pose changes, health suppression or saves changed.
 - Evidence and grouped acceptance: `docs/handoffs/wrist-centurion-followup-20261030.md`. No gameplay launch or physical PASS this turn.
+- Clean source `ab5a83e1`, x86 `/O2` DLL `A2D9042A…` and repaired Centurion bank `502AAEC0…` installed with verified backups. INI `2793671F…` and 45 other assets unchanged; candidate retained, no timer/launch. Exact build/test/install identity: `docs/handoffs/wrist-centurion-followup-candidate-20261030.json`. Physical acceptance remains PENDING.
 
 ## 2026-10-30 — MAIN wrist orientation / retained world + foreground depth candidate
 

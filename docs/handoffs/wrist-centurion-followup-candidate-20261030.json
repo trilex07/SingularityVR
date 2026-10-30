@@ -1,0 +1,36 @@
+{
+  "schema": "singularityvr-wrist-centurion-followup-v1",
+  "sourceCommit": "ab5a83e124986a5c5a2319e4841861028c11a308",
+  "branch": "integration/left-wrist-hud-retained-hd",
+  "dllSha256": "A2D9042A206C681A1ABE0A1C606129DD7EB335DAFCE5ACC6BDC02EB7D2F27720",
+  "architecture": "x86 PE32",
+  "optimization": "/O2",
+  "centurionBankBefore": "A5FA0D72BB6B32D845E6D0FC89990F18D3A87A9FAC444D698689D74233756D39",
+  "centurionBankAfter": "502AAEC045B7C221DAC4E9891F829F7370E8431DB14FAAA4031A414731FA701D",
+  "unchangedIniSha256": "2793671F654CBB5174A4E23009CD56F04B41ABC5F932C0E99D82C5A1205E17F5",
+  "unchangedProtectedAssets": 45,
+  "offline": {
+    "handsTmdOled": "PASS",
+    "audioTests": "11 PASS",
+    "diegeticAtlas": "156 pixel cases each D3D9/D3D9Ex PASS",
+    "centurionD3D9Ex": "PASS including index-resource alternation",
+    "hudD3D9Ex": "PASS including tilted mask and async query",
+    "haptics": "PASS",
+    "audioPcmAndRoundtrip": "PASS identical",
+    "nativeDecoder": "-133 -> 0",
+    "compiledLockerAbi": "PASS literal [eax+20Ch]"
+  },
+  "physical": {
+    "cylinderFlicker": "PENDING",
+    "performance": "NOT MEASURED",
+    "wristVisibility": "PENDING, prior 3FE6FE8E FAIL",
+    "centurionCrashFree": "PENDING"
+  },
+  "deployed": true,
+  "gameLaunched": false,
+  "automaticRestore": false,
+  "dllBackup": "deployment/install-backups/20261030-110533",
+  "installReport": "deployment/install-reports/20261030-110534.json",
+  "audioBackup": "build/next-weapon-reload/wrist-centurion-followup-20261030/audio-backup",
+  "evidence": "build/wrist-main/session-20261030-centurion-crash"
+}
