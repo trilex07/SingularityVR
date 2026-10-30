@@ -1,6 +1,7 @@
 // Native method resolved from the reflected UFunction and its audited virtual
 // dispatch. No executable VA, replacement asset, template edit or shader guess.
 #include "native_rifle_fx_policy.h"
+#include "native_muzzle_code_capture.h"
 namespace NativeRifleFx {
 using Method=void (__thiscall*)(void*,const hipknife::V*,int);
 static Method original=nullptr;
@@ -328,6 +329,21 @@ static void Install(){
     const auto method=PauseRttProbe::Pointer(PauseRttProbe::Pointer(object)+0x120);
     if(!Code(method,846,0xDEA566CA454CAFEBull)){
         Log("rifle native emitter: refused native method fingerprint");return;}
+    if(g_nativeMuzzleCodeCapture){
+        // Both bodies already fingerprinted/range-checked. Save before the
+        // detour changes the prologue, once at initialization; no GPU access.
+        static bool attempted=false;
+        if(!attempted){
+            attempted=true;char path[MAX_PATH]{};strcpy_s(path,g_logPath);
+            if(char* end=strrchr(path,'\\')){
+                sprintf_s(end+1,sizeof(path)-(end+1-path),"native-muzzle-code-%lu.bin",GetCurrentProcessId());
+                const bool saved=muzzlecode::Write(path,(uint32_t)wrapper,(const void*)wrapper,
+                    (uint32_t)method,(const void*)method);
+                Log("native-fx code capture: saved=%d wrapper=%08X/197 method=%08X/846 path=%s [pre-detour owned code; NOT visual PASS]",
+                    saved?1:0,(unsigned)wrapper,(unsigned)method,path);
+            }
+        }
+    }
     auto status=MH_CreateHook((void*)method,(void*)&Hook,(void**)&original);
     if(status!=MH_OK){original=nullptr;Log("rifle native emitter: CreateHook=%d",int(status));return;}
     status=MH_EnableHook((void*)method);

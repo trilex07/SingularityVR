@@ -2496,6 +2496,7 @@ static weaponmuzzle::Witness g_nextMuzzle,g_nextMuzzleStaged;
 static sniperscope::Mount g_sniperScopeMount;
 static sniperscope::State g_sniperScopeState; // input thread only
 static int g_nativeWeaponMuzzle=0; // opt-in measured Kasimov/Centurion native spawn origin
+static int g_nativeMuzzleCodeCapture=0; // bounded private pre-hook RE evidence only
 static int g_nativeRifleMuzzle=0; // 0 unchanged, 1 observe, 2 native Valkyrie origin
 static bool g_nativeRifleTracer=false; // exact native visual source getter, default OFF
 static int g_sniperPip=0;
@@ -32430,9 +32431,9 @@ void DrawEquipmentWrist(IDirect3DDevice9* dev){
         const float px=rx*cy+ry*sp*sy;
         const float py=ry*cp;
         const float pz=-rx*sy+ry*sp*cy;
-        // Source bind: wrist-to-elbow runs along local -Y; finger spread runs
-        // along Z. Put the long display axis down the short forearm, with its
-        // front normal along -X, instead of spanning 155 mm across the wrist.
+        // Source bind: wrist-to-elbow is +Y; finger spread is Z. The inner
+        // surface faces +X, the legacy outer surface -X. Keep the measured
+        // attachment and rotate only the logical text footprint.
         // Inner/palm face reverses the surface basis as well as its normal.
         // Merely translating the old outer face exposes the text's back side.
         const bool inner=Rd(g_equipmentHudInnerWrist)!=0;
@@ -37356,6 +37357,7 @@ void LoadIniSettings() {
         nativefx::ConfigureParticles(GetPrivateProfileIntA("Render","NativeMuzzleParticleStereo",0,path)!=0);
         nativefx::ConfigureProbeGun((unsigned)GetPrivateProfileIntA("Diagnostic","NativeMuzzleProbeGunVerts",0,path));
         g_nativeWeaponMuzzle=GetPrivateProfileIntA("Render","NativeWeaponMuzzleOrigin",0,path)?1:0;
+        g_nativeMuzzleCodeCapture=GetPrivateProfileIntA("Diagnostic","NativeMuzzleCodeCapture",0,path)?1:0;
         Log("ini: NativeWeaponMuzzleOrigin=%d (measured Kasimov/Centurion spawn only)",g_nativeWeaponMuzzle);
         g_nativeRifleMuzzle=(int)GetPrivateProfileIntA("Diagnostic","NativeRifleMuzzleOrigin",0,path);
         if(g_nativeRifleMuzzle<0||g_nativeRifleMuzzle>3)g_nativeRifleMuzzle=0;

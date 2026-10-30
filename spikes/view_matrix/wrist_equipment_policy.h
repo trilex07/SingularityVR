@@ -35,7 +35,10 @@ inline bool Visibility(bool shown,float facing,float distance,float heightBelowE
                        bool gameplay,bool paused,bool menu,bool cinematic,bool support){
     if(!tracked||!gameplay||paused||menu||cinematic||support||
        !std::isfinite(facing)||!std::isfinite(distance)||!std::isfinite(heightBelowEye))return false;
-    const float dot=shown?.16f:.34f;
+    // Deliberate inner-wrist inspection: enter within 37 degrees of the
+    // surface normal, leave beyond 49 degrees. Edge-on palms must not open it.
+    // Hysteresis changes visibility only, never the tracked wrist transform.
+    const float dot=shown?.65f:.80f;
     const float maxDistance=shown?.72f:.62f;
     return facing>=dot&&distance>=.16f&&distance<=maxDistance&&heightBelowEye<=.50f;
 }

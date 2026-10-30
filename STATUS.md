@@ -1,3 +1,10 @@
+## 2026-10-30 — Inner wrist inspection gate; VFX still BROKEN
+
+- Physical 8EEC46A2: HUD visible; activation should require inward wrist rotation. VFX offset FAIL except Volk PASS.
+- L1/L2: stricter facing hysteresis (.80 enter/.65 leave) and full rotation sweeps PASS; actual D3D9/D3D9Ex pixel/reset tests PASS. No pose/aim/reload changes.
+- Native origin forwarding executed but was insufficient. Added default-OFF, one-shot pre-detour original-code capture for evidence-driven analysis; NOT a VFX fix. Steam unchanged; physical gate PENDING.
+- Handoff: `docs/handoffs/wrist-facing-vfx-evidence-20261030.md`.
+
 ## 2026-10-30 — Inner wrist axis and native muzzle scope follow-up
 
 - Physical 57E1BFAD: weapons/grips OK; wrist visibility FAIL; VFX spawn offset FAIL (user).
