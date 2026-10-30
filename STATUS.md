@@ -1,3 +1,12 @@
+## 2026-10-30 — MAIN wrist orientation / retained world + foreground depth candidate
+
+- Physical preview: visible; text orientation and glove/magazine overlap FAILED. Session log archived with exact SHA.
+- Implemented opt-in exact-scene depth-attachment split, two native projection families, same-frame wrist gate, opaque backing and quarter-turn text. No controller/grip/reload changes.
+- D3D9/D3D9Ex occlusion pixel fixtures and HUD/gameplay/OLED/WeaponLocker regressions PASS. This does not establish headset occlusion or performance.
+- Source SVNC/SVTG measurement yields candidate panel-only normal offset -62 mm; no hand pose offsets are changed.
+- Legacy health suppression remains OFF. Optional live E99/supplies/energy and final depth-aware physical acceptance remain PENDING.
+- See `docs/handoffs/left-wrist-occlusion-20261030.md`; final build/install identities follow in its candidate receipt. No promotion or merge.
+
 ## 2026-10-30 — MAIN PR73 wrist HUD integration on retained HD + PR71
 
 - Branch `integration/left-wrist-hud-retained-hd`, pinned SIDE `ce163a15`; existing PR70, HD follow-up and MenuDrawTrace default OFF preserved.

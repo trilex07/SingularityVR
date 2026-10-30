@@ -28,3 +28,7 @@ $source=Join-Path $root 'spikes/view_matrix/tests/test-wrist-equipment-trace-d3d
 $exe=Join-Path $out 'test-wrist-equipment-trace-d3d9.exe'
 cmd /c "`"$vc`" x86 >nul && cl /nologo /O2 /EHsc /std:c++17 `"$source`" /Fe:`"$exe`" d3d9.lib user32.lib && `"$exe`""
 if($LASTEXITCODE -ne 0){throw 'Actual D3D9/D3D9Ex wrist trace regression failed'}
+$source=Join-Path $root 'spikes/view_matrix/tests/test-wrist-equipment-occlusion-d3d9.cpp'
+$exe=Join-Path $out 'test-wrist-equipment-occlusion-d3d9.exe'
+cmd /c "`"$vc`" x86 >nul && cl /nologo /O2 /EHsc /std:c++17 `"$source`" /Fe:`"$exe`" d3d9.lib user32.lib && `"$exe`""
+if($LASTEXITCODE -ne 0){throw 'Actual D3D9/D3D9Ex wrist occlusion regression failed'}

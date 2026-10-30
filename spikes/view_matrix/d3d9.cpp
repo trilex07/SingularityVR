@@ -2463,12 +2463,13 @@ static seekergeometry::IndexIdentity g_seekerIndices;
 static weaponcarry::Wrist g_nextWrist,g_nextWristStaged;
 static bool g_nextWristStagedFromTmd=false;
 struct EquipmentWristPose { bool valid=false,fromTmd=false; uintptr_t pawn=0;
-    ULONGLONG sampled=0,controllerSample=0; armbind::Mat tracking{}; };
+    ULONGLONG sampled=0,controllerSample=0; armbind::Mat tracking{},nativeTracking{}; unsigned frame=0; };
 static EquipmentWristPose g_equipmentWrist,g_equipmentWristStaged;
 static SRWLOCK g_equipmentWristLock=SRWLOCK_INIT;
 static LONG g_equipmentHud=0,g_equipmentHudSuppress=0,g_equipmentHudEnergy=0;
 static LONG g_equipmentHudPreviewNoDepth=0;
-static LONG g_equipmentHudTrace=0;
+static LONG g_equipmentHudTrace=0,g_equipmentHudOcclusion=0;
+static LONG g_equipmentHudTextQuarterTurn=1;
 static LONG g_equipmentHudTech=0,g_equipmentHudSupplies=0;
 static LONG g_equipmentHudOffsetMm[3]{-25,-80,0},g_equipmentHudScalePct=100;
 static LONG g_equipmentHudDrew=0,g_equipmentHudVisible=0;
@@ -5297,6 +5298,7 @@ inline void InvalidateCamMats() {
 struct ShaderLayoutEntry { IDirect3DVertexShader9* shader; skeletal::Layout layout; };
 #include "shadow_pass_trace.h"
 #include "wrist_equipment_trace.h"
+#include "wrist_equipment_occlusion.h"
 #include "shadow_receiver_fix.h"
 #include "shadow_world_receiver_fix.h"
 #include "shadow_clear_gate.h"
@@ -15152,7 +15154,7 @@ HRESULT StereoPairBody(IDirect3DDevice9* dev, DrawFn&& draw) {
         dev->SetRenderState(D3DRS_SCISSORTESTENABLE, TRUE);
     }
 
-    float mat[16];
+    float mat[16],wristBase[16]{};int wristConv=-1;
     HRESULT hr = S_OK;
 
     if (dbg != 2) {
@@ -15164,6 +15166,9 @@ HRESULT StereoPairBody(IDirect3DDevice9* dev, DrawFn&& draw) {
             memcpy(mat, cs.m, sizeof(mat));
             ApplyEyeRemap(reinterpret_cast<Reg4*>(mat), cs.conv, -0.5f);
             if (i == 0 && !g_thisDrawMoved) { VfxCaptureEyeMat(mat, cs.conv, 0); VfxCaptureBaseCam(cs.m, cs.conv); }
+            if(wristdepth::state.enabled&&i==0&&cs.reg==0){
+                memcpy(wristBase,mat,sizeof wristBase);wristConv=cs.conv;
+            }
             if (g_thisDrawMoved) {
                 // Pivot on the camera: the gun hangs off the view, so turning it about the eye is
                 // what makes it point where the controller points. Pivoting on the world origin
@@ -15193,11 +15198,14 @@ HRESULT StereoPairBody(IDirect3DDevice9* dev, DrawFn&& draw) {
         if(g_knifeHandGrip)g_knifeStereoEye=0;
         hr = draw();
         if(wristEye)wristEye->hr=hr;
+        if(wristdepth::state.enabled&&wristConv>=0&&SUCCEEDED(hr))
+            wristdepth::state.Eye(dev,Rd(g_inForeground)?1:0,0,wristBase,wristConv,full);
         if(g_knifeHandGrip)g_knifeStereoEye=-1;
         VfxEyeDraw(dev, 0); // host VFX, left eye: matrices for this eye still bound
     }
 
     if (dbg != 1) {
+        wristConv=-1;
         RECT rr = { (LONG)full.X + halfW, (LONG)full.Y,
                     (LONG)(full.X + full.Width), (LONG)(full.Y + full.Height) };
         if (useScissor) dev->SetScissorRect(&rr);
@@ -15209,6 +15217,9 @@ HRESULT StereoPairBody(IDirect3DDevice9* dev, DrawFn&& draw) {
             ApplyOffset(reinterpret_cast<Reg4*>(mat), cs.conv, g_eyeDeltaUU);
             ApplyEyeRemap(reinterpret_cast<Reg4*>(mat), cs.conv, +0.5f);
             if (i == 0 && !g_thisDrawMoved) { VfxCaptureEyeMat(mat, cs.conv, 1); VfxCaptureBaseCam(cs.m, cs.conv); }
+            if(wristdepth::state.enabled&&i==0&&cs.reg==0){
+                memcpy(wristBase,mat,sizeof wristBase);wristConv=cs.conv;
+            }
             if (g_thisDrawMoved) {
                 // Pivot on the camera: the gun hangs off the view, so turning it about the eye is
                 // what makes it point where the controller points. Pivoting on the world origin
@@ -15226,6 +15237,8 @@ HRESULT StereoPairBody(IDirect3DDevice9* dev, DrawFn&& draw) {
         if(g_knifeHandGrip)g_knifeStereoEye=1;
         HRESULT hr2 = draw();
         if(wristEye)wristEye->hr=hr2;
+        if(wristdepth::state.enabled&&wristConv>=0&&SUCCEEDED(hr2))
+            wristdepth::state.Eye(dev,Rd(g_inForeground)?1:0,1,wristBase,wristConv,full);
         if(g_knifeHandGrip)g_knifeStereoEye=-1;
         if (dbg == 2) hr = hr2;
         VfxEyeDraw(dev, 1); // host VFX, right eye: matrices for this eye still bound
@@ -18790,7 +18803,7 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
            wristhud::FinalWrist(*bind,
               reinterpret_cast<const float(*)[4]>(changed+wristSlot[0]*3),actualLocal,actualBase,tracking,desired)){
             g_equipmentWristStaged={true,fromTmd,g_playerPawn,GetTickCount64(),
-                (ULONGLONG)InterlockedCompareExchange64(&g_handPoseSampleMs[0],0,0),desired};
+                (ULONGLONG)InterlockedCompareExchange64(&g_handPoseSampleMs[0],0,0),desired,tracking,wristdepth::state.frame};
         }
     }
     if(physicalActive&&((gloves&&slots==(int)gloveisolate::kNoTmdCookedPaletteCount)||
@@ -20417,9 +20430,40 @@ typedef HRESULT (STDMETHODCALLTYPE *PFN_Clear)(IDirect3DDevice9*, DWORD, const D
 PFN_SetViewport g_origSetViewport = nullptr;
 PFN_Clear       g_origClear = nullptr;
 static PFN_Clear shadowNativeClear=nullptr;
+using PFN_WristCreateDepth=HRESULT (STDMETHODCALLTYPE*)(IDirect3DDevice9*,UINT,UINT,D3DFORMAT,D3DMULTISAMPLE_TYPE,DWORD,BOOL,IDirect3DSurface9**,HANDLE*);
+static PFN_WristCreateDepth g_origWristCreateDepth=nullptr;
+static HRESULT STDMETHODCALLTYPE Hook_WristCreateDepth(IDirect3DDevice9* dev,UINT w,UINT h,D3DFORMAT fmt,
+    D3DMULTISAMPLE_TYPE ms,DWORD quality,BOOL discard,IDirect3DSurface9** out,HANDLE* shared){
+    // A discardable DS cannot legally survive the switch at the foreground
+    // clear. Preserve only full-backbuffer D24S8 allocations for this opt-in
+    // route. Actual scene identity is still established by both world draws.
+    BOOL actual=discard;
+    if(wristdepth::state.enabled&&fmt==D3DFMT_D24S8&&ms==D3DMULTISAMPLE_NONE&&!quality){
+        IDirect3DSurface9* back=nullptr;D3DSURFACE_DESC d{};
+        if(SUCCEEDED(dev->GetBackBuffer(0,0,D3DBACKBUFFER_TYPE_MONO,&back))&&back){
+            if(SUCCEEDED(back->GetDesc(&d))&&w==d.Width&&h==d.Height)actual=FALSE;
+            back->Release();
+        }
+    }
+    const HRESULT hr=g_origWristCreateDepth(dev,w,h,fmt,ms,quality,actual,out,shared);
+    if(SUCCEEDED(hr)&&out)wristdepth::Created(*out,actual);
+    return hr;
+}
+static HRESULT STDMETHODCALLTYPE Hook_WristDepthBind(IDirect3DDevice9* dev,IDirect3DSurface9* surface){
+    return wristdepth::state.Bind(dev,surface);
+}
 static HRESULT STDMETHODCALLTYPE ShadowTraceClear(IDirect3DDevice9* dev,DWORD count,const D3DRECT* rects,DWORD flags,D3DCOLOR colour,float z,DWORD stencil) {
     auto* wristEvent=wristtrace::Clear(dev,(unsigned)Rd(g_frameDrawIdx),Rd(g_inForeground),flags,z);
+    const bool split=wristdepth::state.BeforeClear(dev,Rd(g_inForeground)!=0,count,flags);
     const HRESULT hr=shadowNativeClear(dev,count,rects,flags,colour,z,stencil);
+    if(FAILED(hr)&&wristdepth::state.active)wristdepth::state.failed=true;
+    if(split&&Rd(g_equipmentHudTrace)){
+        static unsigned receipts=0;if(receipts<4){++receipts;
+            Log("wrist depth split [%u/4]: frame=%u draw=%ld world=%p foreground=%p size=%ux%u flags=%lX clear=%08X",
+                receipts,wristdepth::state.frame,Rd(g_frameDrawIdx),wristdepth::state.world,
+                wristdepth::state.foreground,wristdepth::state.desc.Width,wristdepth::state.desc.Height,flags,(unsigned)hr);
+        }
+    }
     if(wristEvent)wristEvent->hr=hr;
     shadowtrace::NoteClear(dev,count,flags,colour,z,stencil,hr);return hr;
 }
@@ -30188,6 +30232,7 @@ void ReleaseWristResources() {
     ReleaseNextReloadGPU();CancelNextReload();
     g_centurionPresentationSafety.Reset();
     hipknife::Release(g_centurionMarkerState);
+    wristdepth::state.Release();
     wristtrace::Reset();
     AcquireSRWLockExclusive(&g_equipmentWristLock);g_equipmentWrist={};g_equipmentWristStaged={};ReleaseSRWLockExclusive(&g_equipmentWristLock);
     InterlockedExchange(&g_equipmentHudDrew,0);
@@ -32276,10 +32321,12 @@ void DrawEquipmentWrist(IDirect3DDevice9* dev){
     InterlockedExchange(&g_equipmentHudDrew,0);
     InterlockedExchange(&g_equipmentHudVisible,0);
     // Scene depth is cleared before the first-person pass; there is no
-    // validated world-depth copy or per-eye Z mapping at Present. Refuse a
-    // production draw until both witnesses exist. Preview is explicitly
+    // preserved world depth or per-eye native Z mapping at Present. Refuse a
+    // depth-tested draw until both witnesses exist. Preview is explicitly
     // opt-in and can never suppress the existing health display.
-    const wristhud::DepthEvidence depthEvidence{};
+    const bool occluded=Rd(g_equipmentHudOcclusion)!=0;
+    const bool depthReady=occluded&&wristdepth::state.Ready();
+    const wristhud::DepthEvidence depthEvidence{depthReady,depthReady,depthReady,depthReady};
     if(!wristhud::MayDraw(Rd(g_equipmentHud)!=0,Rd(g_equipmentHudPreviewNoDepth)!=0,depthEvidence)||
        !wristhud::RuntimeAllowed(VrModeOn(),g_haveEyes,Rd(g_gamePaused)!=0,
            Rd(g_vrUiMenu)!=0,Rd(g_panelOpen)!=0,Rd(g_inCinematic)!=0,
@@ -32292,6 +32339,14 @@ void DrawEquipmentWrist(IDirect3DDevice9* dev){
     if(!pose.valid||pose.pawn!=g_playerPawn||!g_handPositionValid[0]||
        !wristhud::Current(pose.sampled,now)||
        !wristhud::Current(pose.controllerSample,now)){shown=false;EquipmentGateReceipt(1,"missing/foreign/stale final left wrist or controller");return;}
+    if(occluded&&(!depthReady||pose.frame!=wristdepth::state.frame)){
+        if(Rd(g_equipmentHudTrace)){static unsigned receipts=0;
+            if(receipts<4){++receipts;const auto& s=wristdepth::state;
+                Log("wrist depth unavailable [%u/4]: frame=%u poseFrame=%u active=%d failed=%d world=%p fg=%p mask=%p worldEyes=%d%d fgEyes=%d%d",
+                    receipts,s.frame,pose.frame,s.active,s.failed,s.world,s.foreground,s.mask,
+                    s.cameras[0][0].valid,s.cameras[0][1].valid,s.cameras[1][0].valid,s.cameras[1][1].valid);}}
+        EquipmentGateReceipt(7,"missing same-frame preserved world/foreground depth or camera");return;
+    }
     const auto values=EquipmentValues();
     EquipmentLiveReceipt(values);
     if(!values.health&&!values.energy&&!values.tech&&!values.packs&&!values.vials){shown=false;EquipmentGateReceipt(2,"no validated local-player values");return;}
@@ -32308,6 +32363,9 @@ void DrawEquipmentWrist(IDirect3DDevice9* dev){
     const float cy=cosf(yaw),sy=sinf(yaw),cp=cosf(pitch),sp=sinf(pitch),
                 cr=cosf(roll),sr=sinf(roll);
     auto point=[&](float x,float y){
+        // Rotate the complete logical display, not the controller or wrist.
+        // The physical 155 x 104 mm footprint is unchanged.
+        if(Rd(g_equipmentHudTextQuarterTurn))wristdepth::QuarterTurn(x,y);
         const float a=(x-.5f)*w,b=(.5f-y)*h;
         const float rx=a*cr-b*sr,ry=a*sr+b*cr;
         const float px=rx*cy+ry*sp*sy;
@@ -32340,19 +32398,50 @@ void DrawEquipmentWrist(IDirect3DDevice9* dev){
            !VrUiProjectEye(eye,point(1,1),p[3])){EquipmentGateReceipt(4,"corner behind eye/projection unavailable");return;}
         for(const auto& q:projected[eye])if(q.u<0||q.u>1||q.v<0||q.v>1){EquipmentGateReceipt(5,"panel extends beyond eye bounds");return;}
     }
+    auto projectDepth=[&](int phase,int eye,float x,float y,wristdepth::Projected& out){
+        const auto t=point(x,y);
+        const auto n=centurionvisual::Point({t.x,t.y,t.z},pose.nativeTracking);
+        const float p[3]{n.x,n.y,n.z};
+        return wristdepth::state.Project(phase,eye,p,out);
+    };
+    wristdepth::Projected depthCorners[2][2][4];
+    if(occluded)for(int phase=0;phase<2;++phase)for(int eye=0;eye<2;++eye)
+        for(int k=0;k<4;++k)if(!projectDepth(phase,eye,float(k&1),float(k>>1),depthCorners[phase][eye][k])){
+            EquipmentGateReceipt(8,"native per-eye XYZ projection outside captured scene depth");return;
+        }
+    if(occluded)for(int eye=0;eye<2;++eye)
+        if(!wristdepth::CompatibleW(depthCorners[0][eye],depthCorners[1][eye])){
+            EquipmentGateReceipt(9,"world/foreground projective W mismatch");return;
+        }
     IDirect3DSurface9* back=nullptr,*old=nullptr,*depth=nullptr;
     if(FAILED(dev->GetBackBuffer(0,0,D3DBACKBUFFER_TYPE_MONO,&back))||!back)return;
     D3DSURFACE_DESC desc{};
     if(FAILED(back->GetDesc(&desc))||desc.Width<8||desc.Height<8){back->Release();return;}
     if(FAILED(dev->GetRenderTarget(0,&old))||!old){back->Release();return;}
     dev->GetDepthStencilSurface(&depth);
+    D3DVIEWPORT9 previousViewport{};
+    if(FAILED(dev->GetViewport(&previousViewport))){old->Release();if(depth)depth->Release();back->Release();return;}
     if(!g_wristState&&FAILED(dev->CreateStateBlock(D3DSBT_ALL,&g_wristState))){
         if(old)old->Release();if(depth)depth->Release();back->Release();return;}
     if(FAILED(g_wristState->Capture())){
         if(old)old->Release();if(depth)depth->Release();back->Release();return;}
+    if(occluded&&(desc.Width!=wristdepth::state.desc.Width||desc.Height!=wristdepth::state.desc.Height||
+        desc.MultiSampleType!=D3DMULTISAMPLE_NONE)){
+        old->Release();if(depth)depth->Release();back->Release();return;
+    }
+    // State blocks do not restore render targets/depth attachments. Keep MRTs
+    // explicitly; own binds bypass the exact-scene redirect.
+    IDirect3DSurface9* mrt[3]{};
+    for(unsigned i=0;i<3;++i){dev->GetRenderTarget(i+1,&mrt[i]);g_origSetRenderTarget(dev,i+1,nullptr);}
+    wristdepth::state.internal=true;
     dev->SetDepthStencilSurface(nullptr);
-    if(FAILED(g_origSetRenderTarget(dev,0,back))){
-        g_wristState->Apply();g_origSetRenderTarget(dev,0,old);dev->SetDepthStencilSurface(depth);
+    if(FAILED(g_origSetRenderTarget(dev,0,occluded?wristdepth::state.maskSurface:back))||
+       (occluded&&FAILED(dev->SetDepthStencilSurface(wristdepth::state.world)))){
+        g_wristState->Apply();dev->SetDepthStencilSurface(nullptr);
+        g_origSetRenderTarget(dev,0,old);dev->SetDepthStencilSurface(depth);
+        for(unsigned i=0;i<3;++i){g_origSetRenderTarget(dev,i+1,mrt[i]);if(mrt[i])mrt[i]->Release();}
+        dev->SetViewport(&previousViewport);
+        wristdepth::state.internal=false;
         old->Release();if(depth)depth->Release();back->Release();return;
     }
     D3DVIEWPORT9 vp{0,0,desc.Width,desc.Height,0.f,1.f};dev->SetViewport(&vp);
@@ -32363,10 +32452,15 @@ void DrawEquipmentWrist(IDirect3DDevice9* dev){
     dev->SetRenderState(D3DRS_STENCILENABLE,FALSE);
     dev->SetRenderState(D3DRS_FOGENABLE,FALSE);
     dev->SetRenderState(D3DRS_COLORWRITEENABLE,0xF);
+    dev->SetRenderState(D3DRS_SRGBWRITEENABLE,FALSE);
     dev->SetRenderState(D3DRS_SEPARATEALPHABLENDENABLE,FALSE);
     dev->SetRenderState(D3DRS_BLENDOP,D3DBLENDOP_ADD);
-    dev->SetRenderState(D3DRS_ZENABLE,FALSE);dev->SetRenderState(D3DRS_ZWRITEENABLE,FALSE);
-    dev->SetRenderState(D3DRS_ALPHABLENDENABLE,TRUE);
+    dev->SetRenderState(D3DRS_ZENABLE,occluded?D3DZB_TRUE:D3DZB_FALSE);dev->SetRenderState(D3DRS_ZWRITEENABLE,FALSE);
+    dev->SetRenderState(D3DRS_ZFUNC,D3DCMP_LESSEQUAL);
+    dev->SetRenderState(D3DRS_DEPTHBIAS,0);
+    dev->SetRenderState(D3DRS_SLOPESCALEDEPTHBIAS,0);
+    dev->SetRenderState(D3DRS_FILLMODE,D3DFILL_SOLID);
+    dev->SetRenderState(D3DRS_ALPHABLENDENABLE,occluded?FALSE:TRUE);
     dev->SetRenderState(D3DRS_SRCBLEND,D3DBLEND_SRCALPHA);
     dev->SetRenderState(D3DRS_DESTBLEND,D3DBLEND_INVSRCALPHA);
     dev->SetRenderState(D3DRS_LIGHTING,FALSE);dev->SetRenderState(D3DRS_CULLMODE,D3DCULL_NONE);
@@ -32391,17 +32485,24 @@ void DrawEquipmentWrist(IDirect3DDevice9* dev){
                     quad(x+col*cell/6.f,y+row*cell/6.f,
                          x+(col+1)*cell/6.f,y+(row+1)*cell/6.f,color);
         }};
+    bool projectFailed=false;
+    bool maskClear=true;
+    if(occluded)maskClear=SUCCEEDED(shadowNativeClear(dev,0,nullptr,D3DCLEAR_TARGET,0,1.f,0));
     int drew=0;
     for(int eye=0;eye<2;++eye){
         const auto* p=projected[eye];
         D3DRECT clip{(LONG)(eye*desc.Width/2),0,(LONG)((eye+1)*desc.Width/2),(LONG)desc.Height};
         dev->SetScissorRect(reinterpret_cast<const RECT*>(&clip));
         auto vertex=[&](float x,float y,DWORD color){
+            if(occluded){wristdepth::Projected q;
+                if(!projectDepth(0,eye,x,y,q)){projectFailed=true;return V{};}
+                return V{q.x,q.y,q.z,q.rhw,color};
+            }
             const float u=(1-x)*(1-y)*p[0].u+x*(1-y)*p[1].u+(1-x)*y*p[2].u+x*y*p[3].u;
             const float v=(1-x)*(1-y)*p[0].v+x*(1-y)*p[1].v+(1-x)*y*p[2].v+x*y*p[3].v;
             return V{(eye+u)*desc.Width*.5f,v*desc.Height,0.f,1.f,color};};
         if(eye==0){
-        quad(0,0,1,1,0xE510181Cu);quad(.015f,.02f,.985f,.98f,0xD9213036u);
+        quad(0,0,1,1,0xFF10181Cu);quad(.015f,.02f,.985f,.98f,0xFF213036u);
         quad(.015f,.02f,.985f,.027f,0xFF6B7776u);
         quad(.015f,.973f,.985f,.98f,0xFF10191Cu);
         quad(.018f,.03f,.027f,.97f,0xFF526164u);
@@ -32447,12 +32548,46 @@ void DrawEquipmentWrist(IDirect3DDevice9* dev){
             verts[n++]=vertex(q.x0,q.y1,q.color);verts[n++]=vertex(q.x1,q.y0,q.color);
             verts[n++]=vertex(q.x1,q.y1,q.color);verts[n++]=vertex(q.x0,q.y1,q.color);
         }
-        if(n&&SUCCEEDED(g_origDrawPrimUP(dev,D3DPT_TRIANGLELIST,n/3,verts,sizeof(V))))drew|=1<<eye;
+        if(n&&maskClear&&!projectFailed&&SUCCEEDED(g_origDrawPrimUP(dev,D3DPT_TRIANGLELIST,n/3,verts,sizeof(V))))drew|=1<<eye;
     }
-    g_wristState->Apply();g_origSetRenderTarget(dev,0,old);dev->SetDepthStencilSurface(depth);
+    if(occluded&&drew==3){
+        // The mask contains only world-visible HUD pixels. Reproject that
+        // screen-aligned mask through the native foreground Z test so gloves,
+        // weapon and native carried magazines also occlude it.
+        drew=0;
+        dev->SetDepthStencilSurface(nullptr);
+        bool bound=SUCCEEDED(g_origSetRenderTarget(dev,0,back))&&
+            SUCCEEDED(dev->SetDepthStencilSurface(wristdepth::state.foreground));
+        dev->SetViewport(&vp);
+        dev->SetTexture(0,wristdepth::state.mask);
+        dev->SetTextureStageState(0,D3DTSS_COLORARG1,D3DTA_TEXTURE);
+        dev->SetTextureStageState(0,D3DTSS_ALPHAARG1,D3DTA_TEXTURE);
+        dev->SetTextureStageState(0,D3DTSS_TEXCOORDINDEX,0);
+        dev->SetTextureStageState(0,D3DTSS_TEXTURETRANSFORMFLAGS,D3DTTFF_DISABLE);
+        dev->SetSamplerState(0,D3DSAMP_MINFILTER,D3DTEXF_POINT);
+        dev->SetSamplerState(0,D3DSAMP_MAGFILTER,D3DTEXF_POINT);
+        dev->SetSamplerState(0,D3DSAMP_MIPFILTER,D3DTEXF_NONE);
+        dev->SetSamplerState(0,D3DSAMP_SRGBTEXTURE,FALSE);
+        dev->SetSamplerState(0,D3DSAMP_ADDRESSU,D3DTADDRESS_CLAMP);
+        dev->SetSamplerState(0,D3DSAMP_ADDRESSV,D3DTADDRESS_CLAMP);
+        dev->SetRenderState(D3DRS_ALPHABLENDENABLE,TRUE);
+        dev->SetFVF(D3DFVF_XYZRHW|D3DFVF_TEX1);
+        for(int eye=0;eye<2&&bound;++eye){
+            if(SUCCEEDED(wristdepth::CompositeEye(dev,g_origDrawPrimUP,eye,desc.Width,desc.Height,
+                depthCorners[0][eye],depthCorners[1][eye])))drew|=1<<eye;
+        }
+        dev->SetTexture(0,nullptr);
+    }
+    g_wristState->Apply();dev->SetDepthStencilSurface(nullptr);
+    g_origSetRenderTarget(dev,0,old);dev->SetDepthStencilSurface(depth);
+    for(unsigned i=0;i<3;++i){g_origSetRenderTarget(dev,i+1,mrt[i]);if(mrt[i])mrt[i]->Release();}
+    dev->SetViewport(&previousViewport);
+    wristdepth::state.internal=false;
     if(old)old->Release();if(depth)depth->Release();back->Release();
     InterlockedExchange(&g_equipmentHudVisible,drew==3?1:0);
-    if(drew==3)EquipmentGateReceipt(6,"preview submitted both eyes; world occlusion NOT validated");
+    if(drew==3)EquipmentGateReceipt(6,occluded?
+        "occluded candidate submitted both eyes; world+foreground Z, physical acceptance PENDING":
+        "preview submitted both eyes; world occlusion NOT validated");
     if(wristhud::MaySuppress(drew==3,values.health,Rd(g_equipmentHudPreviewNoDepth)!=0,
                             depthEvidence))InterlockedExchange(&g_equipmentHudDrew,3);
 }
@@ -36714,6 +36849,7 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
         desktop_mirror::PresentBackbufferScope captureScope(s,
             mirrored && Rd(g_steamCaptureBackbuffer) != 0);
         presentResult = g_origPresent(s, a, b, c, d);
+        wristdepth::state.NewFrame(s);
     }
     static double realPresentSum=0, realPresentMax=0;
     static unsigned realPresentSamples=0;
@@ -37726,6 +37862,9 @@ void LoadIniSettings() {
     InterlockedExchange(&g_equipmentHudPolish,GetPrivateProfileIntA("Render","EquipmentWristPolish",0,path)?1:0);
     InterlockedExchange(&g_equipmentHudNormalSign,GetPrivateProfileIntA("Render","EquipmentWristNormalSign",1,path)<0?-1:1);
     InterlockedExchange(&g_equipmentHudScalePct,std::clamp((LONG)GetPrivateProfileIntA("Render","EquipmentWristScalePct",100,path),60L,150L));
+    InterlockedExchange(&g_equipmentHudOcclusion,GetPrivateProfileIntA("Render","EquipmentWristOcclusion",0,path)?1:0);
+    wristdepth::state.enabled=Rd(g_equipmentHud)&&Rd(g_equipmentHudOcclusion);
+    InterlockedExchange(&g_equipmentHudTextQuarterTurn,GetPrivateProfileIntA("Render","EquipmentWristTextQuarterTurn",1,path)?1:0);
     InterlockedExchange(&g_equipmentHudOffsetMm[0],std::clamp((LONG)GetPrivateProfileIntA("Render","EquipmentWristOffsetXmm",-25,path),-80L,80L));
     InterlockedExchange(&g_equipmentHudOffsetMm[1],std::clamp((LONG)GetPrivateProfileIntA("Render","EquipmentWristOffsetYmm",-80,path),-80L,80L));
     InterlockedExchange(&g_equipmentHudOffsetMm[2],std::clamp((LONG)GetPrivateProfileIntA("Render","EquipmentWristOffsetZmm",0,path),-80L,80L));
@@ -38533,6 +38672,9 @@ HRESULT STDMETHODCALLTYPE Hook_CreateDevice(IDirect3D9* self, UINT ad, D3DDEVTYP
         // SetRenderTarget at 37 and DrawPrimitive at 81 - these two sit between them and need no
         // separate verification. Both only RECORD; see the note on DpgRecord.
         g_origClear       = (PFN_Clear)PatchVTable(*out, 43, (void*)&Hook_Clear);
+        // SDK IDirect3DDevice9 slot 39; only the selected scene DS is redirected.
+        wristdepth::state.native=(wristdepth::SetDepth)PatchVTable(*out,39,(void*)&Hook_WristDepthBind);
+        g_origWristCreateDepth=(PFN_WristCreateDepth)PatchVTable(*out,29,(void*)&Hook_WristCreateDepth);
         g_origSetViewport = (PFN_SetViewport)PatchVTable(*out, 47, (void*)&Hook_SetViewport);
         // 83/84 = the user-pointer draw forms, VERIFIED against d3d9.h rather than from memory:
         // enumerating IDirect3DDevice9's declarations and anchoring on the slots already known to

@@ -10,6 +10,7 @@ struct Event {
     D3DSURFACE_DESC rd{},dd{}; D3DVIEWPORT9 vp{}; RECT sc{};
     HRESULT rtHr=E_FAIL,depthHr=E_FAIL,vpHr=E_FAIL,scHr=E_FAIL,matrixHr=E_FAIL;
     float matrix[16]{}; ULONGLONG wrist=0,controller=0;
+    DWORD zEnable=0,zWrite=0,zFunc=0;bool zStateValid=false;
 };
 constexpr unsigned Capacity=64;
 static Event events[Capacity]; static unsigned count=0,overflow=0;
@@ -30,6 +31,9 @@ inline Event* Capture(IDirect3DDevice9* dev,const char* kind,unsigned draw,int e
     e.rtHr=dev->GetRenderTarget(0,&e.rt);e.depthHr=dev->GetDepthStencilSurface(&e.depth);
     if(e.rt)e.rt->GetDesc(&e.rd);if(e.depth)e.depth->GetDesc(&e.dd);
     e.vpHr=dev->GetViewport(&e.vp);e.scHr=dev->GetScissorRect(&e.sc);
+    e.zStateValid=SUCCEEDED(dev->GetRenderState(D3DRS_ZENABLE,&e.zEnable))&&
+        SUCCEEDED(dev->GetRenderState(D3DRS_ZWRITEENABLE,&e.zWrite))&&
+        SUCCEEDED(dev->GetRenderState(D3DRS_ZFUNC,&e.zFunc));
     if(reg>=0&&reg<=252)e.matrixHr=dev->GetVertexShaderConstantF(reg,e.matrix,4);
     return &e;
 }
@@ -69,6 +73,7 @@ inline void Boundary(IDirect3DDevice9* dev,bool enabled,bool ready,unsigned fram
             Log("wrist-depth state=%u vpHr=%08lX vp=%lu,%lu,%lu,%lu,%.9g,%.9g scHr=%08lX sc=%ld,%ld,%ld,%ld c=%d conv=%d matrixHr=%08lX wristMs=%llu controllerMs=%llu",
                 i,e.vpHr,e.vp.X,e.vp.Y,e.vp.Width,e.vp.Height,e.vp.MinZ,e.vp.MaxZ,e.scHr,e.sc.left,e.sc.top,e.sc.right,e.sc.bottom,
                 e.reg,e.conv,e.matrixHr,(unsigned long long)e.wrist,(unsigned long long)e.controller);
+            Log("wrist-depth z-state=%u valid=%d enable=%lu write=%lu func=%lu",i,e.zStateValid,e.zEnable,e.zWrite,e.zFunc);
             if(SUCCEEDED(e.matrixHr))for(unsigned r=0;r<4;++r)
                 Log("wrist-depth matrix=%u row=%u %.9g %.9g %.9g %.9g",i,r,e.matrix[r*4],e.matrix[r*4+1],e.matrix[r*4+2],e.matrix[r*4+3]);
         }
@@ -76,6 +81,6 @@ inline void Boundary(IDirect3DDevice9* dev,bool enabled,bool ready,unsigned fram
     }
     if(!enabled||done){stable=0;return;}
     stable=ready?stable+1:0;
-    if(stable>=18){Release();active=true;Log("wrist-depth trace: armed ONE frame=%u (no depth mutation)",frame);}
+    if(stable>=18){Release();active=true;Log("wrist-depth trace: armed ONE frame=%u (collector read-only)",frame);}
 }
 }
