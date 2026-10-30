@@ -95,7 +95,7 @@ struct FrameWrist {
     bool Select(std::uint32_t nextFrame,Kind nextKind,std::uint32_t nextPawn,
                 std::uint32_t nextWeapon,std::uint64_t nextTransaction,
                 bool currentValid,const Mat& current,Mat& out,bool* reused=nullptr){
-        const bool same=sampled&&valid&&frame==nextFrame&&kind==nextKind&&pawn==nextPawn&&
+        const bool same=sampled&&frame==nextFrame&&kind==nextKind&&pawn==nextPawn&&
             weapon==nextWeapon&&transaction==nextTransaction;
         if(reused)*reused=same;
         if(!same){

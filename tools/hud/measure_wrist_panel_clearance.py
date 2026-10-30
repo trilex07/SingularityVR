@@ -21,6 +21,7 @@ def main():
     ap.add_argument('--assets', type=Path, required=True)
     ap.add_argument('--units-per-metre', type=float, default=65.625)
     ap.add_argument('--output', type=Path, required=True)
+    ap.add_argument('--inner', action='store_true', help='Measure the palm-facing +X surface')
     args = ap.parse_args()
     paths = [args.psk_dir / 'ch_inview_noTMD.psk', args.psk_dir / 'ch_inview_tmd_mesh.psk',
              args.assets / 'native_cuffs.svnc', args.assets / 'tmd_short_gauntlet.svtg']
@@ -60,11 +61,13 @@ def main():
     front = min(row['min_wrist_uu'][0] for row in rows)
     # One-millimetre surface separation is a documented panel thickness;
     # no hand/controller transform or source geometry is changed.
-    normal_mm = int(np.floor(front / args.units_per_metre * 1000 - 1))
+    back = max(row['max_wrist_uu'][0] for row in rows)
+    normal_mm = (int(np.ceil(back / args.units_per_metre * 1000 + 1)) if args.inner else
+                 int(np.floor(front / args.units_per_metre * 1000 - 1)))
     result = dict(schema='wrist-panel-source-clearance-v1', units_per_metre=args.units_per_metre,
                   footprint_mm=[155, 104], centre_from_wrist_mm=80, panel_thickness_mm=1,
                   source_hashes={p.name: hashlib.sha256(p.read_bytes()).hexdigest().upper() for p in paths},
-                  bounds=rows, candidate_offset_x_mm=normal_mm,
+                  bounds=rows, candidate_offset_x_mm=normal_mm, inner_surface=args.inner,
                   limitation='Original bind surface only; animated final-palette/headset acceptance remains pending')
     args.output.write_text(json.dumps(result, indent=2) + '\n', encoding='utf-8')
     print(json.dumps(result, indent=2))

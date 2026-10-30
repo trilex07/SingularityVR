@@ -2457,6 +2457,7 @@ static volatile LONG g_seekerBackSlot=0,g_seekerBackRequest=0,g_seekerBackAvaila
 static int g_seekerSupportGrip=0,g_seekerProjectileAim=0;
 static seekergeometry::Witness g_seekerPose;
 static seekergeometry::Witness g_kasimovSupportPose;
+static uint32_t g_kasimovSupportFrameToken=0;
 static seekergeometry::SupportFrame g_seekerSupportFrame;
 static seekergeometry::IndexIdentity g_seekerIndices;
 static weaponcarry::Wrist g_nextWrist,g_nextWristStaged;
@@ -2469,6 +2470,7 @@ static LONG g_equipmentHud=0,g_equipmentHudSuppress=0,g_equipmentHudEnergy=0;
 static LONG g_equipmentHudPreviewNoDepth=0;
 static LONG g_equipmentHudTrace=0,g_equipmentHudOcclusion=0;
 static LONG g_equipmentHudTextQuarterTurn=1;
+static LONG g_equipmentHudInnerWrist=0;
 static LONG g_equipmentHudTech=0,g_equipmentHudSupplies=0;
 static LONG g_equipmentHudOffsetMm[3]{-25,-80,0},g_equipmentHudScalePct=100;
 static LONG g_equipmentHudDrew=0,g_equipmentHudVisible=0;
@@ -2532,6 +2534,8 @@ static centurionclip::PresentationSafety g_nextPresentation;
 static void InitNextReload();
 static void ReleaseNextReloadGPU();
 static void UpdateNextReload(bool context,bool grip,bool supportLatched,bool circleDown);
+static void StageNextWeaponGeometry(weaponreload::Kind,const armbind::Mat&,
+    const armbind::Mat&,const armbind::Mat&,uint32_t,uint32_t,ULONGLONG);
 static int PrepareNextReload(IDirect3DDevice9*,INT,UINT,UINT,UINT,UINT,float*,UINT&,weaponreload::ReplayPlan&);
 static void DrawNextReload(IDirect3DDevice9*);
 static void DrawNextReloadHint(IDirect3DDevice9*);
@@ -20806,12 +20810,17 @@ static int PrepareCenturionCylinder(IDirect3DDevice9* dev,INT baseVertex,UINT ve
             if(g_centurionPhysicalPolish&&visual.phase==(int)centurionreload::Phase::Carrying){
                 centurionphysical::GripWitness grip;
                 if(TryAcquireSRWLockShared(&g_centurionGripLock)){grip=g_centurionGrip;ReleaseSRWLockShared(&g_centurionGripLock);}
-                spare=grip.Current(visual.clip.pawn,visual.clip.weapon,visual.transaction,now);
+                static weaponcarry::FrameWrist cylinderFrame;
+                armbind::Mat stableGrip;
+                spare=cylinderFrame.Select((std::uint32_t)Rd(g_armPaletteFrameToken),
+                    weaponreload::Kind::None,visual.clip.pawn,visual.clip.weapon,visual.transaction,
+                    grip.Current(visual.clip.pawn,visual.clip.weapon,visual.transaction,now),
+                    grip.desired,stableGrip);
                 if(spare){armbind::Mat bind,invTracking,desired;
                     if(!centuriontracked::Inverse(clipData.inverse[0],bind)||!centuriontracked::Inverse(tracking,invTracking))return -1;
                     const auto observed=centurionvisual::Product(centurionvisual::Product(centurionvisual::Product(bind,root),
                         centurionvisual::Product(local,gunC)),invTracking);
-                    if(!centurionphysical::MatchSize(grip.desired,observed,desired)||
+                    if(!centurionphysical::MatchSize(stableGrip,observed,desired)||
                        !centurionvisual::SpareDesired(clipData,local,gunC,tracking,desired,replay.clip))return -1;
                     InterlockedIncrement(&g_centurionPalmReplays);
                 }
@@ -21455,7 +21464,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
        g_boundShaderLayout.boneRegs%3==0&&
        g_boundShaderLayout.boneRegs<=int(dualtmdgunpose::kMaxBones*3)) {
         const auto* body=diegetichud::MountForBodyDraw(baseVertex,minIndex,numVertices,startIndex,primCount);
-        if(body&&(numVertices==8297||numVertices==11387||numVertices==11378)&&
+        if(body&&(numVertices==8297||numVertices==11387||numVertices==11378||numVertices==11389)&&
            g_boundShaderLayout.boneRegs>=(body->rootSlot+1)*3) {
             dualGunBones=(unsigned)g_boundShaderLayout.boneRegs/3;
             dualGunKey={g_playerPawn,(uintptr_t)(unsigned)Rd(g_weaponObj),
@@ -21622,9 +21631,9 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
            armbind::Finite(local)){
             BuildGunC(controller.m);
             const auto chain=centurionvisual::Product(centurionvisual::Product(skin,local),controller);
-            const hipknife::V p{.000005440695f,114.69569557f,63.52872816f};
+            const auto p=weaponmuzzle::CenturionMuzzle;
             const auto muzzle=centurionvisual::Point(p,chain);
-            const auto ahead=centurionvisual::Point(p+hipknife::V{.00000005f,-.000000015f,1.f},chain);
+            const auto ahead=centurionvisual::Point(p+weaponmuzzle::CenturionForward,chain);
             const auto axis=ahead-muzzle;const float length=hipknife::Length(axis);
             if(hipknife::Finite(muzzle)&&hipknife::Finite(axis)&&length>.001f&&
                hipknife::Length(muzzle)<4.f*MetresToUU()){
@@ -21646,9 +21655,52 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
            SUCCEEDED(dev->GetVertexShaderConstantF(g_boundShaderLayout.local,&local.m[0][0],4)))
             seekergeometry::Capture(skin,local,(uint32_t)g_playerPawn,(uint32_t)Rd(g_weaponObj),GetTickCount64(),seekerStaged);
     }
+    // Read the final displayed body, independently of reload-FSM snapshot age.
+    // Includes the corrected TMD palette; eye publication remains guarded below.
+    if(t==D3DPT_TRIANGLELIST&&g_thisDrawMoved==1&&!g_boundShaderLayout.shadow&&
+       Rd(g_rtIsScene)&&FgMatchWindow()&&!Rd(g_weaponHolstered)&&g_nextReady[2]&&
+       g_nextIBVerified[2]&&weaponreload::DrawPart(weaponreload::Kind::Kasimov,
+           baseVertex,minIndex,numVertices,startIndex,primCount)==weaponreload::Part::Body&&
+       g_boundShaderLayout.bones>=0&&g_boundShaderLayout.boneRegs>=18&&g_boundShaderLayout.local>=0){
+        float palette[3][4];armbind::Mat root,local,controller;
+        if(SUCCEEDED(dev->GetVertexShaderConstantF(g_boundShaderLayout.bones,palette[0],3))&&
+           armbind::FromGpu(palette,root)&&
+           SUCCEEDED(dev->GetVertexShaderConstantF(g_boundShaderLayout.local,local.m[0],4))){
+            BuildGunC(controller.m);
+            StageNextWeaponGeometry(weaponreload::Kind::Kasimov,root,local,controller,
+                (uint32_t)g_playerPawn,(uint32_t)Rd(g_weaponObj),GetTickCount64());
+        }
+    }
+    // The native lens has its own one-bone palette. Reuse THIS FRAME's final
+    // cog pose from the body; otherwise TMD correction moves only the receiver.
+    float kasimovLensSaved[3][4]{};bool kasimovLensChanged=false,kasimovLensFault=false;
+    if(t==D3DPT_TRIANGLELIST&&g_thisDrawMoved==1&&!g_boundShaderLayout.shadow&&
+       Rd(g_rtIsScene)&&FgMatchWindow()&&g_boundShaderLayout.bones>=0&&
+       g_boundShaderLayout.boneRegs>=3&&g_boundShaderLayout.local>=0&&
+       weaponreload::DrawPart(weaponreload::Kind::Kasimov,baseVertex,minIndex,numVertices,startIndex,primCount)==weaponreload::Part::Attachment){
+        seekergeometry::Witness body;uint32_t frame=0;
+        if(TryAcquireSRWLockShared(&g_nextVisualLock)){
+            body=g_kasimovSupportPose;frame=g_kasimovSupportFrameToken;ReleaseSRWLockShared(&g_nextVisualLock);
+        }
+        armbind::Mat local,root;
+        if(frame==(uint32_t)Rd(g_armPaletteFrameToken)&&
+           body.Current((uint32_t)g_playerPawn,(uint32_t)Rd(g_weaponObj),GetTickCount64())&&
+           SUCCEEDED(dev->GetVertexShaderConstantF(g_boundShaderLayout.local,local.m[0],4))&&
+           kasimovsupport::LensPalette(body.rootLocal,local,root)&&
+           SUCCEEDED(dev->GetVertexShaderConstantF(g_boundShaderLayout.bones,kasimovLensSaved[0],3))){
+            float gpu[3][4];armbind::ToGpu(root,gpu);
+            if(SUCCEEDED(g_origSetVSConstF(dev,g_boundShaderLayout.bones,gpu[0],3)))kasimovLensChanged=true;
+            else if(FAILED(g_origSetVSConstF(dev,g_boundShaderLayout.bones,kasimovLensSaved[0],3))){
+                // Skip submission, but continue through ALL palette/IB restore
+                // paths below. A failed upload may have partially changed state.
+                kasimovLensChanged=true;kasimovLensFault=true;
+            }
+        }
+    }
     seekergeometry::Witness kasimovSupportStaged;
+    weaponreload::Witness kasimovSocketStaged;
     unsigned kasimovSupportEyes=0;
-    if(g_kasimovAuthoredGrip&&t==D3DPT_TRIANGLELIST&&numVertices==11389&&
+    if((g_kasimovAuthoredGrip||g_sniperNearEyeScope)&&t==D3DPT_TRIANGLELIST&&numVertices==11389&&
        !baseVertex&&!minIndex&&!startIndex&&primCount==12942&&g_thisDrawMoved==1&&
        !g_boundShaderLayout.shadow&&Rd(g_rtIsScene)&&!Rd(g_weaponHolstered)&&
        g_boundShaderLayout.bones>=0&&g_boundShaderLayout.boneRegs>=18&&g_boundShaderLayout.local>=0&&
@@ -21656,9 +21708,17 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
         float palette[3][4];armbind::Mat skin,local;
         if(SUCCEEDED(dev->GetVertexShaderConstantF(g_boundShaderLayout.bones,&palette[0][0],3))&&
            armbind::FromGpu(palette,skin)&&
-           SUCCEEDED(dev->GetVertexShaderConstantF(g_boundShaderLayout.local,&local.m[0][0],4)))
+           SUCCEEDED(dev->GetVertexShaderConstantF(g_boundShaderLayout.local,&local.m[0][0],4))){
             seekergeometry::Capture(kasimovsupport::RootBind,skin,local,(uint32_t)g_playerPawn,
                 (uint32_t)Rd(g_weaponObj),GetTickCount64(),kasimovSupportStaged);
+            float socketPalette[72]{};armbind::ToGpu(skin,reinterpret_cast<float(*)[4]>(socketPalette));
+            armbind::Mat controller,clipTracking;BuildGunC(controller.m);hipknife::V socket;
+            if(weaponreload::Socket(g_nextAnimation[2],socketPalette,local,controller,
+                {g_centrePos[0],g_centrePos[1],g_centrePos[2]},g_centreYaw,g_baseYaw*(6.2831853f/65536.f),MetresToUU(),socket,&clipTracking)&&
+                hipknife::Length(socket-hipknife::V{g_handLastPos[1].x,g_handLastPos[1].y,g_handLastPos[1].z})<=.75f)
+                kasimovSocketStaged={true,weaponreload::Kind::Kasimov,(uint32_t)g_playerPawn,
+                    (uint32_t)Rd(g_weaponObj),GetTickCount64(),socket,clipTracking,skin};
+        }
     }
     // Diegetic 3D HUD: capture the live weapon transform (skin * local * controller)
     // for Centurion (5799), Valkyrie AR9 (11387), and Spikeshot/Volk (8297).
@@ -21722,7 +21782,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
     bool equipmentWristEyeDrawn[2]{};
     armbind::Mat dualRightWristEye[2],dualRightRawEye[2];
     bool dualRightWristDrawn[2]{};
-    const HRESULT dhr = FAILED(sleevePaletteHr)?sleevePaletteHr:StereoPair(dev, [&] {
+    const HRESULT dhr = kasimovLensFault?E_FAIL:FAILED(sleevePaletteHr)?sleevePaletteHr:StereoPair(dev, [&] {
         const unsigned eye=assemblyEye++;
         unsigned poseIndex=6;
         if(poseDue&&g_dualPoseBudget.Claim(poseSource.frame,poseSource.part,eye)) {
@@ -22104,7 +22164,9 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
     });
     g_scopeLensStaged=false;
     if(FAILED(dhr))g_scopeAperture={};
-    const HRESULT nativeRestore=nativeIndices.Restore();
+    const HRESULT lensRestore=kasimovLensChanged?g_origSetVSConstF(dev,g_boundShaderLayout.bones,kasimovLensSaved[0],3):S_OK;
+    const HRESULT indexRestore=nativeIndices.Restore();
+    const HRESULT nativeRestore=FAILED(lensRestore)?lensRestore:indexRestore;
     if(shortTmdBuffer && FAILED(dhr))
         LogShortTmdGate(tmdgauntlet::Gate::Draw,numVertices,startIndex,primCount);
     if(shortTmdBuffer && FAILED(nativeRestore))
@@ -22210,7 +22272,10 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
     }
     if(kasimovSupportStaged.valid&&kasimovSupportEyes==2&&SUCCEEDED(dhr)&&SUCCEEDED(nextRestore)&&
        SUCCEEDED(nativeRestore)&&SUCCEEDED(handRestore)&&TryAcquireSRWLockExclusive(&g_nextVisualLock)){
-        g_kasimovSupportPose=kasimovSupportStaged;ReleaseSRWLockExclusive(&g_nextVisualLock);
+        g_kasimovSupportPose=kasimovSupportStaged;
+        g_kasimovSupportFrameToken=(uint32_t)Rd(g_armPaletteFrameToken);
+        if(kasimovSocketStaged.valid)g_nextWitness=kasimovSocketStaged;
+        ReleaseSRWLockExclusive(&g_nextVisualLock);
     }
     if(seekerStaged.valid&&seekerEyeDraws==2&&SUCCEEDED(dhr)&&SUCCEEDED(nextRestore)&&
        SUCCEEDED(nativeRestore)&&SUCCEEDED(handRestore)&&TryAcquireSRWLockExclusive(&g_nextVisualLock)){
@@ -32367,7 +32432,10 @@ void DrawEquipmentWrist(IDirect3DDevice9* dev){
         // Source bind: wrist-to-elbow runs along local -Y; finger spread runs
         // along Z. Put the long display axis down the short forearm, with its
         // front normal along -X, instead of spanning 155 mm across the wrist.
-        const auto p=centurionvisual::Point({ox-pz,oy-px,oz+py},pose.tracking);
+        // Inner/palm face reverses the surface basis as well as its normal.
+        // Merely translating the old outer face exposes the text's back side.
+        const bool inner=Rd(g_equipmentHudInnerWrist)!=0;
+        const auto p=centurionvisual::Point(wristdepth::SurfacePoint(px,py,pz,ox,oy,oz,inner),pose.tracking);
         return uipointer::V{p.x,p.y,p.z};};
     const auto center=point(.5f,.5f),right=point(1.f,.5f),up=point(.5f,0.f);
     const float ax=right.x-center.x,ay=right.y-center.y,az=right.z-center.z;
@@ -37869,6 +37937,7 @@ void LoadIniSettings() {
     InterlockedExchange(&g_equipmentHudOcclusion,GetPrivateProfileIntA("Render","EquipmentWristOcclusion",0,path)?1:0);
     wristdepth::state.enabled=Rd(g_equipmentHud)&&Rd(g_equipmentHudOcclusion);
     InterlockedExchange(&g_equipmentHudTextQuarterTurn,GetPrivateProfileIntA("Render","EquipmentWristTextQuarterTurn",1,path)?1:0);
+    InterlockedExchange(&g_equipmentHudInnerWrist,GetPrivateProfileIntA("Render","EquipmentWristInner",0,path)?1:0);
     InterlockedExchange(&g_equipmentHudOffsetMm[0],std::clamp((LONG)GetPrivateProfileIntA("Render","EquipmentWristOffsetXmm",-25,path),-80L,80L));
     InterlockedExchange(&g_equipmentHudOffsetMm[1],std::clamp((LONG)GetPrivateProfileIntA("Render","EquipmentWristOffsetYmm",-80,path),-80L,80L));
     InterlockedExchange(&g_equipmentHudOffsetMm[2],std::clamp((LONG)GetPrivateProfileIntA("Render","EquipmentWristOffsetZmm",0,path),-80L,80L));

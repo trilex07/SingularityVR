@@ -61,7 +61,25 @@ inline bool ParentPalette(const weaponreloadanim::Data& d,const float* native,un
     if(!d.ready||!native||!out||regs!=d.slots*3||d.slots>16||d.root>=d.slots||
        (held&&!armbind::Finite(*held)))return false;
     float staged[16*12];std::memcpy(staged,native,regs*4*sizeof(float));
-    if(held)armbind::ToGpu(*held,reinterpret_cast<float(*)[4]>(staged+d.root*12));
+    if(held&&d.kind==Kind::Kasimov){
+        // Kasimov has vertices weighted across cog_sniper and its wire chain.
+        // Holding ONLY cog changes the relative skin transforms and tears the
+        // surface. Rebase the entire native palette by one common right delta:
+        // S'_i = S_i * inverse(S_root) * heldRoot. Native relative animation
+        // (including wire_1 -> wire_2 -> wire_3) is preserved, exactly once.
+        armbind::Mat root,inverse,delta;
+        if(!armbind::FromGpu(reinterpret_cast<const float(*)[4]>(native+d.root*12),root)||
+           !skeletal::Inverse(inverse.m,root.m))return false;
+        skeletal::Multiply(delta.m,inverse.m,held->m);
+        for(unsigned slot=0;slot<d.slots;++slot){
+            armbind::Mat skin,result;
+            if(!armbind::FromGpu(reinterpret_cast<const float(*)[4]>(native+slot*12),skin))return false;
+            skeletal::Multiply(result.m,skin.m,delta.m);
+            if(!armbind::Finite(result))return false;
+            armbind::ToGpu(result,reinterpret_cast<float(*)[4]>(staged+slot*12));
+        }
+        armbind::ToGpu(*held,reinterpret_cast<float(*)[4]>(staged+d.root*12));
+    }else if(held)armbind::ToGpu(*held,reinterpret_cast<float(*)[4]>(staged+d.root*12));
     std::memcpy(out,staged,regs*4*sizeof(float));return true;
 }
 // Actual native seated joint, not a guessed controller-local socket. The root

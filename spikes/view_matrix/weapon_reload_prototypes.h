@@ -77,6 +77,8 @@ struct Frame {
     float bodyYaw=0; // physical head yaw for the independent shoulder anchor
     bool magazineReleaseDown=false; // named action LEVEL, PSVR2 binding: Circle
     bool nativePermitRequired=false,nativePermitConsumed=false; // real dispatcher evidence, not just conserved HUD change
+    bool measuredInsertion=false,insertionValid=false;
+    hipknife::V insertionPoint{}; // carried clip bind origin, NOT controller origin
     centurionreload::Frame gesture{};
 };
 enum class Phase {Idle,NeedAmmo,Carrying,WaitingNative,Cooldown};
@@ -186,7 +188,9 @@ inline Result Update(State& s,const Frame& f,const Calibration& c){
         }break;
     case Phase::Carrying:
         if(gripRelease){
-            if(centurionreload::Near(in.hand,in.socket,g.socketRadius)){
+            const bool measured=f.kind==Kind::Kasimov&&f.measuredInsertion;
+            const auto point=measured?f.insertionPoint:in.hand;
+            if((!measured||f.insertionValid)&&centurionreload::Near(point,in.socket,g.socketRadius)){
                 t.phase=Phase::WaitingNative;t.since=in.nowMs;return out(Event::Inserted,true);
             }
             return enter(Phase::NeedAmmo,Event::Discarded);
