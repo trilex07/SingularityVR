@@ -6,6 +6,9 @@ import struct
 
 import numpy as np
 from PIL import Image
+import sys
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'textures'))
+from dds_io import read_dds_header
 
 
 def glb(path):
@@ -61,9 +64,17 @@ def validate(root):
         assert blender[stem]['import']['triangles'] == blender[stem]['roundtrip']['triangles']
         assert (root/'clean'/(stem+'.blend')).is_file()
         assert (root/'clean'/(stem+'_roundtrip.glb')).is_file()
+    for stem in ('original_side', 'hd_side', 'original_perspective', 'hd_perspective',
+                 'original_detached_magazine', 'hd_detached_magazine'):
+        assert Image.open(root/'previews'/(stem+'_blender.png')).size == (1600, 900)
+    for name in ('AR_Steerable_d.dds', 'AR_Steerable_n.dds'):
+        header = read_dds_header(root/'native_textures'/name)
+        assert header['width'] == 4096 and header['height'] == 2048
+        assert header['fourcc'] == 'DXT5' and header['mip_count'] > 1
     return {'rig': 'PASS', 'source_animation': 'PASS', 'detached_magazine': 'PASS',
             'pbr_maps': 'PASS', 'icon_atlas': 'PASS', 'native_ammo': 'NOT VERIFIED',
-            'blender_roundtrip': 'PASS', 'hd_visual_acceptance': 'FAIL',
+            'blender_roundtrip': 'PASS', 'hd_visual_acceptance': 'OFFLINE PASS',
+            'native_dds': 'OFFLINE PASS', 'native_hd_material_binding': 'NOT VERIFIED',
             'Steam_PSVR2': 'NOT RUN'}
 
 
