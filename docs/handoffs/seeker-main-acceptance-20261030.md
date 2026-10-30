@@ -1,8 +1,8 @@
-# MAIN — Seeker HD / rear reload acceptance, 2026-10-30
+# MAIN â€” Seeker HD / rear reload acceptance, 2026-10-30
 
 ## Scope and identities
 
-Integrated PR #79 source `8151b341eda4b2f21f6312356f7b94e892d81734` onto accepted MAIN `2e9d5f32` on `integration/main-seeker-hd-rear-acceptance`. No merge to main. Both optimized x86 PE32 DLLs built from `c0d5b8f6f5aa16b6c27b615bd11e27cc8b5f66b0`.
+Integrated PR #79 source `8151b341eda4b2f21f6312356f7b94e892d81734` onto accepted MAIN `2e9d5f32` on `integration/main-seeker-hd-rear-acceptance`. No merge to main. Initial optimized x86 PE32 DLLs built from `c0d5b8f6f5aa16b6c27b615bd11e27cc8b5f66b0`.
 
 - d3d9.dll: `14194A4A58A5DF2C59909083EEAFF1432E1D45313FB2766297123A12E171787C`
 - dinput8.dll: `64C0CFE840E51B9B1D5D5A4730CE351EE8135229124A028DFECFC65D2F43E5B3`
@@ -41,7 +41,7 @@ Profile was reconstructed from the accepted promotion plan and every pinned inst
 2. Restore accepted baseline after exit, then stage 2 from that same baseline: only Seeker material mode changes to 2. Require both replacement counts >0, user material/stereo confirmation, wall/depth/reset/switch/level behavior and comparable frame-time evidence. Do not silently count a first classification stall as a cached-bind regression or vice versa.
 3. Only after native transfer proof, prepare a separate plan enabling `SeekerManualReload=1`. One grouped PSVR2 check: Circle ejects rearward; shoulder Grip carries a visible stable magazine; rear insertion works while front/side fail; release confirms exactly one legitimate refill; standard/guided shots, support, holster, cancel and switching remain correct. Log/fixture results alone cannot mark physical PASS.
 
-## Current runtime session
+## Initial runtime sessions (historical)
 
 User explicitly confirmed readiness and an owned Seeker. Stage 1 installed with exact built/deployed hashes, runtime backup `deployment/install-backups/20261030-170706`, per-stage asset backup and validated combined guard. Guard PID 30100, Steam launch PID 34728, actual game PID 27144. Before-launch window 1800 seconds, **no timeout during active gameplay**; after normal exit, guard restores runtime and five-file asset baseline with verified hashes. No gameplay input injection. Initial OpenXR heartbeat reported shouldRender=0 awaiting headset wake.
 
@@ -53,6 +53,24 @@ Actual owned Seeker: pawn `1C1A6400`, weapon `39056000`, native ownership chain 
 
 Three native launch receipts preserved the physical origin and native guided projectile mechanism. No `Seeker native ammo BEGIN/END` appeared; the user reported no ammunition. Therefore the ammo contract is **NOT ESTABLISHED**, not a reload failure or permission to synthesize reserve. Physical reload remains OFF. Existing shared native code requires nonempty reserve; shared vtable identity alone still does not prove Seeker refill support.
 
-After normal exit, combined guard restored all five asset preimages and four runtime files; four exact baseline hashes re-read and matched. Stage 2 then installed the same binary pair with only material mode=2. Backup `deployment/install-backups/20261030-171157`, guardian PID 30164, Steam launcher PID 32752. Both stages are independently bound to the accepted baseline, not to an unaccepted prior candidate. Mode-2 physical and timing results pending.
+After normal exit, combined guard restored all five asset preimages and four runtime files; four exact baseline hashes re-read and matched. Stage 2 then installed the same binary pair with only material mode=2. Backup `deployment/install-backups/20261030-171157`, guardian PID 30164, Steam launcher PID 32752. Both stages are independently bound to the accepted baseline, not to an unaccepted prior candidate. Mode-2 results and the subsequent correction are recorded below.
 
 Mode-1 late gameplay sample: `perf: 89.9 fps (11.12 ms/frame)`; cumulative controllers-in-hand bucket 89.2 fps, missed 0.6%, worst 80 ms. Startup/standby/menu samples are separate and lower. This is descriptive evidence, **not** a 90 Hz guarantee or matched-scene performance non-regression result. No per-resource classification latency was measured.
+
+### Stage 2 actual failure and bounded correction
+
+Stage 2 is closed and the exact accepted four-file runtime and five asset preimages were restored, with verified hashes. Archived logs are in `build/next-weapon-reload/seeker-main-20261030/mode2/`. Mode 2 matched diffuse **8382/0** and normal **8382/0** (matches/substitutions). CPU and GPU pairs were READY, but **no HD substitutions executed**. HD runtime acceptance FAIL; no physical appearance claim.
+
+The preload receipt identifies upload thread **38092 (94CC)**, while the real Present CPU receipt identifies render thread **38540 (968C)**. `Ready()` required the upload thread, rejecting the resources on the actual rendering path. This is a confirmed first violated eligibility contract, not a texture identity or asset-generation problem.
+
+Correction `18f7dfc0`, fixture refinement `14433cdf`: MAIN Present explicitly registers its thread through lifecycle event 3. Registration does no D3D/file work. Binding requires that registered thread, exact owning device and the complete immutable GPU pair. Creation/reset remain in existing lifecycle callbacks; release/reset clears registration. No SetTexture loading/upload, global bridge ownership changes or reload enablement.
+
+New real D3D9 and D3D9Ex fixtures create resources on one thread, register/bind both textures on another, inspect actual bound GPU resources, and reject unregistered/foreign-device/foreign-thread access. Calls are serialized; native device creation flags unchanged. Existing pixel, partial-allocation, missing/corrupt asset, Reset/ResetEx and cached-bind fixtures PASS. MAIN bridge fixtures and compiled Locker factory ABI PASS. Existing fixture intentionally forwards `E_ACCESSDENIED`; the two-thread test verifies preservation of this sentinel rather than inventing a successful original result.
+
+Both x86 PE32 `/O2` DLLs built from `14433cdf`:
+
+- d3d9.dll: `800FBA6499C0D225F701415245615DE436FBCA78A99FA6670BD3C65D8DDE21D0`
+- dinput8.dll: `393E6EABB426375336BE939AA699E7B6ECAF2541E89412019596874FCEC7E0B3`
+- Prepared private stage: `build/next-weapon-reload/seeker-main-20261030/mode2-render-thread-fix/`, material mode 2, physical reload OFF, accepted baseline unchanged. Source/DLL identities and exact five asset hashes pinned in that stage; earlier failed sessions preserved.
+
+**Next specific gates:** real mode-2 receipt must show both replacements >0, followed by headset confirmation of original material effects/stereo. Native reload remains BLOCKED by missing legitimate reserve ammunition: no observed AttemptReload transaction/conserved transfer, no direct ammo changes permitted. A legitimately stocked Seeker/save is needed before enabling physical rear reload. Support, rear reload, transition/reset and matched-scene performance acceptance remain PENDING; no main merge or release promotion.

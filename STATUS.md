@@ -2,7 +2,7 @@
 
 - PR #79 integrated on `integration/main-seeker-hd-rear-acceptance`; optimized x86 pair from c0d5b8f6: d3d9 14194A4A, dinput8 64C0CFE8. Offline reload, D3D9/Ex pixel/reset, hands/haptics/HUD, Locker ABI and guarded restore PASS.
 - Real log-only PASS: both Seeker textures 4201 matches each, zero replacements. Owned Seeker and OpenXR confirmed. User has no ammunition; native refill NOT ESTABLISHED; physical reload remains OFF.
-- First session restored exact accepted runtime/assets. Mode-2 HD-only physical/material/timing acceptance pending. No merge/release promotion. Handoff: docs/handoffs/seeker-main-acceptance-20261030.md.
+- Both sessions restored exact accepted runtime/assets. Mode-2 FAILED: pair READY but 8382 matches/0 replacements per texture, because CreateDevice and Present use different threads. Fixed explicit render-thread registration in 18f7dfc0/14433cdf; actual two-thread D3D9/Ex binding/pixel/reset tests PASS. Prepared x86 pair 800FBA64 / 393E6EAB, not deployed. Real HD and native refill remain pending (no reserve ammunition); physical reload OFF. No merge/release promotion. Handoff: docs/handoffs/seeker-main-acceptance-20261030.md.
 
 ## 2026-10-30 — Wrist live counter ownership correction
 
