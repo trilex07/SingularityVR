@@ -4,7 +4,7 @@
 namespace NativeRifleFx {
 using Method=void (__thiscall*)(void*,const hipknife::V*,int);
 static Method original=nullptr;
-static unsigned notes=0;
+static unsigned notes[3]{};
 static uintptr_t hooked=0;
 using SetLocation=int (__thiscall*)(void*,hipknife::V);
 using SetRotation=int (__thiscall*)(void*,int,int,int);
@@ -277,16 +277,18 @@ static void __fastcall Hook(void* self,void*,const hipknife::V* location,int fir
     const bool scene=Scene();
     const bool changed=readable&&riflefx::Origin(g_nativeRifleMuzzle,scene,firstPerson!=0,
         (uint32_t)owner,(uint32_t)g_playerPawn,(uint32_t)Rd(g_weaponObj),GetTickCount64(),
-        witness,{g_camPos[0],g_camPos[1],g_camPos[2]},*location,replacement);
+        witness,{g_camPos[0],g_camPos[1],g_camPos[2]},*location,replacement,
+        g_nativeWeaponMuzzle!=0,(unsigned)Rd(g_gunVerts));
     const bool rifle=witness.kind==weaponreload::Kind::Valkyrie||Rd(g_gunVerts)==11387;
-    const bool receipt=readable&&rifle&&owner==(uintptr_t)(uint32_t)Rd(g_weaponObj)&&notes++<24;
+    const unsigned receiptSlot=witness.kind==weaponreload::Kind::Kasimov?1:Rd(g_gunVerts)==5799?2:0;
+    const bool receipt=readable&&(rifle||g_nativeWeaponMuzzle)&&owner==(uintptr_t)(uint32_t)Rd(g_weaponObj)&&notes[receiptSlot]++<8;
     if(receipt)
-        Log("rifle native emitter: mode=%d first=%d fresh=%d kind=%d changed=%d source=(%.3f,%.3f,%.3f) destination=(%.3f,%.3f,%.3f) [call receipt, not pixels]",
+        Log("rifle native emitter: mode=%d first=%d fresh=%d kind=%d changed=%d mesh=%d source=(%.3f,%.3f,%.3f) destination=(%.3f,%.3f,%.3f) [call receipt, not pixels]",
             g_nativeRifleMuzzle,firstPerson,witness.Current((uint32_t)g_playerPawn,(uint32_t)owner,GetTickCount64())?1:0,
-            int(witness.kind),changed?1:0,location->x,location->y,location->z,
+            int(witness.kind),changed?1:0,(int)Rd(g_gunVerts),location->x,location->y,location->z,
             changed?replacement.x:location->x,changed?replacement.y:location->y,changed?replacement.z:location->z);
     original(self,changed?&replacement:location,firstPerson);
-    if(changed&&TryAcquireSRWLockExclusive(&tracerFxLock)){
+    if(changed&&rifle&&TryAcquireSRWLockExclusive(&tracerFxLock)){
         tracerFx=(uintptr_t)self;tracerPawn=g_playerPawn;tracerWeapon=owner;
         ReleaseSRWLockExclusive(&tracerFxLock);
     }

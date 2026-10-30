@@ -40,6 +40,18 @@ int main(){
     assert(!riflefx::TracerSource(true,true,false,2+0x2d4,1,2,110,w,{}, {},out));
     assert(!riflefx::TracerSource(true,true,true,3+0x2d4,1,2,110,w,{}, {},out));
     assert(!riflefx::TracerSource(true,true,true,2+0x2d4,1,2,251,w,{}, {},out));
+    // Same first-person spawn contract; loop/tracer paths remain rifle-only.
+    for(const unsigned mesh:{11389u,5799u}){
+        w.kind=mesh==11389?weaponreload::Kind::Kasimov:weaponreload::Kind::None;
+        assert(!riflefx::Origin(3,true,true,2,1,2,110,w,{}, {},out));
+        assert(riflefx::Origin(3,true,true,2,1,2,110,w,{}, {},out,true,mesh));
+        assert(!riflefx::Origin(3,true,true,2,1,2,110,w,{}, {},out,true,8297));
+        assert(!riflefx::Origin(3,true,false,2,1,2,110,w,{}, {},out,true,mesh));
+        assert(!riflefx::Origin(3,true,true,3,1,2,110,w,{}, {},out,true,mesh));
+        assert(!riflefx::Origin(3,true,true,2,1,2,251,w,{}, {},out,true,mesh));
+        assert(!riflefx::Lease(3,true,100,110,1,2,w));
+        assert(!riflefx::TracerSource(true,true,true,2+0x2d4,1,2,110,w,{}, {},out));
+    }
     w.kind=weaponreload::Kind::Kasimov;
     assert(!riflefx::Origin(2,true,true,2,1,2,110,w,{}, {},out));
 }

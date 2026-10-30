@@ -1,3 +1,9 @@
+## 2026-10-30 — Inner wrist axis and native muzzle scope follow-up
+
+- Physical 57E1BFAD: weapons/grips OK; wrist visibility FAIL; VFX spawn offset FAIL (user).
+- L1/L2 focused checks PASS: inner panel corrected using original elbow/index native axes and remeasured actual cuff bounds; default-OFF cosmetic native origin extension for measured Kasimov/Centurion only. No hand/aim/reload or depth-route changes.
+- New build/deployment and physical outcome are recorded separately; no headset PASS inferred. Details: docs/handoffs/wrist-native-muzzle-followup-20261030.md.
+
 ## 2026-10-30 — HD physical follow-up / inner wrist
 
 - Physical A2D9042A: Kasimov scope/support/reload, Centurion aim, carried-part stability and wrist placement FAILED. Centurion reload ACK/firing occurred without a new crash in that session; earlier crash resolution is not inferred.

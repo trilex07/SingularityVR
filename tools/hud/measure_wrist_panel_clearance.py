@@ -29,6 +29,7 @@ def main():
     assert struct.unpack_from('<4s3I', raw) == (b'SVNC', 1, 2, 0)
     offset = 16
     rows = []
+    attachment = []
     for profile, path in enumerate(paths[:2]):
         header = struct.unpack_from('<6I', raw, offset)
         assert header[0] == profile + 1
@@ -37,6 +38,11 @@ def main():
         offset += header[4] * 2
         names, _, _, bind, points, _, wedges, _ = read_psk(path)
         assert names[9] == 'l_arm_wrist'
+        joints = bind @ np.linalg.inv(bind[9])
+        refs = {name: joints[names.index(name), 3, :3].tolist() for name in
+                ('l_arm_elbow', 'l_arm_forearm2', 'l_index_1', 'l_middle_1', 'l_pinky_1')}
+        assert refs['l_arm_elbow'][1] > 0 and refs['l_index_1'][1] < 0
+        attachment.append(dict(profile=profile, native_wrist_local_joints=refs))
         # Match native wrist's row-vector convention exactly once.
         native = np.c_[points[:, 0], -points[:, 1], points[:, 2], np.ones(len(points))]
         wrist = native @ np.linalg.inv(bind[9])
@@ -53,7 +59,8 @@ def main():
             ids = ids[source[ids, 0] > 0]  # actual left half, not vertex-count identity
             q = wp[ids]
             unit = args.units_per_metre
-            q = q[(q[:, 1] >= -.1575 * unit) & (q[:, 1] <= -.0025 * unit) &
+            longitudinal = q[:, 1] if args.inner else -q[:, 1]
+            q = q[(longitudinal >= .0025 * unit) & (longitudinal <= .1575 * unit) &
                   (np.abs(q[:, 2]) <= .052 * unit)]
             assert len(q)
             rows.append(dict(profile=profile, route=route, vertices=len(q),
@@ -65,7 +72,7 @@ def main():
     normal_mm = (int(np.ceil(back / args.units_per_metre * 1000 + 1)) if args.inner else
                  int(np.floor(front / args.units_per_metre * 1000 - 1)))
     result = dict(schema='wrist-panel-source-clearance-v1', units_per_metre=args.units_per_metre,
-                  footprint_mm=[155, 104], centre_from_wrist_mm=80, panel_thickness_mm=1,
+                  footprint_mm=[155, 104], centre_from_wrist_mm=(80 if args.inner else -80), attachment=attachment, panel_thickness_mm=1,
                   source_hashes={p.name: hashlib.sha256(p.read_bytes()).hexdigest().upper() for p in paths},
                   bounds=rows, candidate_offset_x_mm=normal_mm, inner_surface=args.inner,
                   limitation='Original bind surface only; animated final-palette/headset acceptance remains pending')
