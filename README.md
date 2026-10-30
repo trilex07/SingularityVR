@@ -10,12 +10,11 @@ VR menus to the original campaign.
 **Mod VR autorstwa Trilexa.** Obsługuje PSVR2 na PC, ręczne przeładowanie,
 śledzone dłonie, TMD oraz polską lokalizację i rozbudowany pakiet dubbingu.
 
-**First-release baseline accepted on 26 October 2026.** The combined V7 build
-passed the user's latest PSVR2 session and is the current stable development
-baseline. The installer and downloadable first-release package are being
-prepared; they have not been published yet. A source ZIP is not an installer.
+**Accepted gameplay update: 30 October 2026.** The user confirmed the inner-wrist HUD with E99 and health-pack counts, legacy health replacement and corrected muzzle VFX. The accepted runtime DLL is `147C3297`.
 
-[Downloads / releases](https://github.com/trilex07/SingularityVR/releases) ·
+**[Download the complete Trilex installer RC5](https://github.com/trilex07/TrilexModInstaller/releases/tag/installer-1.0.0-rc.5)** � includes the accepted runtime, four HD weapon/reload sets, Polish localization and existing remaster modules. Extract the full ZIP before running the unsigned installer. Installer lifecycle verification is recorded separately from gameplay headset acceptance. A source ZIP is not an installer.
+
+[Mod releases](https://github.com/trilex07/SingularityVR/releases) �
 [Report a bug](https://github.com/trilex07/SingularityVR/issues) ·
 [Accepted baseline](docs/release/first-release-baseline-20261026.md) ·
 [Development status](STATUS.md)
