@@ -4,6 +4,7 @@
 - Fixed unreachable stereo preview, missing moved=3 assembly ride and both-eye publication gate; no reload/grip/input changes.
 - Added bounded one-frame read-only depth/pose trace and bounded live-value/natural maximum receipts. No depth copies or speculative production occlusion.
 - Preview keeps the legacy health display. Production depth/live-data/PSVR2/performance remain PENDING until the specific focused stereo trace and final overlap check.
+- Installed preview DLL `71F7254B871EE8C079196A6D02AAC3DB26A9D8517BDE6F255D780F4F4B42AEB2`; exact backup preimages verified; 45 protected files unchanged. No gameplay launch or physical PASS.
 - Details and consolidated physical dependency: `docs/handoffs/left-wrist-main-integration-20261030.md`. Exact candidate/install identity follows in its JSON receipt; older blocks below are historical.
 
 ## 2026-10-30 — PR71 scoped CPU optimization in retained HD candidate
