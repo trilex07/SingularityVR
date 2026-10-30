@@ -364,8 +364,10 @@ static bool CreateReplacement(IDirect3DDevice9* dev, const DDSImage& img,
 
 // ---------------------------------------------------------------------------
 #include "seeker_preload.h"
-static void ReportSeeker(){Log("SEEKER matches=%ld substitutions=%ld; startup-only mode; no bind DDS load/upload",
-    InterlockedCompareExchange(&seekerpreload::binds,0,0),InterlockedCompareExchange(&seekerpreload::substitutions,0,0));}
+static void ReportSeeker(){Log("SEEKER mode=%d matches=%ld substitutions=%ld diffuse=%ld/%ld normal=%ld/%ld (matched/replaced; exact original content identities); no bind DDS load/upload",
+    seekerpreload::mode,InterlockedCompareExchange(&seekerpreload::binds,0,0),InterlockedCompareExchange(&seekerpreload::substitutions,0,0),
+    InterlockedCompareExchange(&seekerpreload::matched[0],0,0),InterlockedCompareExchange(&seekerpreload::replaced[0],0,0),
+    InterlockedCompareExchange(&seekerpreload::matched[1],0,0),InterlockedCompareExchange(&seekerpreload::replaced[1],0,0));}
 // runtime capture: dump the mip0 the engine actually uploads (the offline TFC
 // path cannot reach some textures, e.g. the first-person pistol)
 // ---------------------------------------------------------------------------

@@ -13,6 +13,7 @@ inline int mode=0;
 inline bool loaded=false;
 inline unsigned reads=0,uploads=0;
 inline volatile LONG binds=0,substitutions=0;
+inline volatile LONG matched[2]{},replaced[2]{};
 inline void Release(){for(auto& p:gpu){if(p)p->Release();p=nullptr;}owner=nullptr;}
 inline bool Pinned(const char* path,const char* expected){
     FILE* f=nullptr;if(fopen_s(&f,path,"rb")||!f)return false;
@@ -55,7 +56,10 @@ inline void Lifecycle(IDirect3DDevice9* dev,unsigned event){
 }
 inline int Index(const char* name){return !strcmp(name,"ar_steerable_d")?0:!strcmp(name,"ar_steerable_n")?1:-1;}
 inline IDirect3DBaseTexture9* Ready(IDirect3DDevice9* dev,int index,IDirect3DBaseTexture9* original){
-    InterlockedIncrement(&binds);if(mode==2&&owner==dev&&thread==GetCurrentThreadId()&&gpu[index]){InterlockedIncrement(&substitutions);return gpu[index];}
+    if(index<0||index>=2)return original;
+    InterlockedIncrement(&binds);InterlockedIncrement(&matched[index]);
+    if(mode==2&&owner==dev&&thread==GetCurrentThreadId()&&gpu[index]){
+        InterlockedIncrement(&substitutions);InterlockedIncrement(&replaced[index]);return gpu[index];}
     return original;
 }
 }

@@ -80,7 +80,15 @@ static void Run(IDirect3D9* api,IDirect3D9Ex* apiEx,bool ex){
             Check(current==seekerpreload::gpu[k],"Seeker both-eye stages use prepared resource");if(current)current->Release();dev->SetTexture(eye,nullptr);}
         Check(ReadPixel(dev,seekerpreload::gpu[k],0xff0000),"Seeker native uploaded pixel");}
     for(unsigned mode=0;mode<2;++mode){seekerpreload::mode=int(mode);
-        Check(seekerpreload::Ready(dev,0,marker)==marker,"Seeker OFF/log-only original forwarding");}
+        for(int index=0;index<2;++index){
+            const LONG matches=seekerpreload::matched[index], replacements=seekerpreload::replaced[index];
+            Check(seekerpreload::Ready(dev,index,marker)==marker,"Seeker OFF/log-only original forwarding");
+            Check(seekerpreload::matched[index]==matches+1&&seekerpreload::replaced[index]==replacements,
+                "Seeker per-identity receipt: both matches, zero log-only replacements");}}
+    Check(seekerpreload::matched[0]>0&&seekerpreload::matched[1]>0&&seekerpreload::replaced[0]>0&&seekerpreload::replaced[1]>0,
+        "Seeker apply receipts prove both prepared resources submitted");
+    Check(seekerpreload::Ready(dev,-1,marker)==marker&&seekerpreload::Ready(dev,2,marker)==marker,
+        "Invalid Seeker scalar identity forwards original without out-of-bounds access");
     seekerpreload::mode=2;
     for(unsigned n=0;n<10000;++n)SingularityTextureBridgeV1(dev,0,marker,Forward,1,0);
     dev->SetTexture(0,nullptr);
