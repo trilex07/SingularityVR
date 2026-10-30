@@ -5,6 +5,38 @@
 #include <limits>
 static float dot(const float* a,const float* b){return a[0]*b[0]+a[1]*b[1]+a[2]*b[2];}
 int main(){
+    using K=weaponreload::Kind;
+    assert(weaponmuzzle::FinalBody(0,0,11387,0,12834)==K::Valkyrie);
+    assert(weaponmuzzle::FinalBody(0,0,11378,0,12834)==K::Valkyrie);
+    assert(weaponmuzzle::FinalBody(0,0,11389,0,12942)==K::Kasimov);
+    assert(weaponmuzzle::FinalBody(0,0,11387,38502,8)==K::None);
+    assert(weaponmuzzle::FinalBody(0,11378,9,38502,8)==K::None);
+    assert(weaponmuzzle::FinalBody(0,0,11389,38826,168)==K::None);
+    assert(weaponmuzzle::FinalBody(1,0,11387,0,12834)==K::None);
+    assert(weaponmuzzle::FinalBody(0,1,11387,0,12834)==K::None);
+    assert(weaponmuzzle::FinalBody(0,0,8297,0,10835)==K::None); // accepted Volk unchanged
+    assert(weaponmuzzle::FinalBody(0,0,5799,0,6767)==K::None); // different cog slot
+    // Reproduce a late TMD correction of the root palette: the witness must
+    // equal the rendered vertex chain, not the pre-correction reload snapshot.
+    for(auto kind:{K::Valkyrie,K::Kasimov})for(int turn=0;turn<4;++turn){
+        weaponreloadanim::Data data;data.ready=true;data.nativeSpace=true;data.kind=kind;
+        armbind::Mat before{},after{},local{},controller{};
+        for(int j=0;j<4;++j){data.rootBind.m[j][j]=1;before.m[j][j]=1;
+            after.m[j][j]=1;local.m[j][j]=1;controller.m[j][j]=1;}
+        const float a=turn*1.57079632679f;
+        after.m[0][0]=std::cos(a);after.m[0][1]=std::sin(a);
+        after.m[1][0]=-std::sin(a);after.m[1][1]=std::cos(a);
+        after.m[3][0]=13;after.m[3][1]=-19;after.m[3][2]=7;
+        controller.m[3][0]=5;local.m[3][1]=4;
+        hipknife::V oldPoint{},finalPoint{},source{};
+        assert(weaponmuzzle::Position(data,before,local,controller,oldPoint));
+        assert(weaponmuzzle::Position(data,after,local,controller,finalPoint));
+        assert(weaponmuzzle::RootPoint(kind,source));
+        auto rendered=weaponreload::Transform(weaponreload::Transform(
+            weaponreload::Transform(source,after),local),controller);
+        assert(hipknife::Length(finalPoint-rendered)<.0001f);
+        assert(hipknife::Length(oldPoint-finalPoint)>1.f);
+    }
     constexpr float pi=3.14159265359f;
     const float from[]{1,0,0};
     // All headings and near-vertical poses, with a native spread cone. A rigid

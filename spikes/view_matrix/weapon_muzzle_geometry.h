@@ -1,6 +1,13 @@
 #pragma once
 #include "weapon_reload_runtime.h"
 namespace weaponmuzzle {
+// Only these original BODY palettes have cog_gun/cog_sniper in slot zero.
+// The later one-bone attachment draw must never replace the body witness.
+inline weaponreload::Kind FinalBody(int base,unsigned min,unsigned vertices,unsigned first,unsigned triangles){
+    for(auto kind:{weaponreload::Kind::Valkyrie,weaponreload::Kind::Kasimov})
+        if(weaponreload::DrawPart(kind,base,min,vertices,first,triangles)==weaponreload::Part::Body)return kind;
+    return weaponreload::Kind::None;
+}
 // prepare_gloves.read_psk already applies UEViewer's Y reflection. These are
 // native cooked-vertex coordinates; reflecting its bind a second time placed
 // the shot origin 229.3914 UU across the receiver's actual muzzle.

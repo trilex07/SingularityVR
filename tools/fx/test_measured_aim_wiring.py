@@ -6,6 +6,14 @@ ROOT = Path(__file__).resolve().parents[2]
 
 
 class Wiring(unittest.TestCase):
+    def test_final_body_sample_is_after_dual_palette_and_before_draw(self):
+        source = (ROOT/'spikes/view_matrix/d3d9.cpp').read_text(encoding='utf8')
+        sample=source.index('const auto finalMuzzleKind=weaponmuzzle::FinalBody(')
+        self.assertLess(source.index('static int PrepareNextReload(') if 'static int PrepareNextReload(' in source else 0,sample)
+        self.assertIn('dualGun',source[sample-18000:sample])
+        self.assertIn('StageNextWeaponGeometry(finalMuzzleKind',source[sample:sample+1800])
+        self.assertIn('g_nextIBVerified[finalMuzzleIndex]',source[sample:sample+1800])
+
     def test_default_off(self):
         source = (ROOT/'spikes/view_matrix/d3d9.cpp').read_text(encoding='utf8')
         for section, key in [('Input', 'WeaponMeasuredAim'), ('Render', 'ScopeMeasuredPose'), ('Diagnostic', 'BodyEquipmentProbe')]:

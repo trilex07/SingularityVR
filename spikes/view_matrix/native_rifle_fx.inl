@@ -19,15 +19,18 @@ static void __fastcall SpawnHook(void* self,void*,const hipknife::V* position,co
     const bool changed=riflefx::SpawnDirection(g_nativeWeaponMuzzleDirection!=0,
         spawningFx==(uintptr_t)self&&spawningFx!=0,(uintptr_t)_ReturnAddress()==spawnCaller,
         (uint32_t)g_playerPawn,(uint32_t)Rd(g_weaponObj),GetTickCount64(),spawningWitness,corrected);
+    const auto attachment=riflefx::WorldMuzzleAttachment(changed,{a8,a9,a10,a11});
     static unsigned notes=0;
     if(changed&&notes++<12)
-        Log("native-fx direction: mesh=%d direction=(%.6f,%.6f,%.6f) exact local muzzle call; native particle arguments retained [NOT pixels]",
-            (int)Rd(g_gunVerts),corrected.x,corrected.y,corrected.z);
+        Log("native-fx direction: mesh=%d direction=(%.6f,%.6f,%.6f) world muzzle attachment base=%08X mesh=%08X name=%u/%u -> none; template/owner/DPG retained [NOT pixels]",
+            (int)Rd(g_gunVerts),corrected.x,corrected.y,corrected.z,a8,a9,a10,a11);
     muzzleabi::Forward(spawnOriginal,self,position,changed?&corrected:direction,
-        a3,a4,a5,a6,a7,a8,a9,a10,a11);
+        a3,a4,a5,a6,a7,attachment.base,attachment.mesh,attachment.name,attachment.number);
 }
 using SetLocation=int (__thiscall*)(void*,hipknife::V);
 using SetRotation=int (__thiscall*)(void*,int,int,int);
+// RvEmitter::SetBase full 84-byte native adapter forwards to Actor::SetBase,
+// then updates emitter ownership. FVector is BY VALUE, FName is two DWORDs.
 static_assert(sizeof(hipknife::V)==12&&sizeof(int)==4,"audited x86 native pose ABI");
 static SetLocation setLocation=nullptr;
 static SetRotation setRotation=nullptr;
@@ -208,11 +211,11 @@ static void MaintainTick(){
        PauseRttProbe::Pointer(movingEmitter+pscOffset)!=movingPsc||
        PauseRttProbe::Pointer(movingPsc+templateOffset)!=movingTemplate){firedAt=0;return;}
     const hipknife::V camera{g_camPos[0],g_camPos[1],g_camPos[2]};
-    hipknife::V position{};float aim[3]{};int pitch=0,yaw=0;
-    GunAimDir(aim); // Same engine-space axis as the accepted bullet/laser path.
+    hipknife::V position{},axis{};int pitch=0,yaw=0;
     if(!riflefx::Origin(3,true,true,(uint32_t)movingWeapon,(uint32_t)movingPawn,
        (uint32_t)movingWeapon,now,w,camera,camera,position)||
-       !riflefx::Rotation({aim[0],aim[1],aim[2]},pitch,yaw)){firedAt=0;return;}
+       !w.Direction((uint32_t)movingPawn,(uint32_t)movingWeapon,now,axis)||
+       !riflefx::Rotation(axis,pitch,yaw)){firedAt=0;return;}
     running=true;
     const int moved=setLocation((void*)movingEmitter,position);
     const int turned=moved?setRotation((void*)movingEmitter,pitch,yaw,0):0;
@@ -241,6 +244,19 @@ static void Track(uintptr_t fx,uintptr_t weapon,const weaponmuzzle::Witness& w){
     // PlayMuzzleFX fingerprint: regular loop + iron-sight loop. Never move AI
     // effects, impact actors, templates or an unrelated pooled emitter.
     if(!asset||(asset!=PauseRttProbe::Pointer(fx+0x6c)&&asset!=PauseRttProbe::Pointer(fx+0x84))){TrackRefusal("first-person-template");return;}
+    // Pooled loops are attached by the original native call too. Detach ONLY
+    // this live, owned, exact first-person loop via the verified native method;
+    // SetLocation below then updates the actor/component through the engine.
+    const int baseOffset=emitterLayout==cls?0x9c:PauseRttProbe::Property(cls,"Base","ObjectProperty");
+    if(baseOffset!=0x9c){TrackRefusal("base-layout");return;}
+    if(PauseRttProbe::Pointer(emitter+baseOffset)){
+        const auto method=PauseRttProbe::Pointer(PauseRttProbe::Pointer(emitter)+0x270);
+        if(!Code(method,84,0x1349FDB9D36C8F90ull)){TrackRefusal("detach-contract");return;}
+        muzzleabi::Detach((muzzleabi::SetBase)method,(void*)emitter);
+        if(PauseRttProbe::Pointer(emitter+baseOffset)){TrackRefusal("detach-result");return;}
+        static unsigned detachNotes=0;if(detachNotes++<8)
+            Log("rifle native pose: owned loop=%08X native base detached; measured world muzzle owns pose [NOT pixels]",(unsigned)emitter);
+    }
     movingFx=fx;movingWeapon=weapon;movingPawn=g_playerPawn;movingEmitter=emitter;
     movingPsc=psc;movingTemplate=asset;pscOffset=component;templateOffset=templ;
     emitterLayout=cls;pscLayout=pscClass;

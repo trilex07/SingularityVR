@@ -21660,17 +21660,21 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
     }
     // Read the final displayed body, independently of reload-FSM snapshot age.
     // Includes the corrected TMD palette; eye publication remains guarded below.
+    // Valkyrie's earlier PrepareNextReload witness precedes dualGun correction.
+    // Re-read the same final slot-zero body palette used for the visible mesh.
+    const auto finalMuzzleKind=weaponmuzzle::FinalBody(baseVertex,minIndex,numVertices,startIndex,primCount);
+    const auto finalMuzzleIndex=finalMuzzleKind==weaponreload::Kind::None?0u:weaponreload::Index(finalMuzzleKind);
     if(t==D3DPT_TRIANGLELIST&&g_thisDrawMoved==1&&!g_boundShaderLayout.shadow&&
-       Rd(g_rtIsScene)&&FgMatchWindow()&&!Rd(g_weaponHolstered)&&g_nextReady[2]&&
-       g_nextIBVerified[2]&&weaponreload::DrawPart(weaponreload::Kind::Kasimov,
-           baseVertex,minIndex,numVertices,startIndex,primCount)==weaponreload::Part::Body&&
+       finalMuzzleKind!=weaponreload::Kind::None&&
+       Rd(g_rtIsScene)&&FgMatchWindow()&&!Rd(g_weaponHolstered)&&g_nextReady[finalMuzzleIndex]&&
+       g_nextIBVerified[finalMuzzleIndex]&&
        g_boundShaderLayout.bones>=0&&g_boundShaderLayout.boneRegs>=18&&g_boundShaderLayout.local>=0){
         float palette[3][4];armbind::Mat root,local,controller;
         if(SUCCEEDED(dev->GetVertexShaderConstantF(g_boundShaderLayout.bones,palette[0],3))&&
            armbind::FromGpu(palette,root)&&
            SUCCEEDED(dev->GetVertexShaderConstantF(g_boundShaderLayout.local,local.m[0],4))){
             BuildGunC(controller.m);
-            StageNextWeaponGeometry(weaponreload::Kind::Kasimov,root,local,controller,
+            StageNextWeaponGeometry(finalMuzzleKind,root,local,controller,
                 (uint32_t)g_playerPawn,(uint32_t)Rd(g_weaponObj),GetTickCount64());
         }
     }

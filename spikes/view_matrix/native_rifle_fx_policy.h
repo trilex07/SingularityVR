@@ -1,6 +1,13 @@
 #pragma once
 #include "weapon_muzzle_geometry.h"
 namespace riflefx {
+struct Attachment {std::uint32_t base=0,mesh=0,name=0,number=0;};
+inline Attachment WorldMuzzleAttachment(bool measuredLocalSpawn,Attachment original){
+    // ObjectPool::GetEmitterEx attaches AFTER setting the requested world pose.
+    // Actor::SetBase replaces relative pose with the named socket's transform.
+    // A controller-owned world muzzle must not inherit that native attachment.
+    return measuredLocalSpawn?Attachment{}:original;
+}
 inline bool SpawnDirection(bool enabled,bool scoped,bool exactCaller,
     std::uint32_t pawn,std::uint32_t weapon,std::uint64_t now,
     const weaponmuzzle::Witness& witness,hipknife::V& result){

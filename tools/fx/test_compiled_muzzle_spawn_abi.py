@@ -24,7 +24,14 @@ while start >= 0 and ins[start].mnemonic not in ('jmp', 'xor'):
     start -= 1
 args = ins[start+1:call]
 assert sum(x.mnemonic == 'push' for x in args) == 11
-assert any((x.mnemonic, x.op_str) == ('mov', 'ecx, esi') for x in args)
+ops=[(x.mnemonic,x.op_str) for x in ins]
+# New attachment selection uses EBP for a11; self is saved before selection.
+# Entry S -> sub32 + four nonvolatile pushes = S-48. self at [esp+20h]
+# is S-16. After two argument pushes, [esp+28h] is the SAME S-16 slot.
+assert ops[0]==('sub','esp, 0x20')
+assert ('mov','ebp, ecx') in ops[:12]
+assert ('mov','dword ptr [esp + 0x20], ebp') in ops[:12]
+assert any((x.mnemonic, x.op_str) == ('mov', 'ecx, dword ptr [esp + 0x28]') for x in args)
 assert [(x.mnemonic,x.op_str) for x in ins[call+1:]] == [
-    ('pop','edi'),('pop','esi'),('pop','ebp'),('pop','ebx'),('add','esp, 0x18'),('ret','0x2c')]
+    ('pop','edi'),('pop','esi'),('pop','ebp'),('pop','ebx'),('add','esp, 0x20'),('ret','0x2c')]
 print('PASS: optimized PE32 SpawnHook forwards 11 DWORDs/ECX; trampoline cleans arguments; nonvolatile restoration and ret2C')

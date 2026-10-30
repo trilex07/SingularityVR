@@ -1,6 +1,8 @@
 #pragma once
 #include "native_rifle_fx_policy.h"
 namespace muzzleabi {
+using SetBase=void (__thiscall*)(void*,void*,hipknife::V,int,void*,std::uint32_t,std::uint32_t);
+inline void Detach(SetBase method,void* emitter){method(emitter,nullptr,{0,0,1},1,nullptr,0,0);}
 // Full 431-byte native +130 body: two FVector references followed by nine
 // unchanged 32-bit arguments, callee ret 2Ch. The second vector is converted
 // by FVector::Rotation, NOT interpreted as an FRotator.
