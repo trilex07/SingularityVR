@@ -33755,6 +33755,7 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
     // Whoever calls Present owns the device. Recorded so the user-pointer draw hooks can tell
     // render-thread calls from movie-playback-thread ones and stay completely inert on the latter.
     g_mainThreadId = GetCurrentThreadId();
+    if(g_seekerTextureLifecycle)g_seekerTextureLifecycle(s,3);
     // Sample after the frame's draws have populated the Bink signal and before
     // any matte/overlay is emitted, so presentation policy and diagnostics use
     // the same frame boundary.

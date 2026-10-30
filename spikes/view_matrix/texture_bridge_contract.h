@@ -10,7 +10,7 @@
 namespace texbridge {
 using Forward=HRESULT (STDMETHODCALLTYPE*)(IDirect3DDevice9*,DWORD,IDirect3DBaseTexture9*);
 using Bind=HRESULT (WINAPI*)(IDirect3DDevice9*,DWORD,IDirect3DBaseTexture9*,Forward,unsigned,unsigned);
-using Lifecycle=void (WINAPI*)(IDirect3DDevice9*,unsigned); // 0 init, 1 pre-reset/release, 2 post-reset
+using Lifecycle=void (WINAPI*)(IDirect3DDevice9*,unsigned); // 0 init, 1 pre-reset/release, 2 post-reset, 3 Present-thread registration (no GPU work)
 constexpr unsigned version=1, protectedSource=1;
 // Project-owned COM metadata, not an engine offset. Metadata dies with source.
 inline const GUID positiveId={0x3558dca8,0x2fe4,0x4988,{0x80,0x56,0xc6,0xec,0xf3,0x89,0x98,0x67}};

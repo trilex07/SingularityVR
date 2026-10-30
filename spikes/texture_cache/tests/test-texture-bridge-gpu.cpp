@@ -73,6 +73,28 @@ static void Run(IDirect3D9* api,IDirect3D9Ex* apiEx,bool ex){
     seekerpreload::Lifecycle(dev,2);
     Check(seekerpreload::gpu[0]&&seekerpreload::gpu[1],"Seeker pair atomically uploaded outside bind");
     IDirect3DTexture9* marker=nullptr;dev->CreateTexture(4,4,1,0,D3DFMT_DXT1,ex?D3DPOOL_DEFAULT:D3DPOOL_MANAGED,&marker,nullptr);
+    Check(seekerpreload::Ready(dev,0,marker)==marker,"Seeker creation thread is not implicitly the render owner");
+    struct RenderCall {IDirect3DDevice9* dev;IDirect3DTexture9* original;} render{dev,marker};
+    HANDLE renderWorker=CreateThread(nullptr,0,[](void* data)->DWORD{
+        auto& call=*static_cast<RenderCall*>(data);
+        seekerpreload::Lifecycle(call.dev,3);
+        for(int index=0;index<2;++index){
+            Check(seekerpreload::Ready(call.dev,index,call.original)==seekerpreload::gpu[index],
+                "Seeker separate Present thread accepts immutable prepared pair");
+            unsigned scalar=unsigned(index);call.original->SetPrivateData(texbridge::seekerId,&scalar,sizeof(scalar),0);
+            Check(SUCCEEDED(SingularityTextureBridgeV1(call.dev,0,call.original,Forward,1,0)),"Seeker cross-thread real bridge submission");
+            IDirect3DBaseTexture9* bound=nullptr;call.dev->GetTexture(0,&bound);
+            Check(bound==seekerpreload::gpu[index],"Seeker cross-thread actual bound GPU resource");
+            if(bound)bound->Release();call.dev->SetTexture(0,nullptr);
+        }
+        return 0;
+    },&render,0,nullptr);
+    Check(renderWorker!=nullptr,"Seeker separate render fixture thread created");
+    if(renderWorker){WaitForSingleObject(renderWorker,INFINITE);CloseHandle(renderWorker);}
+    Check(seekerpreload::Ready(dev,0,marker)==marker,"Seeker unrelated thread cannot bind prepared pair");
+    Check(seekerpreload::Ready(nullptr,0,marker)==marker,"Seeker foreign device forwards original");
+    seekerpreload::Lifecycle(dev,1);Check(!seekerpreload::renderThread,"Reset clears Seeker render ownership");
+    seekerpreload::Lifecycle(dev,2);seekerpreload::Lifecycle(dev,3);
     const unsigned reads=seekerpreload::reads,uploads=seekerpreload::uploads;
     for(unsigned k=0;k<2;++k){marker->SetPrivateData(texbridge::seekerId,&k,sizeof(k),0);
         for(unsigned eye=0;eye<2;++eye){SingularityTextureBridgeV1(dev,eye,marker,Forward,1,0);

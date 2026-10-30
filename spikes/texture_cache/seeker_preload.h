@@ -2,19 +2,20 @@
 #include <bcrypt.h>
 #pragma comment(lib,"bcrypt.lib")
 #include "seeker_targets_generated.h"
-// Called exclusively by production CreateDevice/Reset on its owning thread.
-// No worker publishes mutable data to the bind callback.
+// GPU creation stays in production CreateDevice/Reset. MAIN Present registers
+// its distinct render thread; registration performs no file or GPU operations.
 namespace seekerpreload {
 inline DDSImage cpu[2];
 inline IDirect3DTexture9* gpu[2]{};
 inline IDirect3DDevice9* owner=nullptr; // borrowed; GPU references own their device
 inline DWORD thread=0;
+inline DWORD renderThread=0;
 inline int mode=0;
 inline bool loaded=false;
 inline unsigned reads=0,uploads=0;
 inline volatile LONG binds=0,substitutions=0;
 inline volatile LONG matched[2]{},replaced[2]{};
-inline void Release(){for(auto& p:gpu){if(p)p->Release();p=nullptr;}owner=nullptr;}
+inline void Release(){for(auto& p:gpu){if(p)p->Release();p=nullptr;}owner=nullptr;renderThread=0;}
 inline bool Pinned(const char* path,const char* expected){
     FILE* f=nullptr;if(fopen_s(&f,path,"rb")||!f)return false;
     ++reads;fseek(f,0,SEEK_END);long n=ftell(f);rewind(f);
@@ -36,6 +37,13 @@ inline bool Validate(const DDSImage& d,unsigned index){
 inline void Lifecycle(IDirect3DDevice9* dev,unsigned event){
     if(event==1){Release();return;}
     if(!dev||!g_bridgeOwned||!g_enabled)return;
+    if(event==3){
+        if(dev==owner&&mode==2&&gpu[0]&&gpu[1]&&!renderThread){
+            renderThread=GetCurrentThreadId();
+            Log("SEEKER render handoff device=%p uploadThread=%lu renderThread=%lu; immutable pair, no GPU work",dev,thread,renderThread);
+        }
+        return;
+    }
     if(event==0){
         Release();thread=GetCurrentThreadId();loaded=false;cpu[0]={};cpu[1]={};
         char ini[MAX_PATH];BuildPath("texture_override.ini",ini,sizeof(ini));
@@ -58,7 +66,7 @@ inline int Index(const char* name){return !strcmp(name,"ar_steerable_d")?0:!strc
 inline IDirect3DBaseTexture9* Ready(IDirect3DDevice9* dev,int index,IDirect3DBaseTexture9* original){
     if(index<0||index>=2)return original;
     InterlockedIncrement(&binds);InterlockedIncrement(&matched[index]);
-    if(mode==2&&owner==dev&&thread==GetCurrentThreadId()&&gpu[index]){
+    if(mode==2&&owner==dev&&renderThread==GetCurrentThreadId()&&gpu[index]){
         InterlockedIncrement(&substitutions);InterlockedIncrement(&replaced[index]);return gpu[index];}
     return original;
 }
