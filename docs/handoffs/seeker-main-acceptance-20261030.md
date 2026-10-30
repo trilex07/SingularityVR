@@ -74,3 +74,15 @@ Both x86 PE32 `/O2` DLLs built from `14433cdf`:
 - Prepared private stage: `build/next-weapon-reload/seeker-main-20261030/mode2-render-thread-fix/`, material mode 2, physical reload OFF, accepted baseline unchanged. Source/DLL identities and exact five asset hashes pinned in that stage; earlier failed sessions preserved.
 
 **Next specific gates:** real mode-2 receipt must show both replacements >0, followed by headset confirmation of original material effects/stereo. Native reload remains BLOCKED by missing legitimate reserve ammunition: no observed AttemptReload transaction/conserved transfer, no direct ammo changes permitted. A legitimately stocked Seeker/save is needed before enabling physical rear reload. Support, rear reload, transition/reset and matched-scene performance acceptance remain PENDING; no main merge or release promotion.
+
+### Corrected mode 2: runtime and physical HD acceptance
+
+User explicitly requested the short HD-only PSVR2 test. After full-process preflight and accepted hash comparison, installed the exact `800FBA64` / `393E6EAB` pair and five pinned private files. Runtime backup: `deployment/install-backups/20261030-172834`; deployment report: `deployment/install-reports/20261030-172835.json`; guard PID **28264**, game PID **37600**. No active-session timeout; Seeker physical reload stayed OFF.
+
+Actual bounded receipt: device `0DDA0CE0`, upload thread **27792**, registered Present thread **37892**. Final counters: **diffuse 2731 matched / 2731 replaced; normal 2731 / 2731; total 5462 / 5462**. OpenXR `shouldRender=1`, valid captured frames, stereo submission confirmed. This establishes real texture substitution after the explicit thread handoff and falsifies the previous rejection mechanism in this session.
+
+User's response to the both-eye/material/black-patch/flicker check: **"HD wygląda poprawnie"**. Therefore **HD material appearance: physical PSVR2 PASS for this session**. This does not establish reload, support, level transitions, device Reset or projectile acceptance.
+
+Normal game exit observed; guard restored the four accepted runtime files and all five absent asset preimages, with verified hashes. MAIN independently re-read those nine states and matched the accepted profile. Candidate is **not retained**, not merged, and not released. Both actual logs and the updated acceptance manifest are archived under the private candidate root.
+
+Gameplay samples include 82.3–90.3 fps; later transition samples include 49.3 and 75.4 fps. No controlled equal-scene comparison or proof of performance non-regression/solid 90 Hz is claimed. Native ammo observer produced no accepted transfer: user lacks reserve ammunition. **Native refill contract BLOCKED; physical rear reload OFF / NOT TESTED; support NOT TESTED in this HD-only session.** Next required dependency is legitimately acquired Seeker reserve ammo, followed by one native reload transaction before any physical-reload enablement.
