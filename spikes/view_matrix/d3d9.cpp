@@ -1,4 +1,4 @@
-#include "two_hand_grip.h"
+﻿#include "two_hand_grip.h"
 #include "support_grip_probe.h"
 #include "dual_weapon_tmd_policy.h"
 #include "tmd_support_gauntlet.h"
@@ -26575,6 +26575,7 @@ int       g_funcOffset = -1;
 
 // Both defined further down, with the census they belong to. Declared here because the probe has
 // to reset them when it moves the hook.
+static void PollSeekerNativeAmmo(void* self);
 void __fastcall Hook_ProcessEvent(void* self, void* edx, void* Stack, void* Result);
 extern volatile LONG g_peSeen, g_peUnnamed;
 
@@ -28395,6 +28396,7 @@ void __fastcall Hook_ProcessEvent(void* self, void* edx, void* Stack, void* Resu
         if (!NativeOwnedInventory::InvokeRetained(self,edx,Stack,Result,fnIdx,(int)Rd(g_nodeOffset),g_origProcessEvent))
             g_origProcessEvent(self, edx, Stack, Result);
     }
+    PollSeekerNativeAmmo(self); // bounded, opt-in, natural engine thread; no ammo writes
     int shotAfter=-1;bool shotPulseArmed=false;
     if(localShot && shotBefore>=0 && shotOffset>=0 &&
        shotWeapon==(uintptr_t)(uint32_t)Rd(g_weaponObj) &&
@@ -30751,6 +30753,7 @@ struct CenturionRefillNative {
 #include "native_tmd_beam.inl"
 #include "native_scope_pip.inl"
 #include "native_seeker_projectile.inl"
+#include "seeker_ammo_probe.inl"
 static int __fastcall Hook_CenturionAttemptReload(void* self,void*){
     const auto object=(uint32_t)reinterpret_cast<uintptr_t>(self);
     const auto weapon=(uint32_t)Rd(g_weaponObj),pawn=(uint32_t)g_playerPawn;
@@ -30865,7 +30868,11 @@ static int __fastcall Hook_CenturionAttemptReload(void* self,void*){
     }
     // This is forwarding an existing native call, NOT calling ProcessInternal
     // with invented parameters. No exception masking or ammo modification.
+    BeginSeekerNativeAmmo(self);
     const int result=g_origCenturionAttemptReload(self);
+    if(g_seekerAmmoTransaction.active&&g_seekerAmmoTransaction.weapon==object)
+        g_seekerAmmoTransaction.accepted|=result!=0;
+    PollSeekerNativeAmmo(self);
     if(note)Log("%s native guard: %s self=%08X pawn=%08X return=%08X result=%d lockMiss=%d t=%llu (result is not ammo proof)",owner,
         decision==centurionnative::Decision::Permit?"PERMIT":
         decision==centurionnative::Decision::Observe?"OBSERVE":"FORWARD",
@@ -38194,6 +38201,8 @@ void LoadIniSettings() {
     g_centurionReload=GetPrivateProfileIntA("Input","CenturionManualReload",0,path)?1:0;
     g_centurionNativeTap=GetPrivateProfileIntA("Input","CenturionNativeReloadTap",0,path)?1:0;
     g_centurionReloadProbe=GetPrivateProfileIntA("Input","CenturionReloadProbe",0,path)?1:0;
+    g_seekerNativeAmmoProbe=GetPrivateProfileIntA("Diagnostic","SeekerNativeAmmoProbe",0,path)?1:0;
+    Log("ini: SeekerNativeAmmoProbe=%d (read-only audited getters on natural engine calls; default OFF)",g_seekerNativeAmmoProbe);
     g_centurionClipPreview=GetPrivateProfileIntA("Input","CenturionClipPreview",0,path)?1:0;
     g_centurionCylinderAnimation=GetPrivateProfileIntA("Input","CenturionCylinderAnimation",0,path)?1:0;
     g_centurionVisualFollowup=GetPrivateProfileIntA("Input","CenturionVisualFollowup",0,path)?1:0;
