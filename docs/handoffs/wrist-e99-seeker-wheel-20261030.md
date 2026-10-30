@@ -18,3 +18,11 @@ User physically accepted wrist candidate 06609B2D (source 8c323ebd): inward wris
 
 ## Physical acceptance pending
 One session: read the enlarged inward-wrist panel, verify E99 Tech against the native balance and a pickup/spend, then select an actually owned Seeker from R3 and return to an ordinary weapon. An unowned Seeker must not be selectable. No physical result or performance improvement is inferred from offline tests. Current Steam remains accepted 06609B2D until an authorized test deployment.
+
+## Candidate identity
+- Source: b9f7f42ec698368f5bd67a6d44baa71fdd552435, branch feature/wrist-e99-seeker-wheel (pushed).
+- DLL: 57840426EBA3799D4E6C11557E00F8BCE16B8BF1717C41E1E4F96BD4CD207482.
+- MSVC x86 PE32 /O2 PASS; tracked source clean at build. Existing unrelated untracked private build/hd-physical-followup excluded.
+- Staged: build/next-weapon-reload/wrist-e99-seeker-20261030. Profile/change-plan WhatIf preflight PASS; no Steam writes or launch.
+- Installed baseline remains 06609B2D64E4000EBCCD2D76EDACB569AC8A8A45E1467FAEA3B20D5E6CB46657. Installed INI has no explicit scale override, so 110 percent default applies on deployment.
+- New changes: READY_FOR_PHYSICAL_ACCEPTANCE. Actual E99 balance updates and Seeker wheel appearance/retrieval remain PENDING.
