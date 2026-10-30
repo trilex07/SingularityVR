@@ -32,7 +32,7 @@ def build(package):
         normal.size, Image.Resampling.BILINEAR))
     result = {}
     for label, image, format in (('AR_Steerable_d.dds', hd, 'DXT5'),
-                                 ('AR_Steerable_n.dds', normal, 'DXT5')):
+                                 ('AR_Steerable_n.dds', normal, 'DXT1')):
         path = output / label
         header = save_dds(path, image, format)
         decoded, verified = load_dds(path)

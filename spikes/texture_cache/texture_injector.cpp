@@ -273,7 +273,9 @@ static Entry* CacheAdd(IDirect3DTexture9* t) {
     return e;
 }
 
+static void ReportSeeker();
 static void ReportCache() {
+    ReportSeeker();
     AcquireSRWLockShared(&g_cacheLock);
     const int occupied=g_cacheCount;
     ReleaseSRWLockShared(&g_cacheLock);
@@ -361,6 +363,9 @@ static bool CreateReplacement(IDirect3DDevice9* dev, const DDSImage& img,
 }
 
 // ---------------------------------------------------------------------------
+#include "seeker_preload.h"
+static void ReportSeeker(){Log("SEEKER matches=%ld substitutions=%ld; startup-only mode; no bind DDS load/upload",
+    InterlockedCompareExchange(&seekerpreload::binds,0,0),InterlockedCompareExchange(&seekerpreload::substitutions,0,0));}
 // runtime capture: dump the mip0 the engine actually uploads (the offline TFC
 // path cannot reach some textures, e.g. the first-person pistol)
 // ---------------------------------------------------------------------------
@@ -530,6 +535,7 @@ static HRESULT WINAPI HookCreate9Ex(UINT sdk, IDirect3D9Ex** out) {
 static const Target* MatchTarget(const D3DSURFACE_DESC& d, uint64_t hash, bool& haveHash) {
     for (int i = 0; i < kTargetCount; ++i) {
         const Target& t = kTargets[i];
+        if(seekerpreload::Index(t.name)>=0&&!seekerpreload::mode)continue;
         if (t.w == d.Width && t.h == d.Height && t.fmt == d.Format)
             if (haveHash && t.hash == hash && remasterscope::ReviewTargetEnabled(t.name,g_kasimovMaterialMode)) return &t;
     }
@@ -649,6 +655,11 @@ extern "C" HRESULT WINAPI SingularityTextureBridgeV1(IDirect3DDevice9* dev,DWORD
     if(!g_bridgeOwned||abi!=texbridge::version||(flags&texbridge::protectedSource)||
        !g_enabled||!texture||texture->GetType()!=D3DRTYPE_TEXTURE)return forward(dev,stage,texture);
     auto* original=static_cast<IDirect3DTexture9*>(texture);
+    // Resource-owned scalar identity survives Reset without holding GPU pointers.
+    const auto& seekerId=texbridge::seekerId;
+    unsigned seekerIndex=2;DWORD seekerSize=sizeof(seekerIndex);
+    if(seekerpreload::mode&&SUCCEEDED(original->GetPrivateData(seekerId,&seekerIndex,&seekerSize))&&seekerIndex<2)
+        return forward(dev,stage,seekerpreload::Ready(dev,int(seekerIndex),texture));
     InterlockedIncrement64(&g_cacheCounters.binds);
     if(g_resourceNativeCache&&texnative::KnownNative(original)){
         InterlockedIncrement64(&g_cacheCounters.nativeHits);return forward(dev,stage,texture);
@@ -662,6 +673,12 @@ extern "C" HRESULT WINAPI SingularityTextureBridgeV1(IDirect3DDevice9* dev,DWORD
     uint64_t hash=0;InterlockedIncrement64(&g_cacheCounters.hashes);
     bool have=HashLevel0(original,desc,hash);
     const Target* target=MatchTarget(desc,hash,have);
+    const int seekerTarget=target?seekerpreload::Index(target->name):-1;
+    if(seekerTarget>=0){
+        seekerIndex=unsigned(seekerTarget);
+        original->SetPrivateData(seekerId,&seekerIndex,sizeof(seekerIndex),0);
+        return forward(dev,stage,seekerpreload::Ready(dev,seekerTarget,texture));
+    }
     if(target&&!texgroups::GroupAllows(g_groupOn,texgroups::GroupIndex(target->group)))target=nullptr;
     // New blood identities must not widen baseline replacement when OFF.
     if(target&&remasterscope::IsAddedBlood(target->name)&&!g_effectsRemaster)target=nullptr;

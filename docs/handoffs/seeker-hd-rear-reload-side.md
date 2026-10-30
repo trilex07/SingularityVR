@@ -1,5 +1,7 @@
 # Seeker SIDE asset handoff (offline candidate)
 
+Native diffuse/normal integration is now implemented through the production-owned bridge. See [native texture preload candidate](seeker-native-texture-preload.md) for current lifecycle, settings, evidence and MAIN acceptance. Earlier native-binding limitations below describe the asset baseline and are superseded by that implementation.
+
 Private package: `build/seeker-private/final_handoff/` in the dedicated SIDE worktree. It contains original cooked/decoded source, source PSK/PSA, exact and PBR GLBs, 4K maps, an updated 64 px wheel atlas, previews, validation and SHA-256 manifests. None of these game-derived bytes are committed.
 
 ## What is ready

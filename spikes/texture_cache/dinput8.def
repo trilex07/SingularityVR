@@ -2,4 +2,5 @@ LIBRARY dinput8
 EXPORTS
     DirectInput8Create
     SingularityTextureBridgeV1
+    SingularitySeekerLifecycleV1
 
