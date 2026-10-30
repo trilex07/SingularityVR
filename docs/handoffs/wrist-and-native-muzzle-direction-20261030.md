@@ -53,7 +53,7 @@ trampoline, restores EDI/ESI/EBP/EBX and its own 24-byte locals, then ret2C.
 ## Candidate and physical gate
 
 Enable Render/NativeWeaponMuzzleDirection=1; keep NativeWeaponMuzzleOrigin=1
-and NativeRifleMuzzleOrigin=3. Disable Diagnostic/NativeMuzzleCodeCapture after
+and Diagnostic/NativeRifleMuzzleOrigin=3. Disable Diagnostic/NativeMuzzleCodeCapture after
 the successful capture. Preserve the installed profile and all protected assets.
 Hook receipt: `native-fx direction: audited 431-byte spawn ret2C`.
 At most twelve correction receipts identify direction/mesh; they are not pixels.
