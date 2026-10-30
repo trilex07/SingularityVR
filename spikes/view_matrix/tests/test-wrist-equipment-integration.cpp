@@ -30,6 +30,17 @@ int main(){
         skeletal::Multiply(expected.m,c.m,inv.m);
         for(unsigned r=0;r<4;++r)for(unsigned k=0;k<4;++k)
             assert(fabsf(expected.m[r][k]-out.m[r][k])<1e-4f);
+        const float determinant=out.m[0][0]*(out.m[1][1]*out.m[2][2]-out.m[1][2]*out.m[2][1])-out.m[0][1]*(out.m[1][0]*out.m[2][2]-out.m[1][2]*out.m[2][0])+out.m[0][2]*(out.m[1][0]*out.m[2][1]-out.m[1][1]*out.m[2][0]);
+        assert(determinant<0);
+        // Actual panel after quarter-turn: right=-Z, top=-Y. Its XR normal
+        // must point along the anatomical +X palm, never toward the dorsum.
+        hipknife::V right{-out.m[2][0],-out.m[2][1],-out.m[2][2]};
+        hipknife::V top{-out.m[1][0],-out.m[1][1],-out.m[1][2]};
+        hipknife::V normal{right.y*top.z-right.z*top.y,right.z*top.x-right.x*top.z,right.x*top.y-right.y*top.x};
+        const float dot=normal.x*out.m[0][0]+normal.y*out.m[0][1]+normal.z*out.m[0][2];
+        assert(dot>0); // Old +Z text basis gives dot<0 and shows only the back.
+        assert(wristhud::Visibility(false,1,.35f,.2f,true,true,false,false,false,false));
+        assert(!wristhud::Visibility(false,-1,.35f,.2f,true,true,false,false,false,false));
         // A local physical 155 mm panel must remain 155 mm in XR metres.
         const float len=sqrtf(out.m[0][0]*out.m[0][0]+out.m[0][1]*out.m[0][1]+out.m[0][2]*out.m[0][2]);
         assert(fabsf(len*.155f*52.5f-.155f)<1e-5f);++cases;

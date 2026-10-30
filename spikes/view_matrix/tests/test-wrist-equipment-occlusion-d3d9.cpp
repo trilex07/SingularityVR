@@ -137,13 +137,13 @@ static void Run(bool ex){
 }
 int main(){
     // Same logical glyph orientation, viewed from the palm side. Top points
-    // toward fingers (-wrist Y); right points across palm (+wrist Z). Their
-    // cross product faces inward (+X), not the back of the old outer panel.
+    // toward fingers (-wrist Y); right points across palm (-wrist Z). Their
+    // native cross product is -X; the handedness-changing XR map makes it palm-facing.
     const auto point=[](float x,float y){wristdepth::QuarterTurn(x,y);
         return wristdepth::SurfacePoint((x-.5f)*.155f,(.5f-y)*.104f,0,.094f,.080f,0,true);};
     const auto centre=point(.5f,.5f),right=point(1,.5f)-centre,top=point(.5f,0)-centre;
-    assert(right.z>0&&top.y<0&&right.y==0&&top.z==0);
-    assert(right.y*top.z-right.z*top.y>0&&centre.x>0);
+    assert(right.z<0&&top.y<0&&right.y==0&&top.z==0);
+    assert(right.y*top.z-right.z*top.y<0&&centre.x>0);
     assert(fabsf((point(.5f,0).y)-(.0025f))<1e-6f); // front edge at wrist
     float x=.2f,y=.7f;wristdepth::QuarterTurn(x,y);assert(std::fabs(x-.7f)<.00001f&&std::fabs(y-.8f)<.00001f);
     wristdepth::Projected a[4],b[4];for(int k=0;k<4;++k){a[k].rhw=1+k*.1f;b[k].rhw=a[k].rhw*2;}
