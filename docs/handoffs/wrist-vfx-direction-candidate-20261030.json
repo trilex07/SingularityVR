@@ -1,0 +1,19 @@
+{
+  "sourceCommit": "b15fa7bec8edb241fc67e63799a0c72caa0e9e9d",
+  "branch": "fix/wrist-visibility-native-muzzle-followup",
+  "dllSha256": "B9ADCFED061B707B26BA9C5B0C817A30060934C67A0750DCAC5DB2CD80AD09FC",
+  "iniSha256": "A6A80E686A4F799F99301B9D5F179C6386AF1832993438B3F6769E48CAC3CF22",
+  "backup": "deployment/install-backups/20261030-125607",
+  "deploymentReceipt": "deployment/install-reports/20261030-125608.json",
+  "protectedAssets": 46,
+  "offline": "PASS",
+  "build": "x86 PE32 /O2 PASS",
+  "physical": "PENDING",
+  "retained": true,
+  "automaticRollbackTimer": false,
+  "flags": {
+    "Render/NativeWeaponMuzzleDirection": 1,
+    "Diagnostic/NativeMuzzleCodeCapture": 0
+  },
+  "test": "Inner wrist toward/away face; native VFX at visible muzzle for Valkyrie/Kasimov/Centurion, Volk unchanged control"
+}

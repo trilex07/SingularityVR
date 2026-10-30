@@ -5,6 +5,16 @@ int main(){
     using hipknife::V;
     weaponmuzzle::Witness w{true,weaponreload::Kind::Valkyrie,1,2,100,{5,6,7}};
     V out{99,99,99};
+    w.forward={0,1,0};
+    assert(riflefx::SpawnDirection(true,true,true,1,2,110,w,out)&&out.y==1&&out.x==0);
+    assert(!riflefx::SpawnDirection(false,true,true,1,2,110,w,out));
+    assert(!riflefx::SpawnDirection(true,false,true,1,2,110,w,out));
+    assert(!riflefx::SpawnDirection(true,true,false,1,2,110,w,out));
+    assert(!riflefx::SpawnDirection(true,true,true,3,2,110,w,out));
+    assert(!riflefx::SpawnDirection(true,true,true,1,3,110,w,out));
+    assert(!riflefx::SpawnDirection(true,true,true,1,2,251,w,out));
+    w.forward={2,0,0};assert(!riflefx::SpawnDirection(true,true,true,1,2,110,w,out));
+    w.forward={0,1,0};
     assert(riflefx::Origin(2,true,true,2,1,2,110,w,{100,200,300},{100,200,300},out));
     assert(out.x==105&&out.y==206&&out.z==307);
     assert(riflefx::Origin(3,true,true,2,1,2,110,w,{100,200,300},{100,200,300},out));
@@ -40,6 +50,18 @@ int main(){
     assert(!riflefx::TracerSource(true,true,false,2+0x2d4,1,2,110,w,{}, {},out));
     assert(!riflefx::TracerSource(true,true,true,3+0x2d4,1,2,110,w,{}, {},out));
     assert(!riflefx::TracerSource(true,true,true,2+0x2d4,1,2,251,w,{}, {},out));
+    // Same first-person spawn contract; loop/tracer paths remain rifle-only.
+    for(const unsigned mesh:{11389u,5799u}){
+        w.kind=mesh==11389?weaponreload::Kind::Kasimov:weaponreload::Kind::None;
+        assert(!riflefx::Origin(3,true,true,2,1,2,110,w,{}, {},out));
+        assert(riflefx::Origin(3,true,true,2,1,2,110,w,{}, {},out,true,mesh));
+        assert(!riflefx::Origin(3,true,true,2,1,2,110,w,{}, {},out,true,8297));
+        assert(!riflefx::Origin(3,true,false,2,1,2,110,w,{}, {},out,true,mesh));
+        assert(!riflefx::Origin(3,true,true,3,1,2,110,w,{}, {},out,true,mesh));
+        assert(!riflefx::Origin(3,true,true,2,1,2,251,w,{}, {},out,true,mesh));
+        assert(!riflefx::Lease(3,true,100,110,1,2,w));
+        assert(!riflefx::TracerSource(true,true,true,2+0x2d4,1,2,110,w,{}, {},out));
+    }
     w.kind=weaponreload::Kind::Kasimov;
     assert(!riflefx::Origin(2,true,true,2,1,2,110,w,{}, {},out));
 }

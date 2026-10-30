@@ -1,11 +1,31 @@
 // Native method resolved from the reflected UFunction and its audited virtual
 // dispatch. No executable VA, replacement asset, template edit or shader guess.
 #include "native_rifle_fx_policy.h"
+#include "native_muzzle_code_capture.h"
+#include "native_muzzle_spawn_abi.h"
 namespace NativeRifleFx {
 using Method=void (__thiscall*)(void*,const hipknife::V*,int);
 static Method original=nullptr;
-static unsigned notes=0;
+static unsigned notes[3]{};
 static uintptr_t hooked=0;
+static muzzleabi::Method spawnOriginal=nullptr;
+static uintptr_t spawnCaller=0;
+static thread_local uintptr_t spawningFx=0;
+static thread_local weaponmuzzle::Witness spawningWitness{};
+static void __fastcall SpawnHook(void* self,void*,const hipknife::V* position,const hipknife::V* direction,
+    std::uint32_t a3,std::uint32_t a4,std::uint32_t a5,std::uint32_t a6,std::uint32_t a7,
+    std::uint32_t a8,std::uint32_t a9,std::uint32_t a10,std::uint32_t a11){
+    hipknife::V corrected{};
+    const bool changed=riflefx::SpawnDirection(g_nativeWeaponMuzzleDirection!=0,
+        spawningFx==(uintptr_t)self&&spawningFx!=0,(uintptr_t)_ReturnAddress()==spawnCaller,
+        (uint32_t)g_playerPawn,(uint32_t)Rd(g_weaponObj),GetTickCount64(),spawningWitness,corrected);
+    static unsigned notes=0;
+    if(changed&&notes++<12)
+        Log("native-fx direction: mesh=%d direction=(%.6f,%.6f,%.6f) exact local muzzle call; native particle arguments retained [NOT pixels]",
+            (int)Rd(g_gunVerts),corrected.x,corrected.y,corrected.z);
+    muzzleabi::Forward(spawnOriginal,self,position,changed?&corrected:direction,
+        a3,a4,a5,a6,a7,a8,a9,a10,a11);
+}
 using SetLocation=int (__thiscall*)(void*,hipknife::V);
 using SetRotation=int (__thiscall*)(void*,int,int,int);
 static_assert(sizeof(hipknife::V)==12&&sizeof(int)==4,"audited x86 native pose ABI");
@@ -277,16 +297,23 @@ static void __fastcall Hook(void* self,void*,const hipknife::V* location,int fir
     const bool scene=Scene();
     const bool changed=readable&&riflefx::Origin(g_nativeRifleMuzzle,scene,firstPerson!=0,
         (uint32_t)owner,(uint32_t)g_playerPawn,(uint32_t)Rd(g_weaponObj),GetTickCount64(),
-        witness,{g_camPos[0],g_camPos[1],g_camPos[2]},*location,replacement);
+        witness,{g_camPos[0],g_camPos[1],g_camPos[2]},*location,replacement,
+        g_nativeWeaponMuzzle!=0,(unsigned)Rd(g_gunVerts));
     const bool rifle=witness.kind==weaponreload::Kind::Valkyrie||Rd(g_gunVerts)==11387;
-    const bool receipt=readable&&rifle&&owner==(uintptr_t)(uint32_t)Rd(g_weaponObj)&&notes++<24;
+    const unsigned receiptSlot=witness.kind==weaponreload::Kind::Kasimov?1:Rd(g_gunVerts)==5799?2:0;
+    const bool receipt=readable&&(rifle||g_nativeWeaponMuzzle)&&owner==(uintptr_t)(uint32_t)Rd(g_weaponObj)&&notes[receiptSlot]++<8;
     if(receipt)
-        Log("rifle native emitter: mode=%d first=%d fresh=%d kind=%d changed=%d source=(%.3f,%.3f,%.3f) destination=(%.3f,%.3f,%.3f) [call receipt, not pixels]",
+        Log("rifle native emitter: mode=%d first=%d fresh=%d kind=%d changed=%d mesh=%d source=(%.3f,%.3f,%.3f) destination=(%.3f,%.3f,%.3f) [call receipt, not pixels]",
             g_nativeRifleMuzzle,firstPerson,witness.Current((uint32_t)g_playerPawn,(uint32_t)owner,GetTickCount64())?1:0,
-            int(witness.kind),changed?1:0,location->x,location->y,location->z,
+            int(witness.kind),changed?1:0,(int)Rd(g_gunVerts),location->x,location->y,location->z,
             changed?replacement.x:location->x,changed?replacement.y:location->y,changed?replacement.z:location->z);
+    // Scope only the measured local first-person muzzle call. Other callers
+    // of +130 (shells, impacts, AI, third person) retain their original vector.
+    const auto previousFx=spawningFx;const auto previousWitness=spawningWitness;
+    spawningFx=changed?(uintptr_t)self:0;spawningWitness=changed?witness:weaponmuzzle::Witness{};
     original(self,changed?&replacement:location,firstPerson);
-    if(changed&&TryAcquireSRWLockExclusive(&tracerFxLock)){
+    spawningFx=previousFx;spawningWitness=previousWitness;
+    if(changed&&rifle&&TryAcquireSRWLockExclusive(&tracerFxLock)){
         tracerFx=(uintptr_t)self;tracerPawn=g_playerPawn;tracerWeapon=owner;
         ReleaseSRWLockExclusive(&tracerFxLock);
     }
@@ -326,6 +353,33 @@ static void Install(){
     const auto method=PauseRttProbe::Pointer(PauseRttProbe::Pointer(object)+0x120);
     if(!Code(method,846,0xDEA566CA454CAFEBull)){
         Log("rifle native emitter: refused native method fingerprint");return;}
+    if(g_nativeMuzzleCodeCapture){
+        // Both bodies already fingerprinted/range-checked. Save before the
+        // detour changes the prologue, once at initialization; no GPU access.
+        static bool attempted=false;
+        if(!attempted){
+            attempted=true;char path[MAX_PATH]{};strcpy_s(path,g_logPath);
+            if(char* end=strrchr(path,'\\')){
+                sprintf_s(end+1,sizeof(path)-(end+1-path),"native-muzzle-code-%lu.bin",GetCurrentProcessId());
+                const bool saved=muzzlecode::Write(path,(uint32_t)wrapper,(const void*)wrapper,
+                    (uint32_t)method,(const void*)method);
+                Log("native-fx code capture: saved=%d wrapper=%08X/197 method=%08X/846 path=%s [pre-detour owned code; NOT visual PASS]",
+                    saved?1:0,(unsigned)wrapper,(unsigned)method,path);
+            }
+        }
+    }
+    if(g_nativeWeaponMuzzleDirection&&!spawnOriginal){
+        const auto spawn=PauseRttProbe::Pointer(PauseRttProbe::Pointer(object)+0x130);
+        if(!Code(spawn,431,0x7D212C7E3EE26640ull)){
+            Log("native-fx direction: REFUSE full spawn contract");return;
+        }
+        auto s=MH_CreateHook((void*)spawn,(void*)&SpawnHook,(void**)&spawnOriginal);
+        if(s!=MH_OK){spawnOriginal=nullptr;return;}
+        spawnCaller=method+0x1e3; // exact +130 CALL return, verified full parent body
+        s=MH_EnableHook((void*)spawn);
+        if(s!=MH_OK){MH_RemoveHook((void*)spawn);spawnOriginal=nullptr;spawnCaller=0;return;}
+        Log("native-fx direction: audited 431-byte spawn ret2C; exact local first-person caller armed");
+    }
     auto status=MH_CreateHook((void*)method,(void*)&Hook,(void**)&original);
     if(status!=MH_OK){original=nullptr;Log("rifle native emitter: CreateHook=%d",int(status));return;}
     status=MH_EnableHook((void*)method);

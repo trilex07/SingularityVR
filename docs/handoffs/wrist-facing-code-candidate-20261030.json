@@ -1,0 +1,24 @@
+{
+  "source": "f1a040b0bbc06c248dab68aabd12ca35f6ea03b4",
+  "branch": "fix/wrist-visibility-native-muzzle-followup",
+  "dllSha256": "1B95225CA79B1A1DF3AE72B68E398B23A7A10D885AC636F93C10B99D683CFD38",
+  "iniSha256": "4EF16A1E01A1242BD748699822EF2D86AC730442D4D33E90ED40B230BE0839B3",
+  "architecture": "x86 PE32",
+  "optimization": "/O2",
+  "stage": "build/next-weapon-reload/wrist-facing-code-20261030",
+  "preflight": "PASS",
+  "steamChanged": false,
+  "gameLaunched": false,
+  "physicalAcceptance": "PENDING",
+  "vfxStatus": "BROKEN except physical Volk PASS; no new VFX correction",
+  "nativeCodeCapture": "default OFF; staged Diagnostic/NativeMuzzleCodeCapture=1; one pre-detour 1067-byte private receipt",
+  "tests": {
+    "D3D9Ex": "PASS",
+    "compiledLockerABI": "PASS",
+    "wristDeterministic": "PASS",
+    "D3D9": "PASS",
+    "nativeMuzzle": "PASS"
+  },
+  "installedDll": "8EEC46A2E61CBC7179B40A3B6C7BD10641FBBF4D251D2AA622648092E09368F6",
+  "installedIni": "F2BDE6D2CB68BDC48D7F2AC5FA9A13712EF788E154E861AB354B5FA76C3E80C8"
+}

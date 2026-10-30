@@ -1,15 +1,25 @@
 #pragma once
 #include "weapon_muzzle_geometry.h"
 namespace riflefx {
+inline bool SpawnDirection(bool enabled,bool scoped,bool exactCaller,
+    std::uint32_t pawn,std::uint32_t weapon,std::uint64_t now,
+    const weaponmuzzle::Witness& witness,hipknife::V& result){
+    return enabled&&scoped&&exactCaller&&witness.Direction(pawn,weapon,now,result);
+}
 // Native PlayMuzzleFX takes (const FVector&, UBOOL), not (bool, vector).
-// Only the local player's looping Valkyrie emitter is in scope. AI, pistol,
+// Valkyrie follow-through is unchanged. Optional measured pistol/sniper spawn
+// correction uses this same native FVector argument. AI,
 // tracer endpoints, impact effects and template pointers remain unchanged.
 inline bool Origin(int mode,bool scene,bool firstPerson,std::uint32_t owner,
                    std::uint32_t pawn,std::uint32_t weapon,std::uint64_t now,
                    const weaponmuzzle::Witness& witness,hipknife::V camera,
-                   hipknife::V original,hipknife::V& result) {
+                   hipknife::V original,hipknife::V& result,
+                   bool measuredOther=false,unsigned meshVertices=0) {
+    const bool eligible=witness.kind==weaponreload::Kind::Valkyrie ||
+        (measuredOther&&((meshVertices==11389&&witness.kind==weaponreload::Kind::Kasimov)||
+                         (meshVertices==5799&&witness.kind==weaponreload::Kind::None)));
     if((mode!=2&&mode!=3)||!scene||!firstPerson||!owner||owner!=weapon||
-       witness.kind!=weaponreload::Kind::Valkyrie||!witness.Current(pawn,weapon,now)||
+       !eligible||!witness.Current(pawn,weapon,now)||
        !hipknife::Finite(camera)||!hipknife::Finite(original))return false;
     const auto position=camera+witness.relative;
     // Refuse a different world/origin epoch; this is not an offset calibration.

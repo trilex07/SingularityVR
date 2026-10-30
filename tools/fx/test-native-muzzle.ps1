@@ -5,7 +5,7 @@ New-Item -ItemType Directory -Force -Path $out | Out-Null
 $vswhere="${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
 $vs=& $vswhere -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
 $vcvars=Join-Path $vs 'VC\Auxiliary\Build\vcvarsall.bat'
-foreach($test in @('test-gore-policy','test-tmd-aim','test-tmd-native-adapter','test-body-equipment','test-measured-aim','test-weapon-steady','test-native-registry','test-native-muzzle','test-rifle-native-origin','test-scope-pip','test-shadow-world-receiver','test-shadow-first-person-receiver','test-vfx-eye-scale','test-hand-anchor-math','test-weapon-holster')){
+foreach($test in @('test-gore-policy','test-tmd-aim','test-tmd-native-adapter','test-body-equipment','test-measured-aim','test-weapon-steady','test-native-registry','test-native-muzzle','test-native-muzzle-code-capture','test-native-muzzle-spawn-abi','test-rifle-native-origin','test-scope-pip','test-shadow-world-receiver','test-shadow-first-person-receiver','test-vfx-eye-scale','test-hand-anchor-math','test-weapon-holster')){
     $source=Join-Path $repo "spikes\view_matrix\tests\$test.cpp"
     if(!(Test-Path -LiteralPath $source)){throw "Missing test $source"}
     $exe=Join-Path $out "$test.exe"; $obj=Join-Path $out "$test.obj"

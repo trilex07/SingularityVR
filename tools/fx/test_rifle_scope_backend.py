@@ -88,7 +88,8 @@ class NativeBackendTests(unittest.TestCase):
         rifle = (ROOT/'spikes/view_matrix/native_rifle_fx.inl').read_text()
         self.assertIn('original(self,changed?&replacement:location,firstPerson)', rifle)
         self.assertIn('0xDEA566CA454CAFEBull', rifle)
-        self.assertIn('notes++<24', rifle)
+        self.assertIn('static unsigned notes[3]{};', rifle)
+        self.assertIn('notes[receiptSlot]++<8', rifle)
         for guard in ('BindMovement()', '0x8A32507F9F7A934Aull', '0xAA63F1F63DEFF3D8ull',
                       'movingFx+0x88', 'movingPsc+templateOffset', 'riflefx::Lease(',
                       'if(changed)Track(', 'setLocation((void*)movingEmitter,position)'):

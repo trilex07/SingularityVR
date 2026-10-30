@@ -1,3 +1,22 @@
+## 2026-10-30 — Combined wrist gate + native muzzle direction correction
+
+- Authorized Steam diagnostic captured original native code; full-body analysis proves the one-shot helper uses a separate native aim vector for emitter rotation. Existing measured-origin forwarding did not propagate the rendered barrel direction.
+- Added default-OFF, exact-caller/owner/freshness-gated cosmetic direction forwarding for Valkyrie/Kasimov/Centurion. Volk remains unchanged. Inward wrist inspection hysteresis retained; no hand, aim, grip, reload or shader changes.
+- Native code/optimized DLL ABI checks, 1000 x86 stack forwarding calls, muzzle regressions and compiled WeaponLocker ABI PASS. PE32 /O2 build PASS; combined physical HUD/VFX acceptance PENDING.
+- Handoff: docs/handoffs/wrist-and-native-muzzle-direction-20261030.md. Deployment identity recorded separately; no physical/FPS claim.
+## 2026-10-30 — Inner wrist inspection gate; VFX still BROKEN
+
+- Physical 8EEC46A2: HUD visible; activation should require inward wrist rotation. VFX offset FAIL except Volk PASS.
+- L1/L2: stricter facing hysteresis (.80 enter/.65 leave) and full rotation sweeps PASS; actual D3D9/D3D9Ex pixel/reset tests PASS. No pose/aim/reload changes.
+- Native origin forwarding executed but was insufficient. Added default-OFF, one-shot pre-detour original-code capture for evidence-driven analysis; NOT a VFX fix. Steam unchanged; physical gate PENDING.
+- Handoff: `docs/handoffs/wrist-facing-vfx-evidence-20261030.md`.
+
+## 2026-10-30 — Inner wrist axis and native muzzle scope follow-up
+
+- Physical 57E1BFAD: weapons/grips OK; wrist visibility FAIL; VFX spawn offset FAIL (user).
+- L1/L2 focused checks PASS: inner panel corrected using original elbow/index native axes and remeasured actual cuff bounds; default-OFF cosmetic native origin extension for measured Kasimov/Centurion only. No hand/aim/reload or depth-route changes.
+- New build/deployment and physical outcome are recorded separately; no headset PASS inferred. Details: docs/handoffs/wrist-native-muzzle-followup-20261030.md.
+
 ## 2026-10-30 — HD physical follow-up / inner wrist
 
 - Physical A2D9042A: Kasimov scope/support/reload, Centurion aim, carried-part stability and wrist placement FAILED. Centurion reload ACK/firing occurred without a new crash in that session; earlier crash resolution is not inferred.
@@ -5429,3 +5448,4 @@ Toggle with **F6**.
   get cycled past unseen.
 - **Doc errors become code bugs.** `ENGINE_NOTES` recorded the backbuffer as `X8R8G8B8`; it is
   `A8R8G8B8`, and that mistake propagated straight into a `D3DERR_INVALIDCALL`.
+
