@@ -3589,6 +3589,25 @@ void RefreshEquipmentSourceAtInput(){
             }
         }
     }
+    // Bounded input-thread rejection receipt: the previous live log only
+    // showed HUD=0, hiding whether the field, owner or pointer failed.
+    // Read the SAME offsets/objects used above; no fallback or ownership bypass.
+    if(Rd(g_equipmentHudTrace)){
+        static unsigned notes=0;static int previousReason=-1;static uintptr_t previousPawn=0;
+        const uintptr_t ownerPawn=controller&&offPawn>=0&&Readable((void*)(controller+offPawn),4)?
+            *reinterpret_cast<const uintptr_t*>(controller+offPawn):0;
+        const uintptr_t rawHud=controller&&offShared>=0&&Readable((void*)(controller+offShared),4)?
+            *reinterpret_cast<const uintptr_t*>(controller+offShared):0;
+        const int reason=!controller?1:!pawn?2:offShared<0?3:offPawn<0?4:
+            ownerPawn!=pawn?5:!rawHud?6:!next.hud?7:0;
+        if(notes<12&&(reason!=previousReason||pawn!=previousPawn)){
+            ++notes;previousReason=reason;previousPawn=pawn;
+            Log("wrist source gate [%u/12]: reason=%d ctl=%08X cls=%08X pawn=%08X ownerPawn=%08X myHUDidx=%d pawnIdx=%d offsets=%d,%d rawHUD=%08X cachedHUD=%08X fields=%d,%d,%d,%d layout=%X,%X,%X",
+                notes,reason,(unsigned)controller,(unsigned)controllerClass,(unsigned)pawn,(unsigned)ownerPawn,
+                WantedIdx("myHUD"),WantedIdx("Pawn"),offShared,offPawn,(unsigned)rawHud,(unsigned)g_hudObject,
+                offTech,offPacks,offVials,offEnergy,g_upChildren,g_upNext,g_upOffset);
+        }
+    }
     InterlockedExchange(&g_equipmentTmdPointer,(LONG)next.tmd);
     if(TryAcquireSRWLockExclusive(&g_equipmentSourceLock)){
         g_equipmentSource=next;ReleaseSRWLockExclusive(&g_equipmentSourceLock);
