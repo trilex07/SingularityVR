@@ -2040,7 +2040,7 @@ WantedName g_wantNames[] = {
     // Run 200: ...and "do I even have an item". See the note at FindHudObject.
     { "mHealthPackCount", -1 }, { "mTMDEnergy", -1 },
     { "mE99TechCount", -1 }, { "mE99VialCount", -1 },
-    { "GetTMDEnergyMax", -1 }, { "sharedHUD", -1 },
+    { "GetTMDEnergyMax", -1 }, { "sharedHUD", -1 }, { "myHUD", -1 },
     // Run 201: READ ONLY - what does the game think the player's eye height is? See ReportEyeHeight.
     { "BaseEyeHeight", -1 }, { "EyeHeight", -1 },
     // ⭐ run 227: the one question every mesh-latch heuristic has been guessing at: is a weapon EQUIPPED.
@@ -2453,7 +2453,7 @@ static int g_nextShoulderExtraLeftCm[2]{18,18}; // Valkyrie, Volk; Kasimov uncha
 static int g_nextShoulderRadiusCm[2]{18,18};
 static int g_nextShoulderReachMs[2]{1800,1800};
 static int g_nextInsertRadiusCm[2]{18,18}; // Valkyrie, Volk; native clip-joint socket (candidate INI: 20)
-static volatile LONG g_seekerBackSlot=0,g_seekerBackRequest=0,g_seekerBackAvailable=0;
+static volatile LONG g_seekerBackSlot=0,g_seekerBackRequest=0,g_seekerBackAvailable=0,g_seekerWheelRequest=0;
 static int g_seekerSupportGrip=0,g_seekerProjectileAim=0;
 static seekergeometry::Witness g_seekerPose;
 static seekergeometry::Witness g_kasimovSupportPose;
@@ -2686,6 +2686,12 @@ static void MaybeLoadWheelCatalog() {
     wheel_catalog::Catalog cat;
     if (got > 0 && wheel_catalog::Parse(buf, cat) &&
         !cat.sectors.empty() && !cat.cycle.empty()) {
+        // Add the existing heavy item as a fifth catalog position, without
+        // changing ordinary acquisition, inventory masks or native cycling.
+        if(Rd(g_seekerBackSlot)){
+            const bool present=wheel_catalog::AddSeeker(cat);
+            if(present&&g_weaponWheelSlots==4)g_weaponWheelSlots=5;
+        }
         g_wwCatalog = cat;
         InterlockedExchange(&g_wwCatalogState, 1);
         Log("weapon wheel: direct-select catalog ready (%u sectors, %u cycle entries)",
@@ -3536,7 +3542,7 @@ void RefreshEquipmentSourceAtInput(){
         const uintptr_t cc=*reinterpret_cast<const uintptr_t*>(controller+OBJ_CLASS);
         if(cc!=controllerClass||((offShared<0||offPawn<0)&&((DWORD)(tick-retry)>=1000))){
             controllerClass=cc;retry=tick;
-            offShared=PropOffsetInChain(cc,"sharedHUD");
+            offShared=PropOffsetInChain(cc,"myHUD");
             offPawn=PropOffsetInChain(cc,"Pawn");
         }
         if(offShared>=0&&offPawn>=0&&
@@ -3545,7 +3551,7 @@ void RefreshEquipmentSourceAtInput(){
             const uintptr_t hud=*reinterpret_cast<const uintptr_t*>(controller+offShared);
             if(hud&&Readable((void*)(hud+OBJ_CLASS),4)){
                 const uintptr_t hc=*reinterpret_cast<const uintptr_t*>(hud+OBJ_CLASS);
-                // Ownership comes from the local controller's sharedHUD field;
+                // Ownership comes from the local controller's myHUD field;
                 // required properties validate its shape without a GObjects scan.
                 if(hc){
                     if(hc!=hudClass||((offTech<0||offPacks<0||offVials<0||offEnergy<0)&&
@@ -11980,7 +11986,10 @@ void SyncXRInput(XrTime displayTime) {
             const weaponwheel_direct::Catalog view{ secs, (int)n, cyc, (int)m };
             const LONG curV = Rd(g_gunVerts);
             const LONG tgtV = weaponwheel_direct::TargetVertsForSector(view, (int)sel);
-            if (Rd(g_ownedWeaponWheel) && NativeOwnedInventory::Ready()) {
+            if(tgtV==12444){
+                pulses=0;
+                InterlockedExchange(&g_seekerWheelRequest,Rd(g_seekerBackAvailable));
+            } else if (Rd(g_ownedWeaponWheel) && NativeOwnedInventory::Ready()) {
                 // Select an actually possessed item on the engine input thread.
                 // Native two-slot cycling cannot reach retained extra guns.
                 pulses=0;
@@ -31697,7 +31706,7 @@ static bool DrawUiRemasterWheelEye(IDirect3DDevice9* dev,int eye,int cx,int cy,
                                    const wheel_layout::Metrics& m,int slots,int selected,
                                    const long* verts,const bool* named,int clip,int reserve,
                                    int backW,int backH){
-    if(!uiremaster::WheelEnabled(Rd(g_uiRemasterWheel)!=0)||slots!=4||!g_origDrawPrimUP||
+    if(!uiremaster::WheelEnabled(Rd(g_uiRemasterWheel)!=0)||(slots!=4&&slots!=5)||!g_origDrawPrimUP||
        !LoadUiRemasterNeutral(dev))return false;
     IDirect3DTexture9* lang=LoadUiRemasterLocalized(dev,
         PolishLocalization::PL().IsPolishEnabled());
@@ -31705,7 +31714,10 @@ static bool DrawUiRemasterWheelEye(IDirect3DDevice9* dev,int eye,int cx,int cy,
     const int half=backW/2;
     const uiremaster::Rect chassis{cx-m.outerR,cy-m.outerR,cx+m.outerR,cy+m.outerR};
     if(!uiremaster::Valid(chassis,eye,half,backW,backH))return false;
-    for(int i=0;i<slots;++i)if(!uiremaster::SpriteValid(uiremaster::WheelIcon(verts[i])))return false;
+    for(int i=0;i<slots;++i){
+        if(verts[i]==12444){if(!g_hudAtlasTex||!hud_atlas::Find(g_hudAtlas,"dev-seeker"))return false;}
+        else if(!uiremaster::SpriteValid(uiremaster::WheelIcon(verts[i])))return false;
+    }
     if(!wheelstate::Prepare(dev,wheelstate::Pass::Atlas))return false;
     dev->SetFVF(D3DFVF_XYZRHW|D3DFVF_TEX1);
     bool good=DrawUiRemasterSprite(dev,g_uiRemasterNeutral,chassis,uiremaster::wheelChassis);
@@ -31717,7 +31729,11 @@ static bool DrawUiRemasterWheelEye(IDirect3DDevice9* dev,int eye,int cx,int cy,
         const int x=(int)lroundf(ix),y=(int)lroundf(iy);
         const uiremaster::Rect icon{x-m.iconHalf,y-m.iconHalf,x+m.iconHalf,y+m.iconHalf};
         if(!uiremaster::Valid(icon,eye,half,backW,backH))return false;
-        good &= DrawUiRemasterSprite(dev,g_uiRemasterNeutral,icon,uiremaster::WheelIcon(verts[i]));
+        if(verts[i]==12444){
+            const auto* r=hud_atlas::Find(g_hudAtlas,"dev-seeker");
+            good &= DrawUiRemasterSprite(dev,g_hudAtlasTex,icon,
+                uiremaster::Atlas(r->x,r->y,r->w,r->h,g_hudAtlas.width,g_hudAtlas.height));
+        }else good &= DrawUiRemasterSprite(dev,g_uiRemasterNeutral,icon,uiremaster::WheelIcon(verts[i]));
         if(i==selected){
             const uiremaster::Rect ring{x-m.iconHalf-5,y-m.iconHalf-5,
                                         x+m.iconHalf+5,y+m.iconHalf+5};
@@ -31747,7 +31763,7 @@ static int DrawUiRemasterWheelPair(IDirect3DDevice9* dev,const wheel_layout::Met
                                     const int (&cx)[2],const int (&cy)[2],int slots,int selected,
                                     const long* verts,const bool* named,int clip,int reserve,
                                     int backW,int backH){
-    if(!uiremaster::WheelEnabled(Rd(g_uiRemasterWheel)!=0)||slots!=4||!g_origDrawPrimUP||!g_origSetRenderTarget)return false;
+    if(!uiremaster::WheelEnabled(Rd(g_uiRemasterWheel)!=0)||(slots!=4&&slots!=5)||!g_origDrawPrimUP||!g_origSetRenderTarget)return false;
     const UINT side=(UINT)(2*m.outerR+16);
     if(side<16||side>2048)return false;
     uiremaster::Vertex vertices[12]{};
@@ -31927,6 +31943,7 @@ void DrawWeaponWheel(IDirect3DDevice9* dev) {
     bool slotNamed[8]{};
     for (int i = 0; i < slots && i < 8; ++i) {
         const long pv = slotVerts[i];
+        if(pv==12444){slotNamed[i]=Rd(g_seekerBackAvailable)!=0;continue;}
         if (ownedReady) {
             slotNamed[i]=(ownedMask & inventoryretention::WeaponBit((int)pv))!=0;
             continue;
@@ -37944,7 +37961,7 @@ void LoadIniSettings() {
     InterlockedExchange(&g_equipmentHudSuppress,GetPrivateProfileIntA("Render","EquipmentWristSuppressHealth",0,path)?1:0);
     InterlockedExchange(&g_equipmentHudPolish,GetPrivateProfileIntA("Render","EquipmentWristPolish",0,path)?1:0);
     InterlockedExchange(&g_equipmentHudNormalSign,GetPrivateProfileIntA("Render","EquipmentWristNormalSign",1,path)<0?-1:1);
-    InterlockedExchange(&g_equipmentHudScalePct,std::clamp((LONG)GetPrivateProfileIntA("Render","EquipmentWristScalePct",100,path),60L,150L));
+    InterlockedExchange(&g_equipmentHudScalePct,std::clamp((LONG)GetPrivateProfileIntA("Render","EquipmentWristScalePct",110,path),60L,150L));
     InterlockedExchange(&g_equipmentHudOcclusion,GetPrivateProfileIntA("Render","EquipmentWristOcclusion",0,path)?1:0);
     wristdepth::state.enabled=Rd(g_equipmentHud)&&Rd(g_equipmentHudOcclusion);
     InterlockedExchange(&g_equipmentHudTextQuarterTurn,GetPrivateProfileIntA("Render","EquipmentWristTextQuarterTurn",1,path)?1:0);

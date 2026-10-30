@@ -1,3 +1,8 @@
+## 2026-10-30 — Wrist physical acceptance; larger panel/E99/Seeker wheel
+
+- Wrist 06609B2D: PHYSICALLY_VERIFIED by user; VFX acceptance preserved.
+- New changes: 110% default size, native PlayerController.myHUD source for E99, fifth owned-Seeker wheel selection. L1 tests PASS; new physical acceptance PENDING.
+- Evidence and grouped test: docs/handoffs/wrist-e99-seeker-wheel-20261030.md.
 ## 2026-10-30 — Combined wrist gate + native muzzle direction correction
 
 - Authorized Steam diagnostic captured original native code; full-body analysis proves the one-shot helper uses a separate native aim vector for emitter rotation. Existing measured-origin forwarding did not propagate the rendered barrel direction.
@@ -5448,4 +5453,5 @@ Toggle with **F6**.
   get cycled past unseen.
 - **Doc errors become code bugs.** `ENGINE_NOTES` recorded the backbuffer as `X8R8G8B8`; it is
   `A8R8G8B8`, and that mistake propagated straight into a `D3DERR_INVALIDCALL`.
+
 

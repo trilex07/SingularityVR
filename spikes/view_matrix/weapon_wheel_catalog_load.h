@@ -12,6 +12,15 @@ namespace wheel_catalog {
 struct Sector { int index = -1; long verts = 0; std::string atlas; std::string label; };
 struct Catalog { std::vector<Sector> sectors; std::vector<long> cycle; };
 
+// Reuse an unused catalog position; never add Seeker to ordinary cycling.
+inline bool AddSeeker(Catalog& cat){
+    for(const auto& row:cat.sectors)if(row.verts==12444)return true;
+    for(auto& row:cat.sectors)if(row.index>0&&row.verts==0){
+        row.verts=12444;row.atlas="dev-seeker";row.label="Seeker";return true;
+    }
+    return false;
+}
+
 inline const char* SkipWs(const char* p) {
     while (*p == ' ' || *p == '\t' || *p == '\n' || *p == '\r') ++p;
     return p;

@@ -118,7 +118,9 @@ static bool Bind(const seekerslot::Snapshot& s){
 static uint32_t pendingPawn=0,pendingTarget=0;
 static ULONGLONG pendingUntil=0;
 static void Poll(){
-    const LONG requested=InterlockedExchange(&g_seekerBackRequest,0);
+    const LONG wheelRequest=InterlockedExchange(&g_seekerWheelRequest,0);
+    const LONG backRequest=InterlockedExchange(&g_seekerBackRequest,0);
+    const LONG requested=wheelRequest?wheelRequest:backRequest;
     if(!Rd(g_seekerBackSlot)){InterlockedExchange(&g_seekerBackAvailable,0);state={};return;}
     static ULONGLONG next=0;const auto now=GetTickCount64();
     if(!requested&&now<next)return;next=now+100;
@@ -139,7 +141,8 @@ static void Poll(){
             stage=!ready?stage:(uint32_t)requested!=s.pawn?"request-pawn-changed":"request-context";
             Receipt(s,true);return;
         }
-        const auto target=state.ToggleTarget(s);if(!target){stage="no-toggle-target";Receipt(s,true);return;}
+        const auto target=wheelRequest?state.seeker:state.ToggleTarget(s);if(!target){stage="no-toggle-target";Receipt(s,true);return;}
+        if(wheelRequest&&target==s.current)return; // selecting Seeker again never toggles it away
         using namespace NativeOwnedInventory;
         // Existing owned selector ABI: FName by value, ret8. It traverses the
         // possession chain and sets the EXISTING item, with no creation path.

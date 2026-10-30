@@ -8,7 +8,7 @@
 #include <cstdio>
 #include <cstdint>
 #include <map>
-volatile LONG g_seekerBackSlot=1,g_seekerBackRequest=0,g_seekerBackAvailable=0;
+volatile LONG g_seekerBackSlot=1,g_seekerBackRequest=0,g_seekerBackAvailable=0,g_seekerWheelRequest=0;
 volatile LONG g_gamePaused=0,g_inCinematic=0,g_vrMenuClass=0,g_vrUiMenu=0,g_panelOpen=0;
 constexpr unsigned OBJ_CLASS=32;
 static LONG Rd(volatile LONG& p){return InterlockedCompareExchange(&p,0,0);}
@@ -156,6 +156,13 @@ int main(){
     badMethod=true;refusal();badMethod=false;
     g_seekerBackRequest=(LONG)Ptr(pawn);currentPawn=Ptr(pawn)+4;
     NativeSeekerSlot::Poll();assert(selected==100&&!g_seekerBackAvailable);currentPawn=Ptr(pawn);
+    // Wheel is explicit selection, not the back-holster toggle.
+    g_seekerWheelRequest=(LONG)Ptr(pawn);NativeSeekerSlot::Poll();
+    assert(fields[Ptr(pawn)+0x3d4]==Ptr(seeker));
+    const auto wheelCount=selected;
+    g_seekerWheelRequest=(LONG)Ptr(pawn);NativeSeekerSlot::Poll();assert(selected==wheelCount);
+    assert(fields[Ptr(pawn)+0x3d4]==Ptr(seeker));
+    Request();assert(fields[Ptr(pawn)+0x3d4]==Ptr(rifle));
     // A selector returning is not proof of equip. Keep pending until observed.
     selectorCompletes=false;Request();assert(NativeSeekerSlot::pendingTarget==Ptr(seeker));
     NativeSeekerSlot::pendingUntil=0;NativeSeekerSlot::Poll();

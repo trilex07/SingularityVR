@@ -56,5 +56,12 @@ int main() {
     Expect(weaponwheel_direct::ShortestCycleSteps(8297, 5799, cyc, 4) == 2, "wrap distance");
     Expect(weaponwheel_direct::ShortestCycleSteps(1, 5799, cyc, 4) == -1, "unknown current refused");
     Expect(weaponwheel_direct::ShortestCycleSteps(5799, 1, cyc, 4) == -1, "unknown target refused");
+    const auto cycle=cat.cycle;
+    Expect(wheel_catalog::AddSeeker(cat),"Seeker added to unused slot");
+    Expect(cat.sectors[5].verts==12444 && cat.sectors[5].atlas=="dev-seeker","Seeker identity and icon");
+    Expect(wheel_catalog::AddSeeker(cat) && cat.sectors[6].verts==0,"no duplicate Seeker");
+    Expect(cat.cycle==cycle,"native ordinary cycling unchanged");
+    wheel_catalog::Catalog full;full.sectors.push_back({1,5799,"a","b"});
+    Expect(!wheel_catalog::AddSeeker(full),"never replace an occupied sector");
     return g_fails == 0 ? 0 : 1;
 }
