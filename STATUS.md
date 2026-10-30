@@ -1,3 +1,11 @@
+## 2026-10-30 — HD physical follow-up / inner wrist
+
+- Physical A2D9042A: Kasimov scope/support/reload, Centurion aim, carried-part stability and wrist placement FAILED. Centurion reload ACK/firing occurred without a new crash in that session; earlier crash resolution is not inferred.
+- Corrected original-muzzle Y reflection, Kasimov mixed-palette held-root rebase, same-frame native lens/body alignment and final-palette socket/optic publication. Kasimov insertion uses the carried clip joint rather than raw controller origin. Frame-stable carried pose/validity now includes Centurion.
+- Opt-in inner wrist surface with matching text basis and source-derived +69 mm clearance. Outer-mode default and legacy health display preserved.
+- Focused actual-asset math, native reload/ABI, D3D9/D3D9Ex pixels, hands/TMD/OLED/WeaponLocker regressions PASS. Physical acceptance PENDING; no launch during implementation.
+- Evidence, limits and grouped acceptance: `docs/handoffs/hd-physical-followup-wrist-20261030.md`.
+
 ## 2026-10-30 — Wrist/Centurion physical failure follow-up
 
 - Physical `3FE6FE8E`: wrist HUD BROKEN (invisible), carried Centurion cylinder flickers, Centurion firing crashes in XAudio2_5.dll +4DE73. Reload/native ammunition acknowledgement works. Save ownership is not a proven cause.

@@ -1,6 +1,11 @@
 #pragma once
 #include "weapon_reload_runtime.h"
 namespace weaponmuzzle {
+// prepare_gloves.read_psk already applies UEViewer's Y reflection. These are
+// native cooked-vertex coordinates; reflecting its bind a second time placed
+// the shot origin 229.3914 UU across the receiver's actual muzzle.
+inline constexpr hipknife::V CenturionMuzzle{.000005440695f,-114.69569557f,63.52872816f};
+inline constexpr hipknife::V CenturionForward{.00000005f,.000000015f,1.f};
 // Named muzzle_flash relative to named weapon cog from ORIGINAL PSKs. These
 // are bone-local UU, not controller offsets. Verify via audit_weapon_mounts.py.
 inline bool RootPoint(weaponreload::Kind kind,hipknife::V& out){

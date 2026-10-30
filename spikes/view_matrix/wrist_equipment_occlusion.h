@@ -1,6 +1,7 @@
 #pragma once
 #include <cmath>
 #include <cstring>
+#include "hip_knife.h"
 
 // Exact-scene depth attachment split, not a depth copy. Native world draws
 // keep their original D24S8; the original late Clear and foreground draws use
@@ -21,6 +22,9 @@ using SetDepth=HRESULT (STDMETHODCALLTYPE*)(IDirect3DDevice9*,IDirect3DSurface9*
 struct Camera { float m[16]{};int conv=0;D3DVIEWPORT9 vp{};bool valid=false; };
 struct Projected { float x=0,y=0,z=0,rhw=0,u=0,v=0; };
 inline void QuarterTurn(float& x,float& y){const float old=x;x=y;y=1.f-old;}
+inline hipknife::V SurfacePoint(float x,float y,float z,float ox,float oy,float oz,bool inner){
+    return inner?hipknife::V{ox+z,oy-x,oz-y}:hipknife::V{ox-z,oy-x,oz+y};
+}
 // A screen-mask quad needs the same projective W up to one common scale.
 // Refuse different world/foreground projection families instead of warping it.
 inline bool CompatibleW(const Projected* world,const Projected* foreground){

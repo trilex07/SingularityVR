@@ -38,8 +38,11 @@ static void TestOriginal(const weaponreloadanim::Spec& spec,const std::string& r
     assert(Palette(*data,timing.inFrame,false,parent,data->slots*3,heldResult));
     assert(!std::memcmp(heldResult+data->root*12,heldGpu,12*sizeof(float)));
     assert(std::memcmp(native+data->root*12,parent+data->root*12,12*sizeof(float))!=0);
-    for(unsigned slot=0;slot<data->slots;++slot)if(slot!=data->root)
-        assert(!std::memcmp(native+slot*12,parent+slot*12,12*sizeof(float)));
+    for(unsigned slot=0;slot<data->slots;++slot)if(slot!=data->root){
+        if(kind==Kind::Kasimov)
+            assert(!std::memcmp(heldGpu,parent+slot*12,12*sizeof(float)));
+        else assert(!std::memcmp(native+slot*12,parent+slot*12,12*sizeof(float)));
+    }
     assert(ParentPalette(*data,native,data->slots*3,nullptr,parent));
     assert(!std::memcmp(native,parent,data->slots*12*sizeof(float))); // end/cancel = unmodified parent
     const unsigned clip=ClipSlot(kind);

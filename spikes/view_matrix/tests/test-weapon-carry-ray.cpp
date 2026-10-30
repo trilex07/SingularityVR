@@ -21,7 +21,9 @@ int main(){
     assert(frameWrist.Select(19,Kind::Volk,3,4,70,true,newPose,selected,&reused)&&!reused);
     assert(selected.m[3][0]==.5f);
     assert(!frameWrist.Select(19,Kind::Volk,3,4,71,false,newPose,selected,&reused));
-    assert(frameWrist.Select(19,Kind::Volk,3,4,71,true,newPose,selected,&reused)&&!reused);
+    // A missing depth-prime witness cannot become colour-only geometry later
+    // in the same frame. Retry on the next frame, not midway through its eyes.
+    assert(!frameWrist.Select(19,Kind::Volk,3,4,71,true,newPose,selected,&reused)&&reused);
     assert(frameWrist.Select(20,Kind::Volk,3,4,71,true,newPose,selected,&reused));
     assert(frameWrist.Select(20,Kind::Volk,3,5,71,true,oldPose,selected,&reused)&&!reused);
     assert(weaponcarry::CarrySectionEligible(Kind::Valkyrie,false));
