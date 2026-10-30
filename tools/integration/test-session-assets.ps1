@@ -24,6 +24,16 @@ function Assert([bool]$condition,[string]$message){if(-not $condition){throw $me
 function MustRefuse([scriptblock]$call){$refused=$false;try{& $call | Out-Null}catch{$refused=$true};Assert $refused 'Expected guarded refusal'}
 Put (Join-Path $game 'Binaries\Singularity.exe') 'FAKE NON-EXECUTABLE FIXTURE; NEVER LAUNCHED'
 $files=@()
+$seekerAssets=@('Binaries/vr-assets/reload/seeker/seeker_reload.svwa',
+ 'Binaries/vr-assets/reload/seeker/seeker_clip.svrk','Binaries/vr-assets/reload/seeker/seeker_clip.svrt',
+ 'Binaries/vr-assets/reload/seeker/AR_Steerable_d.dds','Binaries/vr-assets/reload/seeker/AR_Steerable_n.dds')
+foreach($relative in $seekerAssets){
+ $source=Join-Path (Join-Path $candidate 'payload') $relative
+ Put $source ('candidate '+$relative)
+ $live=Join-Path $game $relative
+ if($relative.EndsWith('seeker_reload.svwa')){Put $live ('before '+$relative)}
+ $files += [pscustomobject]@{path=$relative;before=(Hash $live);after=(Hash $source)}
+}
 foreach($relative in @('Binaries/texture-override-remaster/revert_d2.dds','Binaries/vr-assets/localization/pl/polish_text.jsonl','Binaries/vr-assets/audio/polish/story/new.wav',
     'RvGame/CookedPC/UI_SinglePlayer_SF.xxx',
     'Binaries/texture-override-remaster/ar_sniper_rifle_d.dds')){

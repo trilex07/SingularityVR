@@ -25,9 +25,12 @@ static void BeginSeekerNativeAmmo(void* self){
     }
 }
 static void PollSeekerNativeAmmo(void* self){
-    auto& t=g_seekerAmmoTransaction;const auto now=GetTickCount64();
+    if(!g_seekerNativeAmmoProbe)return;
+    auto& t=g_seekerAmmoTransaction;
+    if(!t.active)return;
+    const auto now=GetTickCount64();
     if(g_nextReload[3]){t.active=false;return;}
-    if(!g_seekerNativeAmmoProbe||!t.Due(now))return;
+    if(!t.Due(now))return;
     // Natural interpreter/native call on the initiating engine thread only.
     if((uintptr_t)self!=t.weapon&&(uintptr_t)self!=t.pawn)return;
     seekerslot::Snapshot s;nativerefill::Counts after;
