@@ -16,7 +16,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'knife'))
 from fit_hand_grip import read_psk, posed, intersections, inside, distance
 
 
-def fit(hands_path, gun_path):
+def fit(hands_path, gun_path, include_descendants=False):
     hands, gun = read_psk(hands_path), read_psk(gun_path)
     names, parents, _, bind, _, weights, wedges, faces = hands
     wrist = names.index('l_arm_wrist')
@@ -26,9 +26,13 @@ def fit(hands_path, gun_path):
             descendants.add(i)
     hf = np.array([f[:3] for f in faces if all(
         all(b in descendants for _, b in weights[wedges[i][0]]) for i in f[:3])])
-    gn, _, _, gb, gp, gw, gwed, gf = gun
+    gn, gparents, _, gb, gp, gw, gwed, gf = gun
     clip = gn.index('clip')
-    selected = {i for i in range(len(gp)) if all(b == clip for _, b in gw[i])}
+    clip_bones={clip}
+    if include_descendants:
+        for i,parent in enumerate(gparents):
+            if i and parent in clip_bones:clip_bones.add(i)
+    selected = {i for i in range(len(gp)) if all(b in clip_bones for _, b in gw[i])}
     cf = np.array([[gwed[i][0] for i in f[:3]] for f in gf
                    if all(gwed[i][0] in selected for i in f[:3])])
     # Both meshes enter the SAME native UE3 axes, undoing UEViewer Y once.
@@ -84,5 +88,6 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--hands', type=Path, required=True)
     parser.add_argument('--gun', type=Path, required=True)
+    parser.add_argument('--include-descendants', action='store_true')
     args = parser.parse_args()
-    print(json.dumps(fit(args.hands, args.gun), indent=2))
+    print(json.dumps(fit(args.hands, args.gun, args.include_descendants), indent=2))

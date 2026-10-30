@@ -43,7 +43,7 @@ try {
     if([BitConverter]::ToUInt32($bytes,$pe) -ne 0x4550 -or
        [BitConverter]::ToUInt16($bytes,$pe+4) -ne 0x14c -or
        [BitConverter]::ToUInt16($bytes,$pe+24) -ne 0x10b){throw 'Not x86 PE32'}
-    $inputs=@('texture_injector.cpp','resource_native_cache.h','resource_positive_cache.h','remaster_scope.h','texture_hook_timing.h','texture_groups.h','targets_generated.h','dinput8.def','../view_matrix/texture_bridge_contract.h') | ForEach-Object {
+    $inputs=@('texture_injector.cpp','seeker_preload.h','seeker_targets_generated.h','resource_native_cache.h','resource_positive_cache.h','remaster_scope.h','texture_hook_timing.h','texture_groups.h','targets_generated.h','dinput8.def','../view_matrix/texture_bridge_contract.h') | ForEach-Object {
         [ordered]@{name=$_;sha256=(Get-FileHash -LiteralPath (Join-Path $here $_)).Hash}
     }
     [ordered]@{builtAt=(Get-Date).ToString('o');branch=(& git -C $root branch --show-current).Trim();

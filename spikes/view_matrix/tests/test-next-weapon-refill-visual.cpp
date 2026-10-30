@@ -47,7 +47,7 @@ int main(int argc,char** argv){
             assert(weaponreloadanim::Palette(data,true,seatFrame,native,regs,allTracks));
             assert(SeatingPalette(data,seatFrame,native,regs,out));
             for(unsigned slot=0;slot<data.slots;++slot){
-                const auto* expected=slot==ClipSlot(profile.kind)?allTracks:native;
+                const auto* expected=SeatingSlot(profile.kind,slot)?allTracks:native;
                 assert(!std::memcmp(out+slot*12,expected+slot*12,12*sizeof(float)));
             } // every non-magazine native bone, including root/scope/fire tracks, byte-exact
             float parent[16*12]{};assert(ParentPalette(data,native,regs,nullptr,parent));
@@ -85,5 +85,5 @@ int main(int argc,char** argv){
     }
     hipknife::V centre;assert(!weaponreloadproto::MidEye({},{},centre));
     assert(!weaponreloadproto::MidEye({},{1,0,0},centre));
-    std::printf("PASS 3 original clip tracks: 15003 samples,180ms child-only seat/live first-shot bones, immediate root/scope release and legacy OFF; %u physical-left shoulder poses\n",poses);
+    std::printf("PASS 4 original clip tracks: 180ms child-only seat/live first-shot bones, immediate root/scope release and legacy OFF; %u physical-left shoulder poses\n",poses);
 }

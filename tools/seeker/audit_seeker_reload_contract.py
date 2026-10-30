@@ -1,0 +1,77 @@
+"""Read-only script inheritance and source motion audit for Seeker reload."""
+import argparse
+import hashlib
+import json
+from pathlib import Path
+import sys
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'title'))
+from ue3_layout import inspect
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'reload'))
+from inspect_centurion_animation import read_psa
+from inspect_native_reload import PE, u32
+
+EXE_SHA = 'bd459acd87d4b82693928dee4ed437c086d5928a8e0428f3ad54b6fc114c0f51'
+SHARED_VTABLE = 0x192f200  # independently derived in docs/centurion-native-reload.md
+ROCKET_VTABLE = 0x1931648  # independently derived in tools/reload/audit_seeker_native.py
+ATTEMPT_SLOT = 0x4c4     # audited native wrapper displacement
+ATTEMPT_METHOD = 0xea3710
+
+
+def one(rows, label):
+    if len(rows) != 1: raise ValueError(f'{label}: expected one export, got {len(rows)}')
+    return rows[0]
+
+
+def audit(game, seeker, psa, exe):
+    core = inspect(game, include_all=True)['exports']
+    source = inspect(seeker, include_all=True)['exports']
+    shared = one([e for e in core if e['name'] == 'RvWeaponShared' and e['cls'] == 0], 'shared class')
+    rocket = one([e for e in core if e['name'] == 'RvWeaponShared_RocketLauncher' and e['cls'] == 0], 'rocket class')
+    middle = one([e for e in core if e['index'] == rocket['super_index']], 'rocket parent')
+    if middle['name'] != 'RvWeaponShared_RememberProjectile' or middle['super_index'] != shared['index']:
+        raise ValueError('rocket inheritance drift')
+    children = [e['name'] for e in core if e['outer'] in (rocket['index'], middle['index'])]
+    overrides = sorted(set(children) & {'AttemptReload','ServerStartReload','RefillClip','ReloadFinished'})
+    archetype = one([e for e in source if e['name'] == 'Shared_ARSteerable'], 'Seeker archetype')
+    if archetype['class_name'] != 'RvWeaponShared_RocketLauncher':
+        raise ValueError('Seeker archetype class drift')
+    prop = {p['name']: p.get('value') for p in archetype['properties']}
+    if prop.get('mUsesAmmoType') != 'ERAT_ARSteerable' or prop.get('mbIsHeavyWeapon') is not True:
+        raise ValueError('Seeker ammo/heavy archetype drift')
+    names, sequences, _ = read_psa(psa.read_bytes())
+    reload = one([s for s in sequences if s['name'] == 'Reload'], 'Reload sequence')
+    if reload['frames'] != 54 or reload['rate'] != 24 or 'clip' not in names:
+        raise ValueError('source reload drift')
+    pe = PE(exe.read_bytes())
+    exe_sha = hashlib.sha256(pe.data).hexdigest()
+    if exe_sha != EXE_SHA:
+        raise ValueError('owned executable identity drift')
+    shared_method = u32(pe.read(SHARED_VTABLE+ATTEMPT_SLOT, 4), 0)
+    rocket_method = u32(pe.read(ROCKET_VTABLE+ATTEMPT_SLOT, 4), 0)
+    if shared_method != rocket_method or rocket_method != ATTEMPT_METHOD:
+        raise ValueError('Seeker native AttemptReload vtable drift')
+    return {'game_sha256':hashlib.sha256(game.read_bytes()).hexdigest(),
+            'exe_sha256':exe_sha,
+            'seeker_package_sha256':hashlib.sha256(seeker.read_bytes()).hexdigest(),
+            'psa_sha256':hashlib.sha256(psa.read_bytes()).hexdigest(),
+            'script':{'rocket_parent':'RvWeaponShared_RememberProjectile -> RvWeaponShared','relevant_overrides':overrides,
+                      'seeker_class':archetype['class_name'],
+                      'ammo_type':prop['mUsesAmmoType'],'heavy_weapon':True,
+                      'reload_frames':54,'reload_fps':24},
+            'native':{'method_vtable':'PASS: RocketLauncher and Shared both 0xEA3710 at slot 0x4C4 in pinned owned PE',
+                      'eligibility':'audited Shared method checks clip < capacity and reserve > 0; Seeker runtime counts not witnessed',
+                      'Seeker_clip_reserve_commit':'NOT VERIFIED',
+                      'reason':'Same native method is proven statically, but Seeker live clip/reserve and native acknowledgment are not captured'},
+            'gate':'Keep Seeker feature default OFF; require local Seeker clip/reserve before-after and one acknowledgment in MAIN headset acceptance'}
+
+
+if __name__ == '__main__':
+    p = argparse.ArgumentParser(description=__doc__)
+    for key in ('game','seeker','psa','exe','output'):
+        p.add_argument('--'+key,type=Path,required=True)
+    a = p.parse_args()
+    report = audit(a.game,a.seeker,a.psa,a.exe)
+    a.output.parent.mkdir(parents=True,exist_ok=True)
+    a.output.write_text(json.dumps(report,indent=2)+'\n')
+    print(json.dumps(report,indent=2))

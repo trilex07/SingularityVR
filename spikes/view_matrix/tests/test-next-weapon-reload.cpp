@@ -341,6 +341,7 @@ static void TestSharedStateWeaponTransitions(){
     State shared;
     std::uint64_t now=1000;
     for(unsigned cycle=0;cycle<30;++cycle)for(const auto& p:profiles){
+        if(p.kind==Kind::Seeker)continue; // source-axis gate has its own fixture
         Fixture x(p);x.s=shared;x.f.gesture.weapon=100+cycle*3+unsigned(p.kind);
         x.f.gesture.nowMs=now;
         auto r=x.Tick(false,x.f.gesture.socket);
@@ -379,6 +380,7 @@ int main(int argc,char** argv){
     TestReachGesture(profiles[0]);TestReachGesture(profiles[1]);
     unsigned transactions=0;
     for(const auto& p:profiles){
+        if(p.kind==Kind::Seeker)continue;
         TestDefaultsAndIdentity(p);TestCancellation(p);TestInsertComfort(p);TestAmmoAndTimeout(p);TestEveryPhase(p);TestCircleAndOwnership(p);
         for(unsigned cycle=0;cycle<10000;++cycle){
             Fixture x(p);x.Insert();
