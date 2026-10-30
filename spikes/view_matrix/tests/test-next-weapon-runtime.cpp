@@ -117,6 +117,7 @@ static void TestBridge(){
     assert(PhysicalMatrix(scaled)); // existing WorldScale200% / GunScale400% combination
     scaled.m[0][0]=32;assert(!PhysicalMatrix(scaled));
     for(const auto& profile:weaponreloadproto::profiles){
+        if(profile.kind==Kind::Seeker)continue; // directional insertion fixture is separate
         weaponreloadproto::State state;weaponreloadproto::Frame f;weaponreloadproto::Calibration config;
         config.ready=true;config.revision=1;config.gesture.socketRadius=.16f;config.gesture.pullDistance=.30f;
         f.enabled=f.liveIdentityVerified=true;f.kind=profile.kind;f.objectName=profile.objectName;f.meshWedges=profile.meshWedges;
@@ -158,7 +159,7 @@ static void TestBridge(){
         assert(DrawPart(s.kind,0,0,s.vertices,0,s.triangles+1)==Part::None);
         assert(DrawPart(s.kind,1,0,s.vertices,0,s.triangles)==Part::None);
         assert(DrawPart(s.kind,0,1,s.vertices,0,s.triangles)==Part::None);
-        if(s.kind!=Kind::Volk){const unsigned first=s.kind==Kind::Valkyrie?11378:11292,extra=s.kind==Kind::Valkyrie?8:168;
+        if(s.kind!=Kind::Volk&&s.kind!=Kind::Seeker){const unsigned first=s.kind==Kind::Valkyrie?11378:11292,extra=s.kind==Kind::Valkyrie?8:168;
             assert(DrawPart(s.kind,0,first,s.vertices-first,s.triangles*3,extra)==Part::Attachment);
             assert(DrawPart(s.kind,0,0,s.vertices,s.triangles*3,extra)==Part::Attachment);
             assert(DrawPart(s.kind,0,first,s.vertices-first,s.triangles*3+3,extra)==Part::None);
@@ -171,6 +172,7 @@ static void TestBridge(){
     puts("PASS native bridge: Circle/physical-left/insert -> ONE permit + XInput -> conserved ACK, auto block, trigger rearm, stale/foreign witness");
 }
 int main(int argc,char** argv){
-    TestBridge();assert(argc==2);for(const auto& s:weaponreloadanim::specs)TestOriginal(s,argv[1]);
+    TestBridge();assert(argc==1||argc==2);
+    if(argc==2)for(const auto& s:weaponreloadanim::specs)TestOriginal(s,argv[1]);
     puts("L1 OWN fixtures only, NOT live inventory or physical alignment proof");
 }

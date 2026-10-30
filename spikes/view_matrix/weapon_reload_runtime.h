@@ -9,16 +9,19 @@ namespace weaponreload {
 using Kind=weaponreloadproto::Kind;
 using Phase=weaponreloadproto::Phase;
 inline unsigned Index(Kind k){return unsigned(k)-1;}
-inline unsigned ClipSlot(Kind k){return k==Kind::Valkyrie?3:k==Kind::Volk?0:k==Kind::Kasimov?5:99;}
+inline unsigned ClipSlot(Kind k){return k==Kind::Valkyrie?3:k==Kind::Volk?0:k==Kind::Kasimov?5:k==Kind::Seeker?4:99;}
 inline const char* ClassName(Kind k){return k==Kind::Valkyrie?"RvWeaponShared":
-    k==Kind::Volk?"RvWeaponShared_Shotgun":k==Kind::Kasimov?"RvWeaponShared_SniperRifle":"";}
-inline const char* Stem(Kind k){return k==Kind::Valkyrie?"valkyrie":k==Kind::Volk?"volk":"kasimov";}
+    k==Kind::Volk?"RvWeaponShared_Shotgun":k==Kind::Kasimov?"RvWeaponShared_SniperRifle":
+    k==Kind::Seeker?"RvWeaponShared_RocketLauncher":"";}
+inline const char* Stem(Kind k){return k==Kind::Valkyrie?"valkyrie":k==Kind::Volk?"volk":
+    k==Kind::Kasimov?"kasimov":"seeker";}
 inline bool Active(Phase p){return p==Phase::NeedAmmo||p==Phase::Carrying||p==Phase::WaitingNative;}
 inline bool Absent(Phase p){return p==Phase::NeedAmmo||p==Phase::Carrying;}
 enum class Part {None,Body,Attachment};
 inline Part DrawPart(Kind kind,int base,unsigned min,unsigned vertices,unsigned first,unsigned triangles){
     const auto* spec=weaponreloadanim::Find(kind);if(!spec||base)return Part::None;
-    const unsigned mainVertices=kind==Kind::Valkyrie?11378:kind==Kind::Kasimov?11292:8297;
+    const unsigned mainVertices=kind==Kind::Valkyrie?11378:kind==Kind::Kasimov?11292:
+        kind==Kind::Seeker?12436:8297;
     if(!min&&!first&&triangles==spec->triangles&&(vertices==spec->vertices||vertices==mainVertices))return Part::Body;
     const unsigned extra=kind==Kind::Valkyrie?8:kind==Kind::Kasimov?168:0;
     if(extra&&first==spec->triangles*3&&triangles==extra&&(min==0||min==mainVertices)&&
@@ -31,7 +34,8 @@ struct OriginalAssets {unsigned animation,mesh,albedo,vertices,triangles,width,h
 inline constexpr OriginalAssets originalAssets[]{
     {1866531932u,1387338662u,2571601141u,547,596,2048,1024},
     {2782548863u,789788386u,2003765126u,242,198,1024,1024},
-    {2750451985u,3422279735u,543706490u,170,180,1024,512}
+    {2750451985u,3422279735u,543706490u,170,180,1024,512},
+    {1082273042u,1844431866u,4229746732u,384,410,2048,1024}
 }; // full original cache FNV witnesses; release/deployment uses SHA-256 manifest
 inline unsigned ReadableUsage(bool enabled,unsigned bytes,bool index16,unsigned usage,unsigned writeOnly){
     if(enabled&&index16)for(const auto& s:weaponreloadanim::specs)
@@ -42,6 +46,45 @@ inline hipknife::V Transform(hipknife::V p,const armbind::Mat& m){return {
     p.x*m.m[0][0]+p.y*m.m[1][0]+p.z*m.m[2][0]+m.m[3][0],
     p.x*m.m[0][1]+p.y*m.m[1][1]+p.z*m.m[2][1]+m.m[3][1],
     p.x*m.m[0][2]+p.y*m.m[1][2]+p.z*m.m[2][2]+m.m[3][2]};}
+// Original Seeker clip Reload frame 12 displacement from its bind position,
+// in ActorX clip-local axes: (-1.63356,-17.99378,-21.27680) UU. The same
+// clipTracking matrix used for stereo maps this measured direction to XR.
+inline bool SeekerRearAxis(const armbind::Mat& socket,hipknife::V& out){
+    constexpr hipknife::V raw{-1.63356f,-17.99378f,-21.27680f};
+    const auto v=Transform(raw,socket)-Transform({},socket);
+    const float length=hipknife::Length(v);
+    if(!hipknife::Finite(v)||!std::isfinite(length)||length<.01f)return false;
+    out=v*(1.f/length);return true;
+}
+inline bool SeekerOrientation(const armbind::Mat& carried,const armbind::Mat& seated){
+    for(unsigned row=0;row<3;++row){
+        const hipknife::V a{carried.m[row][0],carried.m[row][1],carried.m[row][2]};
+        const hipknife::V b{seated.m[row][0],seated.m[row][1],seated.m[row][2]};
+        const float lengths=hipknife::Length(a)*hipknife::Length(b);
+        if(!hipknife::Finite(a)||!hipknife::Finite(b)||lengths<.0001f||
+           hipknife::Dot(a,b)/lengths<.8660254f)return false; // 30 degrees max
+    }
+    return true;
+}
+inline bool SeekerCorridor(const armbind::Mat& carried,const armbind::Mat& seated,
+                          hipknife::V socket,bool& path,bool& approach,bool& nearSocket){
+    path=approach=nearSocket=false;hipknife::V axis;
+    if(!SeekerRearAxis(seated,axis)||!SeekerOrientation(carried,seated))return false;
+    const hipknife::V origin=Transform({},carried),delta=origin-socket;
+    const float axial=hipknife::Dot(delta,axis);
+    const float lateral=hipknife::Length(delta-axis*axial);
+    if(!std::isfinite(axial)||!std::isfinite(lateral))return false;
+    path=axial>=-.005f&&axial<=.34f&&lateral<=.06f;
+    approach=path&&axial>=.10f;
+    nearSocket=path&&axial<=.07f&&lateral<=.045f;
+    return true;
+}
+inline bool SeekerEject(armbind::Mat& pose,float elapsed){
+    hipknife::V axis;if(!std::isfinite(elapsed)||elapsed<0||!SeekerRearAxis(pose,axis))return false;
+    const auto shift=axis*std::min(.14f,elapsed*.65f);
+    pose.m[3][0]+=shift.x;pose.m[3][1]+=shift.y;pose.m[3][2]+=shift.z;
+    return true;
+}
 inline bool PhysicalMatrix(const armbind::Mat& m){
     if(!armbind::Finite(m)||m.m[0][3]||m.m[1][3]||m.m[2][3]||m.m[3][3]!=1)return false;
     for(unsigned r=0;r<3;++r){const float n=hipknife::Length({m.m[r][0],m.m[r][1],m.m[r][2]});
@@ -50,6 +93,12 @@ inline bool PhysicalMatrix(const armbind::Mat& m){
         m.m[0][1]*(m.m[1][0]*m.m[2][2]-m.m[1][2]*m.m[2][0])+
         m.m[0][2]*(m.m[1][0]*m.m[2][1]-m.m[1][1]*m.m[2][0]);
     return std::fabs(determinant)>.0001f; // handedness may be negative; never collapse
+}
+inline bool MagazineSlot(Kind k,unsigned slot){
+    return slot==ClipSlot(k)||(k==Kind::Seeker&&slot>=5&&slot<=7);
+}
+inline bool SeatingSlot(Kind k,unsigned slot){
+    return MagazineSlot(k,slot)||(k==Kind::Seeker&&(slot==3||slot==8));
 }
 inline bool ClipBind(const weaponreloadanim::Data& d,armbind::Mat& bind){
     for(unsigned i=0;d.ready&&i<d.tracks;++i)if(d.target[i]==ClipSlot(d.kind))
@@ -174,7 +223,8 @@ inline bool SparePalette(const weaponreloadanim::Data& d,const armbind::Mat& tra
     float staged[16*12]{};
     for(unsigned slot=0;slot<d.slots;++slot)for(unsigned r=0;r<3;++r)
         staged[slot*12+r*4+3]=skin.m[3][r]; // SAME degenerate point for all other bones
-    armbind::ToGpu(skin,reinterpret_cast<float(*)[4]>(staged+ClipSlot(d.kind)*12));
+    for(unsigned slot=0;slot<d.slots;++slot)if(MagazineSlot(d.kind,slot))
+        armbind::ToGpu(skin,reinterpret_cast<float(*)[4]>(staged+slot*12));
     std::memcpy(out,staged,regs*4*sizeof(float));return true;
 }
 // Called INSIDE each existing stereo-eye callback with the original DIP/setter.
@@ -195,7 +245,8 @@ inline bool Palette(const weaponreloadanim::Data& d,float frame,bool absent,cons
     const unsigned clip=ClipSlot(d.kind);if(clip>=d.slots)return false;
     // Measured original clips are rigid, no mixed-boundary triangles. Zero
     // linear part collapses ONLY those triangles; finite translation retained.
-    if(absent)for(unsigned r=0;r<3;++r)for(unsigned c=0;c<3;++c)staged[clip*12+r*4+c]=0;
+    if(absent)for(unsigned slot=0;slot<d.slots;++slot)if(MagazineSlot(d.kind,slot))
+        for(unsigned r=0;r<3;++r)for(unsigned c=0;c<3;++c)staged[slot*12+r*4+c]=0;
     std::memcpy(out,staged,regs*4*sizeof(float));return true;
 }
 // After refill-only insertion, animate ONLY the rigid magazine. All native
@@ -205,7 +256,8 @@ inline bool SeatingPalette(const weaponreloadanim::Data& d,float frame,const flo
     if(!native||!out||!weaponreloadanim::Palette(d,true,frame,native,regs,animated))return false;
     const unsigned clip=ClipSlot(d.kind);if(clip>=d.slots)return false;
     float staged[16*12];std::memcpy(staged,native,regs*4*sizeof(float));
-    std::memcpy(staged+clip*12,animated+clip*12,12*sizeof(float));
+    for(unsigned slot=0;slot<d.slots;++slot)if(SeatingSlot(d.kind,slot))
+        std::memcpy(staged+slot*12,animated+slot*12,12*sizeof(float));
     std::memcpy(out,staged,regs*4*sizeof(float));return true;
 }
 struct Animation {

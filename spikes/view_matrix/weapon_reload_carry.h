@@ -6,7 +6,7 @@ using Mat=armbind::Mat;
 using Kind=weaponreload::Kind;
 enum class WristSource { None, NoTmd, Tmd };
 inline bool CarrySectionEligible(Kind kind,bool noTmdGlove){
-    return noTmdGlove||weaponreload::Index(kind)<3;
+    return noTmdGlove||weaponreload::Index(kind)<4;
 }
 // All three existing magazine mounts are wrist-local. The original TMD
 // material-0 publishes that same physical left wrist after stereo submission.
@@ -14,7 +14,7 @@ inline WristSource Source(Kind kind,bool carrying,bool noTmdGlove,bool tmdGlove,
                           bool noTmdPosed,bool leftTracked,unsigned wristBone){
     if(!carrying)return WristSource::None;
     if(noTmdGlove&&noTmdPosed)return WristSource::NoTmd;
-    if(weaponreload::Index(kind)<3&&tmdGlove&&leftTracked&&wristBone==9u)
+    if(weaponreload::Index(kind)<4&&tmdGlove&&leftTracked&&wristBone==9u)
         return WristSource::Tmd;
     return WristSource::None;
 }
@@ -22,9 +22,11 @@ inline float Curl(Kind kind){return kind==Kind::Kasimov?.35f:.25f;}
 // Original glove + original clip, fit_magazine_palm.py: zero intersecting
 // triangles and zero sampled containment. Units are NATIVE wrist UU, not XR.
 inline bool Mount(Kind kind,Mat& out){
-    if(weaponreload::Index(kind)>=3)return false;
+    if(weaponreload::Index(kind)>=4)return false;
     Mat m{};m.m[0][0]=-1;m.m[3][3]=1;
-    if(kind==Kind::Kasimov){m.m[1][1]=-1;m.m[2][2]=1;
+    if(kind==Kind::Seeker){m.m[0][0]=m.m[1][1]=m.m[2][2]=1;
+        m.m[3][0]=5.00000373f;m.m[3][1]=-9.05215640f;m.m[3][2]=.64266947f;
+    }else if(kind==Kind::Kasimov){m.m[1][1]=-1;m.m[2][2]=1;
         m.m[3][0]=5.02334944f;m.m[3][1]=-.50722513f;m.m[3][2]=3.90860947f;
     }else{m.m[1][2]=-1;m.m[2][1]=-1;
         if(kind==Kind::Valkyrie){m.m[3][0]=5.05332961f;m.m[3][1]=-3.56168574f;m.m[3][2]=.62759385f;}

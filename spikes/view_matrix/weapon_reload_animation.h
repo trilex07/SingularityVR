@@ -11,12 +11,14 @@ namespace weaponreloadanim {
 using Kind=weaponreloadproto::Kind;
 struct Spec {
     Kind kind;unsigned vertices,triangles,indexCount,indexHash,slots,root,tracks,frames,fps;
-    unsigned target[5];int parent[5];
+    unsigned target[8];int parent[8];
 };
 inline constexpr Spec specs[]{
     {Kind::Valkyrie,11387,12834,38526,941526542,6,0,5,52,24,{3,1,5,4,2},{-1,-1,-1,-1,-1}},
     {Kind::Volk,8297,10835,32505,754008012,5,2,4,108,36,{3,0,1,4,0},{-1,-1,-1,-1,-1}},
-    {Kind::Kasimov,11389,12942,39330,906901468,6,0,5,239,60,{4,5,2,1,3},{-1,-1,-1,2,3}}
+    {Kind::Kasimov,11389,12942,39330,906901468,6,0,5,239,60,{4,5,2,1,3},{-1,-1,-1,2,3}},
+    {Kind::Seeker,12444,14990,44988,3842523959u,9,1,8,54,24,
+        {2,8,4,5,6,7,3,0},{-1,-1,-1,2,2,2,-1,-1}}
 };
 inline const Spec* Find(Kind kind){for(const auto& s:specs)if(s.kind==kind)return &s;return nullptr;}
 struct Data {

@@ -52,9 +52,19 @@ def validate(root):
     icon = Image.open(root/'icon/weapon_icon_seeker.png').convert('RGBA')
     assert icon.size == (64,64) and np.count_nonzero(np.asarray(icon)[:,:,3]>32)>250
     assert atlas.getpixel((256,128)) == icon.getpixel((0,0))
+    cache = json.loads((root/'runtime/animation-report.json').read_text())
+    for name in ('seeker_reload.svwa', 'seeker_clip.svrk', 'seeker_clip.svrt'):
+        assert (root/'runtime'/name).is_file()
+    assert cache['frames'] == 54 if 'frames' in cache else cache['source_frames'] == 54
+    blender = json.loads((root/'blender_validation.json').read_text())
+    for stem in ('seeker_hd_animated', 'seeker_hd_rear_magazine'):
+        assert blender[stem]['import']['triangles'] == blender[stem]['roundtrip']['triangles']
+        assert (root/'clean'/(stem+'.blend')).is_file()
+        assert (root/'clean'/(stem+'_roundtrip.glb')).is_file()
     return {'rig': 'PASS', 'source_animation': 'PASS', 'detached_magazine': 'PASS',
             'pbr_maps': 'PASS', 'icon_atlas': 'PASS', 'native_ammo': 'NOT VERIFIED',
-            'blender_roundtrip': 'NOT RUN', 'Steam_PSVR2': 'NOT RUN'}
+            'blender_roundtrip': 'PASS', 'hd_visual_acceptance': 'FAIL',
+            'Steam_PSVR2': 'NOT RUN'}
 
 
 if __name__ == '__main__':
