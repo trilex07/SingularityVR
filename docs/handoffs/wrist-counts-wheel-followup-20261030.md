@@ -24,3 +24,8 @@ Source b239bf30; x86 PE32 /O2 DLL SHA256 147C3297211CFA6CA6B964E29FBBD79538B7EE6
 L1/L2 PASS: startup-readiness native reciprocal ownership tests; HUD source freshness/identity; D3D9/D3D9Ex both-eye wall/glove/magazine pixels and resource restoration/reset. D3D fixture rerun outside sandbox passed after sandbox device creation failure.
 Guarded Steam deployment completed with game closed: deployment/install-reports/20261030-151338.json; backup deployment/install-backups/20261030-151337. Installed INI SHA256 81E9F33BE4D6A5A968DE0D96A45C59A262F2FDD3DB8ECF7DED89D40CF12A87E2. Only DLL/INI deployed. No launch or physical validation performed for this build; real optional counter values PENDING.
 Acceptance: load save, inspect inward left wrist for actual E99 Tech and health-pack count, confirm legacy health displays absent. Preserve accepted wrist occlusion and VFX. Candidate retained for user test.
+
+## Physical acceptance and main promotion
+2026-10-30: user confirmed the requested E99 / health-pack / legacy-health test with "tak jest mozesz dac na main" and authorized main promotion. HUD counter presentation and legacy-health replacement are PHYSICALLY_VERIFIED for this session. No broader new weapon/menu/performance acceptance is inferred.
+Before promotion, installed DLL remained 147C3297211CFA6CA6B964E29FBBD79538B7EE69D7BC155861B66F67B24BDC96 and INI remained 81E9F33BE4D6A5A968DE0D96A45C59A262F2FDD3DB8ECF7DED89D40CF12A87E2. Accepted runtime source is b239bf30; later commits update evidence only. Steam remains untouched during promotion. Backup 20261030-151337 is preserved.
+Fetched origin/main is an ancestor of the complete tested candidate; promotion uses fast-forward only, without force or source conflict resolution.
