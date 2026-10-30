@@ -24,6 +24,8 @@ SPECS = {
         material='AR_Shotgun', diffuse='AR_shotgun_d', vertices=8297, triangles=[10835], frames=108, fps=36),
     'kasimov': dict(id=3, label='Kasimov SNV-E99', mesh='ch_inview_sniper_mesh', root='cog_sniper',
         material='AR_SniperRifle', diffuse='ar_sniper_rifle_d', vertices=11389, triangles=[12942,168], frames=239, fps=60),
+    'seeker': dict(id=4, label='Seeker', mesh='ch_inview_e99_steerable_mesh', root='cog_e99_steerable',
+        material='e99_steerable', diffuse='ar_steerable_d', vertices=12444, triangles=[14990,6], frames=54, fps=24),
 }
 
 
@@ -165,7 +167,10 @@ def prepare(kind,psk,psa,data,package):
     # Include unweighted ancestors if ever needed; refuse an unmapped ancestor
     # rather than treating a PSK index as a GPU register slot.
     for b in selected:
-        if parents[b]!=root and parents[b] not in selected:raise ValueError('unmapped animated ancestor')
+        if parents[b]!=root and parents[b] not in selected and not (
+                kind=='seeker' and names[parents[b]]=='bullet_slide' and names[b] in ('bullet_1','bullet_2','bullet_3')
+                and parents[parents[b]]==names.index('clip')):
+            raise ValueError('unmapped animated ancestor')
     bones=sorted(selected)
     if not bones or len(bones)>8 or 'clip' not in [names[b] for b in bones]:raise ValueError('track budget/clip identity')
     pn,seqs,keys=read_psa(psa)
@@ -174,12 +179,27 @@ def prepare(kind,psk,psa,data,package):
     seq=seq[0]
     if seq['frames']!=spec['frames'] or seq['rate']!=spec['fps']:raise ValueError('unreviewed reload timing')
     tracks=keys[seq['first']:seq['first']+seq['frames'],[pn.index(names[b]) for b in bones],:7].copy()
+    if kind=='seeker':
+        # bullet_slide is an unweighted parent absent from the cooked palette.
+        # Compose its original PSA key into each weighted bullet child, then
+        # parent those effective tracks to clip. This preserves the exact
+        # source motion without inventing a ninth GPU slot.
+        from build_volk_mechanical_glb import quaternion
+        slide=keys[seq['first']:seq['first']+seq['frames'],pn.index('bullet_slide'),:7]
+        for child in ('bullet_1','bullet_2','bullet_3'):
+            j=bones.index(names.index(child))
+            for frame in range(spec['frames']):
+                composed=key_local(tracks[frame,j])@key_local(slide[frame])
+                q=quaternion(composed);q[3]*=-1
+                tracks[frame,j,:3]=composed[3,:3]
+                tracks[frame,j,3:7]=q
     if not np.isfinite(tracks).all() or np.any(np.abs(tracks[:,:,:3]).sum(axis=2)>500):
         raise ValueError('animation local position budget')
     reflect=np.diag([1.,-1.,1.,1.]);raw_bind=reflect@bind@reflect
     # Freeze native/controller root. Compose original descendants hierarchically.
     inverse=[np.linalg.inv(raw_bind[b]) for b in bones]
-    parent_tracks=[-1 if parents[b]==root else bones.index(parents[b]) for b in bones]
+    parent_tracks=[-1 if parents[b]==root else bones.index(
+        parents[parents[b]] if kind=='seeker' and names[parents[b]]=='bullet_slide' else parents[b]) for b in bones]
     slots=[palette.index(b) for b in bones]
     root_slot=palette.index(root)
     header=struct.pack('<4s10If',b'SVWA',1,spec['id'],spec['vertices'],0,spec['triangles'][0],

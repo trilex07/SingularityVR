@@ -79,6 +79,7 @@ struct Frame {
     bool nativePermitRequired=false,nativePermitConsumed=false; // real dispatcher evidence, not just conserved HUD change
     bool measuredInsertion=false,insertionValid=false;
     hipknife::V insertionPoint{}; // carried clip bind origin, NOT controller origin
+    bool seekerPath=false,seekerApproach=false,seekerNear=false; // source-axis and orientation gates
     centurionreload::Frame gesture{};
 };
 enum class Phase {Idle,NeedAmmo,Carrying,WaitingNative,Cooldown};
@@ -97,6 +98,7 @@ struct Transaction {
     std::uint64_t since=0,lastMs=0;
     std::uint64_t reachUntil=0;
     float bodyYaw=0; // physical head yaw latched on eject, not stick-turn/body yaw
+    bool approachSeen=false; // Seeker: entered rear corridor before seating
 };
 struct State {
     Kind profile=Kind::None;
@@ -179,7 +181,7 @@ inline Result Update(State& s,const Frame& f,const Calibration& c){
         // A fresh, unowned squeeze may arrive at either shoulder region within
         // the profile's bounded reach interval. Never inherit support/menu grip.
         if(!in.grip||in.handBusy||in.supportLatched||in.knifeNear)t.reachUntil=0;
-        else if(gripEdge&&(f.kind==Kind::Valkyrie||f.kind==Kind::Volk)&&c.gripReachMs)
+        else if(gripEdge&&(f.kind==Kind::Valkyrie||f.kind==Kind::Volk||f.kind==Kind::Seeker)&&c.gripReachMs)
             t.reachUntil=in.nowMs+c.gripReachMs;
         if((gripEdge||(in.grip&&t.reachUntil&&in.nowMs<=t.reachUntil))&&
            !t.ownsGrip&&!in.handBusy&&!in.supportLatched&&!in.knifeNear&&
@@ -187,10 +189,15 @@ inline Result Update(State& s,const Frame& f,const Calibration& c){
             t.reachUntil=0;t.ownsGrip=true;return enter(Phase::Carrying,Event::GrabFresh);
         }break;
     case Phase::Carrying:
+        if(f.kind==Kind::Seeker){
+            if(!f.seekerPath)t.approachSeen=false;
+            else if(f.seekerApproach)t.approachSeen=true;
+        }
         if(gripRelease){
-            const bool measured=f.kind==Kind::Kasimov&&f.measuredInsertion;
+            const bool measured=(f.kind==Kind::Kasimov||f.kind==Kind::Seeker)&&f.measuredInsertion;
             const auto point=measured?f.insertionPoint:in.hand;
-            if((!measured||f.insertionValid)&&centurionreload::Near(point,in.socket,g.socketRadius)){
+            const bool rear=f.kind!=Kind::Seeker||(t.approachSeen&&f.seekerNear);
+            if(rear&&(!measured||f.insertionValid)&&centurionreload::Near(point,in.socket,g.socketRadius)){
                 t.phase=Phase::WaitingNative;t.since=in.nowMs;return out(Event::Inserted,true);
             }
             return enter(Phase::NeedAmmo,Event::Discarded);

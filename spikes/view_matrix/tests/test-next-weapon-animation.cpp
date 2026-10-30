@@ -102,7 +102,9 @@ static unsigned TestPrivate(const Spec& s,const std::string& root,const char* na
 int main(int argc,char** argv){
     for(const auto& s:specs)TestSynthetic(s);
     unsigned poses=0;
-    if(argc>1){assert(argc==2);const char* names[]{"valkyrie","volk","kasimov"};
+    if(argc==3){assert(!std::strcmp(argv[1],"--seeker"));
+        poses+=TestPrivate(specs[3],argv[2],"seeker");}
+    else if(argc>1){assert(argc==2);const char* names[]{"valkyrie","volk","kasimov"};
         for(unsigned i=0;i<3;++i)poses+=TestPrivate(specs[i],argv[1],names[i]);}
-    std::printf("L1 three-weapon animation PASS: hierarchy/shortest-quaternion/root/parent/aliasing/transactional rejection; original poses=%u; pure consumer fixture, NOT native draws\n",poses);
+    std::printf("L1 four-profile animation PASS: hierarchy/shortest-quaternion/root/parent/aliasing/transactional rejection; original poses=%u; pure consumer fixture, NOT native draws\n",poses);
 }

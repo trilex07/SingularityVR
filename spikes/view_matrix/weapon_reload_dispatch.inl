@@ -23,7 +23,7 @@ static void ReleaseNextReloadGPU(){
     g_kasimovHdRenderer.ReleaseGPU();
     g_centurionHdRenderer.ReleaseGPU();
     g_centurionHdIndices.Reset();
-    for(unsigned i=0;i<3;++i){
+    for(unsigned i=0;i<4;++i){
         g_nextClipRenderer[i].ReleaseGPU();hipknife::Release(g_nextIB[i]);
         g_nextIBVerified[i]=false;g_nextIBAttempts[i]=0;InterlockedExchange(&g_nextFault[i],0);
     }
@@ -42,7 +42,7 @@ static void InitNextReload(){
         }
         Log("centurion-hd: CPU cache=%s original=5799/6767 final=8051/7927 native material/palette; no runtime proof",loaded?"READY":"INVALID (original retained)");
     }
-    for(unsigned i=0;i<3;++i){
+    for(unsigned i=0;i<4;++i){
         g_nextReady[i]=false;g_nextAnimation[i].ready=false;
         if(!g_nextReload[i])continue;
         try{
@@ -97,7 +97,8 @@ static void UpdateNextReload(bool context,bool grip,bool supportLatched,bool cir
     int32_t health=0;
     const bool alive=pawn&&g_offHealth>=0&&TryLoadAlignedI32(pawn+g_offHealth,&health)&&health>0;
     const bool objectMatch=profile&&NextObject(weapon,kind);
-    const bool identity=profile&&index<3&&g_nextReload[index]&&g_nextReady[index]&&!Rd(g_nextFault[index])&&
+    const bool identity=profile&&index<4&&g_nextReload[index]&&g_nextReady[index]&&!Rd(g_nextFault[index])&&
+        (kind!=Kind::Seeker||(g_nextRefillOnly&&g_nextNativeMagazine&&g_reloadPalmGrip))&&
         g_nextPresentation.Allowed()&&AimHand()==1&&OffHand()==0&&objectMatch;
     static centurionreload::AmmoObservation ammo;
     static centurionreload::HudReseatPolicy hudReseat;
@@ -114,8 +115,8 @@ static void UpdateNextReload(bool context,bool grip,bool supportLatched,bool cir
         Log("next reload gate: kind=%d verts=%ld circleEdge=%d context=%d alive=%d pawn=%08X weapon=%08X hud=%08X enabled=%d assets=%d fault=%ld present=%d aim=%d off=%d object=%d identity=%d holstered=%ld focus=%d",
             int(kind),Rd(g_gunVerts),circleEdge?1:0,context?1:0,alive?1:0,
             (unsigned)pawn,(unsigned)weapon,(unsigned)hud,
-            index<3?g_nextReload[index]:0,index<3?g_nextReady[index]:0,
-            index<3?Rd(g_nextFault[index]):0,g_nextPresentation.Allowed()?1:0,
+            index<4?g_nextReload[index]:0,index<4?g_nextReady[index]:0,
+            index<4?Rd(g_nextFault[index]):0,g_nextPresentation.Allowed()?1:0,
             AimHand(),OffHand(),objectMatch?1:0,identity?1:0,
             Rd(g_weaponHolstered),g_xrSessionState==XR_SESSION_STATE_FOCUSED?1:0);
     }
@@ -171,14 +172,19 @@ static void UpdateNextReload(bool context,bool grip,bool supportLatched,bool cir
     Calibration calibration;calibration.ready=f.liveIdentityVerified;calibration.revision=1;
     calibration.gesture.socketLocal={};calibration.gesture.socketRadius=.16f;calibration.gesture.pullDistance=.30f;
     if(index<2)calibration.gesture.socketRadius=.01f*float(g_nextInsertRadiusCm[index]);
+    if(kind==Kind::Seeker)calibration.gesture.socketRadius=.07f;
     // Only these two profiles use the new, bounded shoulder capsule. The
     // existing Centurion INI settings do not silently control this path.
     if(index<2){
         calibration.shoulder.leftExtension=.01f*float(g_nextShoulderExtraLeftCm[index]);
         calibration.gesture.pouchRadius=.01f*float(g_nextShoulderRadiusCm[index]);
         calibration.gripReachMs=(std::uint64_t)g_nextShoulderReachMs[index];
+    }else if(kind==Kind::Seeker){
+        calibration.shoulder.leftExtension=.18f;
+        calibration.gesture.pouchRadius=.18f;
+        calibration.gripReachMs=1800;
     }else calibration.gripReachMs=0; // Kasimov stays edge-only/point-only
-    if(index<3&&g_nextReady[index])calibration.gesture.ackMs=std::max<uint64_t>(4000,
+    if(index<4&&g_nextReady[index])calibration.gesture.ackMs=std::max<uint64_t>(4000,
         (uint64_t)std::ceil(1000.f*g_nextAnimation[index].frames/g_nextAnimation[index].fps)+1500);
     const hipknife::V head{g_headPosXR[0],g_headPosXR[1],g_headPosXR[2]};
     hipknife::V shoulderHead=head;float shoulderYaw=g_centreYaw;
@@ -196,7 +202,7 @@ static void UpdateNextReload(bool context,bool grip,bool supportLatched,bool cir
     const bool shoulderGripEdge=in.grip&&!g_nextReloadState.transaction.priorGrip;
     const auto priorReachUntil=g_nextReloadState.transaction.reachUntil;
     const auto priorPhase=g_nextReloadState.transaction.phase;
-    if(kind==Kind::Kasimov&&priorPhase==Phase::Carrying){
+    if((kind==Kind::Kasimov||kind==Kind::Seeker)&&priorPhase==Phase::Carrying){
         // Match the original clip joint which Socket() publishes. The hand
         // controller is not that joint: the source-derived palm mount has a
         // nonzero translation. Keep shoulder acquisition on the raw hand.
@@ -212,6 +218,12 @@ static void UpdateNextReload(bool context,bool grip,bool supportLatched,bool cir
             in.tracked,g_reloadCarryTrackedContinuity,wristTracking)&&
             weaponcarry::Matrix(kind,wristTracking,magazine);
         if(f.insertionValid)f.insertionPoint=weaponreload::Transform({},magazine);
+        if(kind==Kind::Seeker&&f.insertionValid){
+            bool path=false,approach=false,nearSocket=false;
+            f.insertionValid=witness.Current(kind,in.pawn,in.weapon,now)&&
+                weaponreload::SeekerCorridor(magazine,witness.clipTracking,in.socket,path,approach,nearSocket);
+            f.seekerPath=path;f.seekerApproach=approach;f.seekerNear=nearSocket;
+        }
     }
     const auto result=Update(g_nextReloadState,f,calibration);
     const auto& t=g_nextReloadState.transaction;
@@ -272,16 +284,16 @@ static void UpdateNextReload(bool context,bool grip,bool supportLatched,bool cir
         if(circleEdge&&next.valid)next.hintUntilMs=now+8000;
         if(result.ejectMagazine){next.drop=witness.clipTracking;next.dropMs=now;
             next.rootValid=true;next.root=witness.nativeRoot;next.nativeEnd=0;next.insertedMs=0;}
-        if(result.reloadIntent&&permit&&index<3){
+        if(result.reloadIntent&&permit&&index<4){
             next.insertedMs=now;
             next.nativeEnd=now+(g_nextRefillOnly?weaponreload::Animation::RefillSeatMs:
                 (ULONGLONG)std::ceil(1000.f*g_nextAnimation[index].frames/g_nextAnimation[index].fps)+300);
         }
-        if(!g_nextRefillOnly&&next.rootValid&&observedPermitMs&&index<3)next.nativeEnd=observedPermitMs+
+        if(!g_nextRefillOnly&&next.rootValid&&observedPermitMs&&index<4)next.nativeEnd=observedPermitMs+
             (ULONGLONG)std::ceil(1000.f*g_nextAnimation[index].frames/g_nextAnimation[index].fps)+150;
         if(result.event==Event::Cancelled||result.event==Event::Rejected||
            (!weaponreload::Active(t.phase)&&(!next.nativeEnd||now>=next.nativeEnd)))next.rootValid=false;
-        if(result.event==Event::Discarded&&index<3){
+        if(result.event==Event::Discarded&&index<4){
             armbind::Mat currentWrist;
             const bool physicalWrist=g_nextWrist.Resolve(kind,in.pawn,in.weapon,g_nextVisual.since,now,
                 next.hand,(std::uint64_t)InterlockedCompareExchange64(&g_handPoseSampleMs[0],0,0),
@@ -380,7 +392,7 @@ static int PrepareNextReload(IDirect3DDevice9* dev,INT base,UINT min,UINT vertic
     // One bounded witness per rejection stage. The live Valkyrie session had
     // valid weapon/ammo/native identity but no render socket; do not bypass
     // that safety gate until the producer of the missing socket is identified.
-    static volatile LONG seenStages[3]={0,0,0};
+    static volatile LONG seenStages[4]={0,0,0,0};
     const auto note=[&](unsigned stage){
         const LONG bit=LONG(1u<<stage);
         if(!(InterlockedOr(&seenStages[index],bit)&bit))
@@ -455,8 +467,8 @@ static int PrepareNextReload(IDirect3DDevice9* dev,INT base,UINT min,UINT vertic
     if(socketHandDistance>.75f){
         // Read-only, bounded evidence for the failed native-to-XR transform.
         // Record both spaces before changing any matrix order or safety bound.
-        static ULONGLONG nextGeometry[3]{};
-        static unsigned geometryNotes[3]{};
+        static ULONGLONG nextGeometry[4]{};
+        static unsigned geometryNotes[4]{};
         if(geometryNotes[index]<4&&now>=nextGeometry[index]){
             ++geometryNotes[index];nextGeometry[index]=now+2000;
             Log("next reload socket geometry: kind=%d distance=%.3f socket=(%.3f,%.3f,%.3f) hand=(%.3f,%.3f,%.3f) centre=(%.3f,%.3f,%.3f) root=(%.2f,%.2f,%.2f) local=(%.2f,%.2f,%.2f) controller=(%.2f,%.2f,%.2f) yaw=(%.3f,%.3f) units=%.3f",
@@ -537,7 +549,7 @@ static int PrepareNextReload(IDirect3DDevice9* dev,INT base,UINT min,UINT vertic
                 weaponreload::HandMatrix(clipTracking,visual.aim,pose,g_nextClipRenderer[index].SourceCentre(),carried,
                     visual.phase==weaponreload::Phase::Carrying?hipknife::V{0,0,-.06f}:hipknife::V{});
             if(continued){
-                static unsigned notes[3]{};
+                static unsigned notes[4]{};
                 if(notes[index]++<8)Log("reload carry continuity: kind=%d measured wrist continued age=%llu ms with tracked left pose",
                     int(kind),(unsigned long long)(now-wrist.tick));
             }
@@ -562,7 +574,7 @@ static int PrepareNextReload(IDirect3DDevice9* dev,INT base,UINT min,UINT vertic
             if(placed){
                 if(!weaponreload::SparePalette(g_nextAnimation[index],carried,local,controller,world,regs,replay.spare[replay.count]))return 0;
                 if(g_reloadCarryRenderProbe&&replay.carried){
-                    static unsigned samples[3]{};
+                    static unsigned samples[4]{};
                     if(samples[index]++<32){
                         const unsigned slot=weaponreload::ClipSlot(kind);
                         const float* c=replay.spare[replay.count]+slot*12;
@@ -578,6 +590,7 @@ static int PrepareNextReload(IDirect3DDevice9* dev,INT base,UINT min,UINT vertic
         }
         if(drop){
             auto falling=visual.drop;const float elapsed=float(now-visual.dropMs)*.001f;
+            if(kind==weaponreload::Kind::Seeker&&!weaponreload::SeekerEject(falling,elapsed))return 0;
             falling.m[3][1]-=.5f*9.81f*elapsed*elapsed;
             if(!weaponreload::SparePalette(g_nextAnimation[index],falling,local,controller,world,regs,replay.spare[replay.count]))return 0;
             ++replay.count;
@@ -601,7 +614,7 @@ static void DrawNextReload(IDirect3DDevice9* dev){
     if(!TryAcquireSRWLockShared(&g_nextVisualLock))return;
     visual=g_nextVisual;witness=g_nextWitness;ReleaseSRWLockShared(&g_nextVisualLock);
     const auto now=GetTickCount64();const unsigned index=weaponreload::Index(visual.kind);
-    if(!visual.valid||index>=3||!g_nextReady[index]||Rd(g_nextFault[index])||
+    if(!visual.valid||index>=4||!g_nextReady[index]||Rd(g_nextFault[index])||
        visual.pawn!=(uint32_t)g_playerPawn||visual.weapon!=(uint32_t)Rd(g_weaponObj)||
        now<visual.sampledMs||now-visual.sampledMs>150)return;
     IDirect3DSurface9* back=nullptr;D3DSURFACE_DESC desc{};
@@ -627,6 +640,7 @@ static void DrawNextReload(IDirect3DDevice9* dev){
         }
         if(ok&&visual.dropMs&&now>=visual.dropMs&&now-visual.dropMs<1200){
             auto pose=visual.drop;const float elapsed=float(now-visual.dropMs)*.001f;
+            if(visual.kind==weaponreload::Kind::Seeker&&!weaponreload::SeekerEject(pose,elapsed))return false;
             pose.m[3][1]-=.5f*9.81f*elapsed*elapsed;
             ok=g_nextClipRenderer[index].Draw(dev,calls,back,{},eyes,g_targetTanX,g_targetTanY,pose.m);
         }

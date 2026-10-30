@@ -104,13 +104,15 @@ int main(){
         data.kind=spec.kind;data.rootBind=Identity();data.rootBind.m[3][1]=7;
         auto skin=Identity(),local=Identity(),controller=Identity();
         skin.m[3][0]=2;local.m[3][2]=3;controller.m[3][0]=11;
-        hipknife::V source,result;assert(weaponmuzzle::RootPoint(spec.kind,source));
-        assert(weaponmuzzle::Position(data,skin,local,controller,result));
-        assert(hipknife::Length(result-(source+hipknife::V{13,7,3}))<.00001f);
-        data.nativeSpace=false;assert(!weaponmuzzle::Position(data,skin,local,controller,result));
+        if(spec.kind!=Kind::Seeker){
+            hipknife::V source,result;assert(weaponmuzzle::RootPoint(spec.kind,source));
+            assert(weaponmuzzle::Position(data,skin,local,controller,result));
+            assert(hipknife::Length(result-(source+hipknife::V{13,7,3}))<.00001f);
+            data.nativeSpace=false;assert(!weaponmuzzle::Position(data,skin,local,controller,result));
+        }
     }
     armbind::Mat out;assert(!weaponcarry::Mount(Kind::None,out));
     weaponmuzzle::Witness muzzle{true,Kind::Valkyrie,3,4,100,{1,2,3}};
     assert(muzzle.Current(3,4,250));assert(!muzzle.Current(3,4,251));assert(!muzzle.Current(3,5,120));
-    puts("L1 PASS: 4000 translated rays, three native wrist mounts, TMD/Volk+Valkyrie+Kasimov sources and wrist rotations, muzzle chain, stale/foreign identities");
+    puts("L1 PASS: 4000 translated rays, four native wrist mounts, TMD/Volk+Valkyrie+Kasimov+Seeker sources and wrist rotations, muzzle chain, stale/foreign identities");
 }
