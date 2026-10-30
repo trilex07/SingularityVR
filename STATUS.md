@@ -1,3 +1,9 @@
+## 2026-10-30 — MAIN Seeker HD / gated rear reload integration
+
+- PR #79 integrated on `integration/main-seeker-hd-rear-acceptance`; optimized x86 pair from c0d5b8f6: d3d9 14194A4A, dinput8 64C0CFE8. Offline reload, D3D9/Ex pixel/reset, hands/haptics/HUD, Locker ABI and guarded restore PASS.
+- Real log-only PASS: both Seeker textures 4201 matches each, zero replacements. Owned Seeker and OpenXR confirmed. User has no ammunition; native refill NOT ESTABLISHED; physical reload remains OFF.
+- First session restored exact accepted runtime/assets. Mode-2 HD-only physical/material/timing acceptance pending. No merge/release promotion. Handoff: docs/handoffs/seeker-main-acceptance-20261030.md.
+
 ## 2026-10-30 — Wrist live counter ownership correction
 
 - Actual diagnostic reason=4 proved duplicate Pawn lookup rejected the local player before counter reads. Reused validated native reciprocal player resolver; no guessed offsets or fake values.
