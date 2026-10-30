@@ -71,3 +71,21 @@ smoke at the visible muzzle in both eyes. Volk is a short unchanged control.
 Check no displaced shadows, double effects, hand/grip or reload regression.
 Keep native damage, range, spread and ammo untouched. Back up/hash before MAIN
 deployment; restore the verified baseline on a new regression.
+
+## Controlled candidate receipt
+
+- Source: `72a1871342bc73b29059b15d8b5f56b94f56d7c4`, pushed.
+- Clean tracked-source x86 `/O2` build (only ignored/untracked private files).
+- DLL: `B7481E527AB0C5B751A4CC8ABC3DAD736A8ADE8FFAB65B4A053AC49762DD3CEF`.
+- Native contract verifier, 17 optimized C++ fixtures, Python regression suite,
+  compiled forwarding verifier and WeaponLocker compiled ABI: PASS offline.
+- MAIN deployed DLL only after the profile preflight, game closed. All 46
+  protected non-DLL files retained; INI unchanged:
+  `A6A80E686A4F799F99301B9D5F179C6386AF1832993438B3F6769E48CAC3CF22`.
+- Backup: `deployment/install-backups/20261030-135402`; previous DLL hash
+  `B9ADCFED061B707B26BA9C5B0C817A30060934C67A0750DCAC5DB2CD80AD09FC`.
+  An exact INI copy is also stored as `SingularityVR.ini.preserved`.
+- Deployment report: `deployment/install-reports/20261030-135403.json`.
+- Installed DLL/INI and backup identities independently rehashed: PASS.
+- Steam runtime, final particle pixels and PSVR2: **PENDING**. Candidate retained
+  awaiting the requested consolidated session; game not launched by this step.
