@@ -10,7 +10,12 @@ New-Item -ItemType Directory -Force -Path $out | Out-Null
 foreach ($source in @(
     'spikes/view_matrix/tests/test-health-gesture.cpp',
     'spikes/view_matrix/tests/test-weapon-steady.cpp',
-    'spikes/view_matrix/tests/test-ammo-layout.cpp'
+    'spikes/view_matrix/tests/test-ammo-layout.cpp',
+    'spikes/view_matrix/tests/test-wrist-equipment-policy.cpp',
+    'spikes/view_matrix/tests/test-wrist-equipment-projection.cpp',
+    'spikes/view_matrix/tests/test-wrist-equipment-source.cpp',
+    'spikes/view_matrix/tests/test-wrist-equipment-depth.cpp',
+    'spikes/view_matrix/tests/test-wrist-equipment-placement.cpp'
 )) {
     $inputPath = Join-Path $root $source
     $exe = Join-Path $out ([IO.Path]::GetFileNameWithoutExtension($source) + '.exe')
