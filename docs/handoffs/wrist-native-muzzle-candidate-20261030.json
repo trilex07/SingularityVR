@@ -1,0 +1,76 @@
+{
+  "source": "2eb0e07f8cfa53f2a6e1596b99b15bc6f89909d3",
+  "branch": "fix/wrist-visibility-native-muzzle-followup",
+  "dllSha256": "8EEC46A2E61CBC7179B40A3B6C7BD10641FBBF4D251D2AA622648092E09368F6",
+  "iniSha256": "F2BDE6D2CB68BDC48D7F2AC5FA9A13712EF788E154E861AB354B5FA76C3E80C8",
+  "architecture": "x86 PE32",
+  "optimization": "/O2",
+  "trackedSourceClean": true,
+  "untrackedPreserved": [
+    "build/hd-physical-followup/"
+  ],
+  "backup": "deployment/install-backups/20261030-122250",
+  "installReport": "deployment/install-reports/20261030-122251.json",
+  "retained": true,
+  "automaticRollback": false,
+  "gameLaunched": false,
+  "physicalAcceptance": "PENDING",
+  "legacyHealthSuppression": 0,
+  "panelSettings": {
+    "EquipmentWristInner": 1,
+    "EquipmentWristOffsetXmm": 94,
+    "EquipmentWristOffsetYmm": 80,
+    "EquipmentWristTextQuarterTurn": 1
+  },
+  "muzzleSettings": {
+    "Render/NativeWeaponMuzzleOrigin": 1,
+    "Diagnostic/NativeRifleMuzzleOrigin": 3
+  },
+  "unchangedProtectedFiles": 46,
+  "offline": "PASS",
+  "tests": {
+    "wrist-followup": {
+      "status": "PASS",
+      "logSha256": "95598D89701E9321C68B5B51D0A9027B99EBFBA1E954D5E0AD7293D6D513EC1A"
+    },
+    "muzzle-followup": {
+      "status": "PASS",
+      "logSha256": "55109CDC3966DEB9F2136CA322761A568EE2955ED559830A9F899753F6654BBF"
+    },
+    "physical-followup": {
+      "status": "PASS",
+      "logSha256": "A196A66A023501754B327CCEA2E4B6E102B21698E8E52B56CB317F59E723E2BB"
+    },
+    "dual-followup": {
+      "status": "PASS",
+      "logSha256": "F1DD78B5FEFE0E9F479862CE7631BEAD7BBFA23057E1B81377ED7EC7CC1FB76F"
+    },
+    "haptics-followup": {
+      "status": "PASS",
+      "logSha256": "5C4B8AB3C42AF32FBD90345FCB11ADFADD8A0AC445FE2BB3EA11776514BED4C6"
+    },
+    "wrist-muzzle-build": {
+      "status": "PASS",
+      "logSha256": "1F3DA4071ACAA59085EA304B0BFCB7966E45D7B837F6FFF222F7B5A22FC48043"
+    },
+    "wrist-muzzle-preflight": {
+      "status": "PASS",
+      "logSha256": "9DE4DCC365DDAC7F9CA1575D4A008B4675385CD024C348E0376DD34CC2FC29AD"
+    },
+    "wrist-muzzle-install": {
+      "status": "PASS",
+      "logSha256": "7899C69096A9F1921D24AA90D5BBEF6E0A14EAF95BEAE6D85A6580BBB0709E4A"
+    }
+  },
+  "baselinePhysical": {
+    "weaponsAndGrips": "user reports OK",
+    "wristHud": "FAIL invisible",
+    "muzzleVfx": "FAIL offset"
+  },
+  "limits": [
+    "No current Steam execution or PSVR2 result",
+    "Reused runtime full native method fingerprint; decoded .text archive unavailable",
+    "Bind geometry clearance does not certify all animated poses",
+    "No measured FPS claim"
+  ]
+}
