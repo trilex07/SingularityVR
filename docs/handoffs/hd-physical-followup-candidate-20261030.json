@@ -1,28 +1,40 @@
 {
-  "source": "e2cbf313036b5c611a5988818e8af8683b157586",
-  "dll_sha256": "63ccff6a95b4f4aabcd0abddbccfba121891b09df6e1378730010768b5f4fe19",
-  "ini_sha256": "cbc6a8e5485ceb77d7ec3b9c7e9b3cde3155e75746994dc38c7dc5483c6acfbf",
-  "asset_count": 16,
-  "automatic_restore": false,
-  "game_launch": false,
-  "physical": "PENDING",
-  "audio_crash_causality": "INFERRED, not confirmed in game",
-  "preferences": "NISSharpen 1.00 / OLED2 / VrSettingsSessionOnly0",
-  "status": "INSTALLED_NOT_LAUNCHED_RETAINED",
-  "asset_verification": "16/16 deployed and backup hashes PASS; protected dependencies PASS",
-  "runtime_backup": "deployment/install-backups/20261030-004355",
-  "asset_backup": "build/next-weapon-reload/physical-followup-20261030/asset-backup",
-  "frame_timing": "NOT_RUN",
-  "native_crash_free": "PENDING",
-  "tests": {
-    "centurion_d3d9_ex": "PASS",
-    "kasimov_d3d9_ex": "PASS",
-    "hud_d3d9_ex": "PASS",
-    "support_palette_cases": 18,
-    "dual_tmd": "PASS",
-    "hands_haptics": "PASS",
-    "deployment_guard": "38 PASS",
-    "vorbis": "10 PASS, 1 optional skipped; actual native header and actual bank roundtrip separately PASS"
+  "source": "190c11279028a5d608b13e089918ec70229db650",
+  "branch": "fix/hd-weapon-physical-followup-wrist",
+  "dllSha256": "57E1BFAD4886E7F4EAA6148326C1D6119D9854BD599B567D2DA456201ECA72B7",
+  "iniSha256": "FB670CF2D36660A6C18B3E94560DEF772FAAB294D36CA3705E495056B9AA390A",
+  "architecture": "x86 PE32",
+  "optimization": "/O2",
+  "cleanSource": true,
+  "backup": "C:\\Users\\Trilex\\vr-mods\\SingularityVR-centurion-runtime\\deployment\\install-backups\\20261030-114649",
+  "installReport": "deployment/install-reports/20261030-114650.json",
+  "retained": true,
+  "automaticRollback": false,
+  "gameLaunched": false,
+  "physicalAcceptance": "PENDING",
+  "legacyHealthSuppression": 0,
+  "panelSettings": {
+    "EquipmentWristOffsetXmm": 69,
+    "EquipmentWristInner": 1,
+    "EquipmentWristTextQuarterTurn": 1
   },
-  "audio_bank_sha256": "41dc6fe2034688a7110e528bea113ccfaf386994932e8b8eb297cdc5e8b68198"
+  "unchangedProtectedAssets": 45,
+  "tests": [
+    "real Kasimov mixed-skinning and lens/FSM",
+    "native reload roundtrips",
+    "Centurion original muzzle source",
+    "Kasimov and Centurion D3D9/D3D9Ex pixels/state/reset",
+    "HUD D3D9/D3D9Ex pixels/state/reset",
+    "dual TMD/hands/OLED/WeaponLocker",
+    "independent hands/shot haptics",
+    "compiled x86 factory literal 0x20c"
+  ],
+  "testLogHashes": {
+    "centurion": "3EDF67F40DE7D52A8512A51C30543C0B637ECE9F6494F082EE7412E87FC05A0B",
+    "physical": "A196A66A023501754B327CCEA2E4B6E102B21698E8E52B56CB317F59E723E2BB",
+    "dual-tmd": "942379EAE0383B199668615B4189E669314732CB6DFEAE4D88CF3B489A394C2D",
+    "haptics": "5C4B8AB3C42AF32FBD90345FCB11ADFADD8A0AC445FE2BB3EA11776514BED4C6",
+    "wrist-gpu": "5CFC7D07A678D8ACC0E54566E367FEB2B97BF65325551F735CD520704D7498EE",
+    "kasimov": "1305EB0D0462D0DE5AE3852B11E2A9776FDABE17E464F56399C339D871C01D71"
+  }
 }
