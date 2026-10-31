@@ -178,6 +178,7 @@ static void BuildTmdAssemblyC(float C[4][4]);
 #include "cinema_surface_copy.h" // D3D headers only after NOMINMAX
 #include "bink_audio_observation.h"
 #include "bink_intro_audio.h"
+#include "bink_memory_movies.h"
 #include "psvr2_trigger.h"
 #include "psvr2_trigger_config.h"
 #include "trigger_shot.h"
@@ -26717,6 +26718,7 @@ static LONG g_polishIntroAudioFix = 1;
 static std::uint32_t g_binkNativeTracks[8]{};
 static DWORD g_binkNativeTrackCount = 0;
 static bool g_binkNativeTracksValid = false;
+static BinkMemoryMovies g_binkMemoryMovies;
 static void WINAPI ObserveBinkSoundTrack(DWORD count, const DWORD* tracks) {
     const DWORD incomingError=GetLastError();
     EnterCriticalSection(&g_binkAudioLock);
@@ -26743,7 +26745,9 @@ static void* WINAPI ObserveBinkOpen(const char* filename, DWORD flags) {
     // Read before the call; source may be a file handle with BINKFILEHANDLE.
     const bool note=InterlockedIncrement(&g_binkOpenNotes)<=12;
     char name[256]{};
-    const bool readable=(note || (Rd(g_binkIntroReady) && Rd(g_polishIntroAudioFix))) && BinkObserveName(filename, name, flags);
+    bool readable=(note || (Rd(g_binkIntroReady) && Rd(g_polishIntroAudioFix))) && BinkObserveName(filename, name, flags);
+    const char* memoryName=!readable?g_binkMemoryMovies.Identify(filename,flags):nullptr;
+    if(memoryName){strcpy_s(name,memoryName);readable=true;}
     const BinkIntroAudioPlan plan=BinkPlanIntroAudio(readable?name:nullptr,
         Rd(g_binkIntroReady) && Rd(g_polishIntroAudioFix) && PolishLocalization::PL().IsPolishEnabled(),
         g_binkNativeTracksValid?g_binkNativeTracks:nullptr,g_binkNativeTrackCount,flags);
@@ -26766,9 +26770,9 @@ static void* WINAPI ObserveBinkOpen(const char* filename, DWORD flags) {
     static unsigned movieNotes=0;
     if(plan.enabled && movieNotes<16) {
         ++movieNotes;
-        Log("bink-audio: Polish movie %s track1->%lu; retained0/2/3; handle=%p post=%s",
+        Log("bink-audio: Polish movie %s track1->%lu; retained0/2/3; handle=%p source=%s post=%s",
             readable?name:"<movie>", (unsigned long)plan.polish[1],
-            result,result?"native-default0":"native-selection-rollback");
+            result,memoryName?"verified-memory":"filename",result?"native-default0":"native-selection-rollback");
     }
     if(note) Log("bink-audio: opened name=%s flags=0x%08lX handle=%p (unchanged)",
         readable?name:"<not a readable filename>", (unsigned long)flags, result);
@@ -26782,6 +26786,16 @@ static void InstallBinkAudioObservation() {
     HMODULE module=GetModuleHandleA("binkw32.dll");
     if(!module)return;
     attempted=true;
+    char movieDirectory[MAX_PATH]{};
+    const DWORD exeLength=GetModuleFileNameA(nullptr,movieDirectory,MAX_PATH);
+    unsigned movieCount=0;
+    if(exeLength && exeLength<MAX_PATH){
+        char* slash=strrchr(movieDirectory,'\\');
+        if(slash && size_t(slash-movieDirectory)+sizeof("\\..\\RvGame\\Movies")<MAX_PATH){
+            strcpy_s(slash,MAX_PATH-size_t(slash-movieDirectory),"\\..\\RvGame\\Movies");
+            movieCount=g_binkMemoryMovies.Load(movieDirectory);
+        }
+    }
     InitializeCriticalSection(&g_binkAudioLock);
     void* sound=reinterpret_cast<void*>(GetProcAddress(module,"_BinkSetSoundTrack@8"));
     void* open=reinterpret_cast<void*>(GetProcAddress(module,"_BinkOpen@8"));
@@ -26790,8 +26804,8 @@ static void InstallBinkAudioObservation() {
     const MH_STATUS ea=a==MH_OK?MH_EnableHook(sound):a;
     const MH_STATUS eb=b==MH_OK?MH_EnableHook(open):b;
     InterlockedExchange(&g_binkIntroReady,ea==MH_OK && eb==MH_OK?1:0);
-    Log("bink-audio: exports sound=%d open=%d max12 notes; known-intro Polish fix=%ld ready=%d; other movies native",
-        (int)ea,(int)eb,Rd(g_polishIntroAudioFix),Rd(g_binkIntroReady)?1:0);
+    Log("bink-audio: exports sound=%d open=%d max12 notes; Polish movie fix=%ld ready=%d memory-catalog=%u/12; unknown movies native",
+        (int)ea,(int)eb,Rd(g_polishIntroAudioFix),Rd(g_binkIntroReady)?1:0,movieCount);
 }
 
 static SRWLOCK g_polishSpeakLock = SRWLOCK_INIT;

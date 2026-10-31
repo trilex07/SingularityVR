@@ -43,17 +43,19 @@ inline std::uint32_t BinkPolishTrackForMovie(const char* filename) {
         return 10;
     }
 
-    // 10-track story film reel: Polish narration is Track 9
+    // Native Bink APIs consume track IDs, not zero-based audio ordinals.
+    // barisov: IDs 0,1,3..10; research reels: IDs 0,1,4..10.
+    // Polish remains ID 10 even when its ordinal is 9 or 8.
     if (match(basename, "barisovtowerfilmreel.bik")) {
-        return 9;
+        return 10;
     }
 
-    // 9-track in-game research projector reels: Polish narration is Track 8
+    // 9-track in-game research projector reels: Polish track ID 10.
     if (match(basename, "ma2_5500.bik") ||
         match(basename, "ma6_1000.bik") ||
         match(basename, "pr99_0800.bik") ||
         match(basename, "vi2_3000.bik")) {
-        return 8;
+        return 10;
     }
 
     return 0; // Not a known multilingual story movie
@@ -63,7 +65,9 @@ inline BinkIntroAudioPlan BinkPlanIntroAudio(const char* name, bool polishOn,
     const std::uint32_t* tracks, std::uint32_t count, std::uint32_t flags) {
     BinkIntroAudioPlan plan;
     const std::uint32_t polishTrack = BinkPolishTrackForMovie(name);
-    if(!polishOn || !polishTrack || !tracks || count!=4 || flags!=0x01004400u)return plan;
+    // Memory names must first be resolved by the verified local-movie catalog.
+    if(!polishOn || !polishTrack || !tracks || count!=4 ||
+       (flags!=0x01004400u && flags!=0x04004400u))return plan;
     for(std::uint32_t i=0;i<4;++i)if(tracks[i]!=i)return plan; // only observed native layout
     plan.enabled=true;plan.count=count;
     for(std::uint32_t i=0;i<count;++i)plan.native[i]=plan.polish[i]=tracks[i];
