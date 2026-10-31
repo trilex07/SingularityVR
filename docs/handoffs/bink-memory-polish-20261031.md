@@ -27,3 +27,16 @@ Falsifier: catalog ready but the next affected real film reports unidentified me
 `tools/tests/test-bink-polish.ps1 -GameRoot <owned game>` runs optimized x86 fixtures for all movie plans, OFF/unsupported/native layouts, failed Open restoration, filename/OS-handle observation, inaccessible memory, missing/ambiguous/different-prefix rejection. Against the installed files it validates all twelve exact identities and opens real MA2 bytes with the installed codec using the production selection helper. Native GetTrackID proves the ordinal/ID distinction. No game process, rendering or playback is launched by this fixture.
 
 Build and broader regression identities are recorded after completion below. Steam remains unchanged. Physical audio acceptance PENDING: play one affected projector/laptop film and confirm Polish narration with music/effects retained; intro remains the accepted control. Expected bounded receipt: `bink-audio: Polish movie <name> track1->10 ... source=verified-memory`.
+
+## Built candidate and exact test results
+
+- Production source `039b0a0f522cba7d008504ede8c35020a5fce7f8`, x86 PE32 `/O2` build PASS.
+- DLL SHA-256: `221297C345FB33AB0B81F351EF64024D7E42466DCC84ACE78448E77392AEA775`.
+- Private candidate/receipt: `build/next-weapon-reload/bink-memory-20261031/`; installed Steam DLL is unchanged `147C3297...`.
+- Focused Bink fixtures including installed codec/native ID query and all twelve local movie identities: PASS.
+- Real D3D9 and D3D9Ex HUD occlusion pixels: PASS. Actual compiled Locker factory literal `[eax+20Ch]` and FName stack regression: PASS.
+- Thirteen post-opening C++ fixtures: PASS. Runner's desktop mirror initially lacked `user32.lib` (`EqualRect`); corrected test linkage and included the new Bink fixtures.
+- Broader runner's **subsequent legacy source-policy check FAILS** at `validate-runtime-policy.ps1:12`: it expects the obsolete literal `VrUiProjectEye(eye,point,projected)`, while accepted MAIN already uses `VrUiProjectPointerPoint`. `vr_menu_overlay.h` is byte-for-byte unchanged against origin/main. No UI code or policy gate was bypassed to conceal that existing failure; do not describe this whole script as PASS.
+- No Steam deployment/game launch, no film replacement, no synthetic voice generation. In-game language and affected-film identity receipt remain PENDING.
+
+Rollback switch remains `[Localization] PolishIntroAudioFix=0`; native selection is forwarded unchanged. This does not disable unrelated Polish text/dubbing.
