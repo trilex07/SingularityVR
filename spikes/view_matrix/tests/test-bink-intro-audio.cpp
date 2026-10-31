@@ -32,19 +32,19 @@ int main() {
     check(planBurn.enabled && planBurn.polish[1]==10,"burningBuildingRecap routes to track 10 (Polish)");
 
     const auto planBarisov=BinkPlanIntroAudio("barisovTowerFilmReel.bik",true,original,4,0x01004400);
-    check(planBarisov.enabled && planBarisov.polish[1]==9,"barisovTowerFilmReel routes to track 9 (Polish)");
+    check(planBarisov.enabled && planBarisov.polish[1]==10,"barisovTowerFilmReel routes to ID 10 (audio ordinal 9)");
 
     const auto planMA2=BinkPlanIntroAudio("MA2_5500.bik",true,original,4,0x01004400);
-    check(planMA2.enabled && planMA2.polish[1]==8,"MA2_5500 routes to track 8 (Polish)");
+    check(planMA2.enabled && planMA2.polish[1]==10,"MA2_5500 routes to ID 10 (audio ordinal 8)");
 
     const auto planMA6=BinkPlanIntroAudio("MA6_1000.bik",true,original,4,0x01004400);
-    check(planMA6.enabled && planMA6.polish[1]==8,"MA6_1000 routes to track 8 (Polish)");
+    check(planMA6.enabled && planMA6.polish[1]==10,"MA6_1000 routes to ID 10 (audio ordinal 8)");
 
     const auto planPR99=BinkPlanIntroAudio("PR99_0800.bik",true,original,4,0x01004400);
-    check(planPR99.enabled && planPR99.polish[1]==8,"PR99_0800 routes to track 8 (Polish)");
+    check(planPR99.enabled && planPR99.polish[1]==10,"PR99_0800 routes to ID 10 (audio ordinal 8)");
 
     const auto planVI2=BinkPlanIntroAudio("VI2_3000.bik",true,original,4,0x01004400);
-    check(planVI2.enabled && planVI2.polish[1]==8,"VI2_3000 routes to track 8 (Polish)");
+    check(planVI2.enabled && planVI2.polish[1]==10,"VI2_3000 routes to ID 10 (audio ordinal 8)");
 
     // Unclassified / Ambient movies untouched:
     check(!BinkPlanIntroAudio("SP_Freighter.bik",true,original,4,0x01004400).enabled,"ambient freighter movie untouched");
@@ -55,7 +55,9 @@ int main() {
     check(!BinkPlanIntroAudio("mir12_video.bik",false,original,4,0x01004400).enabled,"Polish OFF native fallback");
     check(!BinkPlanIntroAudio("mir12_video.bik",true,nullptr,4,0x01004400).enabled,"unobserved selection native fallback");
     check(!BinkPlanIntroAudio("mir12_video.bik",true,original,3,0x01004400).enabled,"other layout/count native fallback");
-    check(!BinkPlanIntroAudio("mir12_video.bik",true,original,4,0x04004400).enabled,"memory/other flags native fallback");
+    check(BinkPlanIntroAudio("mir12_video.bik",true,original,4,0x04004400).enabled,"identified memory movie supports observed native flags");
+    check(!BinkPlanIntroAudio("mir12_video.bik",true,original,4,0x04804400).enabled,"mixed memory/handle flags preserve native selection");
+    check(!BinkPlanIntroAudio(nullptr,true,original,4,0x04004400).enabled,"unidentified memory movie remains native");
     std::uint32_t other[]{0,10,2,3};
     check(!BinkPlanIntroAudio("mir12_video.bik",true,other,4,0x01004400).enabled,"already-localized/non-English selection untouched");
 

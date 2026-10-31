@@ -1,3 +1,9 @@
+## 2026-10-31 — In-game Bink Polish selection correction
+
+- User reports Japanese in game films, accepted intro still Polish. Actual logs prove memory Open flags 04004400 bypass old filename-only routing. Installed movie headers, ffprobe and native codec GetTrackID prove Polish ID 10 differs from ordinal 8/9 in reels.
+- `fix/bink-memory-polish-audio`, production source 039b0a0f, x86 PE32/O2 DLL 221297C3. Exact local-prefix memory identification, fail-closed unknown/ambiguous inputs, existing selection transaction; no movie/media replacements.
+- Focused actual-codec tests, twelve identities, thirteen post-opening C++ fixtures, D3D9/Ex HUD pixels and compiled Locker ABI PASS. Legacy post-opening source-policy literal check FAILS on unchanged accepted menu source; recorded, not bypassed. Steam unchanged; physical audio acceptance PENDING. Handoff: docs/handoffs/bink-memory-polish-20261031.md.
+
 ## 2026-10-30 — Wrist live counter ownership correction
 
 - Actual diagnostic reason=4 proved duplicate Pawn lookup rejected the local player before counter reads. Reused validated native reciprocal player resolver; no guessed offsets or fake values.
