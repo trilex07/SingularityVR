@@ -79,6 +79,32 @@ int main() {
     auto high=readPixels(dev,ctx,b.rt.outTex[0]);
     unsigned changed=0;for(size_t i=0;i<low.size();++i) if(low[i]!=high[i]) ++changed;
     require(changed>100,"sharpness changes actual pixels");
+    // Exercise REAL embedded CS regional dispatches, not only rect arithmetic.
+    b.sharpnessPct=25;
+    require(NisBridge_ProcessStereo(&b,ctx,src,w*2,h,w,h),"reference periphery");
+    auto periphery=readPixels(dev,ctx,b.rt.outTex[0]);
+    b.sharpnessPct=100;
+    const float gx[2]={float(w)/2,float(w)/2},gy[2]={float(h)/2,float(h)/2};
+    const bool valid[2]={true,false};
+    require(NisBridge_ProcessStereo(&b,ctx,src,w*2,h,w,h,gx,gy,valid),"gaze regional dispatch");
+    auto gaze=readPixels(dev,ctx,b.rt.outTex[0]);
+    auto fallback=readPixels(dev,ctx,b.rt.outTex[1]);
+    const auto region=svr_fovea::Around(gx[0],gy[0],w,h,.425f);
+    unsigned foveaChanged=0;
+    for(UINT y=0;y<h;++y)for(UINT x=0;x<w;++x){
+        const UINT i=y*w+x;
+        // NIS's viewport bounds are inclusive: allow the boundary pixel.
+        if(x<region.x||x>region.x+region.w||y<region.y||y>region.y+region.h)
+            require(gaze[i]==periphery[i],"outside gaze unchanged");
+        else if(gaze[i]!=periphery[i])++foveaChanged;
+    }
+    require(foveaChanged>30,"gaze affects actual fovea pixels");
+    require(NisBridge_ProcessStereo(&b,ctx,src,w*2,h,w,h),"uniform fallback reference");
+    require(fallback==readPixels(dev,ctx,b.rt.outTex[1]),"invalid eye uses exact uniform fallback");
+    // Regions must not leak into the adjacent eye or survive recreation.
+    require(NisBridge_EnsureFrame(&b,dev,w*2,h,w*2,h*2),"resize after gaze");
+    require(NisBridge_ProcessStereo(&b,ctx,src,w*2,h,w*2,h*2,gx,gy,valid),"upscale ignores gaze regions");
+    printf("Gaze changed %u regional pixels; invalid-eye uniform fallback exact\n",foveaChanged);
     require(!NisBridge_ShouldEngage(&b,false,true),"menu refused");
     b.mode=0; require(!NisBridge_ShouldEngage(&b,true,true),"Off refused");
     b.mode=2;b.rt.failedOnce=true;

@@ -8,8 +8,11 @@
 #include <cstdlib>
 #include <cstring>
 #include <cwchar>
+#include <new>
 
 #include "../../spikes/view_matrix/psvr2_ipc.h"
+#include "../../spikes/view_matrix/psvr2_gaze_abi.h"
+#include "../../spikes/view_matrix/psvr2_gaze_share.h"
 
 namespace {
 
@@ -128,6 +131,8 @@ BOOL WINAPI ConsoleCtrlHandler(DWORD) {
     return TRUE;
 }
 
+static void (*g_gazePump)() = nullptr;
+
 enum class WaitOutcome { IoReady, ParentExited, ShutdownRequested, Error };
 
 WaitOutcome WaitForOverlappedOrExit(HANDLE ioHandle, OVERLAPPED& ov, HANDLE parentWatch, DWORD& transferred) {
@@ -144,7 +149,11 @@ WaitOutcome WaitForOverlappedOrExit(HANDLE ioHandle, OVERLAPPED& ov, HANDLE pare
         shutdownIdx = count;
         handles[count++] = g_shutdownEvent;
     }
-    const DWORD waitResult = WaitForMultipleObjects(count, handles, FALSE, INFINITE);
+    DWORD waitResult;
+    do {
+        waitResult = WaitForMultipleObjects(count, handles, FALSE, g_gazePump ? 4 : INFINITE);
+        if(waitResult==WAIT_TIMEOUT && g_gazePump)g_gazePump();
+    } while(waitResult==WAIT_TIMEOUT);
     if (waitResult == WAIT_OBJECT_0) {
         if (!GetOverlappedResult(ioHandle, &ov, &transferred, FALSE)) {
             return WaitOutcome::Error;
@@ -190,6 +199,8 @@ struct Backend {
     DeinitFn deinit = nullptr;
     DriverActiveFn active = nullptr;
     SetTriggerFn set = nullptr;
+    using GazeFn=bool (*)(void*,uint32_t);
+    GazeFn gaze=nullptr;
     bool initialized = false;
 
     static void* SafeGetModuleHandle(GetModuleHandleFn fn) {
@@ -225,6 +236,7 @@ struct Backend {
         deinit = reinterpret_cast<DeinitFn>(GetProcAddress(capi, "psvr2_toolkit_deinit"));
         active = reinterpret_cast<DriverActiveFn>(GetProcAddress(capi, "psvr2_toolkit_get_driver_active"));
         set = reinterpret_cast<SetTriggerFn>(GetProcAddress(capi, "psvr2_toolkit_set_trigger_effect"));
+        gaze=reinterpret_cast<GazeFn>(GetProcAddress(capi,"psvr2_toolkit_gaze_status"));
         return init && deinit && active && set;
     }
     bool Initialize() {
@@ -287,6 +299,44 @@ struct Backend {
     }
     ~Backend() { Shutdown(); }
 };
+
+// Same-thread, nonblocking Toolkit polling. Trigger calls never race gaze calls.
+struct GazePublisher {
+    HANDLE mapping=nullptr;svr::psvr2::GazeShared* view=nullptr;Backend* backend=nullptr;
+    uint32_t last=0;bool have=false;ULONGLONG retry=0;
+    bool Open(DWORD pid,Security& security,Backend& b){
+        if(!pid||!b.gaze)return false;
+        wchar_t name[80]{};swprintf_s(name,L"Local\\SingularityVR.Gaze.%lu",pid);
+        mapping=CreateFileMappingW(INVALID_HANDLE_VALUE,&security.attributes,PAGE_READWRITE,0,sizeof(*view),name);
+        if(!mapping)return false;
+        if(GetLastError()==ERROR_ALREADY_EXISTS){CloseHandle(mapping);mapping=nullptr;return false;}
+        view=static_cast<svr::psvr2::GazeShared*>(MapViewOfFile(mapping,FILE_MAP_WRITE,0,0,sizeof(*view)));
+        if(!view){CloseHandle(mapping);mapping=nullptr;return false;}
+        new(view) svr::psvr2::GazeShared{};
+        view->magic=svr::psvr2::kGazeMagic;view->version=svr::psvr2::kGazeVersion;backend=&b;return true;
+    }
+    void Poll(){
+        if(!view||!backend)return;
+        if(!backend->initialized){const auto now=GetTickCount64();if(now<retry)return;retry=now+2000;if(!backend->Initialize())return;}
+        svr::psvr2::gaze_abi::Status st{};
+        bool ok=false;__try{ok=backend->gaze(&st,0);}__except(EXCEPTION_EXECUTE_HANDLER){ok=false;}
+        if(!ok||(have&&last==st.wearable.frameCounter))return;
+        have=true;last=st.wearable.frameCounter;
+        svr::psvr2::GazeSample sample{};sample.publishMs=GetTickCount64();sample.frameCounter=last;
+        sample.deviceTimestamp=st.wearable.timestamp;
+        if(st.wearable.dirCombinedValid)sample.flags|=svr::psvr2::GazeCombinedValid;
+        if(st.wearable.left.blinkValid&&st.wearable.left.blink)sample.flags|=svr::psvr2::GazeBlinkLeft;
+        if(st.wearable.right.blinkValid&&st.wearable.right.blink)sample.flags|=svr::psvr2::GazeBlinkRight;
+        sample.dirCombined[0]=st.wearable.dirCombined.x;sample.dirCombined[1]=st.wearable.dirCombined.y;sample.dirCombined[2]=st.wearable.dirCombined.z;
+        svr::psvr2::GazeWrite(*view,sample);
+        static bool first=false;if(!first&&(sample.flags&svr::psvr2::GazeCombinedValid)){
+            first=true;Log().Write("gaze","first valid combined direction published; no gaze coordinates logged");
+        }
+    }
+    ~GazePublisher(){g_gazePump=nullptr;if(view)UnmapViewOfFile(view);if(mapping)CloseHandle(mapping);}
+};
+static GazePublisher* g_publisher=nullptr;
+static void PumpGaze(){if(g_publisher)g_publisher->Poll();}
 
 static bool AsciiToken(const wchar_t* arg, std::uint8_t out[psvr2ipc::kMaxTokenBytes], std::size_t& n) {
     n = wcslen(arg);
@@ -385,6 +435,15 @@ int wmain(int argc, wchar_t** argv) {
         Log().Write("bridge", "dry bridge active; hardware calls disabled");
     }
 
+    GazePublisher publisher;
+    bool gazeRequested=false;
+    for(int i=3;i<argc;++i)if(wcscmp(argv[i],L"--gaze")==0)gazeRequested=true;
+    if(hardware&&gazeRequested&&publisher.Open(parentPid,security,backend)){
+        g_publisher=&publisher;g_gazePump=PumpGaze;
+        Log().Write("gaze","publisher ready for parent=%lu; nonblocking 4ms poll, invalid/stale samples rejected by client",parentPid);
+    }
+    if(hardware&&gazeRequested&&!g_gazePump)
+        Log().Write("gaze","provider unavailable: optionalExport=%d mapping=%d; triggers unaffected, game uses controller/uniform-NIS fallback",backend.gaze?1:0,publisher.view?1:0);
     bool keepServing = true;
     while (keepServing) {
         if (parentWatch && WaitForSingleObject(parentWatch, 0) == WAIT_OBJECT_0) {
@@ -433,11 +492,13 @@ int wmain(int argc, wchar_t** argv) {
         CloseHandle(connectOv.hEvent);
 
         if (connected) {
+            if(g_gazePump)g_gazePump();
             Log().Write("bridge", "Client connected");
             psvr2ipc::ServerSession client(token, tokenLen);
             std::uint8_t message[psvr2ipc::kMaxMessageBytes]{};
             bool done = false;
             while (!done && keepServing) {
+                if(g_gazePump)g_gazePump();
                 OVERLAPPED readOv{};
                 readOv.hEvent = CreateEventW(nullptr, TRUE, FALSE, nullptr);
                 DWORD got = 0;

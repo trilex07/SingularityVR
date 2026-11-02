@@ -24,6 +24,7 @@
 
 #include "nis_upscale.h"
 #include "nis_runtime.h"
+#include "gaze_fovea.h"
 
 struct NisBridge {
     NisRuntime rt;
@@ -129,7 +130,7 @@ static bool NisBridge_EnsureFrame(NisBridge* b, ID3D11Device* dev,
 // must submit the native halves for this frame instead.
 static bool NisBridge_ProcessStereo(NisBridge* b, ID3D11DeviceContext* ctx,
         ID3D11Texture2D* srcTex, UINT sbsW, UINT sbsH,
-        UINT eyeOutW, UINT eyeOutH) {
+        UINT eyeOutW, UINT eyeOutH, const float* gazeX=nullptr, const float* gazeY=nullptr, const bool* gazeValid=nullptr) {
     if (!b->rt.ready || !srcTex || !b->stageTex[0] || !b->stageSrv[0] ||
         !b->stageTex[1] || !b->stageSrv[1]) return false;
     LARGE_INTEGER t0{}; QueryPerformanceCounter(&t0);
@@ -146,12 +147,22 @@ static bool NisBridge_ProcessStereo(NisBridge* b, ID3D11DeviceContext* ctx,
     const bool sharpenOnly = (b->mode == nis_upscale::kNISSharpen);
     NisTimingBegin(&b->rt, ctx);
     const float sharp = NisBridge_Sharpness(b);
-    const bool ok0 = NisDispatchEye(&b->rt, ctx, b->stageSrv[0],
-        sbsW/2, sbsH, 0, eyeOutW, eyeOutH, sharp, sharpenOnly);
-    const bool ok1 = NisDispatchEye(&b->rt, ctx, b->stageSrv[1],
-        sbsW/2, sbsH, 1, eyeOutW, eyeOutH, sharp, sharpenOnly);
+    bool ok=true;
+    for(int eye=0;eye<2;++eye){
+        const bool foveated=gazeX&&gazeY&&gazeValid&&gazeValid[eye]&&sharpenOnly&&sbsW/2==eyeOutW&&sbsH==eyeOutH;
+        const auto levels=svr_fovea::Grade(sharp*.25f,sharp);
+        ok=NisDispatchEye(&b->rt,ctx,b->stageSrv[eye],sbsW/2,sbsH,eye,eyeOutW,eyeOutH,
+                         foveated?levels.periphery:sharp,sharpenOnly)&&ok;
+        if(foveated){
+            const auto outer=svr_fovea::Around(gazeX[eye],gazeY[eye],eyeOutW,eyeOutH,.425f);
+            const auto inner=svr_fovea::Around(gazeX[eye],gazeY[eye],eyeOutW,eyeOutH,.25f);
+            const nis_upscale::Rect rects[]={{outer.x,outer.y,outer.w,outer.h},{inner.x,inner.y,inner.w,inner.h}};
+            ok=NisDispatchEye(&b->rt,ctx,b->stageSrv[eye],sbsW/2,sbsH,eye,eyeOutW,eyeOutH,levels.transition,true,&rects[0])&&ok;
+            ok=NisDispatchEye(&b->rt,ctx,b->stageSrv[eye],sbsW/2,sbsH,eye,eyeOutW,eyeOutH,levels.fovea,true,&rects[1])&&ok;
+        }
+    }
     NisTimingEnd(&b->rt, ctx);
-    return ok0 && ok1;
+    return ok;
 }
 
 // Harvest timestamps without stalling; accumulates MEASURED GPU time.

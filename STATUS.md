@@ -1,3 +1,9 @@
+## 2026-11-02 — Gaze wheel/NIS and native stereo cinema candidate
+
+- L1/L2 PASS: x86 PE32 /O2; x86/x64 gaze ABI/selection tests, D3D9Ex stereo pixel/state fixture, D3D11 NIS regional pixels, existing hands/TMD/reload/WeaponLocker/OLED/haptics regressions and hardware-OFF bridge IPC.
+- Steam/OpenXR/PSVR2 NOT RUN. Three independent default-OFF switches; existing Bink stays mono. Legacy D3D9 HAL fixture NOT RUN (host CreateDevice 0x8876086C). No FPS gain claimed.
+- Candidate and one grouped acceptance gate: docs/handoffs/gaze-wheel-nis-stereo-cinema-20261102.md. Seeker reload deferred; accepted installed files unchanged.
+
 ## 2026-10-30 — Wrist live counter ownership correction
 
 - Actual diagnostic reason=4 proved duplicate Pawn lookup rejected the local player before counter reads. Reused validated native reciprocal player resolver; no guessed offsets or fake values.
