@@ -2,6 +2,35 @@
 #include <cassert>
 #include <cstdio>
 #include <limits>
+#include <cstring>
+#include "../native_wanted_names.h"
+static constexpr int OBJ_NAME=0x2c;
+// Synthetic readable UObject/property storage, exercising the real registry
+// lookup and production native-property walker, not a source-text assertion.
+static unsigned char reflectionFixture[6][256]{};
+static bool Readable(const void* p,size_t n) {
+    const uintptr_t a=(uintptr_t)p,lo=(uintptr_t)reflectionFixture;
+    return a>=lo && n<=sizeof(reflectionFixture) && a-lo<=sizeof(reflectionFixture)-n;
+}
+#include "../native_property_list.inl"
+static void TestActualRegistryAndWalker(){
+    const char* required[]={"mCombatNode","mNodeName","mCurrentNodeInstigator","mTarget","Health"};
+    for(int i=0;i<kWantNameCount;++i)g_wantNames[i].idx=1000+i;
+    uintptr_t first=(uintptr_t)reflectionFixture[1];
+    memcpy(reflectionFixture[0]+0x4c,&first,sizeof(first));
+    for(int i=0;i<5;++i){
+        const int idx=WantedIdx(required[i]);assert(idx>=1000);
+        const int offset=0x100+i*16;
+        memcpy(reflectionFixture[i+1]+OBJ_NAME,&idx,4);
+        memcpy(reflectionFixture[i+1]+0x64,&offset,4);
+        uintptr_t next=i==4?0:(uintptr_t)reflectionFixture[i+2];
+        memcpy(reflectionFixture[i+1]+0x40,&next,sizeof(next));
+    }
+    for(int i=0;i<5;++i)assert(PropOffsetUnder((uintptr_t)reflectionFixture[0],WantedIdx(required[i]),0x4c,0x40,0x64)==0x100+i*16);
+    assert(WantedIdx("not_a_registered_native_field")==-1);
+    assert(PropOffsetUnder((uintptr_t)reflectionFixture[0],-1,0x4c,0x40,0x64)==-1);
+    puts("production wanted-name registry + native property walk: PASS");
+}
 struct Scene {
     bool interaction=true,attacking=true;uintptr_t instigator=2;
     bool PlayerInteraction(uintptr_t p){return interaction && p==1;}
@@ -9,6 +38,7 @@ struct Scene {
     bool Attacking(uintptr_t object,uintptr_t pawn){return attacking && object==2 && pawn==1;}
 };
 int main(){
+    TestActualRegistryAndWalker();
     Scene scene;assert(cinemamutant::InteractionAttacker(scene,1)==2);
     scene.interaction=false;assert(!cinemamutant::InteractionAttacker(scene,1));
     scene.interaction=true;scene.instigator=3;assert(!cinemamutant::InteractionAttacker(scene,1));

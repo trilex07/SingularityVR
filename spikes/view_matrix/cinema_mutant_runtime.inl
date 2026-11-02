@@ -45,7 +45,15 @@ static bool MutantAssistedEnd(void* source,const float* start,const float* end,f
     // every shot; no GObjects scan, proximity heuristic, or retained pawn pointer.
     MutantScene scene;
     const uintptr_t attacker=cinemamutant::InteractionAttacker(scene,g_playerPawn);
-    if(!attacker)return false;
+    if(!attacker){
+        static unsigned refused=0;
+        if(refused++<4)Log("mutant scripted refusal: pawn=%08X live=%d interaction=%d instigator=%08X propertyOffsets node=%d instigator=%d; native ray retained",
+            (unsigned)g_playerPawn,IsLive(g_playerPawn)?1:0,scene.PlayerInteraction(g_playerPawn)?1:0,
+            (unsigned)scene.Instigator(g_playerPawn),
+            PropOffsetInChain(g_playerPawnClass,"mCombatNode"),
+            PropOffsetInChain(g_playerPawnClass,"mCurrentNodeInstigator"));
+        return false;
+    }
     float center[3]{};
     if(!MutantRead(attacker+ACTOR_LOCATION,center,sizeof(center)))return false;
     if(!cinemamutant::Redirect(true,true,true,(uintptr_t)source,g_playerPawn,attacker,start,end,center,corrected))return false;

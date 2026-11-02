@@ -1,5 +1,26 @@
 # Scripted mutant shot assist — 2026-11-02
 
+## BD038AA4 failed physical follow-up / registry correction
+
+Physical test FAIL: user still misses. Actual session has player-source shot
+at frame 4383, fireDepth=8, flags=228BF, native caller=00E6AB5E; no successful
+`mutant scripted aim` receipt. This proves the new assist did not execute.
+
+Proven first violated contract: PropOffsetInChain resolves names exclusively
+through WantedIdx/g_wantNames. The new mCombatNode, mNodeName,
+mCurrentNodeInstigator and mTarget names were never registered. WantedIdx thus
+always returned -1 and the production walker refused them. Prior math tests did
+not exercise that adapter. This is an implementation error, not evidence against
+the native node/instigator identity or the requested scoped aim policy.
+
+Correction adds the four actual names to the one-shot registry. The unchanged
+registry and lookup move into native_wanted_names.h so the regression compiles
+the actual production names and lookup together with native_property_list.inl.
+Synthetic UProperty chains prove all five required fields, including Health,
+resolve while unknown fields fail. x86/x64 fixture PASS. Four bounded rejection
+receipts additionally expose lifetime/interaction/instigator/offset failures.
+No guessed angles, new native offsets or broader scene gates introduced.
+
 ## Evidence and mechanism
 
 User explicitly requests assisted hits in the scripted tackle: animated pistol
