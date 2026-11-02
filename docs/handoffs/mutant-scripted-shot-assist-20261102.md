@@ -64,3 +64,20 @@ requested for this isolated change.
 
 No files were deployed over the running game. Enable the opt-in only through
 the existing hash/backup/profile deployment after normal game closure.
+
+## Built candidate
+
+- Runtime source: `482c812cc79d29e9ba8b12166f4b45bbdde30109`, pushed.
+- x86 PE32 `/O2` DLL SHA256:
+  `BD038AA405A893F6282544BD7284F24D15B3205864492E2762CD08A6AD9ED171`.
+- test-gaze-cinema.ps1: x86/x64 policies and captured-ray fixture PASS;
+  actual D3D9Ex cinema pixel/state tests PASS. Legacy D3D9 HAL NOT RUN
+  (host returns 8876086C). No game/HMD pass claimed.
+- test-dual-weapon-tmd.ps1: PASS, including hand, reload, WeaponLocker and
+  OLED D3D11 GPU compute/state/lifetime regressions.
+- Staged opt-in INI SHA256:
+  `2F2011D1E280F0FA270E09D5C40556097C5E988EEA67CB087AF69AD3B1FEAC78`.
+- Exact accepted-profile guard preflight PASS for renderer and only
+  Render/CinemaMutantAimAssist addition. Private candidate directory:
+  build/next-weapon-reload/mutant-scripted-20261102/.
+- Steam not modified; PID 25756 still running at delivery.

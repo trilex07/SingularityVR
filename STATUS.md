@@ -1,6 +1,6 @@
 ## 2026-11-02 — Exact scripted mutant assistance
 
-- IMPLEMENTED_NOT_VERIFIED: opt-in CinemaMutantAimAssist redirects only the
+- L2_PASS: opt-in CinemaMutantAimAssist redirects only the
   captured local-player 8000 UU shot in the native mutant tackle interaction.
 - Direct reflected mCurrentNodeInstigator -> RvAI_PawnMutant and reciprocal
   mTarget verified read-only in the running session. No nearest-enemy heuristic.
