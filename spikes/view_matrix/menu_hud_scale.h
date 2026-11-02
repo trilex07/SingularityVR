@@ -67,3 +67,9 @@ inline bool StationMovieClass(const char* name) {
 inline float StationCapturedInset(bool station,bool modPanel,float inset,int percent) {
     return station ? StationMenuInset(4,modPanel,inset,percent) : inset;
 }
+
+// Only direct canvases projected through ProjectCanvasMatrix receive this
+// shift. Legacy class-4 fallback in HudStereoPair has no vertical translation.
+inline float ContextPointerClipY(bool station,bool projectedDirect) {
+    return !station && projectedDirect ? StationMenuClipY(4) : 0.f;
+}

@@ -5515,3 +5515,8 @@ Toggle with **F6**.
 - Existing intro crash: NOT REPRODUCED during read-only exception capture; cause UNRESOLVED.
 - Evidence and test boundary: docs/handoffs/cinema-lock-lifetime-20261102.md.
 
+
+
+## 2026-11-03 — Consolidated gravity/audio/movie/menu/cinema candidate
+
+Branch `fix/tmd-gravity-rifle-audio-crash`. L1 native AntiGrav arbitration, verified Valkyrie Vorbis header repair, imported memory-backed Polish movie routing, contextual pointer geometry and affine stereo captions: offline tests PASS; final /O2 artifact staged privately. See `docs/handoffs/gravity-rifle-movies-context-cinema-20261103.md` for evidence levels and hashes. Steam/game/HMD NOT RUN. Shorter cinema edge remains a physical acceptance dependency; no speculative per-eye crop applied. No merge/release.

@@ -84,5 +84,21 @@ int main() {
         Expect(ProjectPoint(point,{0,0,0},{0,0,-1},{1,0,0},{0,1,0},1.3f,1.33f,screen)&&
             Near(screen.u,.5f+((k&1)?.5f:-.5f)*scale)&&Near(screen.v,.58f+((k&2)?.5f:-.5f)*scale),"new menu projection matches native backbuffer fallback scale/offset");
     }
+    // Context confirmation fallback has scale but no native Y translation.
+    Expect(Near(ContextPointerClipY(false,false),0.f),"legacy confirmation cursor has no unrendered vertical offset");
+    Expect(Near(ContextPointerClipY(true,false),0.f)&&Near(ContextPointerClipY(true,true),0.f),"captured station stays centred");
+    Expect(Near(ContextPointerClipY(false,true),-.12f),"direct canvas shares actual shifted plane");
+    for(bool projected:{false,true}){
+        const float inset=StationMenuInset(4,projected,ClassBackbufferScale(4,true,100),60);
+        Plane p;HeadPlane({0,0,0},{0,0,-1},{1,0,0},{0,1,0},1.2f,1.3f,1.33f,inset,p);
+        const float shift=ContextPointerClipY(false,projected);
+        p.centre=p.centre+p.up*(shift*p.halfHeight);
+        for(float v:{.1f,.5f,.9f}){
+            const V point=PointAtCanvasUv(p,.5f,v);Hit h;
+            Expect(Intersect({0,0,0},point,p,1000,1000,h)&&Near(h.v,v),"confirmation laser/native input roundtrip");
+            Expect(ProjectPoint(point,{0,0,0},{0,0,-1},{1,0,0},{0,1,0},1.3f,1.33f,screen)&&
+                Near(screen.v,.5f+(v-.5f)*inset-shift*.5f),"confirmation visual cursor matches plane");
+        }
+    }
     return g_fails == 0 ? 0 : 1;
 }

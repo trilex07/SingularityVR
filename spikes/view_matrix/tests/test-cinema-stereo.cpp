@@ -48,6 +48,27 @@ static bool run(bool ex){
  dev->GetVertexShaderConstantF(0,restored,4);dev->GetScissorRect(&rr);dev->GetRenderState(D3DRS_SCISSORTESTENABLE,&sc);
  require(memcmp(m,restored,64)==0&&memcmp(&rr,&rect,sizeof rect)==0&&!sc,"failed draw restores state");
  printf("%s pixels PASS: left=%u right=%u centroids=%.2f/%.2f; restored success/failure\n",ex?"D3D9Ex":"D3D9",count[0],count[1],a,b);
+ // Exercise the production GFx caption path with asymmetric glyph positions.
+ const float canvas[16]={1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1};float captions[2][16];
+ require(cinemastereo::CanvasEyes(canvas,captions),"affine caption classified");
+ require(!cinemastereo::CanvasEyes(m,captions),"perspective scene refused as caption");
+ require(cinemastereo::CanvasEyes(canvas,captions),"caption matrices refreshed");
+ dev->Clear(0,nullptr,D3DCLEAR_TARGET,0xff000000,1,0);
+ const float glyph[9]={-.75f,-.75f,0, -.35f,-.75f,0, -.55f,-.35f,0};
+ require(SUCCEEDED(dev->BeginScene()),"caption begin");
+ require(SUCCEEDED(cinemastereo::Dispatch(dev,set,0,canvas,captions,vp,rect,FALSE,
+     [&](){return dev->DrawPrimitiveUP(D3DPT_TRIANGLELIST,1,glyph,12);})),"caption actual GPU dispatch");
+ require(SUCCEEDED(dev->EndScene()),"caption end");
+ require(SUCCEEDED(dev->GetRenderTargetData(target,read)),"caption pixels");
+ require(SUCCEEDED(read->LockRect(&lr,nullptr,D3DLOCK_READONLY)),"caption lock");
+ unsigned glyphPixels=0;
+ for(int y=0;y<H;++y)for(int x=0;x<W/2;++x){
+     const DWORD* row=(DWORD*)((char*)lr.pBits+y*lr.Pitch);
+     require(row[x]==row[x+W/2],"caption same position and full content in BOTH eyes");
+     if((row[x]&0xffffff)==0x00ff00)++glyphPixels;
+ }
+ read->UnlockRect();require(glyphPixels>100,"nonempty caption pixels (not blank parity)");
+ puts("caption GPU parity PASS; no left/right text split, source perspective refused");
  // Real corner pixels reproduce the full-eye content lost to the old matte.
  const D3DRECT corners[8]={{0,0,8,8},{152,0,160,8},{0,152,8,160},{152,152,160,160},
                           {160,0,168,8},{312,0,320,8},{160,152,168,160},{312,152,320,160}};

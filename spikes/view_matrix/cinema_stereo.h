@@ -49,6 +49,21 @@ inline bool EyeMatrix(const float* native,int conv,float displacement,int eye,fl
     }
     return true;
 }
+// GFx's affine canvas has no native ViewProjection CTAB entry. It must
+// be duplicated as a complete zero-disparity caption, never treated as a
+// perspective scene draw or left spanning the two SBS halves.
+inline bool CanvasEyes(const float* native,float (&eyes)[2][16]) {
+    if(!native)return false;
+    for(int i=0;i<16;++i)if(!std::isfinite(native[i]))return false;
+    if(std::fabs(native[3])>=1e-4f || std::fabs(native[7])>=1e-4f ||
+       std::fabs(native[11])>=1e-4f || std::fabs(native[15]-1.f)>=1e-3f)return false;
+    for(int eye=0;eye<2;++eye){
+        std::memcpy(eyes[eye],native,64);
+        for(int row=0;row<4;++row)
+            eyes[eye][row*4]=.5f*native[row*4]+(eye?.5f:-.5f)*native[row*4+3];
+    }
+    return true;
+}
 // Shared by the runtime and real D3D9/D3D9Ex pixel fixtures. Native state is
 // restored even when binding, drawing, or either eye fails.
 template<class Setter,class Draw>

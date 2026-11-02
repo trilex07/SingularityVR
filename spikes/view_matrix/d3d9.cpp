@@ -1,4 +1,7 @@
 #include "two_hand_grip.h"
+#include "tmd_gravity_grip.h"
+static bool g_tmdGravityGrip=true;
+static tmdgravity::Grip g_tmdGravityLatch;
 #include "support_grip_probe.h"
 #include "dual_weapon_tmd_policy.h"
 #include "tmd_support_gauntlet.h"
@@ -181,6 +184,7 @@ static void BuildTmdAssemblyC(float C[4][4]);
 #include "cinema_surface_copy.h" // D3D headers only after NOMINMAX
 #include "bink_audio_observation.h"
 #include "bink_intro_audio.h"
+#include "bink_memory_movies.h"
 #include "psvr2_trigger.h"
 #include "psvr2_trigger_config.h"
 #include "trigger_shot.h"
@@ -9030,7 +9034,7 @@ void PanelRowText(int row, char* out, size_t cap) {
         case PR_TMD_HELP_AGE:
             _snprintf_s(out, cap, _TRUNCATE, "LEFT SQUARE: AGE / RENOVATE"); break;
         case PR_TMD_HELP_RULES:
-            _snprintf_s(out, cap, _TRUNCATE, "POWERS / ENERGY: GAME RULES"); break;
+            _snprintf_s(out, cap, _TRUNCATE, g_tmdGravityGrip?"L1: GRAVITY (FREE LEFT GRIP)":"POWERS / ENERGY: GAME RULES"); break;
         case PR_GOTO_TMD: _snprintf_s(out, cap, _TRUNCATE, "TMD ALIGN..."); break;
         // ---- 💥 run 249: these three rows had NO text case and fell through to `default` ----
         //
@@ -10263,6 +10267,7 @@ static const char* IndexBindingPath(const char* p, bool sensorRole, char* buf, s
 static const char* TouchBindingPath(const char* p, bool, char*, size_t) { return p; }
 
 bool InitXRInput() {
+    g_tmdGravityLatch={};
     if (g_xrInstance == XR_NULL_HANDLE || g_xrSession == XR_NULL_HANDLE) return false;
 
     // Eager CPU asset loading at XR input initialization, outside DllMain and
@@ -11171,6 +11176,7 @@ void SyncXRInput(XrTime displayTime) {
         ++g_syncFailFrames;
         InterlockedExchange(&g_twoHandActive, 0);
         g_supportLatch.Reset();
+        g_tmdGravityLatch.power=false; // require release after sync/focus interruption
         g_handPositionValid[0] = g_handPositionValid[1] = false;
         InterlockedExchange(&g_padBtns, 0);
         InterlockedExchange(&g_padLStick, PackStick(0, 0));
@@ -11697,7 +11703,7 @@ void SyncXRInput(XrTime displayTime) {
             }
         }
     }
-    const bool supportGrip=rawSupportGrip&&!hipknife::Reserves(g_hipKnifeState,OffHand())&&
+    const bool supportGrip=rawSupportGrip&&!g_tmdGravityLatch.power&&!hipknife::Reserves(g_hipKnifeState,OffHand())&&
         !(OffHand()==0&&(g_nextOwnsGrip||g_centurionOwnsGrip||(g_centurionReload&&g_centurionConfig.cylinderGestures&&
             centurionreload::Active(g_centurionState.phase))));
     static bool priorSupportGrip=false;
@@ -12074,6 +12080,19 @@ void SyncXRInput(XrTime displayTime) {
     // Triangle is the single game-menu edge.  It is emitted through the same synthetic XInput
     // START path as a physical pad, so the game's normal pause/options state remains authoritative.
     if (trianglePressed) btns |= XI_START;
+    // Reload/shoulder FSMs above have first refusal; native AntiGrav remains
+    // authoritative for ownership, targets and energy. No native UObject call here.
+    const bool gravityHeld=OffHand()==0?rawSupportGrip:primaryGrip;
+    const bool gravityEligible=feedGame&&VrModeOn()&&InGameplay()&&!uiMenu&&!Rd(g_gamePaused)&&
+        !Rd(g_panelOpen)&&!CutsceneNativeCameraArmed()&&g_xrSessionState==XR_SESSION_STATE_FOCUSED&&
+        !Rd(g_weaponWheelOpen)&&!r3Held&&!r3Released&&Rd(g_haveTMD)==1&&
+        AimHand()==1&&g_handPoseValid[0]&&g_handPositionValid[0];
+    const bool gravityReserved=supportActive||g_supportLatch.Latched()||
+        g_nextOwnsGrip||g_nextBlockFire||g_centurionOwnsGrip||
+        (g_centurionReload&&centurionreload::Active(g_centurionState.phase))||
+        hipknife::Reserves(g_hipKnifeState,0);
+    const bool gravityDown=g_tmdGravityLatch.Update(g_tmdGravityGrip,
+        gravityHeld,gravityEligible,gravityReserved);
     static bool healthWasDown = false;
     bool healthDown = false;
     static bool knifeImpulseWasDown = false;
@@ -12088,7 +12107,7 @@ void SyncXRInput(XrTime displayTime) {
             legacyHealth?reloadcontrols::Face::Circle:reloadcontrols::Face::Other;
         const auto routed=reloadcontrols::RouteFace(reloadLayout,InGameplay()&&!uiMenu,
             face,sampledButtons[i],g_padButtons[i].mask,legacyHealth,reloadActions);
-        bool down=routed.down;const WORD outputMask=routed.mask;const bool healthAction=routed.health;
+        bool down=(i==3&&g_tmdGravityGrip)?gravityDown:routed.down;const WORD outputMask=routed.mask;const bool healthAction=routed.health;
         const int dualPower=i==g_impulseBtnIdx?0:!strcmp(g_padButtons[i].name,"ageyoung")?1:-1;
         if(dualPower>=0)
             down=dualPowerLatch[dualPower].Update(dualOwnsPower,dualPowerReserved,down);
@@ -12124,7 +12143,7 @@ void SyncXRInput(XrTime displayTime) {
                 ArmHealWindowFromButton();
         }
         if (i == 6) continue; // Triangle is handled above as a single START rising edge.
-        if (i == 3 && (Rd(g_weaponWheelOpen) || r3Held || r3Released ||
+        if (i == 3 && !g_tmdGravityGrip && (Rd(g_weaponWheelOpen) || r3Held || r3Released ||
                        wheelEvent == weaponwheel::Event::Commit ||
                        wheelEvent == weaponwheel::Event::Cancel)) continue; // R3 -> wheel
         if (down) ++g_btnHeldFrames[i];
@@ -14116,6 +14135,15 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
                                 layers[eye]=reinterpret_cast<const XrCompositionLayerBaseHeader*>(&q);
                             }
                             layerCount=2;cinemaQuadSubmitted=true;
+                            static unsigned pairNotes=0;
+                            if(pairNotes<2){
+                                ++pairNotes;for(int e=0;e<2;++e){const auto& v=stereoQuads[e];
+                                    Log("cinema pair: eye=%d rect=%d,%d %dx%d size=%.4fx%.4f pose=%.4f,%.4f,%.4f swapchain=%p source=%ux%u",e,
+                                        v.subImage.imageRect.offset.x,v.subImage.imageRect.offset.y,
+                                        v.subImage.imageRect.extent.width,v.subImage.imageRect.extent.height,
+                                        v.size.width,v.size.height,v.pose.position.x,v.pose.position.y,v.pose.position.z,
+                                        (void*)v.subImage.swapchain,g_srcW,g_srcH);}
+                            }
                             static bool said=false;if(!said){said=true;Log("cinema stereo: LOCAL LEFT/RIGHT quad pair with distinct eye rects; physical acceptance pending");}
                         }
                     }
@@ -23114,7 +23142,22 @@ HRESULT HudStereoPair(IDirect3DDevice9* dev, UINT primCount, UINT stride, DrawFn
     // only its old scene/backbuffer canvas copy. Never suppress the RTT producer.
     if (Rd(g_vrMenuClass) == 3 && Rd(g_rtIsScene) && !Rd(g_vrMenuProviderDrawing) &&
         PauseRttProbe::Presented()) return D3D_OK;
-    if(StereoCinemaNow())return StereoNativeCinema(dev,draw);
+    if(StereoCinemaNow()){
+        // GFx canvas classification precedes this route; scene meshes retain
+        // the verified native CTAB camera path, never a guessed UI matrix.
+        float native[16]{},eyes[2][16];D3DVIEWPORT9 vp{};RECT rect{};DWORD scissor=0;
+        if(Rd(g_rtIsScene)&&SUCCEEDED(dev->GetVertexShaderConstantF(5,native,4))&&
+           cinemastereo::CanvasEyes(native,eyes)&&SUCCEEDED(dev->GetViewport(&vp))&&
+           SUCCEEDED(dev->GetScissorRect(&rect))&&
+           SUCCEEDED(dev->GetRenderState(D3DRS_SCISSORTESTENABLE,&scissor))){
+            g_inHudRemap=true;
+            const HRESULT hr=cinemastereo::Dispatch(dev,g_origSetVSConstF,5,native,eyes,vp,rect,scissor,draw);
+            g_inHudRemap=false;
+            static unsigned notes=0;if(notes++<4)Log("cinema captions: affine GFx c5 both eyes full canvas vp=%ux%u hr=%08lX",vp.Width,vp.Height,hr);
+            return hr;
+        }
+        return StereoNativeCinema(dev,draw);
+    }
     if (InterlockedCompareExchange(&g_sceneFlatEnabled, 0, 0) && g_sceneMode.Flat()) return draw();
     if (!g_hudRemap) return StereoPair(dev, draw);
     InterlockedIncrement(&g_uiSeen);          // ⭐ run 230
@@ -23851,7 +23894,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawPrimUP(IDirect3DDevice9* dev, D3DPRIMITIVETYP
     // ⭐ run 266: ANCHORED. The continuation must match a CONFIRMED note element's stride and
     // texture, and a note must be open. See g_noteTextStride - world geometry cannot start a chain
     // because world geometry is never a note element, and outside a note this is entirely inert.
-    const bool menuUi=!quad && Rd(g_vrUiMenu) && Rd(g_hudXformLive);
+    const bool menuUi=!quad && (Rd(g_vrUiMenu)||StereoCinemaNow()) && Rd(g_hudXformLive);
     bool hudArmed = hudFresh || menuUi;
     if (hudFresh) InterlockedExchange(&g_hudArmStride, (LONG)vtxStride);   // ⭐ run 269
     // ⭐ run 268: log EVERY offered draw, gate or no gate. Reported: in the runs where geometry was
@@ -24008,7 +24051,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrimUP(IDirect3DDevice9* dev, D3DPRIMI
     // ⭐ run 266: ANCHORED. The continuation must match a CONFIRMED note element's stride and
     // texture, and a note must be open. See g_noteTextStride - world geometry cannot start a chain
     // because world geometry is never a note element, and outside a note this is entirely inert.
-    const bool menuUi=!quad && Rd(g_vrUiMenu) && Rd(g_hudXformLive);
+    const bool menuUi=!quad && (Rd(g_vrUiMenu)||StereoCinemaNow()) && Rd(g_hudXformLive);
     bool hudArmed = hudFresh || menuUi;
     if (hudFresh) InterlockedExchange(&g_hudArmStride, (LONG)vtxStride);   // ⭐ run 269
     // ⭐ run 268: log EVERY offered draw, gate or no gate. Reported: in the runs where geometry was
@@ -25381,6 +25424,7 @@ static void ResetVrAfterCameraLoss(const char* reason) {
     s_scriptsTimeoutAnnounced = false;
     s_scriptsReadyAnnounced = false;
     g_supportLatch.Reset();
+    g_tmdGravityLatch.power=false;
     InterlockedExchange(&g_vrUiValid, 0);
     InterlockedExchange(&g_vrUiDown, 0);
     InterlockedExchange(&g_vrUiBack, 0);
@@ -26863,6 +26907,7 @@ static LONG g_polishIntroAudioFix = 1;
 static std::uint32_t g_binkNativeTracks[8]{};
 static DWORD g_binkNativeTrackCount = 0;
 static bool g_binkNativeTracksValid = false;
+static BinkMemoryMovies g_binkMemoryMovies;
 static void WINAPI ObserveBinkSoundTrack(DWORD count, const DWORD* tracks) {
     const DWORD incomingError=GetLastError();
     EnterCriticalSection(&g_binkAudioLock);
@@ -26889,7 +26934,9 @@ static void* WINAPI ObserveBinkOpen(const char* filename, DWORD flags) {
     // Read before the call; source may be a file handle with BINKFILEHANDLE.
     const bool note=InterlockedIncrement(&g_binkOpenNotes)<=12;
     char name[256]{};
-    const bool readable=(note || (Rd(g_binkIntroReady) && Rd(g_polishIntroAudioFix))) && BinkObserveName(filename, name, flags);
+    bool readable=(note || (Rd(g_binkIntroReady) && Rd(g_polishIntroAudioFix))) && BinkObserveName(filename, name, flags);
+    const char* memoryName=!readable?g_binkMemoryMovies.Identify(filename,flags):nullptr;
+    if(memoryName){strcpy_s(name,memoryName);readable=true;}
     const BinkIntroAudioPlan plan=BinkPlanIntroAudio(readable?name:nullptr,
         Rd(g_binkIntroReady) && Rd(g_polishIntroAudioFix) && PolishLocalization::PL().IsPolishEnabled(),
         g_binkNativeTracksValid?g_binkNativeTracks:nullptr,g_binkNativeTrackCount,flags);
@@ -26912,9 +26959,9 @@ static void* WINAPI ObserveBinkOpen(const char* filename, DWORD flags) {
     static unsigned movieNotes=0;
     if(plan.enabled && movieNotes<16) {
         ++movieNotes;
-        Log("bink-audio: Polish movie %s track1->%lu; retained0/2/3; handle=%p post=%s",
+        Log("bink-audio: Polish movie %s track1->%lu; retained0/2/3; handle=%p source=%s post=%s",
             readable?name:"<movie>", (unsigned long)plan.polish[1],
-            result,result?"native-default0":"native-selection-rollback");
+            result,memoryName?"verified-memory":"filename",result?"native-default0":"native-selection-rollback");
     }
     if(note) Log("bink-audio: opened name=%s flags=0x%08lX handle=%p (unchanged)",
         readable?name:"<not a readable filename>", (unsigned long)flags, result);
@@ -26928,6 +26975,16 @@ static void InstallBinkAudioObservation() {
     HMODULE module=GetModuleHandleA("binkw32.dll");
     if(!module)return;
     attempted=true;
+    char movieDirectory[MAX_PATH]{};
+    const DWORD exeLength=GetModuleFileNameA(nullptr,movieDirectory,MAX_PATH);
+    unsigned movieCount=0;
+    if(exeLength && exeLength<MAX_PATH){
+        char* slash=strrchr(movieDirectory,'\\');
+        if(slash && size_t(slash-movieDirectory)+sizeof("\\..\\RvGame\\Movies")<MAX_PATH){
+            strcpy_s(slash,MAX_PATH-size_t(slash-movieDirectory),"\\..\\RvGame\\Movies");
+            movieCount=g_binkMemoryMovies.Load(movieDirectory);
+        }
+    }
     InitializeCriticalSection(&g_binkAudioLock);
     void* sound=reinterpret_cast<void*>(GetProcAddress(module,"_BinkSetSoundTrack@8"));
     void* open=reinterpret_cast<void*>(GetProcAddress(module,"_BinkOpen@8"));
@@ -26936,8 +26993,8 @@ static void InstallBinkAudioObservation() {
     const MH_STATUS ea=a==MH_OK?MH_EnableHook(sound):a;
     const MH_STATUS eb=b==MH_OK?MH_EnableHook(open):b;
     InterlockedExchange(&g_binkIntroReady,ea==MH_OK && eb==MH_OK?1:0);
-    Log("bink-audio: exports sound=%d open=%d max12 notes; known-intro Polish fix=%ld ready=%d; other movies native",
-        (int)ea,(int)eb,Rd(g_polishIntroAudioFix),Rd(g_binkIntroReady)?1:0);
+    Log("bink-audio: exports sound=%d open=%d max12 notes; Polish movie fix=%ld ready=%d memory-catalog=%u/12; unknown movies native",
+        (int)ea,(int)eb,Rd(g_polishIntroAudioFix),Rd(g_binkIntroReady)?1:0,movieCount);
 }
 
 static SRWLOCK g_polishSpeakLock = SRWLOCK_INIT;
@@ -38367,6 +38424,8 @@ void LoadIniSettings() {
     g_seekerProjectileAim=GetPrivateProfileIntA("Input","SeekerProjectileAim",0,path);
     g_centurionAimProbe=GetPrivateProfileIntA("Diagnostic","CenturionAimProbe",0,path)!=0;
     g_bodyEquipmentProbe=GetPrivateProfileIntA("Diagnostic","BodyEquipmentProbe",0,path)!=0;
+    g_tmdGravityGrip=GetPrivateProfileIntA("Input","TmdGravityGrip",1,path)!=0;
+    Log("ini: TmdGravityGrip=%d (L1 free left Grip -> native AntiGrav; support/reload priority)",g_tmdGravityGrip?1:0);
     InterlockedExchange(&g_tmdNativeAim,GetPrivateProfileIntA("Input","TmdNativeAim",0,path)!=0);
     InterlockedExchange(&g_dualWeaponTmdReady,GetPrivateProfileIntA("Input","DualWeaponTmdReady",0,path)!=0);
     InterlockedExchange(&g_dualWeaponTmdGunScale,GetPrivateProfileIntA("Input","DualWeaponTmdGunScale",0,path)!=0);

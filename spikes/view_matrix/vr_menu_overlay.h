@@ -397,9 +397,11 @@ void UpdateVrUiPointer(float,bool available) {
     const bool station=!panel&&menuClass==4&&Rd(g_vrUiStationMovie)!=0;
     if(station)
         inset=StationCapturedInset(true,false,ClassBackbufferScale(4,true,(int)Rd(g_menuInsetPct)),(int)Rd(g_stationMenuScalePct));
-    else if(!panel&&menuClass==4&&Rd(g_contextPointerProjection)&&Rd(g_vrUiDirectCanvas))
-        inset=(Rd(g_vrUiNoteCanvas)||Rd(g_noteOpen))?Rd(g_noteInsetPct)/100.f:
-            StationMenuInset(4,true,ClassBackbufferScale(4,true,(int)Rd(g_menuInsetPct)),(int)Rd(g_stationMenuScalePct));
+    else if(!panel&&menuClass==4){
+        const bool projected=Rd(g_contextPointerProjection)&&Rd(g_vrUiDirectCanvas);
+        inset=projected&&(Rd(g_vrUiNoteCanvas)||Rd(g_noteOpen))?Rd(g_noteInsetPct)/100.f:
+            StationMenuInset(4,projected,ClassBackbufferScale(4,true,(int)Rd(g_menuInsetPct)),(int)Rd(g_stationMenuScalePct));
+    }
     else
         inset=FrontMenuInset((int)menuClass,panel,inset,(int)Rd(g_frontMenuScalePct));
     const float distance=ContextMenuDistance((int)menuClass,panel,
@@ -408,7 +410,8 @@ void UpdateVrUiPointer(float,bool available) {
         (int)Rd(g_stationMenuDistanceMm));
     g_vrMenuPanelValid=uipointer::HeadPlane(head,VrUiRotate(q,{0,0,-1}),VrUiRotate(q,{1,0,0}),VrUiRotate(q,{0,1,0}),distance,g_targetTanX,g_targetTanY,inset,g_vrMenuPanel.plane);
     if (!panel && g_vrMenuPanelValid) {
-        const float clipY = station ? 0.f : (menuClass == 4 ? StationMenuClipY(4) : MenuPlacementClipY((int)menuClass));
+        const float clipY = menuClass == 4 ? ContextPointerClipY(station,
+            Rd(g_contextPointerProjection)&&Rd(g_vrUiDirectCanvas)) : MenuPlacementClipY((int)menuClass);
         g_vrMenuPanel.plane.centre = g_vrMenuPanel.plane.centre +
             g_vrMenuPanel.plane.up * (clipY * g_vrMenuPanel.plane.halfHeight);
     }
