@@ -1,3 +1,6 @@
+#include <initializer_list>
+#include "../wheel_ownership_policy.h"
+#include "../vr_scene_mode.h"
 #include "../weapon_wheel.h"
 #include <cassert>
 #include <cstdio>
@@ -35,5 +38,22 @@ int main() {
     assert(Update(s, true,  false, true, true, false, 0, -1, 4) == Event::Open);
     assert(Update(s, true,  true,  true, true, false, 0, -1, 4) == Event::Cancel);
     assert(Update(s, false, false, true, true, false, 0, 0, 4) == Event::None);
+    // Catalog presence and observed meshes never confer native ownership.
+    State empty{};
+    assert(Update(empty,true,false,wheelownership::CanOpen(0,false),true,false,0,0,4)==Event::None);
+    assert(!empty.open&&!wheelownership::CanSelect(0,false,5799));
+    Update(empty,false,false,false,true,false,0,0,4);
+    const unsigned pistol=inventoryretention::WeaponBit(5799);
+    assert(Update(empty,true,false,wheelownership::CanOpen(pistol,false),true,false,0,0,4)==Event::Open);
+    assert(wheelownership::CanSelect(pistol,false,5799));
+    assert(!wheelownership::CanSelect(pistol,false,11389));
+    assert(!wheelownership::CanSelect(pistol,false,12444));
+    assert(wheelownership::CanSelect(0,true,12444));
+    assert(Update(empty,false,false,wheelownership::CanOpen(0,false),true,false,0,-1,4)==Event::Cancel);
+    for(auto from:{vrscene::Mode::Unknown,vrscene::Mode::MenuFlat,vrscene::Mode::VideoFlat,vrscene::Mode::GameplayStereo,vrscene::Mode::CutsceneFlat})
+      for(auto to:{vrscene::Mode::MenuFlat,vrscene::Mode::GameplayStereo,vrscene::Mode::CutsceneFlat}){
+        assert(vrscene::RecenterAfterCutscene({from,to,true,0})==(from==vrscene::Mode::CutsceneFlat&&to==vrscene::Mode::GameplayStereo));
+        assert(!vrscene::RecenterAfterCutscene({from,to,false,0}));
+      }
     std::puts("weapon wheel: slot/deadzone mapping and deterministic R3 down-hold-stick-up/commit/cancel edges");
 }

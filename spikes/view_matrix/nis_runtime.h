@@ -287,18 +287,20 @@ static bool NisDispatchEye(NisRuntime* nis, ID3D11DeviceContext* ctx,
                            ID3D11ShaderResourceView* srcSrv,
                            uint32_t sbsW, uint32_t sbsH,
                            int eye, uint32_t eyeOutW, uint32_t eyeOutH,
-                           float sharpness, bool sharpenOnly) {
+                           float sharpness, bool sharpenOnly, const nis_upscale::Rect* region=nullptr) {
     if (!nis->ready || !srcSrv || eye < 0 || eye > 1) return false;
     // Each SRV contains ONE eye. Sampler clamp now clamps the filter's support
     // at that eye's border rather than sampling the neighbouring SBS half.
-    nis_upscale::Rect src = {0, 0, sbsW, sbsH};
+    nis_upscale::Rect src = region ? *region : nis_upscale::Rect{0, 0, sbsW, sbsH};
+    if(!src.w||!src.h||src.x>sbsW||src.y>sbsH||src.w>sbsW-src.x||src.h>sbsH-src.y)return false;
+    if(region && (!sharpenOnly||sbsW!=eyeOutW||sbsH!=eyeOutH))return false;
     const bool useSharpen = nis_upscale::UseSharpenShader(sharpenOnly,
-        src.w, src.h, eyeOutW, eyeOutH);
+        sbsW, sbsH, eyeOutW, eyeOutH);
     NISConfig cfg = {};
     bool ok;
     if (useSharpen) {
         ok = NVSharpenUpdateConfig(cfg, nis_upscale::ClampSharpness(sharpness),
-            src.x, src.y, src.w, src.h, sbsW, sbsH, 0, 0);
+            src.x, src.y, src.w, src.h, sbsW, sbsH, src.x, src.y);
     } else {
         ok = NVScalerUpdateConfig(cfg, nis_upscale::ClampSharpness(sharpness),
             src.x, src.y, src.w, src.h, sbsW, sbsH,
@@ -327,7 +329,7 @@ static bool NisDispatchEye(NisRuntime* nis, ID3D11DeviceContext* ctx,
     ctx->CSSetUnorderedAccessViews(0, 1, uavs, nullptr);
     uint32_t bw = 32;
     uint32_t bh = useSharpen ? 32 : 24;
-    ctx->Dispatch((eyeOutW + bw - 1) / bw, (eyeOutH + bh - 1) / bh, 1);
+    ctx->Dispatch(((region?src.w:eyeOutW) + bw - 1) / bw, ((region?src.h:eyeOutH) + bh - 1) / bh, 1);
     // Unbind UAV (required before CopyResource from outTex) + SRVs + shader.
     ID3D11UnorderedAccessView* nullUav[1] = { nullptr };
     ctx->CSSetUnorderedAccessViews(0, 1, nullUav, nullptr);

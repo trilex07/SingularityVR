@@ -58,6 +58,12 @@ struct Transition {
     std::uint32_t reason = 0;
 };
 
+// Use the existing common HMD/controller stage request, once on the actual
+// cinematic exit. Menu/pause/startup transitions must never recenter the player.
+inline bool RecenterAfterCutscene(const Transition& t) {
+    return t.changed&&t.from==Mode::CutsceneFlat&&t.to==Mode::GameplayStereo;
+}
+
 // Small, frame-driven hysteresis controller. It deliberately requires a stable
 // cinematic observation before entering and a longer clear run before leaving.
 // Video is an explicit draw observation and enters immediately; menu never

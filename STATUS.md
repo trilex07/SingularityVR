@@ -1,3 +1,54 @@
+## 2026-11-02 — A16FC192 physical acceptance and main promotion
+
+- PHYSICALLY_VERIFIED: user confirmed scripted mutant shots work and authorized
+  main promotion: "tak jest git wrzuc na main".
+- Accepted runtime source 6c38abea084023e8e5f7702385e21b37e71adc9f;
+  x86 PE32 /O2 DLL A16FC1927B215A1A306DBE56CE24B1CB03A042A541EC7C8C4A4CBA1BF6A4A75A.
+- Shipped INI enables CinemaMutantAimAssist=1; explicit 0 is exact rollback.
+- Acceptance is for scripted mutant hitting. Previously pending empty-hand HUD,
+  automatic recenter and wheel-new-game checks are not implicitly marked PASS.
+- Test lease restored CBF16F93 DLL and original INI with verified hashes.
+
+## 2026-11-02 — Exact scripted mutant assistance
+
+- L2_PASS: opt-in CinemaMutantAimAssist redirects only the
+  captured local-player 8000 UU shot in the native mutant tackle interaction.
+- Direct reflected mCurrentNodeInstigator -> RvAI_PawnMutant and reciprocal
+  mTarget verified read-only in the running session. No nearest-enemy heuristic.
+- Native collision, obstruction, damage and ammo remain authoritative.
+- Physical hit acceptance PENDING; see docs/handoffs/mutant-scripted-shot-assist-20261102.md.
+
+## 2026-11-02 — CBF16F93 physical follow-up
+
+- PHYSICALLY_VERIFIED: full cinema framing/edges accepted by the user. Preserve.
+- New L1 corrections: native-current-pawn ownership gates for R3/open/selection;
+  common L3+R3 recenter request exactly on cinema -> gameplay exit.
+- Empty-hand HUD: actual final cuff palette has +0.92922293 UU clearance in both
+  eyes; early compressed-range glove depth remains in preserved world DS while
+  the old retained prime cache requires a weapon. Exact free-glove cache extension
+  and real D3D9Ex both-eye HUD depth pixels PASS; physical outcome PENDING.
+- Mutant targeting remains BROKEN/PARTIAL: no existing fire-window receipt in
+  failed encounter. Native handler inheritance inspected; added <=24 cinematic
+  R2 native caller/source trace receipts, no fabricated target or hit changes.
+- Hands/TMD/reload/WeaponLocker/OLED and x86/x64 cinema/gaze/damage regressions
+  PASS. Legacy D3D9 HAL NOT RUN (host CreateDevice refusal); no FPS claim.
+- Handoff: docs/handoffs/cinema-exit-ownership-wrist-20261102.md. Steam unchanged;
+  new source/build and physical acceptance recorded independently.
+
+## 2026-11-02 — Stereo frame matte and authored-shot ownership
+
+- User physically confirms stereo cinema on BEDA5911; helicopter crop/eye-edge imbalance, noTMD wrist penetration and scripted mutant aim remain FAIL/PENDING.
+- L1/L2: completed stereo bypasses legacy 84%/70% matte; native-camera shots preserve native aim instead of controller trace rebasing. D3D9Ex eight-corner pixel test, x86/x64 policies, HUD math and dual-TMD/OLED regressions PASS. Legacy D3D9 HAL unavailable on host; explicit NOT RUN.
+- HUD bind clearance contradicts a blind offset fix at current WorldScale=80. Added one bounded actual-bound noTMD cuff sample per eye plus weighted offline analyzer; HUD geometry unchanged pending this exact evidence. No blanket auto-hit or damage/ammo edits.
+- Handoff: docs/handoffs/cinema-framing-wrist-scripted-aim-20261102.md. Physical acceptance PENDING; no promotion to main.
+
+## 2026-11-02 — Gaze wheel/NIS, native stereo cinema and damage feedback candidate
+
+- L1/L2 PASS: x86 PE32 /O2; x86/x64 gaze ABI/selection tests, D3D9Ex stereo pixel/state fixture, D3D11 NIS regional pixels, existing hands/TMD/reload/WeaponLocker/OLED/haptics regressions and hardware-OFF bridge IPC.
+- DamagePulses adds native local Health-loss feedback through existing XR rumble, x86/x64 policy and real fake-Steam bridge deployment/rollback fixtures PASS.
+- User-authorized Steam deployment 623D3EFD / bridge C4D002A3: exact hashes and three-file backup verification PASS; game NOT launched. Runtime/OpenXR/PSVR2 NOT RUN. Candidate enables gaze/cinema/damage only; normal builds retain three independent default-OFF switches; existing Bink stays mono. Legacy D3D9 HAL fixture NOT RUN (host CreateDevice 0x8876086C). No FPS gain claimed.
+- Candidate and one grouped acceptance gate: docs/handoffs/gaze-wheel-nis-stereo-cinema-20261102.md. Seeker reload deferred; accepted installed files unchanged.
+
 ## 2026-10-30 — Wrist live counter ownership correction
 
 - Actual diagnostic reason=4 proved duplicate Pawn lookup rejected the local player before counter reads. Reused validated native reciprocal player resolver; no guessed offsets or fake values.
@@ -5458,3 +5509,9 @@ Toggle with **F6**.
   get cycled past unseen.
 - **Doc errors become code bugs.** `ENGINE_NOTES` recorded the backbuffer as `X8R8G8B8`; it is
   `A8R8G8B8`, and that mistake propagated straight into a `D3DERR_INVALIDCALL`.
+
+## 2026-11-02 native stereo cinema follow-up
+- Helicopter stereo: physical FAIL on 623D3EFD; gameplay lock lifetime defect corrected, L1/L2 PASS; new physical acceptance PENDING.
+- Existing intro crash: NOT REPRODUCED during read-only exception capture; cause UNRESOLVED.
+- Evidence and test boundary: docs/handoffs/cinema-lock-lifetime-20261102.md.
+

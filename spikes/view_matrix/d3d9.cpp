@@ -83,10 +83,13 @@ static unsigned g_startupTimeoutMs=5000,g_startupMinVisibleMs=3000;
 #include "context_cursor_gate.h"
 #include "menu_capture_owner.h"
 #include "recenter_chord.h"
+#include "wheel_ownership_policy.h"
 #include "pose_conversion.h"
 #include "vr_scene_mode.h"
 #include "cutscene_mono.h" // CutsceneFlat mono-to-both-eyes fit math (no D3D)
 #include "cinema_world_screen.h"
+#include "cinema_stereo.h"
+#include "gaze_reader.h"
 #include "cinematic_state_observation.h"
 #include "cinematic_event_bridge.h"
 #include "native_restraint_hands.h"
@@ -182,6 +185,7 @@ static void BuildTmdAssemblyC(float C[4][4]);
 #include "psvr2_trigger_config.h"
 #include "trigger_shot.h"
 #include "weapon_shot_haptics.h"
+#include "damage_haptics.h"
 #include "psvr2_client.h"
 #include <d3d11.h>
 #include <dinput.h>
@@ -781,6 +785,9 @@ LONG PackStick(int16_t x, int16_t y) {
 volatile LONG g_rumbleL = 0, g_rumbleR = 0;   // 0..65535, as the game sends them
 static volatile LONG g_weaponShotHaptics = 0; // opt-in until physical PSVR2 acceptance
 static SRWLOCK g_weaponHapticsLock = SRWLOCK_INIT;
+static LONG g_damagePulses=0;
+static damagehaptics::Engine g_damageHaptics;
+static SRWLOCK g_damageHapticsLock = SRWLOCK_INIT;
 static weaponhaptics::Engine g_weaponHaptics;
 
 DWORD WINAPI Hook_XInputSetState(DWORD idx, XiVibration* v) {
@@ -2029,58 +2036,7 @@ const int kKnownChildren = 0x4C, kKnownNext = 0x40, kKnownPropOffset = 0x64;
 // million lookups in a single frame. UE3 interns names, so `*(int32_t*)(obj + OBJ_NAME)` is a stable
 // integer identity - resolve the handful of names we care about once, then the inner loop is an int
 // compare and the whole solve is microseconds.
-struct WantedName { const char* s; int32_t idx; };
-WantedName g_wantNames[] = {
-    { "Location", -1 }, { "Rotation", -1 },                     // the controls
-    { "mMuzzleFlash1stPerson", -1 }, { "mLoopingMuzzleFlash1stPerson", -1 },
-    { "mMuzzleFlashIronsights", -1 }, { "mLoopingMuzzleFlashIronsights", -1 },
-    { "mLoopingMuzzleFXEmitter", -1 },
-    // Run 199: the heal window asks "can this heal do anything" before showing the arms.
-    { "Health", -1 }, { "HealthMax", -1 },
-    // Run 200: ...and "do I even have an item". See the note at FindHudObject.
-    { "mHealthPackCount", -1 }, { "mTMDEnergy", -1 },
-    { "mE99TechCount", -1 }, { "mE99VialCount", -1 },
-    { "GetTMDEnergyMax", -1 }, { "sharedHUD", -1 }, { "myHUD", -1 },
-    // Run 201: READ ONLY - what does the game think the player's eye height is? See ReportEyeHeight.
-    { "BaseEyeHeight", -1 }, { "EyeHeight", -1 },
-    // ⭐ run 227: the one question every mesh-latch heuristic has been guessing at: is a weapon EQUIPPED.
-    { "Weapon", -1 },
-    { "Pawn", -1 }, { "Controller", -1 }, // startup: reflected reciprocal ownership, no guessed offsets
-    { "PCOwner", -1 }, // exact local Camera owner; unregistered names cannot resolve
-    { "PlayerCamera", -1 }, // reciprocal local controller -> current camera
-    // 💥 run 236b: THESE HAVE TO BE HERE. `WantedIdx` searches THIS TABLE and nothing else - a name
-    // absent from it resolves to -1 and `PropOffsetUnder` bails before walking a single class. Run 236
-    // added the lookups and not the registrations, so both reported "+0xFFFFFFFF (depth 13) NOT FOUND"
-    // after a full-chain walk that never actually compared anything, and the failure message blamed the
-    // class chain. The run-235 dump had already listed both at `RvPlayerPawn` depth 1.
-    //
-    // ⚠ The dump and the lookup do NOT share this step: the dump reads names straight off each
-    // property with `NameOf`, so it can see names the lookup is structurally blind to. That is why they
-    // disagreed, and it is worth knowing before trusting a "not found" from this resolver again.
-    { "mPlayerHandsStatus", -1 }, { "mTMD", -1 },
-    // Read-only scene witness: actual native hand components and their assets.
-    { "mArmMeshComponent", -1 }, { "mInviewMesh", -1 }, { "Mesh", -1 },
-    { "SkeletalMesh", -1 }, { "Animations", -1 },
-    // Native dual-TMD gun_scale resolves these by PropOffsetInChain, whose
-    // WantedIdx gate cannot inspect any name omitted from this registry.
-    { "mGunScaleCtrl", -1 }, { "ControlName", -1 }, { "BoneScale", -1 },
-    // Ammo probe round 4: UT-pattern firemode object (WeaponFireTypes[0])
-    // carries the live counters. Resolved per weapon class, never assumed.
-    { "WeaponFireTypes", -1 },
-    // Ammo probe round 7: pawn InvManager (live manager object).
-    { "InvManager", -1 },
-    // 2026-10-19: the owned-inventory chain (manager -> item -> item). The
-    // audited native offsets are the source of truth; these two names are the
-    // CROSS-CHECK that the layout has not drifted.
-    { "InventoryChain", -1 }, { "Inventory", -1 },
-    { "Instigator", -1 }, { "mWeaponName", -1 }, // Seeker ownership cross-checks
-    // Ammo probe round 5: shots-fired counter (fire proof per pull) and the
-    // pawn baseline below needs no new names.
-    { "mShotCount", -1 },
-    // Ammo probe round 9: HUD display cache (mag/reserve as shown on screen).
-    { "mClipAmmo", -1 }, { "mBinAmmo", -1 }, { "mClipSize", -1 },
-};
-const int kWantNameCount = (int)(sizeof(g_wantNames) / sizeof(g_wantNames[0]));
+#include "native_wanted_names.h"
 
 static void ResolveWantedNames() {
     static bool done = false;
@@ -2096,11 +2052,6 @@ static void ResolveWantedNames() {
         for (int w = 0; w < kWantNameCount; ++w)
             if (g_wantNames[w].idx < 0 && !_stricmp(buf, g_wantNames[w].s)) g_wantNames[w].idx = i;
     }
-}
-
-static int32_t WantedIdx(const char* s) {
-    for (int w = 0; w < kWantNameCount; ++w) if (!_stricmp(s, g_wantNames[w].s)) return g_wantNames[w].idx;
-    return -1;
 }
 
 // Walk one class's own property list under a candidate layout, looking for the name INDEX `wantIdx`.
@@ -4882,6 +4833,30 @@ XrInstance g_xrInstance = XR_NULL_HANDLE;
 XrSession  g_xrSession  = XR_NULL_HANDLE;
 XrSpace    g_xrSpace    = XR_NULL_HANDLE;
 static cinemascreen::Anchor g_cinemaWorldAnchor;
+static LONG g_gazeEnabled=1,g_gazeWheel=0,g_gazeNis=0,g_stereoCinema=0;
+static unsigned g_cinemaStereoToken=~0u;
+static cinemastereo::NativeConvention g_cinemaConvention;
+static float g_cinemaNativeAspect=1.f;
+static svrgaze::Reader g_gazeReader;
+static LONG g_gazeWheelSector=-2,g_gazeWheelTime=0,g_gazeWheelEpoch=0;
+static svrgaze::Dwell g_gazeDwell;
+// A combined VIEW direction is reprojected through the captured centre and eye
+// orientations. No desktop cursor or guessed FOV participates.
+static bool GazeEyePixel(const float (&d)[3],const XrPosef* poses,const XrFovf& f,
+                         int eye,UINT w,UINT h,float& x,float& y){
+    const auto& l=poses[0];const auto& r=poses[1];
+    const auto head=cinemascreen::Centre(
+        {l.position.x,l.position.y,l.position.z,l.orientation.x,l.orientation.y,l.orientation.z,l.orientation.w},
+        {r.position.x,r.position.y,r.position.z,r.orientation.x,r.orientation.y,r.orientation.z,r.orientation.w});
+    const float norm=sqrtf(head.qx*head.qx+head.qy*head.qy+head.qz*head.qz+head.qw*head.qw);
+    if(!std::isfinite(norm)||norm<.5f||norm>1.5f)return false;
+    const XrQuaternionf hq{head.qx/norm,head.qy/norm,head.qz/norm,head.qw/norm};
+    const auto world=WwRotate(hq,{d[0],d[1],d[2]});
+    const auto& q=poses[eye].orientation;
+    const auto local=WwRotate({-q.x,-q.y,-q.z,q.w},world);
+    return svr_fovea::GazePixel(local.x,local.y,local.z,f.angleLeft,f.angleRight,
+                               f.angleUp,f.angleDown,w,h,x,y);
+}
 static LONG g_cutsceneWorldScreen=0; // default-OFF world-space presentation experiment
 static LONG g_menuWorldScreen=0;     // default-OFF anchored cinema screen for main menu
 static LONG g_cutsceneScreenDistanceMm=2000;
@@ -4915,7 +4890,7 @@ static triggershot::ShotRunner g_shotRun;
 static SRWLOCK g_shotRunLock = SRWLOCK_INIT;
 
 static bool StartPsvr2TriggerClient() {
-    if (!g_adaptiveTriggersEnabled || !g_psvr2RuntimeCompatible || g_psvr2ClientStarted)
+    if ((!g_adaptiveTriggersEnabled && !(Rd(g_gazeEnabled) && (Rd(g_gazeWheel)||Rd(g_gazeNis)))) || !g_psvr2RuntimeCompatible || g_psvr2ClientStarted)
         return false;
     char localAppData[MAX_PATH]{};
     if (FAILED(SHGetFolderPathA(nullptr, CSIDL_LOCAL_APPDATA, nullptr, SHGFP_TYPE_CURRENT,
@@ -4965,8 +4940,9 @@ static bool StartPsvr2TriggerClient() {
             const char* loaderPath =
                 "C:\\Program Files (x86)\\Steam\\steamapps\\common\\PlayStation VR2 App\\PSVR2Toolkit\\CAPIApps-Windows\\psvr2_toolkit_capi_loader.dll";
             char cmdLine[1024]{};
-            sprintf_s(cmdLine, "\"%s\" \"%s\" %s --hardware --parent %lu",
-                      bridgePath, loaderPath, token, (unsigned long)GetCurrentProcessId());
+            sprintf_s(cmdLine, "\"%s\" \"%s\" %s --hardware --parent %lu%s",
+                      bridgePath, loaderPath, token, (unsigned long)GetCurrentProcessId(),
+                      Rd(g_gazeEnabled)?" --gaze":"");
             STARTUPINFOA si{}; si.cb = sizeof(si);
             PROCESS_INFORMATION pi{};
             if (CreateProcessA(bridgePath, cmdLine, nullptr, nullptr, FALSE,
@@ -5047,8 +5023,7 @@ bool InitXR() {
         Log("OpenXR runtime: %s; adaptive PSVR2 triggers %s", instanceProps.runtimeName,
             g_psvr2RuntimeCompatible ? "eligible (SteamVR)" : "inert (not SteamVR)");
     }
-    if (g_adaptiveTriggersEnabled && g_psvr2RuntimeCompatible)
-        StartPsvr2TriggerClient();
+    if (g_psvr2RuntimeCompatible) StartPsvr2TriggerClient();
 
     XrSystemGetInfo sgi{ XR_TYPE_SYSTEM_GET_INFO };
     sgi.formFactor = XR_FORM_FACTOR_HEAD_MOUNTED_DISPLAY;
@@ -5611,6 +5586,8 @@ struct CopySlot {
     bool    stereo = false;              // alternate-eye active for this frame
     bool    dup = false;                 // draw duplication active for this frame
     bool    menuFlat = false;            // native GFx menu: XR bridge crops one half to both eyes
+    float   cineAspect = 1.f;           // native camera aspect; halves contain squeezed pixels
+    bool    cineStereo = false;         // independent native scene views, never Bink
     bool    cineFlat = false;            // CutsceneFlat mono: composed fit lives in the left half,
                                          // XR bridge submits that same half crop to both eyes
     CutsceneMonoRect cineImage{};         // exact fitted image rect stamped with its pixels
@@ -6006,7 +5983,14 @@ static CutsceneMonoMode CutsceneMonoCurrentMode() {
 
 // Single predicate shared by the composer, the capture stamp and the cinema
 // matte skip, so the three can never disagree about a frame.
+static bool StereoCinemaNow();
+static bool StereoCinemaCompletedFrame(bool menuFlat){
+    return cinemastereo::CompletedFrame(Rd(g_stereoCinema)!=0,
+        g_scenePresentMode==vrscene::Mode::CutsceneFlat,g_cinemaStereoToken,
+        (unsigned)Rd(g_armPaletteFrameToken),menuFlat);
+}
 static bool CutsceneMonoComposeArmed() {
+    if(StereoCinemaCompletedFrame(MenuSubmitForcesFlat((int)Rd(g_vrMenuClass))))return false;
     if (!VrModeOn()) return false;
     if (!InterlockedCompareExchange(&g_sceneFlatEnabled, 0, 0)) return false;
     const bool menuFlat = MenuSubmitForcesFlat((int)Rd(g_vrMenuClass));
@@ -6023,6 +6007,7 @@ static D3DFORMAT g_cineMonoTempFmt = D3DFMT_UNKNOWN;
 static bool g_cineMonoFault = false;
 static LONG g_cutsceneCinemaScalePct = 60; // complete image; user found 85% too wide
 static LONG g_cutsceneNativeCameraFix = 1; // controlled native-camera experiment, cinema only
+static LONG g_cinemaMutantAimAssist = 0; // exact Tackle_Loop assist; opt-in controlled test
 static LONG g_cutsceneNativeHands = 0; // default OFF: original animated foreground in native-camera cinema
 extern volatile LONG g_vrUiMenu;
 static LONG g_cutsceneMenuPairFix = 0; // exact focused menus; same-source XR crop experiment
@@ -6040,6 +6025,14 @@ static bool CutsceneNativeCameraArmed() {
     return CutsceneUseNativeCamera(cinemaPause ? CutsceneMonoMode::CutsceneFlat : CutsceneMonoCurrentMode(),Rd(g_sceneFlatEnabled)!=0,
         MenuSubmitForcesFlat((int)Rd(g_vrMenuClass)),VrModeOn(),Rd(g_cutsceneNativeCameraFix)!=0);
 }
+static bool StereoCinemaNow(){
+    return Rd(g_stereoCinema)&&Rd(g_dupDraws)&&g_haveEyes&&g_eyePositionsValid&&
+        CutsceneMonoCurrentMode()==CutsceneMonoMode::CutsceneFlat&&CutsceneNativeCameraArmed()&&
+        !Rd(g_vrMenuClass)&&!Rd(g_panelOpen);
+}
+static float g_cinemaNativeConstants[256][4]{};
+static bool g_cinemaNativeValid[256]{};
+static bool g_cinemaWasActive=false;
 static LONG g_cutsceneVideoHandoffFix = 1;
 static LONG g_cutsceneMenuHandoffFix = 0; // opt-in frontend presentation ownership
 static LONG g_cineMenuLoadClear = 1; // menu-focused or menu-visited cut clears CINE (save load / quit)
@@ -6175,6 +6168,8 @@ void StampCaptureState(CopySlot& cap) {
         cap.cineFlat = g_cineMonoReady && CutsceneMonoComposeArmed() && !cap.menuFlat;
         cap.cineImage = cap.cineFlat ? g_cineMonoImage : CutsceneMonoRect{};
     }
+    cap.cineStereo=StereoCinemaCompletedFrame(cap.menuFlat);
+    if(cap.cineStereo){cap.stereo=false;cap.dup=true;cap.cineFlat=false;cap.cineAspect=g_cinemaNativeAspect;}
     cap.eyePositionsValid = g_eyePositionsValid;
     if (cap.cineFlat) {
         cap.stereo = false;
@@ -8307,7 +8302,7 @@ enum { PR_ENABLEVR = 0, PR_CUTSCENEVIEW, PR_CINEMAMATTE, PR_AIMMETHOD, PR_MOVEDI
        PR_RELOAD_HINTS, PR_CLOSE,
        PR_GOTO_NIS, PR_NIS_SHARPEN, PR_NIS_STRENGTH,
        PR_OLED_PRESET,
-       PR_HAPTICS, PR_HAPTIC_LEVEL }; // append only
+       PR_HAPTICS, PR_HAPTIC_LEVEL, PR_GAZE_WHEEL, PR_GAZE_NIS, PR_STEREO_CINEMA }; // append only
 
 // ---- ⭐ run 165: pages, because eleven rows is a list you scroll rather than read ----
 //
@@ -8406,10 +8401,10 @@ const uint8_t kPageRows[kPanelPages][kPanelRowsMax] = {
     { PR_TUT_POLISH, PR_TUT_ENGLISH, PR_BACK },
     { PR_TUT_STEP, PR_TUT_LINE1, PR_TUT_LINE2, PR_TUT_LINE3, PR_TUT_LINE4,
       PR_TUT_PREVIOUS, PR_TUT_NEXT, PR_TUT_LANGUAGE, PR_TUT_BACK },
-    { PR_NIS_SHARPEN, PR_NIS_STRENGTH, PR_OLED_PRESET, PR_TEXTURES, PR_BACK },
+    { PR_NIS_SHARPEN, PR_NIS_STRENGTH, PR_OLED_PRESET, PR_TEXTURES, PR_GAZE_WHEEL, PR_GAZE_NIS, PR_STEREO_CINEMA, PR_BACK },
 };
 // ADVANCED lost MENU CAM in run 180 and gained WEAPON FX in 181; DISPLAY gained MUZZLE FX in 189.
-const int kPageCount[kPanelPages] = { 13, 12, 5, 13, 10, 7, 13, 6, 8, 6, 3, 9, 5 };
+const int kPageCount[kPanelPages] = { 13, 12, 5, 13, 10, 7, 13, 6, 8, 6, 3, 9, 8 };
 
 // Width per page, so a two-row sub-page is not as wide as the root. Sized to the longest row/title/
 // footer the page can display, not to what it happens to show now - that is what keeps the box from
@@ -8556,6 +8551,12 @@ void PanelSaveRow(int rowId, const char* path) {
         case PR_NIS_STRENGTH:
             _snprintf_s(v, sizeof(v), _TRUNCATE, "%.2f", NisBridge_Sharpness(&g_nis));
             WritePrivateProfileStringA("Upscaling", "Sharpness", v, path); return;
+        case PR_GAZE_WHEEL:
+            WritePrivateProfileStringA("EyeTracking","WeaponWheel",Rd(g_gazeWheel)?"1":"0",path);return;
+        case PR_GAZE_NIS:
+            WritePrivateProfileStringA("EyeTracking","NisSharpen",Rd(g_gazeNis)?"1":"0",path);return;
+        case PR_STEREO_CINEMA:
+            WritePrivateProfileStringA("Render","CutsceneStereoCinema",Rd(g_stereoCinema)?"1":"0",path);return;
         case PR_OLED_PRESET:
             _snprintf_s(v, sizeof(v), _TRUNCATE, "%d", (int)g_oledGrading.GetPreset());
             WritePrivateProfileStringA("OLED", "Preset", v, path); return;
@@ -8901,6 +8902,12 @@ void PanelRowText(int row, char* out, size_t cap) {
         case PR_HAPTIC_LEVEL:
             _snprintf_s(out, cap, _TRUNCATE, "HAPTIC STRENGTH %s",
                 Rd(g_hapticLevel) == 0 ? "LOW" : Rd(g_hapticLevel) == 2 ? "STRONG" : "NORMAL"); break;
+        case PR_GAZE_WHEEL:
+            _snprintf_s(out,cap,_TRUNCATE,"GAZE WHEEL     %s",Rd(g_gazeWheel)?"ON":"OFF");break;
+        case PR_GAZE_NIS:
+            _snprintf_s(out,cap,_TRUNCATE,"GAZE SHARPEN   %s",Rd(g_gazeNis)?"ON":"OFF");break;
+        case PR_STEREO_CINEMA:
+            _snprintf_s(out,cap,_TRUNCATE,"STEREO CINEMA  %s",Rd(g_stereoCinema)?"ON":"OFF");break;
         case PR_OLED_PRESET: {
             const int preset = (int)g_oledGrading.GetPreset();
             const char* label = preset == 1 ? "BALANCED" : preset == 2 ? "CINEMATIC" :
@@ -9386,6 +9393,14 @@ void PanelAdjust(int row, int dir) {
             InterlockedExchange(&g_hapticLevel, lv);
             ApplyHapticConfig(); break;
         }
+        case PR_GAZE_WHEEL:
+            InterlockedExchange(&g_gazeWheel,!Rd(g_gazeWheel));
+            if(Rd(g_gazeWheel))StartPsvr2TriggerClient();break;
+        case PR_GAZE_NIS:
+            InterlockedExchange(&g_gazeNis,!Rd(g_gazeNis));
+            if(Rd(g_gazeNis))StartPsvr2TriggerClient();break;
+        case PR_STEREO_CINEMA:
+            InterlockedExchange(&g_stereoCinema,!Rd(g_stereoCinema));break;
         case PR_OLED_PRESET: {
             const int current = (int)g_oledGrading.GetPreset();
             const int next = current == 3 ? 0 : (current + (dir >= 0 ? 1 : 2)) % 3;
@@ -11935,14 +11950,23 @@ void SyncXRInput(XrTime displayTime) {
         const float dz = (g_handLastPos[1].z - g_headPosXR[2]) - g_wwHandAnchor.z;
         handSector = wheel_layout::HandSector(dx, dy, dz, eye, (int)g_weaponWheelSlots);
     }
+    if(Rd(g_gazeEnabled)&&Rd(g_gazeWheel)&&g_weaponWheelState.open){
+        const LONG stamp=Rd(g_gazeWheelTime),sector=Rd(g_gazeWheelSector);
+        if((DWORD)(GetTickCount()-(DWORD)stamp)<=100 && sector>=0)handSector=(int)sector;
+    }
     const bool stationWheel = Rd(g_ownedWeaponWheel) &&
         InteractiveStationMenu((int)Rd(g_vrMenuClass), uiMenu);
+    const unsigned wheelOwned=NativeOwnedInventory::MaskForPawn(g_playerPawn);
+    const bool wheelHasWeapon=wheelownership::CanOpen(wheelOwned,g_playerPawn&&((uintptr_t)(unsigned)Rd(g_seekerBackAvailable)==g_playerPawn));
+    if(r3Held&&!g_weaponWheelState.priorR3)NativeOwnedInventory::Refresh();
     const weaponwheel::Event wheelEvent = weaponwheel::Update(
-        g_weaponWheelState, r3Held, l3Held, ((!uiMenu || stationWheel) && feedGame && !Rd(g_gamePaused)),
+        g_weaponWheelState, r3Held, l3Held, (wheelHasWeapon && (!uiMenu || stationWheel) && feedGame && !Rd(g_gamePaused)),
         WeaponPresentationInHands(), Rd(g_weaponHolstered), tx,
         (g_weaponWheelObserved&&!Rd(g_forceDesktopAutomation))?-ty:ty,
         (int)g_weaponWheelSlots, handSector);
     if (wheelEvent == weaponwheel::Event::Open) {
+        InterlockedExchange(&g_gazeWheelSector,-2);InterlockedExchange(&g_gazeWheelTime,0);
+        InterlockedIncrement(&g_gazeWheelEpoch);
         NativeOwnedInventory::Refresh(); // next original input poll, never XR-thread UObject access
         g_weaponWheelSeek={};
         InterlockedExchange(&g_weaponWheelOpen, 1);
@@ -11978,9 +12002,9 @@ void SyncXRInput(XrTime displayTime) {
         // (last SelectionChanged, never cleared on close). Reading the state
         // here yields sel=0 for every commit: highlights without switching.
         const LONG sel = InterlockedCompareExchange(&g_weaponWheelSelection, 0, 0);
-        LONG pulses = g_weaponWheelObserved?0:sel; // unknown catalog must not guess a target
-        // Direct-select: sector -> gun_verts -> forward cycle steps. Unknown
-        // verts (or catalog off) keep the historical offset-pulse behavior.
+        LONG pulses = 0; // Never select from an unverified model/cycle catalog.
+        // Direct-select: sector -> gun_verts, then require current pawn ownership.
+        // Missing catalog data cancels instead of guessing native cycle pulses.
         if (Rd(g_wwDirectSelect) && InterlockedCompareExchange(&g_wwCatalogState, 0, 0) == 1) {
             weaponwheel_direct::CatalogSector secs[8]{};
             long cyc[16]{};
@@ -12003,7 +12027,10 @@ void SyncXRInput(XrTime displayTime) {
             const weaponwheel_direct::Catalog view{ secs, (int)n, cyc, (int)m };
             const LONG curV = Rd(g_gunVerts);
             const LONG tgtV = weaponwheel_direct::TargetVertsForSector(view, (int)sel);
-            if(tgtV==12444){
+            if(!wheelownership::CanSelect(NativeOwnedInventory::MaskForPawn(g_playerPawn),g_playerPawn&&((uintptr_t)(unsigned)Rd(g_seekerBackAvailable)==g_playerPawn),(int)tgtV)){
+                pulses=0;g_weaponWheelSeek={};
+                Log("weapon wheel: refused unowned target=%ld mask=%X",tgtV,NativeOwnedInventory::Mask());
+            } else if(tgtV==12444){
                 pulses=0;
                 InterlockedExchange(&g_seekerWheelRequest,Rd(g_seekerBackAvailable));
             } else if (Rd(g_ownedWeaponWheel) && NativeOwnedInventory::Ready()) {
@@ -12805,6 +12832,12 @@ void SyncXRInput(XrTime displayTime) {
         ++refresh;
         const LONG raw[2] = { InterlockedCompareExchange(&g_rumbleL, 0, 0),
                               InterlockedCompareExchange(&g_rumbleR, 0, 0) };
+        const bool damageAllowed=Rd(g_damagePulses)&&hapticsAllowed&&!Rd(g_gamePaused)&&
+            !Rd(g_inCinematic)&&!uiMenu&&!Rd(g_panelOpen)&&
+            g_xrSessionState==XR_SESSION_STATE_FOCUSED;
+        AcquireSRWLockExclusive(&g_damageHapticsLock);
+        const float damageAmplitude=g_damageHaptics.Sample(damageAllowed,GetTickCount64());
+        ReleaseSRWLockExclusive(&g_damageHapticsLock);
         for (int hand = 0; hand < 2; ++hand) {
             // Authoritative OpenXR controller tracking gate: checks whether the controller
             // orientation or position is valid and tracked. Avoids false negatives from Touch
@@ -12830,6 +12863,9 @@ void SyncXRInput(XrTime displayTime) {
                 ReleaseSRWLockExclusive(&g_weaponHapticsLock);
                 if (shotAmp > overlay) overlay = shotAmp;
             }
+            // Same XR submission and master strength as existing shot/TMD rumble.
+            // max(), never additive; each controller still requires tracking below.
+            if(damageAmplitude>overlay)overlay=damageAmplitude;
             const float merged = tmdhaptics::Merge(nativeAmp, overlay, tmdHand || hand == AimHand(),
                 tmdhaptics::Config{ Rd(g_hapticsEnabled) != 0, (tmdhaptics::Level)lvl, Rd(g_tmdPulses) != 0 });
             const float amp = (hapticsAllowed && handTracked) ? merged : 0.0f;
@@ -12997,7 +13033,7 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
             // and its world transform are untouched.
             g_haveCentre = false;
             g_haveCentrePos = false;
-            Log("recenter chord: L3+R3 accepted; rebuilding common HMD/controller stage");
+            Log("recenter request accepted; rebuilding common HMD/controller stage");
         }
         // Anchor to the GAME's current yaw, not our own previous output. Seeding from
         // g_wantYaw (initially 0) made enabling snap the view to world yaw 0.
@@ -13779,21 +13815,23 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
     // ---- copy the game's frame into the swapchain and submit it ----
     XrCompositionLayerProjection layer{ XR_TYPE_COMPOSITION_LAYER_PROJECTION };
     XrCompositionLayerQuad cinemaQuad{ XR_TYPE_COMPOSITION_LAYER_QUAD };
+    XrCompositionLayerQuad stereoQuads[2]{{XR_TYPE_COMPOSITION_LAYER_QUAD},{XR_TYPE_COMPOSITION_LAYER_QUAD}};
     bool cinemaQuadSubmitted=false;
     XrCompositionLayerProjectionView projViews[2]{};
-    const XrCompositionLayerBaseHeader* layers[1] = { nullptr };
+    const XrCompositionLayerBaseHeader* layers[2] = { nullptr };
     uint32_t layerCount = 0;
 
     const int64_t diagBridge = g_diagEnabled ? DiagQpc() : 0;
     const bool isVideoFlat = (g_sceneMode.Current() == vrscene::Mode::VideoFlat);
-    const bool activeWorldAnchor = (Rd(g_inCinematic) != 0) || isVideoFlat;
-    g_cinemaWorldAnchor.Observe(activeWorldAnchor, Rd(g_cutsceneWorldScreen) != 0);
     if(g_cinemaReferenceChangeTime && fs.predictedDisplayTime>=g_cinemaReferenceChangeTime) {
         g_cinemaWorldAnchor.Reset();g_cinemaReferenceChangeTime=0;
     }
     const bool captureRequested = fs.shouldRender && g_haveEyes && gameDev;
     if (captureRequested) g_menuSubmitDiag.captureAttempts++;
     const CopySlot* frame = captureRequested ? CopyBackbufferToD3D11(gameDev) : nullptr;
+    // Completed capture owns its stereo classification across scene transitions.
+    const bool activeWorldAnchor = (Rd(g_inCinematic) != 0) || isVideoFlat || (frame && frame->cineStereo);
+    g_cinemaWorldAnchor.Observe(activeWorldAnchor, Rd(g_cutsceneWorldScreen) != 0 || Rd(g_stereoCinema)!=0);
     if (captureRequested) {
         if (frame) g_menuSubmitDiag.validCaptures++;
         else g_menuSubmitDiag.failedCaptures++;
@@ -13823,9 +13861,16 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
     // path (two independent eye viewports, seam never in the kernel). Mono and
     // alternate-eye stereo keep the native path. NIS upscale uses recommended
     // output; NISSharpen keeps the actual captured eye resolution unchanged.
+    float gazeX[2]{},gazeY[2]{};bool gazeValid[2]{};
+    if(frame&&Rd(g_gazeEnabled)&&Rd(g_gazeNis)&&Rd(g_nis.mode)==nis_upscale::kNISSharpen){
+        float direction[3]{};
+        if(g_gazeReader.Read(direction))for(int eye=0;eye<2;++eye)
+            gazeValid[eye]=GazeEyePixel(direction,frame->pose,frame->useDerived?frame->derived:frame->fov[eye],
+                                       eye,g_srcW/2,g_srcH,gazeX[eye],gazeY[eye]);
+    }
     bool nisFrame = false;
     UINT nisOutW = 0, nisOutH = 0;
-    const bool nisStereoSbs = frame && nis_upscale::IsStereoSbs(frame->dup,
+    const bool nisStereoSbs = frame && !frame->cineStereo && nis_upscale::IsStereoSbs(frame->dup,
         frame->stereo, frame->menuFlat, frame->cineFlat, g_srcW, g_srcH);
     if (nisStereoSbs && displaySrc &&
         InterlockedCompareExchange(&g_nis.mode, 0, 0) != 0) {
@@ -13854,7 +13899,7 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
         // image. Native fallback then always uses native dimensions, not an
         // out-of-bounds native copy into an enlarged NIS swapchain.
         if (nisFrame && !NisBridge_ProcessStereo(&g_nis, g_ctx11, displaySrc,
-                g_srcW, g_srcH, nisOutW, nisOutH)) {
+                g_srcW, g_srcH, nisOutW, nisOutH, gazeX, gazeY, gazeValid)) {
             Log("nis: dispatch FAILED - native submission, disabled for session");
             g_nis.rt.failedOnce = true; nisFrame = false;
         }
@@ -14052,6 +14097,28 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
                         }
                     }
                     layerCount = 1;
+                    if(frame->cineStereo&&activeWorldAnchor&&!Rd(g_panelOpen)&&
+                       cinemascreen::TrackingAllowsAnchor(g_cinemaWorldAnchor.valid,frame->eyePositionsValid)){
+                        const auto& l=frame->pose[0];const auto& r=frame->pose[1];
+                        const auto head=cinemascreen::Centre(
+                            {l.position.x,l.position.y,l.position.z,l.orientation.x,l.orientation.y,l.orientation.z,l.orientation.w},
+                            {r.position.x,r.position.y,r.position.z,r.orientation.x,r.orientation.y,r.orientation.z,r.orientation.w});
+                        const auto& f=frame->useDerived?frame->derived:frame->fov[0];
+                        const float halfTan=(tanf(f.angleRight)-tanf(f.angleLeft))*.5f;
+                        if(g_cinemaWorldAnchor.Latch(head,Rd(g_cutsceneScreenDistanceMm)/1000.f,halfTan,
+                            std::clamp(Rd(g_cutsceneCinemaScalePct)/100.f,.2f,1.f),frame->cineAspect)){
+                            const auto& a=g_cinemaWorldAnchor;
+                            for(int eye=0;eye<2;++eye){
+                                auto& q=stereoQuads[eye];q.space=g_xrSpace;
+                                q.eyeVisibility=eye?XR_EYE_VISIBILITY_RIGHT:XR_EYE_VISIBILITY_LEFT;
+                                q.pose={{a.pose.qx,a.pose.qy,a.pose.qz,a.pose.qw},{a.pose.x,a.pose.y,a.pose.z}};
+                                q.size={a.width,a.height};q.subImage=projViews[eye].subImage;
+                                layers[eye]=reinterpret_cast<const XrCompositionLayerBaseHeader*>(&q);
+                            }
+                            layerCount=2;cinemaQuadSubmitted=true;
+                            static bool said=false;if(!said){said=true;Log("cinema stereo: LOCAL LEFT/RIGHT quad pair with distinct eye rects; physical acceptance pending");}
+                        }
+                    }
                     NoteMenuLayerSubmitted(frame, monoCrop);
                     if (++g_framesSubmitted == 1) Log("*** FIRST FRAME SUBMITTED TO THE HEADSET ***");
                 }
@@ -14082,13 +14149,14 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
     if(cinemaQuadSubmitted) {
         if(XR_FAILED(frameEndResult)) {
             InterlockedExchange(&g_cutsceneWorldScreen,0);
+            InterlockedExchange(&g_stereoCinema,0);
             g_cinemaWorldAnchor.Reset();
             Log("cinema-world: xrEndFrame rejected quad result=%d; experiment disabled, legacy projection fallback",(int)frameEndResult);
         } else {
             static bool saidWorldSubmit=false;
             if(!saidWorldSubmit) {
                 saidWorldSubmit=true;
-                Log("cinema-world: quad xrEndFrame accepted; LOCAL/BOTH, physical stability still unverified");
+                Log("cinema-world: quad xrEndFrame accepted; mono=BOTH or stereo=LEFT/RIGHT, physical stability still unverified");
             }
         }
     }
@@ -14174,6 +14242,13 @@ void UpdateCameraStabilizationThisFrame() {
 HRESULT STDMETHODCALLTYPE Hook_SetVSConstF(IDirect3DDevice9* dev, UINT startReg,
                                            const float* data, UINT vec4Count) {
     hotpath::scope hotScope(g_hotPathSampler, hotpath::Family::other_set_hooks);
+    const bool nativeCinema=StereoCinemaNow();
+    if(nativeCinema&&!g_cinemaWasActive){memset(g_cinemaNativeValid,0,sizeof g_cinemaNativeValid);g_cinemaStereoToken=~0u;}
+    g_cinemaWasActive=nativeCinema;
+    if(nativeCinema&&data&&startReg<256&&vec4Count<=256-startReg){
+        memcpy(g_cinemaNativeConstants[startReg],data,vec4Count*4*sizeof(float));
+        for(UINT r=startReg;r<startReg+vec4Count;++r)g_cinemaNativeValid[r]=true;
+    }
     if(NativeScopeRendering()){++g_scopeNativeUploads;return g_origSetVSConstF(dev,startReg,data,vec4Count);}
     // The draw-time gate is too late: HMD position, rotation and projection are
     // already written here. A light/reflection view can pass the matrix shape
@@ -14363,6 +14438,7 @@ HRESULT STDMETHODCALLTYPE Hook_SetVSConstF(IDirect3DDevice9* dev, UINT startReg,
             lockTanX = tx; lockTanY = ty;
             g_projTanX = tx; g_projTanY = ty;
             g_lockVerified = true;
+            g_cinemaConvention.Observe(true,g_lockedConv);
             if (g_projTanX < g_capTanMin) g_capTanMin = g_projTanX;
             if (g_projTanX > g_capTanMax) g_capTanMax = g_projTanX;
             if (g_projTanY < g_capTanYMin) g_capTanYMin = g_projTanY;
@@ -14998,8 +15074,46 @@ HRESULT StereoPair(IDirect3DDevice9* dev, DrawFn&& draw) {
     return hr;
 }
 
+// Only CTAB-labelled native ViewProjection constants can enter this path.
+// Palette, model transforms, native authored camera, and shadow producers stay native.
+template <typename DrawFn>
+HRESULT StereoNativeCinema(IDirect3DDevice9* dev,DrawFn&& draw){
+    if(!Rd(g_rtIsScene)||g_boundShaderLayout.shadow||!g_origSetVSConstF)return draw();
+    // One receipt per refusal class, never per-frame or per-draw log flooding.
+    static unsigned refused=0;
+    const auto fallback=[&](unsigned bit,const char* reason)->HRESULT {
+        if(!(refused&bit)){refused|=bit;Log("cinema stereo: native draw fallback: %s",reason);}
+        return draw();
+    };
+    const int reg=g_boundShaderLayout.viewProjection;
+    if(reg<0||reg>252)return fallback(1,"no verified CTAB ViewProjection register");
+    for(int i=0;i<4;++i)if(!g_cinemaNativeValid[reg+i])return fallback(2,"native matrix not captured");
+    const auto* raw=reinterpret_cast<const Reg4*>(g_cinemaNativeConstants[reg]);
+    float tx=0,ty=0;
+    const int convention=g_cinemaConvention.Resolve([&](int c,float* x,float* y){
+        return ViewMatrixShape(raw,c,x,y);
+    },&tx,&ty);
+    if(convention<0)return fallback(4,"measured convention/current native matrix shape unverified");
+    const auto& l=g_eyePose[0].position;const auto& r=g_eyePose[1].position;
+    const float ipd=sqrtf((r.x-l.x)*(r.x-l.x)+(r.y-l.y)*(r.y-l.y)+(r.z-l.z)*(r.z-l.z));
+    if(!std::isfinite(ipd)||ipd<.035f||ipd>.09f)return fallback(8,"tracked eye separation invalid");
+    D3DVIEWPORT9 vp{};RECT oldRect{};DWORD scissor=0;
+    if(FAILED(dev->GetViewport(&vp))||vp.Width<4||
+       FAILED(dev->GetScissorRect(&oldRect))||FAILED(dev->GetRenderState(D3DRS_SCISSORTESTENABLE,&scissor)))return draw();
+    float eyes[2][16];
+    for(int eye=0;eye<2;++eye)if(!cinemastereo::EyeMatrix(reinterpret_cast<const float*>(raw),
+        convention,(eye?.5f:-.5f)*ipd*MetresToUU(),eye,eyes[eye]))return draw();
+    const HRESULT result=cinemastereo::Dispatch(dev,g_origSetVSConstF,(UINT)reg,
+        reinterpret_cast<const float*>(raw),eyes,vp,oldRect,scissor,draw);
+    if(SUCCEEDED(result)){
+        g_cinemaStereoToken=(unsigned)Rd(g_armPaletteFrameToken);g_cinemaNativeAspect=tx/ty;
+        static unsigned notes=0;if(notes++<2)Log("cinema stereo: native CTAB c%d convention=%d IPD=%.4fm; two independent scene-eye draws, HMD rotation excluded",reg,convention,ipd);
+    }
+    return result;
+}
 template <typename DrawFn>
 HRESULT StereoPairBody(IDirect3DDevice9* dev, DrawFn&& draw) {
+    if(StereoCinemaNow())return StereoNativeCinema(dev,draw);
     MenuTracePath menuPath(1);   // fix-I census: this draw went through the stereo path
     ++g_drawsTotal;
     if (g_rtCurrent >= 0 && g_rtCurrent < 16) ++g_rtSeen[g_rtCurrent].draws;
@@ -20721,7 +20835,7 @@ static trackedprime::Owner TrackedPrimeOwner() {
         GetCurrentThreadId()==g_mainThreadId&&g_haveEyes&&g_eyePositionsValid&&
         g_sceneMode.Current()==vrscene::Mode::GameplayStereo&&
         !Rd(g_gamePaused)&&!Rd(g_vrUiMenu)&&!Rd(g_inCinematic)&&
-        !Rd(g_weaponHolstered)&&!NativeAnimatedHandsNow()&&!CutsceneNativeCameraArmed()&&
+        (!o.weapon||!Rd(g_weaponHolstered))&&!NativeAnimatedHandsNow()&&!CutsceneNativeCameraArmed()&&
         g_handPoseValid[0]&&g_handPositionValid[0]&&g_handPoseValid[1]&&g_handPositionValid[1];
     return o;
 }
@@ -21981,6 +22095,33 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
                     dualtmdgunpose::Uniform(dualRightRawEye[eye]);
             }
         }
+        // Exact bound noTMD palette: once per eye under existing trace flag.
+        if(Rd(g_equipmentHudTrace)&&cuffProfile==0&&cuffBuffer&&nativeIndices.valid&&
+           independentRegs&&g_equipmentWristStaged.valid&&eye<2){
+            static unsigned captured=0;const unsigned bit=1u<<eye;
+            if(!(captured&bit)){
+                captured|=bit;float palette[135][4]{},local[4][4]{};
+                IDirect3DIndexBuffer9* actual=nullptr;
+                const HRESULT ih=dev->GetIndices(&actual);
+                const HRESULT ph=dev->GetVertexShaderConstantF(5,palette[0],135);
+                const HRESULT lh=dev->GetVertexShaderConstantF(230,local[0],4);
+                Log("wrist-cuff final: frame=%ld eye=%u faces=%u ib=%p expected=%p hr=%08lX/%08lX/%08lX posed=%d moved=%d unit=%g offset=%ld,%ld,%ld scale=%ld",
+                    Rd(g_armPaletteFrameToken),eye,gloveTriangles,actual,cuffBuffer,ih,ph,lh,
+                    g_nativeGlovePoseThisDraw?1:0,g_thisDrawMoved,MetresToUU(),
+                    Rd(g_equipmentHudOffsetMm[0]),Rd(g_equipmentHudOffsetMm[1]),Rd(g_equipmentHudOffsetMm[2]),Rd(g_equipmentHudScalePct));
+                if(SUCCEEDED(ph))for(unsigned r=0;r<135;++r)
+                    Log("wrist-cuff palette: frame=%ld eye=%u reg=%u value=%.9g,%.9g,%.9g,%.9g",Rd(g_armPaletteFrameToken),eye,5+r,palette[r][0],palette[r][1],palette[r][2],palette[r][3]);
+                if(SUCCEEDED(lh))for(unsigned r=0;r<4;++r)
+                    Log("wrist-cuff local: frame=%ld eye=%u row=%u value=%.9g,%.9g,%.9g,%.9g",Rd(g_armPaletteFrameToken),eye,r,local[r][0],local[r][1],local[r][2],local[r][3]);
+                for(unsigned r=0;r<4;++r){
+                    const auto& pose=g_equipmentWristStaged;
+                    Log("wrist-cuff tracking: frame=%ld eye=%u row=%u wrist=%.9g,%.9g,%.9g,%.9g world=%.9g,%.9g,%.9g,%.9g",
+                        Rd(g_armPaletteFrameToken),eye,r,pose.tracking.m[r][0],pose.tracking.m[r][1],pose.tracking.m[r][2],pose.tracking.m[r][3],
+                        pose.nativeTracking.m[r][0],pose.nativeTracking.m[r][1],pose.nativeTracking.m[r][2],pose.nativeTracking.m[r][3]);
+                }
+                if(actual)actual->Release();
+            }
+        }
         if(seekerProbe&&eye<2){
             // Final bound shader/IB inside each eye; no GPU readback or flush.
             IDirect3DIndexBuffer9* ib=nullptr;IDirect3DVertexBuffer9* vb=nullptr;
@@ -22973,6 +23114,7 @@ HRESULT HudStereoPair(IDirect3DDevice9* dev, UINT primCount, UINT stride, DrawFn
     // only its old scene/backbuffer canvas copy. Never suppress the RTT producer.
     if (Rd(g_vrMenuClass) == 3 && Rd(g_rtIsScene) && !Rd(g_vrMenuProviderDrawing) &&
         PauseRttProbe::Presented()) return D3D_OK;
+    if(StereoCinemaNow())return StereoNativeCinema(dev,draw);
     if (InterlockedCompareExchange(&g_sceneFlatEnabled, 0, 0) && g_sceneMode.Flat()) return draw();
     if (!g_hudRemap) return StereoPair(dev, draw);
     InterlockedIncrement(&g_uiSeen);          // ⭐ run 230
@@ -25614,6 +25756,7 @@ void ReportScan() {
                 g_hits[0].startReg, kPointName[g_hits[0].pt]);
         } else if (g_hits[0].count >= kMinUploadsToLock) {
             g_lockedReg = g_hits[0].startReg; g_lockedConv = g_hits[0].conv; g_haveLock = true;
+            g_cinemaConvention.Observe(true,g_lockedConv);
             Log("    LOCKED on c%u %s (%d uploads this frame)", g_lockedReg,
                 g_lockedConv == CONV_ROW ? "ROW" : "COL", g_hits[0].count);
         } else {
@@ -26321,7 +26464,10 @@ static void UpdateSceneModeFrame() {
     const vrscene::Mode renderedMode = g_sceneMode.Current();
     const vrscene::Transition t = g_sceneMode.Advance(signals);
     g_scenePresentMode = vrscene::CompletedFrameMode(renderedMode, g_sceneMode.Current());
-    if(t.changed && t.from==vrscene::Mode::CutsceneFlat && t.to==vrscene::Mode::GameplayStereo) {
+    if(vrscene::RecenterAfterCutscene(t)) {
+        // Same request/settled stage acquisition as L3+R3: no separate camera
+        // or controller transform, and never triggered by pause/menu exits.
+        InterlockedExchange(&g_recenterRequested,1);
         // The cinematic projection is not a valid gameplay lock. Waiting for
         // the generic 60-frame failure timeout exposed stale projection state.
         g_haveLock=false;g_lockMissFrames=0;g_lockVerified=false;
@@ -27385,10 +27531,39 @@ typedef int (__fastcall *PFN_SLC)(void* self, void* edx, void* hit, void* src,
                                   float* End, float* Start, uint32_t flags, void* extent, void* a7);
 PFN_SLC g_origSLC = nullptr;
 volatile LONG g_slcRotated = 0;
+#include "cinema_mutant_aim.h"
+#include "cinema_mutant_runtime.inl"
 
 int __fastcall Hook_SingleLineCheck(void* self, void* edx, void* hit, void* src,
                                     float* End, float* Start, uint32_t flags,
                                     void* extent, void* a7) {
+    // The screen shows the native animated weapon, not the controller gun.
+    // Keep native range/damage/ammo; opt-in tackle assistance resolves its
+    // exact native instigator instead of using the freely tracked controller.
+    if(!cinemastereo::ControllerShotCorrection(CutsceneNativeCameraArmed())){
+        float assistedEnd[3];
+        if(MutantAssistedEnd(src,Start,End,assistedEnd))
+            return g_origSLC(self,edx,hit,src,assistedEnd,Start,flags,extent,a7);
+        // Observe other distinct real native call sites under R2, including unknown
+        // sources; never infer a shot from a nearby pawn or alter an AI trace.
+        struct Site {void* caller;void* source;uint32_t flags;};
+        static Site sites[24]{};static unsigned receipts=0;
+        if(Rd(g_equipmentHudTrace)&&((DWORD)Rd(g_padBtns)>>24)>32&&receipts<24&&
+           Start&&End&&Readable(Start,12)&&Readable(End,12)){
+            void* caller=_ReturnAddress();bool seen=false;
+            for(unsigned i=0;i<receipts;++i)if(sites[i].caller==caller&&sites[i].source==src&&sites[i].flags==flags){seen=true;break;}
+            if(!seen){
+                sites[receipts++]={caller,src,flags};
+                char sourceClass[80]{};
+                const uintptr_t cls=src&&Readable((uint8_t*)src+OBJ_CLASS,4)?*(uintptr_t*)((uint8_t*)src+OBJ_CLASS):0;
+                if(cls)GuardedNameOf(cls,sourceClass,sizeof(sourceClass));
+                Log("cinema R2 trace: frame=%ld pawn=%08X src=%p class=%s start=%g,%g,%g end=%g,%g,%g flags=%X fireDepth=%ld caller=%p; native unchanged, shot identity UNPROVEN",
+                    Rd(g_armPaletteFrameToken),(unsigned)g_playerPawn,src,sourceClass,
+                    Start[0],Start[1],Start[2],End[0],End[1],End[2],flags,Rd(g_fireDepth),caller);
+            }
+        }
+        return g_origSLC(self,edx,hit,src,End,Start,flags,extent,a7);
+    }
     // The opt-in Seeker launch already supplies native weapon-space origin and
     // spread. Do not rotate its own auxiliary traces a second time as hitscan.
     if(SeekerOwnsTrace(src))return g_origSLC(self,edx,hit,src,End,Start,flags,extent,a7);
@@ -27876,7 +28051,7 @@ void __fastcall Hook_ProcessEvent(void* self, void* edx, void* Stack, void* Resu
     const bool cineWatch = InterlockedCompareExchange(&g_cutsceneAuto, 0, 0) != 0 &&
                            FnIdx(kFnSetCinematic) >= 0;
     int32_t fnIdx = -1;
-    if ((censusOn || routeTwo || cineWatch || Rd(g_cinematicSceneProbe) || Rd(g_cinematicEventBridge) || nativefx::Probe() || g_centurionReloadProbe || Rd(g_keepAcquiredWeapons) || singularity_gore::enabled || Rd(g_weaponShotHaptics) ||
+    if ((censusOn || routeTwo || cineWatch || Rd(g_cinematicSceneProbe) || Rd(g_cinematicEventBridge) || nativefx::Probe() || g_centurionReloadProbe || Rd(g_keepAcquiredWeapons) || singularity_gore::enabled || Rd(g_weaponShotHaptics) || Rd(g_damagePulses) ||
          (Rd(g_equipmentHudEnergy)&&self==(void*)(uintptr_t)(uint32_t)Rd(g_equipmentTmdPointer))) && Stack) {
         fnIdx = ScriptFuncNameIdx(Stack);
         InterlockedIncrement(&g_peSeen);
@@ -27958,12 +28133,12 @@ void __fastcall Hook_ProcessEvent(void* self, void* edx, void* Stack, void* Resu
     // The name is checked BEFORE the original call so the common case costs one integer compare,
     // and the buffer is touched only AFTER it, because the value being replaced is the one the
     // original just wrote.
-    const bool wantAim = routeTwo
+    const bool wantAim = routeTwo && cinemastereo::ControllerShotCorrection(CutsceneNativeCameraArmed())
                       && FnIdx(kFnGetAdjustedAim) >= 0
                       && fnIdx == FnIdx(kFnGetAdjustedAim);
 
     // ---- mode 7: the gun's pose. On the way IN, because the callee consumes its parameters ----
-    if (aimMode == 7 && FnIdx(kFnSetAim) >= 0 && fnIdx == FnIdx(kFnSetAim))
+    if (aimMode == 7 && cinemastereo::ControllerShotCorrection(CutsceneNativeCameraArmed()) && FnIdx(kFnSetAim) >= 0 && fnIdx == FnIdx(kFnSetAim))
         RewriteSetAimParams(Stack);
 
     if(Rd(g_cinematicEventBridge)&&FnIdx(kFnPlayerCinematicProbeFirst)>=0&&
@@ -28195,7 +28370,8 @@ void __fastcall Hook_ProcessEvent(void* self, void* edx, void* Stack, void* Resu
     const bool mode9 = ((aimMode == 9) || mode10 || (aimMode == 11) || (aimMode == 12)) && fnIdx >= 0;
     // Mode 11 also opens a null window: it needs the window as a FILTER for the trace hook, but
     // must not write a rotation field or the view would follow - which is the whole point.
-    const bool nullWindow = mode10 || (aimMode == 11) || (aimMode == 12);
+    const bool nullWindow = mode10 || (aimMode == 11) || (aimMode == 12) ||
+        !cinemastereo::ControllerShotCorrection(CutsceneNativeCameraArmed());
     bool firedWindow = false;
     int32_t savedCtl[3] = {}, savedCam[3] = {}, savedPov[3] = {};
     bool haveCtl = false, haveCam = false, havePov = false;
@@ -28338,7 +28514,8 @@ void __fastcall Hook_ProcessEvent(void* self, void* edx, void* Stack, void* Resu
         }
     }
 
-    const bool mode8 = (aimMode == 8) && fnIdx >= 0;
+    const bool mode8 = (aimMode == 8) && fnIdx >= 0 &&
+        cinemastereo::ControllerShotCorrection(CutsceneNativeCameraArmed());
     bool openedWindow = false, maskedHere = false;
     int32_t savedPitch = 0, savedYaw = 0;
     uintptr_t ctlNow = 0;
@@ -28370,6 +28547,17 @@ void __fastcall Hook_ProcessEvent(void* self, void* edx, void* Stack, void* Resu
         }
     }
 
+    // The existing reflected Pawn.Health source is authoritative. Snapshot only
+    // the confirmed local TakeDamage receiver; never enumerate objects per hit.
+    int damageBefore=-1;
+    const uintptr_t damagedPawn=(uintptr_t)self;
+    const bool localDamage=Rd(g_damagePulses)&&Rd(g_hapticsEnabled)&&fnIdx>=0&&
+        FnIdx(kFnGoreDamage)>=0&&fnIdx==FnIdx(kFnGoreDamage)&&
+        damagedPawn!=0&&damagedPawn==g_playerPawn&&g_offHealth>=0&&g_offHealth<0x10000&&
+        Readable(self,OBJ_CLASS+sizeof(uintptr_t))&&
+        *reinterpret_cast<const uintptr_t*>(damagedPawn+OBJ_CLASS)==g_playerPawnClass;
+    if(localDamage&&Readable((void*)(damagedPawn+g_offHealth),sizeof(int)))
+        damageBefore=*reinterpret_cast<const int*>(damagedPawn+g_offHealth);
     int shotBefore=-1, shotOffset=-1;
     const uintptr_t shotWeapon=(uintptr_t)self;
     const bool localShot=Rd(g_weaponShotHaptics) && fnIdx>=0 && FnIdx(kFnFireFirst)>=0 &&
@@ -28393,6 +28581,17 @@ void __fastcall Hook_ProcessEvent(void* self, void* edx, void* Stack, void* Resu
             fnIdx>=0&&FnIdx(kFnGoreDamage)>=0&&fnIdx==FnIdx(kFnGoreDamage));
         if (!NativeOwnedInventory::InvokeRetained(self,edx,Stack,Result,fnIdx,(int)Rd(g_nodeOffset),g_origProcessEvent))
             g_origProcessEvent(self, edx, Stack, Result);
+    }
+    if(localDamage&&damageBefore>0&&damagedPawn==g_playerPawn&&
+       Readable(self,OBJ_CLASS+sizeof(uintptr_t))&&
+       *reinterpret_cast<const uintptr_t*>(damagedPawn+OBJ_CLASS)==g_playerPawnClass&&
+       Readable((void*)(damagedPawn+g_offHealth),sizeof(int))){
+        const int after=*reinterpret_cast<const int*>(damagedPawn+g_offHealth);
+        AcquireSRWLockExclusive(&g_damageHapticsLock);
+        const bool armed=g_damageHaptics.OnNativeReturn(true,damageBefore,after,GetTickCount64());
+        ReleaseSRWLockExclusive(&g_damageHapticsLock);
+        static unsigned receipts=0;if(armed&&receipts++<12)
+            Log("damage haptics witness: local pawn=%08X Health=%d->%d pulse=85ms",(unsigned)damagedPawn,damageBefore,after);
     }
     int shotAfter=-1;bool shotPulseArmed=false;
     if(localShot && shotBefore>=0 && shotOffset>=0 &&
@@ -32022,6 +32221,22 @@ void DrawWeaponWheel(IDirect3DDevice9* dev) {
         wheelCx[eye]=(int)lroundf((eye+u)*d.Width*0.5f);
         wheelCy[eye]=(int)lroundf(v*d.Height);
     }
+    if(Rd(g_gazeEnabled)&&Rd(g_gazeWheel)&&roundOn){
+        static LONG epoch=-1;const LONG current=Rd(g_gazeWheelEpoch);
+        if(epoch!=current){epoch=current;g_gazeDwell.Reset();}
+        float direction[3]{},px=0,py=0;int target=-1;
+        XrFovf f=g_eyeFov[0];
+        if(Rd(g_vrProjection))f={-atanf(g_targetTanX),atanf(g_targetTanX),atanf(g_targetTanY),-atanf(g_targetTanY)};
+        if(g_gazeReader.Read(direction)&&GazeEyePixel(direction,g_eyePose,f,0,d.Width/2,d.Height,px,py))
+            target=svrgaze::Sector(px,py,(float)wheelCx[0],(float)wheelCy[0],
+                                   safeMetrics.innerR,safeMetrics.outerR,slots);
+        const int sector=g_gazeDwell.Update(target,GetTickCount64());
+        InterlockedExchange(&g_gazeWheelSector,sector);
+        InterlockedExchange(&g_gazeWheelTime,(LONG)GetTickCount());
+        static unsigned receipts=0;static int previous=-3;
+        if(sector!=previous&&receipts<12){previous=sector;++receipts;
+            Log("gaze wheel: sector=%d (R3 release confirms); invalid gaze uses original input",sector);}
+    }
     const int remasterResult=roundOn?DrawUiRemasterWheelPair(dev,safeMetrics,wheelCx,wheelCy,
         slots,selected,slotVerts,slotNamed,wheelClip,wheelReserve,(int)d.Width,(int)d.Height):0;
     // A failed staged atlas may have left textured alpha state. Re-establish
@@ -33614,7 +33829,11 @@ static void DrawCutsceneCinemaMask(IDirect3DDevice9* dev) {
     // A composed mono frame already carries its own letterbox bars; the matte
     // would clear over the composed image. It still applies to uncomposed flat
     // frames (composition failed or VideoFlat self-handled path).
-    if (CutsceneMonoComposeArmed()) return;
+    const bool composed=CutsceneMonoComposeArmed();
+    // Stereo already fills each complete eye rectangle and is sized by the XR
+    // cinema quad. The legacy mono matte erases 16% x 30% of that valid scene.
+    if (!cinemastereo::LegacyMatteNeeded(composed,
+        StereoCinemaCompletedFrame(MenuSubmitForcesFlat((int)Rd(g_vrMenuClass))))) return;
 
     IDirect3DSurface9* back = nullptr;
     if (FAILED(dev->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &back)) || !back) return;
@@ -33753,6 +33972,17 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
     g_cineMonoReady = false;
     g_frontMenuCleanFrame = false;
     UpdateSceneModeFrame();
+    // Transition receipts remain available for the helicopter even if attract
+    // cinematics consumed the draw-level diagnostic budget earlier in startup.
+    {
+        static bool wasStereo=false;static unsigned receipts=0;
+        const bool stereo=Rd(g_stereoCinema)&&g_scenePresentMode==vrscene::Mode::CutsceneFlat&&
+            g_cinemaStereoToken==(unsigned)Rd(g_armPaletteFrameToken);
+        if(stereo!=wasStereo&&receipts++<24)
+            Log("cinema stereo completed frame: stereo=%d frame=%ld gameplayLock=%d; current native CTAB matrix validated before eye dispatch",
+                stereo?1:0,Rd(g_armPaletteFrameToken),g_haveLock?1:0);
+        wasStereo=stereo;
+    }
     InstallBinkAudioObservation(); // bounded exported-API observation, no audio mutation
     // VFX host: frame serial for once-per-eye draws + effect aging. Render
     // thread owns all plugin calls (game thread only fills the fire mailbox).
@@ -37061,6 +37291,7 @@ HRESULT STDMETHODCALLTYPE Hook_ResetDevice(IDirect3DDevice9* dev, D3DPRESENT_PAR
     if(pp){InterlockedExchange(&g_diagResetRequestW,LONG(pp->BackBufferWidth));InterlockedExchange(&g_diagResetRequestH,LONG(pp->BackBufferHeight));}
     if (pp && dev) GuardResetSize(pp);
     ReleaseWristResources();
+    g_cinemaWasActive=false;g_cinemaStereoToken=~0u;memset(g_cinemaNativeValid,0,sizeof g_cinemaNativeValid);
     ReleaseCutsceneMonoResources(); // DEFAULT-pool compose surface; rebuilt lazily
     ReleaseVfxHost(); // drawer VB + atlas are device-bound; rebuilt lazily
     return g_origResetDevice(dev,pp);
@@ -37070,6 +37301,7 @@ HRESULT STDMETHODCALLTYPE Hook_ResetDeviceEx(IDirect3DDevice9Ex* dev, D3DPRESENT
     if(pp){InterlockedExchange(&g_diagResetRequestW,LONG(pp->BackBufferWidth));InterlockedExchange(&g_diagResetRequestH,LONG(pp->BackBufferHeight));}
     if (pp && dev) GuardResetSize(pp);
     ReleaseWristResources();
+    g_cinemaWasActive=false;g_cinemaStereoToken=~0u;memset(g_cinemaNativeValid,0,sizeof g_cinemaNativeValid);
     ReleaseCutsceneMonoResources(); // DEFAULT-pool compose surface; rebuilt lazily
     ReleaseVfxHost(); // drawer VB + atlas are device-bound; rebuilt lazily
     return g_origResetDeviceEx(dev,pp,dm);
@@ -37182,7 +37414,9 @@ void LoadIniSettings() {
     InterlockedExchange(&g_tmdPulses,GetPrivateProfileIntA("Haptics","TmdPulses",0,path)!=0);
     InterlockedExchange(&g_weaponShotHaptics,
         GetPrivateProfileIntA("Haptics","WeaponShotPulses",0,path)!=0);
+    InterlockedExchange(&g_damagePulses,GetPrivateProfileIntA("Haptics","DamagePulses",0,path)!=0);
     ApplyHapticConfig();
+    Log("ini: damage haptics DamagePulses=%ld (native local health loss)",Rd(g_damagePulses));
     Log("ini: Haptics Enabled=%ld Level=%ld TmdPulses=%ld WeaponShotPulses=%ld (shot fallback default OFF)",
         Rd(g_hapticsEnabled),Rd(g_hapticLevel),Rd(g_tmdPulses),Rd(g_weaponShotHaptics));
     Log("ini: VrSettingsMinimal=%d ReloadHints=%ld (optional PL/EN reload instructions)",
@@ -37334,6 +37568,12 @@ void LoadIniSettings() {
     g_cutsceneCinemaScalePct = ClampVideoCinemaScale(
         GetPrivateProfileIntA("Render", "CutsceneCinemaScalePct", 60, path));
     g_cutsceneNativeCameraFix = GetPrivateProfileIntA("Render", "CutsceneNativeCameraFix", 1, path) ? 1 : 0;
+    g_cinemaMutantAimAssist = GetPrivateProfileIntA("Render", "CinemaMutantAimAssist", 0, path) ? 1 : 0;
+    g_gazeEnabled=GetPrivateProfileIntA("EyeTracking","Enabled",1,path)?1:0;
+    g_gazeWheel=GetPrivateProfileIntA("EyeTracking","WeaponWheel",0,path)?1:0;
+    g_gazeNis=GetPrivateProfileIntA("EyeTracking","NisSharpen",0,path)?1:0;
+    g_stereoCinema=GetPrivateProfileIntA("Render","CutsceneStereoCinema",0,path)?1:0;
+    Log("gaze: enabled=%ld wheel=%ld sharpen=%ld; stereo cinema=%ld; PSVR2 Toolkit provider required",g_gazeEnabled,g_gazeWheel,g_gazeNis,g_stereoCinema);
     g_cutsceneWorldScreen=GetPrivateProfileIntA("Render","CutsceneWorldScreen",0,path)?1:0;
     g_menuAssetWitness=GetPrivateProfileIntA("Diagnostic","MenuAssetWitness",0,path)?1:0;
     InterlockedExchange(&g_menuDrawTrace,
