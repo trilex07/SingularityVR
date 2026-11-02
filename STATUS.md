@@ -1,3 +1,10 @@
+## 2026-11-02 — Stereo frame matte and authored-shot ownership
+
+- User physically confirms stereo cinema on BEDA5911; helicopter crop/eye-edge imbalance, noTMD wrist penetration and scripted mutant aim remain FAIL/PENDING.
+- L1/L2: completed stereo bypasses legacy 84%/70% matte; native-camera shots preserve native aim instead of controller trace rebasing. D3D9Ex eight-corner pixel test, x86/x64 policies, HUD math and dual-TMD/OLED regressions PASS. Legacy D3D9 HAL unavailable on host; explicit NOT RUN.
+- HUD bind clearance contradicts a blind offset fix at current WorldScale=80. Added one bounded actual-bound noTMD cuff sample per eye plus weighted offline analyzer; HUD geometry unchanged pending this exact evidence. No blanket auto-hit or damage/ammo edits.
+- Handoff: docs/handoffs/cinema-framing-wrist-scripted-aim-20261102.md. Physical acceptance PENDING; no promotion to main.
+
 ## 2026-11-02 — Gaze wheel/NIS, native stereo cinema and damage feedback candidate
 
 - L1/L2 PASS: x86 PE32 /O2; x86/x64 gaze ABI/selection tests, D3D9Ex stereo pixel/state fixture, D3D11 NIS regional pixels, existing hands/TMD/reload/WeaponLocker/OLED/haptics regressions and hardware-OFF bridge IPC.

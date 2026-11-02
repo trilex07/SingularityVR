@@ -152,3 +152,4 @@ offline-deliverables/
 # Private fake-Steam bridge deployment fixtures
 /build/gaze-bridge-lease/
 /build/bink-crash-audit/
+/build/cinema-framing/

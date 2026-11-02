@@ -4,6 +4,16 @@
 #include <d3d9.h>
 
 namespace cinemastereo {
+inline bool CompletedFrame(bool enabled,bool nativeCinema,unsigned drawToken,
+                           unsigned frameToken,bool menuFlat){
+    return enabled&&nativeCinema&&drawToken==frameToken&&!menuFlat;
+}
+inline bool LegacyMatteNeeded(bool monoComposed,bool stereoComplete){
+    return !monoComposed&&!stereoComplete;
+}
+// Authored/scripted camera sequences retain the game's original aim. A
+// controller ray is unrelated to the animated weapon shown on the screen.
+inline bool ControllerShotCorrection(bool nativeCamera){return !nativeCamera;}
 // Storage convention is a renderer fact, not a live gameplay camera pose.
 // Native-camera cinema intentionally bypasses gameplay lock verification; its
 // 61-frame expiry must not invalidate a previously measured ROW/COL convention.
