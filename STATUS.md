@@ -5465,3 +5465,9 @@ Toggle with **F6**.
   get cycled past unseen.
 - **Doc errors become code bugs.** `ENGINE_NOTES` recorded the backbuffer as `X8R8G8B8`; it is
   `A8R8G8B8`, and that mistake propagated straight into a `D3DERR_INVALIDCALL`.
+
+## 2026-11-02 native stereo cinema follow-up
+- Helicopter stereo: physical FAIL on 623D3EFD; gameplay lock lifetime defect corrected, L1/L2 PASS; new physical acceptance PENDING.
+- Existing intro crash: NOT REPRODUCED during read-only exception capture; cause UNRESOLVED.
+- Evidence and test boundary: docs/handoffs/cinema-lock-lifetime-20261102.md.
+

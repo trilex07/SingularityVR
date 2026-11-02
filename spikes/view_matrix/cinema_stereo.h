@@ -4,6 +4,21 @@
 #include <d3d9.h>
 
 namespace cinemastereo {
+// Storage convention is a renderer fact, not a live gameplay camera pose.
+// Native-camera cinema intentionally bypasses gameplay lock verification; its
+// 61-frame expiry must not invalidate a previously measured ROW/COL convention.
+class NativeConvention {
+    int measured_=-1;
+public:
+    void Observe(bool verified,int convention){
+        if(verified&&(convention==0||convention==1))measured_=convention;
+    }
+    void Reset(){measured_=-1;}
+    template<class Shape> int Resolve(Shape&& shape,float* tx,float* ty)const{
+        if(measured_<0)return -1;
+        return shape(measured_,tx,ty)?measured_:-1;
+    }
+};
 // Same ROW/COL convention and order as ApplyOffset -> ApplyEyeRemap.
 // A native ViewProjection matrix is authoritative: no HMD yaw/pitch/root motion.
 inline bool EyeMatrix(const float* native,int conv,float displacement,int eye,float* output){

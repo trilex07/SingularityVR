@@ -4890,6 +4890,7 @@ XrSpace    g_xrSpace    = XR_NULL_HANDLE;
 static cinemascreen::Anchor g_cinemaWorldAnchor;
 static LONG g_gazeEnabled=1,g_gazeWheel=0,g_gazeNis=0,g_stereoCinema=0;
 static unsigned g_cinemaStereoToken=~0u;
+static cinemastereo::NativeConvention g_cinemaConvention;
 static float g_cinemaNativeAspect=1.f;
 static svrgaze::Reader g_gazeReader;
 static LONG g_gazeWheelSector=-2,g_gazeWheelTime=0,g_gazeWheelEpoch=0;
@@ -14482,6 +14483,7 @@ HRESULT STDMETHODCALLTYPE Hook_SetVSConstF(IDirect3DDevice9* dev, UINT startReg,
             lockTanX = tx; lockTanY = ty;
             g_projTanX = tx; g_projTanY = ty;
             g_lockVerified = true;
+            g_cinemaConvention.Observe(true,g_lockedConv);
             if (g_projTanX < g_capTanMin) g_capTanMin = g_projTanX;
             if (g_projTanX > g_capTanMax) g_capTanMax = g_projTanX;
             if (g_projTanY < g_capTanYMin) g_capTanYMin = g_projTanY;
@@ -15133,7 +15135,10 @@ HRESULT StereoNativeCinema(IDirect3DDevice9* dev,DrawFn&& draw){
     for(int i=0;i<4;++i)if(!g_cinemaNativeValid[reg+i])return fallback(2,"native matrix not captured");
     const auto* raw=reinterpret_cast<const Reg4*>(g_cinemaNativeConstants[reg]);
     float tx=0,ty=0;
-    if(!g_haveLock||!ViewMatrixShape(raw,g_lockedConv,&tx,&ty))return fallback(4,"matrix convention/shape unverified");
+    const int convention=g_cinemaConvention.Resolve([&](int c,float* x,float* y){
+        return ViewMatrixShape(raw,c,x,y);
+    },&tx,&ty);
+    if(convention<0)return fallback(4,"measured convention/current native matrix shape unverified");
     const auto& l=g_eyePose[0].position;const auto& r=g_eyePose[1].position;
     const float ipd=sqrtf((r.x-l.x)*(r.x-l.x)+(r.y-l.y)*(r.y-l.y)+(r.z-l.z)*(r.z-l.z));
     if(!std::isfinite(ipd)||ipd<.035f||ipd>.09f)return fallback(8,"tracked eye separation invalid");
@@ -15142,12 +15147,12 @@ HRESULT StereoNativeCinema(IDirect3DDevice9* dev,DrawFn&& draw){
        FAILED(dev->GetScissorRect(&oldRect))||FAILED(dev->GetRenderState(D3DRS_SCISSORTESTENABLE,&scissor)))return draw();
     float eyes[2][16];
     for(int eye=0;eye<2;++eye)if(!cinemastereo::EyeMatrix(reinterpret_cast<const float*>(raw),
-        g_lockedConv,(eye?.5f:-.5f)*ipd*MetresToUU(),eye,eyes[eye]))return draw();
+        convention,(eye?.5f:-.5f)*ipd*MetresToUU(),eye,eyes[eye]))return draw();
     const HRESULT result=cinemastereo::Dispatch(dev,g_origSetVSConstF,(UINT)reg,
         reinterpret_cast<const float*>(raw),eyes,vp,oldRect,scissor,draw);
     if(SUCCEEDED(result)){
         g_cinemaStereoToken=(unsigned)Rd(g_armPaletteFrameToken);g_cinemaNativeAspect=tx/ty;
-        static unsigned notes=0;if(notes++<2)Log("cinema stereo: native CTAB c%d convention=%d IPD=%.4fm; two independent scene-eye draws, HMD rotation excluded",reg,g_lockedConv,ipd);
+        static unsigned notes=0;if(notes++<2)Log("cinema stereo: native CTAB c%d convention=%d IPD=%.4fm; two independent scene-eye draws, HMD rotation excluded",reg,convention,ipd);
     }
     return result;
 }
@@ -25769,6 +25774,7 @@ void ReportScan() {
                 g_hits[0].startReg, kPointName[g_hits[0].pt]);
         } else if (g_hits[0].count >= kMinUploadsToLock) {
             g_lockedReg = g_hits[0].startReg; g_lockedConv = g_hits[0].conv; g_haveLock = true;
+            g_cinemaConvention.Observe(true,g_lockedConv);
             Log("    LOCKED on c%u %s (%d uploads this frame)", g_lockedReg,
                 g_lockedConv == CONV_ROW ? "ROW" : "COL", g_hits[0].count);
         } else {
@@ -33946,6 +33952,17 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
     g_cineMonoReady = false;
     g_frontMenuCleanFrame = false;
     UpdateSceneModeFrame();
+    // Transition receipts remain available for the helicopter even if attract
+    // cinematics consumed the draw-level diagnostic budget earlier in startup.
+    {
+        static bool wasStereo=false;static unsigned receipts=0;
+        const bool stereo=Rd(g_stereoCinema)&&g_scenePresentMode==vrscene::Mode::CutsceneFlat&&
+            g_cinemaStereoToken==(unsigned)Rd(g_armPaletteFrameToken);
+        if(stereo!=wasStereo&&receipts++<24)
+            Log("cinema stereo completed frame: stereo=%d frame=%ld gameplayLock=%d; current native CTAB matrix validated before eye dispatch",
+                stereo?1:0,Rd(g_armPaletteFrameToken),g_haveLock?1:0);
+        wasStereo=stereo;
+    }
     InstallBinkAudioObservation(); // bounded exported-API observation, no audio mutation
     // VFX host: frame serial for once-per-eye draws + effect aging. Render
     // thread owns all plugin calls (game thread only fills the fire mailbox).

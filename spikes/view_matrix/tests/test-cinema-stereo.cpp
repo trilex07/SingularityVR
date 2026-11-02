@@ -50,5 +50,24 @@ static bool run(bool ex){
  printf("%s pixels PASS: left=%u right=%u centroids=%.2f/%.2f; restored success/failure\n",ex?"D3D9Ex":"D3D9",count[0],count[1],a,b);
  read->Release();target->Release();v->Release();p->Release();dev->Release();d9->Release();DestroyWindow(wnd);return true;
 }
-int main(){require(run(true),"D3D9Ex coverage");const bool legacy=run(false);printf("cinema fixture: D3D9Ex PASS; legacy D3D9 %s; game/HMD NOT RUN\n",legacy?"PASS":"NOT RUN");}
+static void conventionLifetime(){
+ cinemastereo::NativeConvention witness;float x=0,y=0;
+ auto shape=[](int c,float* tx,float* ty){*tx=1;*ty=.75f;return c==0;};
+ require(witness.Resolve(shape,&x,&y)<0,"cold start must not guess convention");
+ witness.Observe(false,0);
+ require(witness.Resolve(shape,&x,&y)<0,"unverified gameplay matrix rejected");
+ witness.Observe(true,0);
+ // Reproduce native-camera early return followed by gameplay's 61-frame expiry.
+ for(int frame=0;frame<180;++frame){
+  witness.Observe(false,1);
+  require(witness.Resolve(shape,&x,&y)==0,"cinema survives gameplay lock expiry");
+ }
+ require(x==1&&y==.75f,"current matrix aspect returned");
+ require(witness.Resolve([](int,float*,float*){return false;},&x,&y)<0,"current malformed matrix rejected");
+ witness.Observe(true,1);
+ require(witness.Resolve(shape,&x,&y)<0,"new measured convention replaces old");
+ witness.Reset();require(witness.Resolve(shape,&x,&y)<0,"reset clears convention evidence");
+ puts("native cinema convention lifetime PASS (180 frames; expiry, shape, reset)");
+}
+int main(){conventionLifetime();require(run(true),"D3D9Ex coverage");const bool legacy=run(false);printf("cinema fixture: D3D9Ex PASS; legacy D3D9 %s; game/HMD NOT RUN\n",legacy?"PASS":"NOT RUN");}
 
