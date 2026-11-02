@@ -48,6 +48,19 @@ static bool run(bool ex){
  dev->GetVertexShaderConstantF(0,restored,4);dev->GetScissorRect(&rr);dev->GetRenderState(D3DRS_SCISSORTESTENABLE,&sc);
  require(memcmp(m,restored,64)==0&&memcmp(&rr,&rect,sizeof rect)==0&&!sc,"failed draw restores state");
  printf("%s pixels PASS: left=%u right=%u centroids=%.2f/%.2f; restored success/failure\n",ex?"D3D9Ex":"D3D9",count[0],count[1],a,b);
+ // Real corner pixels reproduce the full-eye content lost to the old matte.
+ const D3DRECT corners[8]={{0,0,8,8},{152,0,160,8},{0,152,8,160},{152,152,160,160},
+                          {160,0,168,8},{312,0,320,8},{160,152,168,160},{312,152,320,160}};
+ require(SUCCEEDED(dev->Clear(8,corners,D3DCLEAR_TARGET,0xffff0000,1,0)),"corner source content");
+ const bool complete=cinemastereo::CompletedFrame(true,true,72,72,false);
+ if(cinemastereo::LegacyMatteNeeded(false,complete))dev->Clear(8,corners,D3DCLEAR_TARGET,0xff000000,1,0);
+ require(SUCCEEDED(dev->GetRenderTargetData(target,read)),"full-eye pixel readback");
+ require(SUCCEEDED(read->LockRect(&lr,nullptr,D3DLOCK_READONLY)),"full-eye lock");
+ for(const auto& corner:corners){
+  const DWORD pixel=((DWORD*)((char*)lr.pBits+(corner.y1+2)*lr.Pitch))[corner.x1+2];
+  require((pixel&0xffffff)==0xff0000,"all four scene corners retained in EACH eye");
+ }
+ read->UnlockRect();puts("full-eye scene corners PASS (8 actual D3D pixels)");
  read->Release();target->Release();v->Release();p->Release();dev->Release();d9->Release();DestroyWindow(wnd);return true;
 }
 static void conventionLifetime(){
@@ -69,5 +82,18 @@ static void conventionLifetime(){
  witness.Reset();require(witness.Resolve(shape,&x,&y)<0,"reset clears convention evidence");
  puts("native cinema convention lifetime PASS (180 frames; expiry, shape, reset)");
 }
-int main(){conventionLifetime();require(run(true),"D3D9Ex coverage");const bool legacy=run(false);printf("cinema fixture: D3D9Ex PASS; legacy D3D9 %s; game/HMD NOT RUN\n",legacy?"PASS":"NOT RUN");}
+static void policies(){
+ require(cinemastereo::CompletedFrame(true,true,42,42,false),"same-frame stereo");
+ require(!cinemastereo::CompletedFrame(false,true,42,42,false),"disabled");
+ require(!cinemastereo::CompletedFrame(true,false,42,42,false),"video/gameplay");
+ require(!cinemastereo::CompletedFrame(true,true,41,42,false),"stale frame");
+ require(!cinemastereo::CompletedFrame(true,true,42,42,true),"menu");
+ require(!cinemastereo::LegacyMatteNeeded(true,false),"composed mono unchanged");
+ require(!cinemastereo::LegacyMatteNeeded(false,true),"stereo not matted");
+ require(cinemastereo::LegacyMatteNeeded(false,false),"legacy fallback retained");
+ require(!cinemastereo::ControllerShotCorrection(true),"authored aim remains native");
+ require(cinemastereo::ControllerShotCorrection(false),"gameplay aim unchanged");
+ puts("cinema completion/matte/native-shot policies PASS");
+}
+int main(){policies();conventionLifetime();require(run(true),"D3D9Ex coverage");const bool legacy=run(false);printf("cinema fixture: D3D9Ex PASS; legacy D3D9 %s; game/HMD NOT RUN\n",legacy?"PASS":"NOT RUN");}
 

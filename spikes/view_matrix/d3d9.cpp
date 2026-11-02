@@ -6039,9 +6039,13 @@ static CutsceneMonoMode CutsceneMonoCurrentMode() {
 // Single predicate shared by the composer, the capture stamp and the cinema
 // matte skip, so the three can never disagree about a frame.
 static bool StereoCinemaNow();
+static bool StereoCinemaCompletedFrame(bool menuFlat){
+    return cinemastereo::CompletedFrame(Rd(g_stereoCinema)!=0,
+        g_scenePresentMode==vrscene::Mode::CutsceneFlat,g_cinemaStereoToken,
+        (unsigned)Rd(g_armPaletteFrameToken),menuFlat);
+}
 static bool CutsceneMonoComposeArmed() {
-    if(Rd(g_stereoCinema)&&g_scenePresentMode==vrscene::Mode::CutsceneFlat &&
-       g_cinemaStereoToken==(unsigned)Rd(g_armPaletteFrameToken)&&!MenuSubmitForcesFlat((int)Rd(g_vrMenuClass)))return false;
+    if(StereoCinemaCompletedFrame(MenuSubmitForcesFlat((int)Rd(g_vrMenuClass))))return false;
     if (!VrModeOn()) return false;
     if (!InterlockedCompareExchange(&g_sceneFlatEnabled, 0, 0)) return false;
     const bool menuFlat = MenuSubmitForcesFlat((int)Rd(g_vrMenuClass));
@@ -6218,8 +6222,7 @@ void StampCaptureState(CopySlot& cap) {
         cap.cineFlat = g_cineMonoReady && CutsceneMonoComposeArmed() && !cap.menuFlat;
         cap.cineImage = cap.cineFlat ? g_cineMonoImage : CutsceneMonoRect{};
     }
-    cap.cineStereo=g_scenePresentMode==vrscene::Mode::CutsceneFlat&&
-        g_cinemaStereoToken==(unsigned)Rd(g_armPaletteFrameToken)&&!cap.menuFlat;
+    cap.cineStereo=StereoCinemaCompletedFrame(cap.menuFlat);
     if(cap.cineStereo){cap.stereo=false;cap.dup=true;cap.cineFlat=false;cap.cineAspect=g_cinemaNativeAspect;}
     cap.eyePositionsValid = g_eyePositionsValid;
     if (cap.cineFlat) {
@@ -22140,6 +22143,33 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
                     dualtmdgunpose::Uniform(dualRightRawEye[eye]);
             }
         }
+        // Exact bound noTMD palette: once per eye under existing trace flag.
+        if(Rd(g_equipmentHudTrace)&&cuffProfile==0&&cuffBuffer&&nativeIndices.valid&&
+           independentRegs&&g_equipmentWristStaged.valid&&eye<2){
+            static unsigned captured=0;const unsigned bit=1u<<eye;
+            if(!(captured&bit)){
+                captured|=bit;float palette[135][4]{},local[4][4]{};
+                IDirect3DIndexBuffer9* actual=nullptr;
+                const HRESULT ih=dev->GetIndices(&actual);
+                const HRESULT ph=dev->GetVertexShaderConstantF(5,palette[0],135);
+                const HRESULT lh=dev->GetVertexShaderConstantF(230,local[0],4);
+                Log("wrist-cuff final: frame=%ld eye=%u faces=%u ib=%p expected=%p hr=%08lX/%08lX/%08lX posed=%d moved=%d unit=%g offset=%ld,%ld,%ld scale=%ld",
+                    Rd(g_armPaletteFrameToken),eye,gloveTriangles,actual,cuffBuffer,ih,ph,lh,
+                    g_nativeGlovePoseThisDraw?1:0,g_thisDrawMoved,MetresToUU(),
+                    Rd(g_equipmentHudOffsetMm[0]),Rd(g_equipmentHudOffsetMm[1]),Rd(g_equipmentHudOffsetMm[2]),Rd(g_equipmentHudScalePct));
+                if(SUCCEEDED(ph))for(unsigned r=0;r<135;++r)
+                    Log("wrist-cuff palette: frame=%ld eye=%u reg=%u value=%.9g,%.9g,%.9g,%.9g",Rd(g_armPaletteFrameToken),eye,5+r,palette[r][0],palette[r][1],palette[r][2],palette[r][3]);
+                if(SUCCEEDED(lh))for(unsigned r=0;r<4;++r)
+                    Log("wrist-cuff local: frame=%ld eye=%u row=%u value=%.9g,%.9g,%.9g,%.9g",Rd(g_armPaletteFrameToken),eye,r,local[r][0],local[r][1],local[r][2],local[r][3]);
+                for(unsigned r=0;r<4;++r){
+                    const auto& pose=g_equipmentWristStaged;
+                    Log("wrist-cuff tracking: frame=%ld eye=%u row=%u wrist=%.9g,%.9g,%.9g,%.9g world=%.9g,%.9g,%.9g,%.9g",
+                        Rd(g_armPaletteFrameToken),eye,r,pose.tracking.m[r][0],pose.tracking.m[r][1],pose.tracking.m[r][2],pose.tracking.m[r][3],
+                        pose.nativeTracking.m[r][0],pose.nativeTracking.m[r][1],pose.nativeTracking.m[r][2],pose.nativeTracking.m[r][3]);
+                }
+                if(actual)actual->Release();
+            }
+        }
         if(seekerProbe&&eye<2){
             // Final bound shader/IB inside each eye; no GPU readback or flush.
             IDirect3DIndexBuffer9* ib=nullptr;IDirect3DVertexBuffer9* vb=nullptr;
@@ -27550,6 +27580,19 @@ volatile LONG g_slcRotated = 0;
 int __fastcall Hook_SingleLineCheck(void* self, void* edx, void* hit, void* src,
                                     float* End, float* Start, uint32_t flags,
                                     void* extent, void* a7) {
+    // The screen shows the native animated weapon, not the controller gun.
+    // Preserve the original scripted ray/target, range, damage and ammo rules.
+    if(!cinemastereo::ControllerShotCorrection(CutsceneNativeCameraArmed())){
+        static unsigned receipts=0;
+        if(Rd(g_equipmentHudTrace)&&Rd(g_fireDepth)>0&&receipts<4&&
+           Start&&End&&Readable(Start,12)&&Readable(End,12)){
+            ++receipts;
+            Log("cinema native shot: frame=%ld pawn=%08X src=%p start=%g,%g,%g end=%g,%g,%g; controller correction bypassed, native hit result authoritative",
+                Rd(g_armPaletteFrameToken),(unsigned)g_playerPawn,src,
+                Start[0],Start[1],Start[2],End[0],End[1],End[2]);
+        }
+        return g_origSLC(self,edx,hit,src,End,Start,flags,extent,a7);
+    }
     // The opt-in Seeker launch already supplies native weapon-space origin and
     // spread. Do not rotate its own auxiliary traces a second time as hitscan.
     if(SeekerOwnsTrace(src))return g_origSLC(self,edx,hit,src,End,Start,flags,extent,a7);
@@ -28119,12 +28162,12 @@ void __fastcall Hook_ProcessEvent(void* self, void* edx, void* Stack, void* Resu
     // The name is checked BEFORE the original call so the common case costs one integer compare,
     // and the buffer is touched only AFTER it, because the value being replaced is the one the
     // original just wrote.
-    const bool wantAim = routeTwo
+    const bool wantAim = routeTwo && cinemastereo::ControllerShotCorrection(CutsceneNativeCameraArmed())
                       && FnIdx(kFnGetAdjustedAim) >= 0
                       && fnIdx == FnIdx(kFnGetAdjustedAim);
 
     // ---- mode 7: the gun's pose. On the way IN, because the callee consumes its parameters ----
-    if (aimMode == 7 && FnIdx(kFnSetAim) >= 0 && fnIdx == FnIdx(kFnSetAim))
+    if (aimMode == 7 && cinemastereo::ControllerShotCorrection(CutsceneNativeCameraArmed()) && FnIdx(kFnSetAim) >= 0 && fnIdx == FnIdx(kFnSetAim))
         RewriteSetAimParams(Stack);
 
     if(Rd(g_cinematicEventBridge)&&FnIdx(kFnPlayerCinematicProbeFirst)>=0&&
@@ -28356,7 +28399,8 @@ void __fastcall Hook_ProcessEvent(void* self, void* edx, void* Stack, void* Resu
     const bool mode9 = ((aimMode == 9) || mode10 || (aimMode == 11) || (aimMode == 12)) && fnIdx >= 0;
     // Mode 11 also opens a null window: it needs the window as a FILTER for the trace hook, but
     // must not write a rotation field or the view would follow - which is the whole point.
-    const bool nullWindow = mode10 || (aimMode == 11) || (aimMode == 12);
+    const bool nullWindow = mode10 || (aimMode == 11) || (aimMode == 12) ||
+        !cinemastereo::ControllerShotCorrection(CutsceneNativeCameraArmed());
     bool firedWindow = false;
     int32_t savedCtl[3] = {}, savedCam[3] = {}, savedPov[3] = {};
     bool haveCtl = false, haveCam = false, havePov = false;
@@ -28499,7 +28543,8 @@ void __fastcall Hook_ProcessEvent(void* self, void* edx, void* Stack, void* Resu
         }
     }
 
-    const bool mode8 = (aimMode == 8) && fnIdx >= 0;
+    const bool mode8 = (aimMode == 8) && fnIdx >= 0 &&
+        cinemastereo::ControllerShotCorrection(CutsceneNativeCameraArmed());
     bool openedWindow = false, maskedHere = false;
     int32_t savedPitch = 0, savedYaw = 0;
     uintptr_t ctlNow = 0;
@@ -33813,7 +33858,11 @@ static void DrawCutsceneCinemaMask(IDirect3DDevice9* dev) {
     // A composed mono frame already carries its own letterbox bars; the matte
     // would clear over the composed image. It still applies to uncomposed flat
     // frames (composition failed or VideoFlat self-handled path).
-    if (CutsceneMonoComposeArmed()) return;
+    const bool composed=CutsceneMonoComposeArmed();
+    // Stereo already fills each complete eye rectangle and is sized by the XR
+    // cinema quad. The legacy mono matte erases 16% x 30% of that valid scene.
+    if (!cinemastereo::LegacyMatteNeeded(composed,
+        StereoCinemaCompletedFrame(MenuSubmitForcesFlat((int)Rd(g_vrMenuClass))))) return;
 
     IDirect3DSurface9* back = nullptr;
     if (FAILED(dev->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &back)) || !back) return;
