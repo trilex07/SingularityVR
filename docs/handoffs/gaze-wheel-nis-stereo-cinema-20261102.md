@@ -88,7 +88,7 @@ Binary identity (private local build, do not commit binaries):
 - `spikes/view_matrix/d3d9.dll` SHA256
   `F60E1BD047B6481DEDF5593997E5793E1EBB9FDB696BFBF194C75619B760E35F`.
 - `deployment/psvr2-bridge-x64/SingularityPsvr2Bridge.exe` SHA256
-  `A5D07B57F306933517B6D2D61C0C0EC452BEE668901285FD1771043023EBE5E4`.
+  `C4D002A3F09258F311EFF9CFB4FF20ABAD4CEB9CF3967E25A80212DFAF335271`.
 The build provenance records the accepted base plus dirty source enumeration;
 the committed source matches that compilation. No installed profile was replaced.
 
