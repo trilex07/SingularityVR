@@ -2,7 +2,7 @@
 
 - L1/L2 PASS: x86 PE32 /O2; x86/x64 gaze ABI/selection tests, D3D9Ex stereo pixel/state fixture, D3D11 NIS regional pixels, existing hands/TMD/reload/WeaponLocker/OLED/haptics regressions and hardware-OFF bridge IPC.
 - DamagePulses adds native local Health-loss feedback through existing XR rumble, x86/x64 policy and real fake-Steam bridge deployment/rollback fixtures PASS.
-- Steam/OpenXR/PSVR2 NOT RUN. Three independent default-OFF switches; existing Bink stays mono. Legacy D3D9 HAL fixture NOT RUN (host CreateDevice 0x8876086C). No FPS gain claimed.
+- User-authorized Steam deployment 623D3EFD / bridge C4D002A3: exact hashes and three-file backup verification PASS; game NOT launched. Runtime/OpenXR/PSVR2 NOT RUN. Candidate enables gaze/cinema/damage only; normal builds retain three independent default-OFF switches; existing Bink stays mono. Legacy D3D9 HAL fixture NOT RUN (host CreateDevice 0x8876086C). No FPS gain claimed.
 - Candidate and one grouped acceptance gate: docs/handoffs/gaze-wheel-nis-stereo-cinema-20261102.md. Seeker reload deferred; accepted installed files unchanged.
 
 ## 2026-10-30 — Wrist live counter ownership correction

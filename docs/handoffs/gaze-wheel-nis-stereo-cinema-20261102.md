@@ -132,3 +132,32 @@ fake Steam tree, with unrelated INI and drift rejection checks.
 Physical damage rumble, gaze and cinematic acceptance remain PENDING. The staged
 INI is copied from the accepted installed profile, changing only the four new
 feature controls and the gaze master. NIS sharpness and OLED are preserved.
+## Installed combined candidate — 2026-11-02
+
+- Runtime source commit: `1da60fc7d3bc77f8c5d1f74221a617ab4ffc6e61`, clean
+  working tree at compilation; x86 PE32 /O2.
+- Installed DLL SHA256:
+  `623D3EFD1197DD1700037775E0E80643C6BC915D3F7F289D90ED9EB66A3E114E`.
+- Installed bridge SHA256:
+  `C4D002A3F09258F311EFF9CFB4FF20ABAD4CEB9CF3967E25A80212DFAF335271`.
+- Installed INI SHA256:
+  `8818B2FE3A04EAC66B08BD62AA306218FEA0797C34AF979AB8181788140901A3`.
+- Exact five INI deltas: EyeTracking Enabled/WeaponWheel/NisSharpen=1,
+  Render CutsceneStereoCinema=1, Haptics DamagePulses=1. Existing NISSharpen
+  Sharpness=1.00 and OLED Preset=2 retained. No other config/asset writes.
+- Prior accepted renderer `147C3297...` and all protected dependencies matched
+  the prior wrist-counts-fixed profile plus its recorded plan before deployment.
+- Established deploy tool preflight, closed-game/full-process visibility,
+  backup, install and postflight PASS. Backup:
+  `deployment/install-backups/20261102-103529`; all three backed-up files
+  independently rehashed against metadata and PASS. Deployment report:
+  `deployment/install-reports/20261102-103530.json`.
+- Candidate staged at `build/next-weapon-reload/gaze-damage-20261102/` with exact
+  profile/plan and compiled artifacts. Toolkit loader present. Game not launched.
+  Runtime/OpenXR gaze export operation, cinema content, damage receipt and
+  physical PSVR2 feel remain NOT RUN/PENDING.
+- User requested Steam installation: candidate retained, no automatic timer or
+  launch. Rollback uses the same profile/plan and backup with the game closed.
+
+Consolidated physical check adds one received hit: confirm brief controller
+rumble, while firing/healing keeps existing feedback and pause stops vibration.
