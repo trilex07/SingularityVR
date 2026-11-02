@@ -111,3 +111,24 @@ enable the three candidate switches. No save edits or ammo injection.
 STOP/restore on stereo corruption, unstable tracking, persistent GPU/resource
 errors or gameplay regression. Keep any failed feature OFF independently.
 Physical acceptance and actual gaze-provider operation remain PENDING.
+## Damage feedback follow-up
+
+User requested damage rumble and an installed Steam candidate. Added
+`[Haptics] DamagePulses=0` (candidate override 1), using the existing resolved
+TakeDamage dispatch and reflected local Pawn.Health before/after native return.
+Only a same-local-pawn health decrease arms an 85 ms both-controller pulse;
+blocked damage, enemy damage and healing cannot arm it. No new native hook,
+reflection walk per hit, health/ammo write or camera shake. Multiple nested
+receipts use max amplitude and cannot prolong the pulse. Existing XR rumble
+submission, tracked-controller gates, pause/focus gates and master strength apply.
+
+`test-damage-haptics.cpp` x86/x64 /O2 PASS: actual decrease, blocked/healing/foreign
+receivers, lethal clamp, bounded strength, nested expiry, pause cancellation.
+Shot/TMD haptics regression PASS. Added narrowly scoped renderer+x64-bridge
+option to the established deploy tool, exact guard map, PE architecture check,
+backup and rollback; real production-tool install/rollback fixture PASS in a
+fake Steam tree, with unrelated INI and drift rejection checks.
+
+Physical damage rumble, gaze and cinematic acceptance remain PENDING. The staged
+INI is copied from the accepted installed profile, changing only the four new
+feature controls and the gaze master. NIS sharpness and OLED are preserved.

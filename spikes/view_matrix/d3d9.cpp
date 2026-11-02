@@ -184,6 +184,7 @@ static void BuildTmdAssemblyC(float C[4][4]);
 #include "psvr2_trigger_config.h"
 #include "trigger_shot.h"
 #include "weapon_shot_haptics.h"
+#include "damage_haptics.h"
 #include "psvr2_client.h"
 #include <d3d11.h>
 #include <dinput.h>
@@ -783,6 +784,9 @@ LONG PackStick(int16_t x, int16_t y) {
 volatile LONG g_rumbleL = 0, g_rumbleR = 0;   // 0..65535, as the game sends them
 static volatile LONG g_weaponShotHaptics = 0; // opt-in until physical PSVR2 acceptance
 static SRWLOCK g_weaponHapticsLock = SRWLOCK_INIT;
+static LONG g_damagePulses=0;
+static damagehaptics::Engine g_damageHaptics;
+static SRWLOCK g_damageHapticsLock = SRWLOCK_INIT;
 static weaponhaptics::Engine g_weaponHaptics;
 
 DWORD WINAPI Hook_XInputSetState(DWORD idx, XiVibration* v) {
@@ -12872,6 +12876,12 @@ void SyncXRInput(XrTime displayTime) {
         ++refresh;
         const LONG raw[2] = { InterlockedCompareExchange(&g_rumbleL, 0, 0),
                               InterlockedCompareExchange(&g_rumbleR, 0, 0) };
+        const bool damageAllowed=Rd(g_damagePulses)&&hapticsAllowed&&!Rd(g_gamePaused)&&
+            !Rd(g_inCinematic)&&!uiMenu&&!Rd(g_panelOpen)&&
+            g_xrSessionState==XR_SESSION_STATE_FOCUSED;
+        AcquireSRWLockExclusive(&g_damageHapticsLock);
+        const float damageAmplitude=g_damageHaptics.Sample(damageAllowed,GetTickCount64());
+        ReleaseSRWLockExclusive(&g_damageHapticsLock);
         for (int hand = 0; hand < 2; ++hand) {
             // Authoritative OpenXR controller tracking gate: checks whether the controller
             // orientation or position is valid and tracked. Avoids false negatives from Touch
@@ -12897,6 +12907,9 @@ void SyncXRInput(XrTime displayTime) {
                 ReleaseSRWLockExclusive(&g_weaponHapticsLock);
                 if (shotAmp > overlay) overlay = shotAmp;
             }
+            // Same XR submission and master strength as existing shot/TMD rumble.
+            // max(), never additive; each controller still requires tracking below.
+            if(damageAmplitude>overlay)overlay=damageAmplitude;
             const float merged = tmdhaptics::Merge(nativeAmp, overlay, tmdHand || hand == AimHand(),
                 tmdhaptics::Config{ Rd(g_hapticsEnabled) != 0, (tmdhaptics::Level)lvl, Rd(g_tmdPulses) != 0 });
             const float amp = (hapticsAllowed && handTracked) ? merged : 0.0f;
@@ -28018,7 +28031,7 @@ void __fastcall Hook_ProcessEvent(void* self, void* edx, void* Stack, void* Resu
     const bool cineWatch = InterlockedCompareExchange(&g_cutsceneAuto, 0, 0) != 0 &&
                            FnIdx(kFnSetCinematic) >= 0;
     int32_t fnIdx = -1;
-    if ((censusOn || routeTwo || cineWatch || Rd(g_cinematicSceneProbe) || Rd(g_cinematicEventBridge) || nativefx::Probe() || g_centurionReloadProbe || Rd(g_keepAcquiredWeapons) || singularity_gore::enabled || Rd(g_weaponShotHaptics) ||
+    if ((censusOn || routeTwo || cineWatch || Rd(g_cinematicSceneProbe) || Rd(g_cinematicEventBridge) || nativefx::Probe() || g_centurionReloadProbe || Rd(g_keepAcquiredWeapons) || singularity_gore::enabled || Rd(g_weaponShotHaptics) || Rd(g_damagePulses) ||
          (Rd(g_equipmentHudEnergy)&&self==(void*)(uintptr_t)(uint32_t)Rd(g_equipmentTmdPointer))) && Stack) {
         fnIdx = ScriptFuncNameIdx(Stack);
         InterlockedIncrement(&g_peSeen);
@@ -28512,6 +28525,17 @@ void __fastcall Hook_ProcessEvent(void* self, void* edx, void* Stack, void* Resu
         }
     }
 
+    // The existing reflected Pawn.Health source is authoritative. Snapshot only
+    // the confirmed local TakeDamage receiver; never enumerate objects per hit.
+    int damageBefore=-1;
+    const uintptr_t damagedPawn=(uintptr_t)self;
+    const bool localDamage=Rd(g_damagePulses)&&Rd(g_hapticsEnabled)&&fnIdx>=0&&
+        FnIdx(kFnGoreDamage)>=0&&fnIdx==FnIdx(kFnGoreDamage)&&
+        damagedPawn!=0&&damagedPawn==g_playerPawn&&g_offHealth>=0&&g_offHealth<0x10000&&
+        Readable(self,OBJ_CLASS+sizeof(uintptr_t))&&
+        *reinterpret_cast<const uintptr_t*>(damagedPawn+OBJ_CLASS)==g_playerPawnClass;
+    if(localDamage&&Readable((void*)(damagedPawn+g_offHealth),sizeof(int)))
+        damageBefore=*reinterpret_cast<const int*>(damagedPawn+g_offHealth);
     int shotBefore=-1, shotOffset=-1;
     const uintptr_t shotWeapon=(uintptr_t)self;
     const bool localShot=Rd(g_weaponShotHaptics) && fnIdx>=0 && FnIdx(kFnFireFirst)>=0 &&
@@ -28535,6 +28559,17 @@ void __fastcall Hook_ProcessEvent(void* self, void* edx, void* Stack, void* Resu
             fnIdx>=0&&FnIdx(kFnGoreDamage)>=0&&fnIdx==FnIdx(kFnGoreDamage));
         if (!NativeOwnedInventory::InvokeRetained(self,edx,Stack,Result,fnIdx,(int)Rd(g_nodeOffset),g_origProcessEvent))
             g_origProcessEvent(self, edx, Stack, Result);
+    }
+    if(localDamage&&damageBefore>0&&damagedPawn==g_playerPawn&&
+       Readable(self,OBJ_CLASS+sizeof(uintptr_t))&&
+       *reinterpret_cast<const uintptr_t*>(damagedPawn+OBJ_CLASS)==g_playerPawnClass&&
+       Readable((void*)(damagedPawn+g_offHealth),sizeof(int))){
+        const int after=*reinterpret_cast<const int*>(damagedPawn+g_offHealth);
+        AcquireSRWLockExclusive(&g_damageHapticsLock);
+        const bool armed=g_damageHaptics.OnNativeReturn(true,damageBefore,after,GetTickCount64());
+        ReleaseSRWLockExclusive(&g_damageHapticsLock);
+        static unsigned receipts=0;if(armed&&receipts++<12)
+            Log("damage haptics witness: local pawn=%08X Health=%d->%d pulse=85ms",(unsigned)damagedPawn,damageBefore,after);
     }
     int shotAfter=-1;bool shotPulseArmed=false;
     if(localShot && shotBefore>=0 && shotOffset>=0 &&
@@ -37342,7 +37377,9 @@ void LoadIniSettings() {
     InterlockedExchange(&g_tmdPulses,GetPrivateProfileIntA("Haptics","TmdPulses",0,path)!=0);
     InterlockedExchange(&g_weaponShotHaptics,
         GetPrivateProfileIntA("Haptics","WeaponShotPulses",0,path)!=0);
+    InterlockedExchange(&g_damagePulses,GetPrivateProfileIntA("Haptics","DamagePulses",0,path)!=0);
     ApplyHapticConfig();
+    Log("ini: damage haptics DamagePulses=%ld (native local health loss)",Rd(g_damagePulses));
     Log("ini: Haptics Enabled=%ld Level=%ld TmdPulses=%ld WeaponShotPulses=%ld (shot fallback default OFF)",
         Rd(g_hapticsEnabled),Rd(g_hapticLevel),Rd(g_tmdPulses),Rd(g_weaponShotHaptics));
     Log("ini: VrSettingsMinimal=%d ReloadHints=%ld (optional PL/EN reload instructions)",

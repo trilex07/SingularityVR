@@ -15,6 +15,7 @@ param(
     [switch]$RuntimeDllPairOnly,
     [switch]$IncludeIni,
     [switch]$IncludeTextureIni,
+    [switch]$IncludePsvr2Bridge,
     [string]$OpeningCutsceneManifestPath = '',
     [string]$SessionAssetsManifestPath = '',
     [string]$AcceptedProfilePath = '',
@@ -25,6 +26,7 @@ param(
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
+if($IncludePsvr2Bridge -and ($SessionAssetsManifestPath -or $OpeningCutsceneManifestPath)){throw 'Bridge is not an asset-only deployment'}
 if($SessionAssetsManifestPath){
     if($OpeningCutsceneManifestPath -or $DllOnly -or $RuntimeDllPairOnly -or $IncludeIni -or $IncludeTextureIni -or $StopGame -or $KeepIni -or $SkipTextures){
         throw 'Session asset delta is an exclusive narrow deployment mode'
@@ -54,6 +56,8 @@ if($IncludeIni -and ((-not $RuntimeDllPairOnly -and -not $DllOnly) -or $KeepIni)
     throw 'IncludeIni requires an explicit DllOnly or RuntimeDllPairOnly deployment without KeepIni'
 }
 $narrowRuntime=$DllOnly -or $RuntimeDllPairOnly
+if($IncludePsvr2Bridge -and (-not $narrowRuntime -or -not $ArtifactDir)){throw 'IncludePsvr2Bridge requires a narrow explicit artifact directory'}
+if($IncludePsvr2Bridge -and ($SessionAssetsManifestPath -or $OpeningCutsceneManifestPath)){throw 'Bridge is not an asset-only deployment'}
 
 function Assert-GameClosed {
     # A background restore guardian can lack WMI/CIM permission while ordinary
@@ -263,6 +267,8 @@ $textureIniSource = Join-Path $assets 'asset-tools\texture-injector\texture_over
 if($IncludeTextureIni){$textureIniSource=Join-Path $stage 'texture_override.ini'}
 $dinputOrigSource = Join-Path $env:windir 'SysWOW64\dinput8.dll'
 $targetDll = Join-Path $gameBin 'd3d9.dll'
+$targetBridge=Join-Path $gameBin 'SingularityPsvr2Bridge.exe'
+$sourceBridge=Join-Path $stage 'SingularityPsvr2Bridge.exe'
 $targetIni = Join-Path $gameBin 'SingularityVR.ini'
 $targetDinput = Join-Path $gameBin 'dinput8.dll'
 $targetDinputOrig = Join-Path $gameBin 'dinput8_orig.dll'
@@ -366,9 +372,16 @@ if (-not $pe.IsPe32) { throw "The deployment DLL is not PE32 x86: $stageDll" }
 $dinputPe = if ($DllOnly) { $null } else { Get-PeIdentity $dinputSource }
 if (-not $DllOnly -and -not $dinputPe.IsPe32) { throw "The texture injector dinput8.dll is not PE32 x86: $dinputSource" }
 
+if($IncludePsvr2Bridge){
+    $bridgePe=Get-PeIdentity $sourceBridge
+    if(-not $bridgePe -or -not $bridgePe.IsPe -or $bridgePe.Machine -ne '0x8664' -or $bridgePe.OptionalMagic -ne '0x020B'){
+        throw 'PSVR2 bridge must be a verified x64 PE32+ artifact'
+    }
+}
 $targets = @($targetDll)
 if($RuntimeDllPairOnly){$targets+=@($targetDinput)}
 if($IncludeIni){$targets+=@($targetIni)}
+if($IncludePsvr2Bridge){$targets+=@($targetBridge)}
 if($IncludeTextureIni){$targets+=@($targetTextureIni)}
 if (-not $narrowRuntime) {
     $targets += @($targetDinput, $targetDinputOrig, $targetTextureIni)
@@ -379,6 +392,7 @@ if (-not $narrowRuntime -and -not $SkipTextures) { $textureSources = @(Get-Textu
 $guardMap=@([pscustomobject]@{Target='Binaries/d3d9.dll';Source=$stageDll})
 if($RuntimeDllPairOnly){$guardMap += [pscustomobject]@{Target='Binaries/dinput8.dll';Source=$dinputSource}}
 if($IncludeIni){$guardMap += [pscustomobject]@{Target='Binaries/SingularityVR.ini';Source=$stageIni}}
+if($IncludePsvr2Bridge){$guardMap += [pscustomobject]@{Target='Binaries/SingularityPsvr2Bridge.exe';Source=$sourceBridge}}
 if($IncludeTextureIni){$guardMap += [pscustomobject]@{Target='Binaries/texture_override.ini';Source=$textureIniSource}}
 $guardTicket=Assert-AcceptedDeployment -GameRoot $guardGameRoot -ProfilePath $AcceptedProfilePath -ChangePlanPath $ChangePlanPath -FileMap $guardMap
 if($WhatIfPreference){Write-Host 'Accepted-profile install preflight PASS; WhatIf creates/writes nothing';return}
@@ -394,6 +408,7 @@ $installed = @()
 $installed += Copy-Verified $stageDll $targetDll
 if($RuntimeDllPairOnly){$installed+=Copy-Verified $dinputSource $targetDinput}
 if($IncludeIni){$installed+=Copy-Verified $stageIni $targetIni}
+if($IncludePsvr2Bridge){$installed+=Copy-Verified $sourceBridge $targetBridge}
 if($IncludeTextureIni){$installed+=Copy-Verified $textureIniSource $targetTextureIni}
 if (-not $narrowRuntime) {
     if (-not $KeepIni) { $installed += Copy-Verified $stageIni $targetIni }
@@ -425,6 +440,7 @@ $report = [pscustomobject]@{
     RuntimeDllPairOnly = [bool]$RuntimeDllPairOnly
     IncludeIni = [bool]$IncludeIni
     IncludeTextureIni = [bool]$IncludeTextureIni
+    IncludePsvr2Bridge = [bool]$IncludePsvr2Bridge
     DInput8Pe32 = if ($dinputPe) { $dinputPe.IsPe32 } else { $null }
     Installed = @($installed)
     TextureVariant = if ($narrowRuntime -or $SkipTextures) { 'skipped' } else { $TextureVariant }

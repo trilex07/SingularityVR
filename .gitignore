@@ -148,3 +148,6 @@ offline-deliverables/
 /build/post-psvr2-20261030/
 
 /build/wrist-main/
+
+# Private fake-Steam bridge deployment fixtures
+/build/gaze-bridge-lease/
