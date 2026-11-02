@@ -83,6 +83,7 @@ static unsigned g_startupTimeoutMs=5000,g_startupMinVisibleMs=3000;
 #include "context_cursor_gate.h"
 #include "menu_capture_owner.h"
 #include "recenter_chord.h"
+#include "wheel_ownership_policy.h"
 #include "pose_conversion.h"
 #include "vr_scene_mode.h"
 #include "cutscene_mono.h" // CutsceneFlat mono-to-both-eyes fit math (no D3D)
@@ -12010,8 +12011,11 @@ void SyncXRInput(XrTime displayTime) {
     }
     const bool stationWheel = Rd(g_ownedWeaponWheel) &&
         InteractiveStationMenu((int)Rd(g_vrMenuClass), uiMenu);
+    const unsigned wheelOwned=NativeOwnedInventory::MaskForPawn(g_playerPawn);
+    const bool wheelHasWeapon=wheelownership::CanOpen(wheelOwned,g_playerPawn&&((uintptr_t)(unsigned)Rd(g_seekerBackAvailable)==g_playerPawn));
+    if(r3Held&&!g_weaponWheelState.priorR3)NativeOwnedInventory::Refresh();
     const weaponwheel::Event wheelEvent = weaponwheel::Update(
-        g_weaponWheelState, r3Held, l3Held, ((!uiMenu || stationWheel) && feedGame && !Rd(g_gamePaused)),
+        g_weaponWheelState, r3Held, l3Held, (wheelHasWeapon && (!uiMenu || stationWheel) && feedGame && !Rd(g_gamePaused)),
         WeaponPresentationInHands(), Rd(g_weaponHolstered), tx,
         (g_weaponWheelObserved&&!Rd(g_forceDesktopAutomation))?-ty:ty,
         (int)g_weaponWheelSlots, handSector);
@@ -12053,9 +12057,9 @@ void SyncXRInput(XrTime displayTime) {
         // (last SelectionChanged, never cleared on close). Reading the state
         // here yields sel=0 for every commit: highlights without switching.
         const LONG sel = InterlockedCompareExchange(&g_weaponWheelSelection, 0, 0);
-        LONG pulses = g_weaponWheelObserved?0:sel; // unknown catalog must not guess a target
-        // Direct-select: sector -> gun_verts -> forward cycle steps. Unknown
-        // verts (or catalog off) keep the historical offset-pulse behavior.
+        LONG pulses = 0; // Never select from an unverified model/cycle catalog.
+        // Direct-select: sector -> gun_verts, then require current pawn ownership.
+        // Missing catalog data cancels instead of guessing native cycle pulses.
         if (Rd(g_wwDirectSelect) && InterlockedCompareExchange(&g_wwCatalogState, 0, 0) == 1) {
             weaponwheel_direct::CatalogSector secs[8]{};
             long cyc[16]{};
@@ -12078,7 +12082,10 @@ void SyncXRInput(XrTime displayTime) {
             const weaponwheel_direct::Catalog view{ secs, (int)n, cyc, (int)m };
             const LONG curV = Rd(g_gunVerts);
             const LONG tgtV = weaponwheel_direct::TargetVertsForSector(view, (int)sel);
-            if(tgtV==12444){
+            if(!wheelownership::CanSelect(NativeOwnedInventory::MaskForPawn(g_playerPawn),g_playerPawn&&((uintptr_t)(unsigned)Rd(g_seekerBackAvailable)==g_playerPawn),(int)tgtV)){
+                pulses=0;g_weaponWheelSeek={};
+                Log("weapon wheel: refused unowned target=%ld mask=%X",tgtV,NativeOwnedInventory::Mask());
+            } else if(tgtV==12444){
                 pulses=0;
                 InterlockedExchange(&g_seekerWheelRequest,Rd(g_seekerBackAvailable));
             } else if (Rd(g_ownedWeaponWheel) && NativeOwnedInventory::Ready()) {
@@ -13081,7 +13088,7 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
             // and its world transform are untouched.
             g_haveCentre = false;
             g_haveCentrePos = false;
-            Log("recenter chord: L3+R3 accepted; rebuilding common HMD/controller stage");
+            Log("recenter request accepted; rebuilding common HMD/controller stage");
         }
         // Anchor to the GAME's current yaw, not our own previous output. Seeding from
         // g_wantYaw (initially 0) made enabling snap the view to world yaw 0.
@@ -20883,7 +20890,7 @@ static trackedprime::Owner TrackedPrimeOwner() {
         GetCurrentThreadId()==g_mainThreadId&&g_haveEyes&&g_eyePositionsValid&&
         g_sceneMode.Current()==vrscene::Mode::GameplayStereo&&
         !Rd(g_gamePaused)&&!Rd(g_vrUiMenu)&&!Rd(g_inCinematic)&&
-        !Rd(g_weaponHolstered)&&!NativeAnimatedHandsNow()&&!CutsceneNativeCameraArmed()&&
+        (!o.weapon||!Rd(g_weaponHolstered))&&!NativeAnimatedHandsNow()&&!CutsceneNativeCameraArmed()&&
         g_handPoseValid[0]&&g_handPositionValid[0]&&g_handPoseValid[1]&&g_handPositionValid[1];
     return o;
 }
@@ -26512,7 +26519,10 @@ static void UpdateSceneModeFrame() {
     const vrscene::Mode renderedMode = g_sceneMode.Current();
     const vrscene::Transition t = g_sceneMode.Advance(signals);
     g_scenePresentMode = vrscene::CompletedFrameMode(renderedMode, g_sceneMode.Current());
-    if(t.changed && t.from==vrscene::Mode::CutsceneFlat && t.to==vrscene::Mode::GameplayStereo) {
+    if(vrscene::RecenterAfterCutscene(t)) {
+        // Same request/settled stage acquisition as L3+R3: no separate camera
+        // or controller transform, and never triggered by pause/menu exits.
+        InterlockedExchange(&g_recenterRequested,1);
         // The cinematic projection is not a valid gameplay lock. Waiting for
         // the generic 60-frame failure timeout exposed stale projection state.
         g_haveLock=false;g_lockMissFrames=0;g_lockVerified=false;
@@ -27583,13 +27593,24 @@ int __fastcall Hook_SingleLineCheck(void* self, void* edx, void* hit, void* src,
     // The screen shows the native animated weapon, not the controller gun.
     // Preserve the original scripted ray/target, range, damage and ammo rules.
     if(!cinemastereo::ControllerShotCorrection(CutsceneNativeCameraArmed())){
-        static unsigned receipts=0;
-        if(Rd(g_equipmentHudTrace)&&Rd(g_fireDepth)>0&&receipts<4&&
+        // The scripted handler did not enter FireAmmunition in CBF16F93.
+        // Observe distinct real native call sites under R2, including unknown
+        // sources; never infer a shot from a nearby pawn or alter an AI trace.
+        struct Site {void* caller;void* source;uint32_t flags;};
+        static Site sites[24]{};static unsigned receipts=0;
+        if(Rd(g_equipmentHudTrace)&&((DWORD)Rd(g_padBtns)>>24)>32&&receipts<24&&
            Start&&End&&Readable(Start,12)&&Readable(End,12)){
-            ++receipts;
-            Log("cinema native shot: frame=%ld pawn=%08X src=%p start=%g,%g,%g end=%g,%g,%g; controller correction bypassed, native hit result authoritative",
-                Rd(g_armPaletteFrameToken),(unsigned)g_playerPawn,src,
-                Start[0],Start[1],Start[2],End[0],End[1],End[2]);
+            void* caller=_ReturnAddress();bool seen=false;
+            for(unsigned i=0;i<receipts;++i)if(sites[i].caller==caller&&sites[i].source==src&&sites[i].flags==flags){seen=true;break;}
+            if(!seen){
+                sites[receipts++]={caller,src,flags};
+                char sourceClass[80]{};
+                const uintptr_t cls=src&&Readable((uint8_t*)src+OBJ_CLASS,4)?*(uintptr_t*)((uint8_t*)src+OBJ_CLASS):0;
+                if(cls)GuardedNameOf(cls,sourceClass,sizeof(sourceClass));
+                Log("cinema R2 trace: frame=%ld pawn=%08X src=%p class=%s start=%g,%g,%g end=%g,%g,%g flags=%X fireDepth=%ld caller=%p; native unchanged, shot identity UNPROVEN",
+                    Rd(g_armPaletteFrameToken),(unsigned)g_playerPawn,src,sourceClass,
+                    Start[0],Start[1],Start[2],End[0],End[1],End[2],flags,Rd(g_fireDepth),caller);
+            }
         }
         return g_origSLC(self,edx,hit,src,End,Start,flags,extent,a7);
     }

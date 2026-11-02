@@ -1,3 +1,20 @@
+## 2026-11-02 — CBF16F93 physical follow-up
+
+- PHYSICALLY_VERIFIED: full cinema framing/edges accepted by the user. Preserve.
+- New L1 corrections: native-current-pawn ownership gates for R3/open/selection;
+  common L3+R3 recenter request exactly on cinema -> gameplay exit.
+- Empty-hand HUD: actual final cuff palette has +0.92922293 UU clearance in both
+  eyes; early compressed-range glove depth remains in preserved world DS while
+  the old retained prime cache requires a weapon. Exact free-glove cache extension
+  and real D3D9Ex both-eye HUD depth pixels PASS; physical outcome PENDING.
+- Mutant targeting remains BROKEN/PARTIAL: no existing fire-window receipt in
+  failed encounter. Native handler inheritance inspected; added <=24 cinematic
+  R2 native caller/source trace receipts, no fabricated target or hit changes.
+- Hands/TMD/reload/WeaponLocker/OLED and x86/x64 cinema/gaze/damage regressions
+  PASS. Legacy D3D9 HAL NOT RUN (host CreateDevice refusal); no FPS claim.
+- Handoff: docs/handoffs/cinema-exit-ownership-wrist-20261102.md. Steam unchanged;
+  new source/build and physical acceptance recorded independently.
+
 ## 2026-11-02 — Stereo frame matte and authored-shot ownership
 
 - User physically confirms stereo cinema on BEDA5911; helicopter crop/eye-edge imbalance, noTMD wrist penetration and scripted mutant aim remain FAIL/PENDING.

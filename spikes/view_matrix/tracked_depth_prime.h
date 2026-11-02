@@ -23,6 +23,15 @@ struct Draw {
     fpshadow::DrawKey key{};
     bool triangles=false, foreground=false;
 };
+// The empty-hand exception is only a candidate range. Learn/Skip still demand
+// the same retained source VB/IB, range, successful stereo color and prime state.
+inline bool FreeGloveRange(const Draw& d) {
+    return (d.key.verts==3314||d.key.verts==2924)&&d.key.prims==4830&&
+        d.key.baseVertex==0&&d.key.minIndex==0&&d.key.startIndex==0;
+}
+inline bool OwnerIdentity(const Owner& o,const Draw& d) {
+    return o.pawn&&(o.weapon||FreeGloveRange(d));
+}
 struct Receipt {
     bool sibling=false;
     DWORD z=0,write=0,color=~0u,stencil=1;
@@ -107,7 +116,7 @@ public:
         d->GetRenderTarget(0,&rt);d->GetVertexShader(&vs);d->GetPixelShader(&ps);
         r.rt=rt;r.vs=vs;r.ps=ps;
         if(rt)rt->Release();if(vs)vs->Release();if(ps)ps->Release();
-        r.gate=!o.active?"owner-context":!o.pawn||!o.weapon?"owner-identity":
+        r.gate=!o.active?"owner-context":!OwnerIdentity(o,draw)?"owner-identity":
             draw.key.layoutShadow?"shadow-layout":!draw.key.rtIsScene?"not-scene-RT":
             !r.viewportWitness?"no-native-prime-viewport":!viewport?"viewport-read":
             r.actual.X!=primeViewport.X||r.actual.Y!=primeViewport.Y||
@@ -124,7 +133,7 @@ public:
     bool Skip(IDirect3DDevice9* d,const Owner& o,Draw draw,Receipt* receipt=nullptr) {
         if(receipt)*receipt={};
         OwnerNow(o);
-        if(!o.active||!o.pawn||!o.weapon||!count||!draw.triangles||draw.foreground||
+        if(!o.active||!OwnerIdentity(o,draw)||!count||!draw.triangles||draw.foreground||
            draw.key.layoutShadow||!draw.key.rtIsScene)return false;
         D3DVIEWPORT9 vp{};
         if(!viewportValid||viewportDevice!=d||FAILED(d->GetViewport(&vp))||
@@ -151,7 +160,7 @@ public:
     }
     bool Learn(IDirect3DDevice9* d,const Owner& o,Draw draw,bool restoredStereoColor) {
         OwnerNow(o);
-        if(!o.active||!o.pawn||!o.weapon||!restoredStereoColor||!draw.triangles||
+        if(!o.active||!OwnerIdentity(o,draw)||!restoredStereoColor||!draw.triangles||
            !draw.foreground||!draw.key.rtIsScene||draw.key.layoutShadow)return false;
         D3DVIEWPORT9 vp{};DWORD color=0;
         if(FAILED(d->GetViewport(&vp))||vp.MaxZ<=vp.MinZ||

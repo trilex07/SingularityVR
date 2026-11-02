@@ -273,6 +273,10 @@ static DWORD PollThreadId(){return thread;}
 static bool Ready(){return Mask()!=0;}
 static bool SnapshotValid(){return InterlockedCompareExchange(&snapshotValid,0,0)!=0;}
 static uintptr_t SnapshotPawn(){return SnapshotValid()?pawn:0;}
+// A previous pawn's snapshot must not authorize a new-game/catalog selection.
+static unsigned MaskForPawn(uintptr_t currentPawn){
+  return currentPawn&&SnapshotPawn()==currentPawn?Mask():0;
+}
 static uintptr_t SnapshotManager(){return SnapshotValid()?manager:0;}
 // Synchronous snapshot for locker virtual apply (input thread, same as wheel poll).
 static bool SnapshotNow() {
