@@ -3,6 +3,8 @@ param(
     [Parameter(Mandatory)][string]$BackupPath,
     [Parameter(Mandatory)][string]$CandidateDllSha256,
     [switch]$DllOnly,
+    [string]$AcceptedProfilePath = '',
+    [string]$ChangePlanPath = '',
     [switch]$ShadowReceiverExperiment,
     [switch]$ShadowClearGateExperiment,
     [switch]$ShadowWorldReceiverExperiment,
@@ -22,6 +24,14 @@ Import-Module (Join-Path $PSHOME 'Modules\Microsoft.PowerShell.Management') -Err
 $backup = (Resolve-Path -LiteralPath $BackupPath).Path
 $manifest = Get-Content -LiteralPath (Join-Path $backup 'manifest.json') -Raw | ConvertFrom-Json
 if ($DllOnly) {
+    # A lease must not report READY if its eventual guarded rollback cannot
+    # resolve the exact deployment profile. Never fall back to a missing or
+    # unrelated repository default after the user has finished testing.
+    if (-not $AcceptedProfilePath -or -not $ChangePlanPath) {
+        throw 'DLL-only lease requires explicit AcceptedProfilePath and ChangePlanPath'
+    }
+    $AcceptedProfilePath=(Resolve-Path -LiteralPath $AcceptedProfilePath -ErrorAction Stop).Path
+    $ChangePlanPath=(Resolve-Path -LiteralPath $ChangePlanPath -ErrorAction Stop).Path
     # DLL-only placement tests retain the physically accepted native UI package.
     # Use the existing deployment runner's exact backup format and rollback.
     $savedDll=Join-Path $backup 'd3d9.dll'
@@ -50,7 +60,7 @@ if ($DllOnly) {
         }
     }
     if ((Get-FileHash -LiteralPath $dllTarget).Hash -ne $CandidateDllSha256) { throw 'Installation changed; refusing DLL restore' }
-    & (Join-Path $PSScriptRoot 'deploy-singularityvr.ps1') -Action Rollback -BackupPath $backup
+    & (Join-Path $PSScriptRoot 'deploy-singularityvr.ps1') -Action Rollback -BackupPath $backup -DllOnly -KeepIni -AcceptedProfilePath $AcceptedProfilePath -ChangePlanPath $ChangePlanPath
     if ((Get-FileHash -LiteralPath $dllTarget).Hash -ne $manifest.Sha256) { throw 'DLL rollback verification failed' }
     Write-Output 'RESTORED: accepted DLL hash verified; native UI package untouched'
     exit 0
