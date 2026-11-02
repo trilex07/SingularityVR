@@ -44,3 +44,13 @@ Retain installed settings, HD assets, bridge and localization. Snapshot current 
 5. In-engine cinema: full scene, equal visible edges and complete readable captions in both eyes. Preserve accepted mutant shot assistance.
 
 Physical PSVR2 and runtime crash acceptance: PENDING for every new change. Leave Steam unchanged until deployment is explicitly resumed.
+
+## Final build and staging receipt
+
+- Build source: `a1c91edea5741219278bd555a9eeaee0b9d90753` (clean source tree).
+- Optimized x86 PE32 DLL SHA256: `A808198C38CBAD62CC7EC4B4E864AA41F8BF434591B4E49E942D6C8519CF02DD`.
+- Actual compiled WeaponLocker ABI regression PASS: literal `[eax+20Ch]` and FName stack setup preserved.
+- Private complete candidate: `build/next-weapon-reload/gravity-audio-20261103/`.
+- `candidate.json` records source, DLL, unchanged user INI snapshot, bank, installed snapshot and evidence levels.
+- Asset manifest `assets.json` ValidateCandidate PASS; repaired rifle bank hash verified. Not installed.
+- Steam and gameplay untouched. Physical acceptance pending, including the previously reported cinema edge asymmetry.
