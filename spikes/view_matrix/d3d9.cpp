@@ -6063,6 +6063,7 @@ static D3DFORMAT g_cineMonoTempFmt = D3DFMT_UNKNOWN;
 static bool g_cineMonoFault = false;
 static LONG g_cutsceneCinemaScalePct = 60; // complete image; user found 85% too wide
 static LONG g_cutsceneNativeCameraFix = 1; // controlled native-camera experiment, cinema only
+static LONG g_cinemaMutantAimAssist = 0; // exact Tackle_Loop assist; opt-in controlled test
 static LONG g_cutsceneNativeHands = 0; // default OFF: original animated foreground in native-camera cinema
 extern volatile LONG g_vrUiMenu;
 static LONG g_cutsceneMenuPairFix = 0; // exact focused menus; same-source XR crop experiment
@@ -27586,15 +27587,20 @@ typedef int (__fastcall *PFN_SLC)(void* self, void* edx, void* hit, void* src,
                                   float* End, float* Start, uint32_t flags, void* extent, void* a7);
 PFN_SLC g_origSLC = nullptr;
 volatile LONG g_slcRotated = 0;
+#include "cinema_mutant_aim.h"
+#include "cinema_mutant_runtime.inl"
 
 int __fastcall Hook_SingleLineCheck(void* self, void* edx, void* hit, void* src,
                                     float* End, float* Start, uint32_t flags,
                                     void* extent, void* a7) {
     // The screen shows the native animated weapon, not the controller gun.
-    // Preserve the original scripted ray/target, range, damage and ammo rules.
+    // Keep native range/damage/ammo; opt-in tackle assistance resolves its
+    // exact native instigator instead of using the freely tracked controller.
     if(!cinemastereo::ControllerShotCorrection(CutsceneNativeCameraArmed())){
-        // The scripted handler did not enter FireAmmunition in CBF16F93.
-        // Observe distinct real native call sites under R2, including unknown
+        float assistedEnd[3];
+        if(MutantAssistedEnd(src,Start,End,assistedEnd))
+            return g_origSLC(self,edx,hit,src,assistedEnd,Start,flags,extent,a7);
+        // Observe other distinct real native call sites under R2, including unknown
         // sources; never infer a shot from a nearby pawn or alter an AI trace.
         struct Site {void* caller;void* source;uint32_t flags;};
         static Site sites[24]{};static unsigned receipts=0;
@@ -37618,6 +37624,7 @@ void LoadIniSettings() {
     g_cutsceneCinemaScalePct = ClampVideoCinemaScale(
         GetPrivateProfileIntA("Render", "CutsceneCinemaScalePct", 60, path));
     g_cutsceneNativeCameraFix = GetPrivateProfileIntA("Render", "CutsceneNativeCameraFix", 1, path) ? 1 : 0;
+    g_cinemaMutantAimAssist = GetPrivateProfileIntA("Render", "CinemaMutantAimAssist", 0, path) ? 1 : 0;
     g_gazeEnabled=GetPrivateProfileIntA("EyeTracking","Enabled",1,path)?1:0;
     g_gazeWheel=GetPrivateProfileIntA("EyeTracking","WeaponWheel",0,path)?1:0;
     g_gazeNis=GetPrivateProfileIntA("EyeTracking","NisSharpen",0,path)?1:0;

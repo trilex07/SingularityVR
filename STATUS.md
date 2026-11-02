@@ -1,3 +1,12 @@
+## 2026-11-02 — Exact scripted mutant assistance
+
+- IMPLEMENTED_NOT_VERIFIED: opt-in CinemaMutantAimAssist redirects only the
+  captured local-player 8000 UU shot in the native mutant tackle interaction.
+- Direct reflected mCurrentNodeInstigator -> RvAI_PawnMutant and reciprocal
+  mTarget verified read-only in the running session. No nearest-enemy heuristic.
+- Native collision, obstruction, damage and ammo remain authoritative.
+- Physical hit acceptance PENDING; see docs/handoffs/mutant-scripted-shot-assist-20261102.md.
+
 ## 2026-11-02 — CBF16F93 physical follow-up
 
 - PHYSICALLY_VERIFIED: full cinema framing/edges accepted by the user. Preserve.
