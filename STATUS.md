@@ -1,3 +1,14 @@
+## 2026-11-02 — A16FC192 physical acceptance and main promotion
+
+- PHYSICALLY_VERIFIED: user confirmed scripted mutant shots work and authorized
+  main promotion: "tak jest git wrzuc na main".
+- Accepted runtime source 6c38abea084023e8e5f7702385e21b37e71adc9f;
+  x86 PE32 /O2 DLL A16FC1927B215A1A306DBE56CE24B1CB03A042A541EC7C8C4A4CBA1BF6A4A75A.
+- Shipped INI enables CinemaMutantAimAssist=1; explicit 0 is exact rollback.
+- Acceptance is for scripted mutant hitting. Previously pending empty-hand HUD,
+  automatic recenter and wheel-new-game checks are not implicitly marked PASS.
+- Test lease restored CBF16F93 DLL and original INI with verified hashes.
+
 ## 2026-11-02 — Exact scripted mutant assistance
 
 - L2_PASS: opt-in CinemaMutantAimAssist redirects only the

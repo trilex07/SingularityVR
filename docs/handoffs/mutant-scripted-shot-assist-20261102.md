@@ -1,5 +1,16 @@
 # Scripted mutant shot assist — 2026-11-02
 
+## Final physical acceptance
+
+User tested the corrected A16FC192 build and confirmed "tak jest git wrzuc na
+main". Scripted mutant shot acceptance is PHYSICALLY_VERIFIED. Source
+`6c38abea084023e8e5f7702385e21b37e71adc9f`, DLL SHA256
+`A16FC1927B215A1A306DBE56CE24B1CB03A042A541EC7C8C4A4CBA1BF6A4A75A`.
+The shipped INI now enables CinemaMutantAimAssist=1. Code fallback remains OFF
+if the key is absent, and explicit 0 disables the scoped behavior.
+Other earlier pending HUD/recenter/wheel acceptance is not implied by this test.
+Lease restored the exact CBF16F93 DLL and prior INI; restoration hashes verified.
+
 ## BD038AA4 failed physical follow-up / registry correction
 
 Physical test FAIL: user still misses. Actual session has player-source shot
