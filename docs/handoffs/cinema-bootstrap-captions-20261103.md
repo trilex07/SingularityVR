@@ -23,3 +23,7 @@ No weapon, tracking, TMD, HUD, input or native aim change. No generic geometry s
 ## One acceptance gate
 
 Same cinema: captions readable and identical in both eyes, equal borders while looking at screen centre; turn away/back and pause/resume. Runtime must record successful stereo fit and caption dispatch, plus accepted xrEndFrame. Preserve accepted right-gun attachment. No further speculative placement changes if captions bypass the measured producer: capture the actual submitting shader/draw instead.
+
+## Built and deployed candidate
+
+Source c6ee44eddfadd4116c2d10f045d8fb523a90a235; optimized x86 PE32 /O2 DLL SHA256 06633749B829E9859B65300F476DE423B4122582DA77A8B3F559274FB36F546F. Actual compiled factory ABI regression PASS (literal [eax+20Ch]). MAIN deployed DLL only after process exit and elevated writer inventory; backup deployment/install-backups/20261103-114647, report deployment/install-reports/20261103-114647.json. Full protected-profile Post verification PASS. INI preserved byte-for-byte SHA A9F4C8932E2C49DBC524B7612C43A4F03A914B00F3900C925A320F6D8202BEA7; one-shot audit remains enabled for next run. No launch/timer initiated. Physical cinema and caption outcome PENDING; no merge to main.
