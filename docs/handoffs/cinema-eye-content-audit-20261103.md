@@ -34,3 +34,7 @@ DLL SHA256: 59171C5884107BC71C732EF48C96DD32BCE44805C9FBF0CD1847D6C1BB1E5786.
 Optimized x86 PE32 build PASS; actual compiled factory literal [eax+20Ch] and FName stack regression PASS. Audit/cinema geometry fixtures x86/x64 PASS. D3D9Ex actual pixel/state/caption/corner fixtures PASS; legacy D3D9 HAL NOT RUN (host rejected device 8876086C). No physical visual PASS claimed.
 
 Private immutable artifacts, linker map, deployment profile and exact two-entry change plan are staged under build/cinema-orientation-audit/. Read-only accepted-profile preflight PASS for all protected installed files and full INI. Only DLL and Diagnostic/CinemaEyeAudit=1 are planned; no assets or other settings change. Steam deployment NOT RUN: active Singularity process blocks writes. Installed EBA33BED remains unchanged.
+
+## Controlled MAIN deployment
+
+2026-11-03 11:30 CET: user confirmed normal game exit. Elevated process inventory found no active game or restore/deploy writer. Project deploy tool installed only the staged DLL and INI; backup deployment/install-backups/20261103-113046, report deployment/install-reports/20261103-113047.json. Installed DLL matches 59171C58 full hash above; installed INI SHA256 A9F4C8932E2C49DBC524B7612C43A4F03A914B00F3900C925A320F6D8202BEA7. Full accepted-profile Post guard PASS (all protected files plus parsed INI). No launch, timer or automatic restore started. Runtime capture remains PENDING.
