@@ -21,3 +21,11 @@ The exact captured production fixture now reaches final-witness with maximum mat
 Run tools/tests/test-dual-weapon-tmd.ps1 (including OLED pixels), optimized x86 build and compiled WeaponLocker ABI regression. Record exact outputs/build identity in build/tmd-stick-turn/candidate.json.
 
 One targeted PSVR2 check when available: Valkyrie then Volk, Impulse L2, release L2, hold right controller steady and turn the stick both directions, including a full turn; move the right hand and verify the weapon remains attached. Briefly verify support Grip. No new test of unrelated accepted systems is required. If it fails, inspect first rejection gate and its captured matrices; do not widen thresholds speculatively.
+
+## Delivered candidate
+
+- Source: 61cc6743f60d4ac86483dca8d222a063e00bb59d (clean source build).
+- DLL: 97F3D3FF97523C6B2C7314CBD0DBEDD0C35449271D1C261519DE3FD5E46D83C1, x86 PE32 /O2.
+- PASS: 23 optimized x86 fixtures, three wiring suites, OLED D3D11 CPU/GPU pixels and device-lifetime tests; actual compiled WeaponLocker factory literal [eax+20Ch] and FName stack fixture.
+- Private artifacts and candidate.json: build/tmd-stick-turn/. Accepted INI copied unchanged from the prior candidate.
+- Steam retained accepted CB43F6DC; new candidate NOT DEPLOYED. Physical result PENDING.
