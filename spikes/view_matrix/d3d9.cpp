@@ -37710,7 +37710,7 @@ void LoadIniSettings() {
     g_cutsceneCinemaScalePct = ClampVideoCinemaScale(
         GetPrivateProfileIntA("Render", "CutsceneCinemaScalePct", 60, path));
     g_cinemaRightLeftExtensionPermille = std::clamp(
-        GetPrivateProfileIntA("Render","CinemaRightLeftExtensionPermille",0,path),0,20);
+        static_cast<int>(GetPrivateProfileIntA("Render","CinemaRightLeftExtensionPermille",0,path)),0,20);
     Log("cinema: right-eye left-edge trial=%ld permille (default OFF; physical acceptance pending)",
         g_cinemaRightLeftExtensionPermille);
     g_cutsceneNativeCameraFix = GetPrivateProfileIntA("Render", "CutsceneNativeCameraFix", 1, path) ? 1 : 0;
