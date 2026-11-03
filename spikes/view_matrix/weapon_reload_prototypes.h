@@ -81,6 +81,9 @@ struct Frame {
     hipknife::V insertionPoint{}; // carried clip bind origin, NOT controller origin
     centurionreload::Frame gesture{};
 };
+inline bool UsesMeasuredInsertion(Kind kind){
+    return kind==Kind::Valkyrie||kind==Kind::Kasimov;
+}
 enum class Phase {Idle,NeedAmmo,Carrying,WaitingNative,Cooldown};
 enum class Event {None,Ejected,GrabFresh,Discarded,Inserted,Acknowledged,Rejected,Cancelled};
 inline const char* Name(Event e){switch(e){
@@ -188,7 +191,7 @@ inline Result Update(State& s,const Frame& f,const Calibration& c){
         }break;
     case Phase::Carrying:
         if(gripRelease){
-            const bool measured=f.kind==Kind::Kasimov&&f.measuredInsertion;
+            const bool measured=UsesMeasuredInsertion(f.kind)&&f.measuredInsertion;
             const auto point=measured?f.insertionPoint:in.hand;
             if((!measured||f.insertionValid)&&centurionreload::Near(point,in.socket,g.socketRadius)){
                 t.phase=Phase::WaitingNative;t.since=in.nowMs;return out(Event::Inserted,true);

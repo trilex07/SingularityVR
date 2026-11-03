@@ -3,6 +3,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <limits>
+#include <new>
 #include "../gaze_reader.h"
 #include "../psvr2_gaze_abi.h"
 static void require(bool b,const char* what){if(!b){printf("FAIL %s\n",what);exit(1);}}
@@ -20,5 +21,18 @@ int main(){using namespace svr::psvr2;GazeShared shared{};shared.magic=kGazeMagi
  require(weaponwheel::Update(state,true,false,true,true,false,0,0,4,1)==weaponwheel::Event::SelectionChanged,"gaze highlights only");
  require(weaponwheel::Update(state,false,false,true,true,false,0,0,4,1)==weaponwheel::Event::Commit,"R3 release commits");
  svrgaze::Reader reader;require(!reader.Read(d),"missing provider falls back");reader.Close();reader.Close();
+ // Actual process-local shared reader propagates the provider timestamp;
+ // a rejected sample must clear it rather than reuse an earlier gaze.
+ wchar_t name[80]{};swprintf_s(name,L"Local\\SingularityVR.Gaze.%lu",GetCurrentProcessId());
+ HANDLE mapping=CreateFileMappingW(INVALID_HANDLE_VALUE,nullptr,PAGE_READWRITE,0,sizeof(GazeShared),name);
+ require(mapping!=nullptr,"fixture mapping");
+ auto* mapped=static_cast<GazeShared*>(MapViewOfFile(mapping,FILE_MAP_WRITE,0,0,sizeof(GazeShared)));
+ require(mapped!=nullptr,"fixture view");new(mapped) GazeShared{};mapped->magic=kGazeMagic;mapped->version=kGazeVersion;
+ s={};s.publishMs=GetTickCount64();s.flags=GazeCombinedValid;s.dirCombined[2]=1;GazeWrite(*mapped,s);
+ svrgaze::Reader live;std::uint64_t stamp=0;
+ require(live.Read(d,&stamp)&&stamp==s.publishMs&&d[2]==-1,"reader timestamp");
+ s.flags|=GazeBlinkLeft|GazeBlinkRight;GazeWrite(*mapped,s);
+ require(!live.Read(d,&stamp)&&stamp==0,"invalid reader clears timestamp");
+ live.Close();UnmapViewOfFile(mapped);CloseHandle(mapping);
  static_assert(sizeof(GazeShared)==96,"cross-bitness shared size");static_assert(offsetof(GazeShared,sample)==16,"sample ABI");
  puts("gaze ABI / freshness / wheel / fovea / reader fallback: PASS");}

@@ -355,6 +355,25 @@ static void TestSharedStateWeaponTransitions(){
     }
 }
 int main(int argc,char** argv){
+    // Physical run: the controller was 20.4--26.9 cm from the clip socket
+    // while the carried mesh was presented at it. Insertion uses the SAME
+    // measured clip origin as carry rendering; invalid witness stays closed.
+    assert(UsesMeasuredInsertion(Kind::Valkyrie));
+    assert(!UsesMeasuredInsertion(Kind::Volk));
+    for(bool valid:{false,true}){
+        Fixture x(profiles[0]);x.Start();
+        assert(x.Tick(true,x.f.gesture.pouch).event==E::GrabFresh);
+        x.f.measuredInsertion=true;x.f.insertionValid=valid;
+        x.f.insertionPoint=x.f.gesture.socket;
+        const auto released=x.Tick(false,x.f.gesture.socket+V{.269f,0,0});
+        assert(released.reloadIntent==valid);
+        assert(released.event==(valid?E::Inserted:E::Discarded));
+    }
+    Fixture wrongClip(profiles[0]);wrongClip.Start();
+    assert(wrongClip.Tick(true,wrongClip.f.gesture.pouch).event==E::GrabFresh);
+    wrongClip.f.measuredInsertion=true;wrongClip.f.insertionValid=true;
+    wrongClip.f.insertionPoint=wrongClip.f.gesture.socket+V{1,0,0};
+    assert(!wrongClip.Tick(false,wrongClip.f.gesture.socket).reloadIntent);
     assert(ValkyrieKnifeCanBlock(true,true,false));
     assert(!ValkyrieKnifeCanBlock(true,true,true));
     assert(!ValkyrieKnifeCanBlock(false,true,false));

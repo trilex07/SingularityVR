@@ -4,7 +4,7 @@
 #include <cstring>
 #include <cstdio>
 #include <cstdint>
-volatile LONG g_tmdNativeAim=1,g_gamePaused=0,g_inCinematic=0,g_vrMenuClass=0,
+volatile LONG g_tmdGazeAim=0,g_tmdNativeAim=1,g_gamePaused=0,g_inCinematic=0,g_vrMenuClass=0,
     g_vrUiMenu=0,g_panelOpen=0,g_offHandValid=1,g_tmdOnOffHand=1,g_fireDepth=0;
 int g_upNext=64;
 constexpr int OBJ_CLASS=32;
@@ -90,9 +90,20 @@ int main(){
     NativeAim(nullptr,nullptr,expected,expected+1);
     NativeTmdAim::Aim((void*)1000,nullptr,overlap,overlap+1);
     assert(!std::memcmp(overlap,expected,sizeof(overlap)));
+    // Exercise the actual hooked getter: gaze-only enable, hand origin,
+    // stale/invalid fallback, and native gun nesting all remain authoritative.
+    g_tmdNativeAim=0;g_tmdGazeAim=1;
+    sample.time=GetTickCount64();sample.gazeTime=sample.time;sample.gazeValid=true;sample.gazeWorld[2]=1;
+    NativeTmdAim::Publish(sample);
+    NativeTmdAim::Aim((void*)1000,nullptr,o,d);
+    assert(o[0]==100&&o[1]==10&&d[2]==1&&d[1]==0);
+    sample.gazeValid=false;NativeTmdAim::Publish(sample);
+    NativeTmdAim::Aim((void*)1000,nullptr,o,d);assert(d[1]==1&&d[2]==0);
+    g_fireDepth=1;NativeTmdAim::Aim((void*)1000,nullptr,o,d);assert(o[0]==7&&d[0]==1);
+    g_fireDepth=0;g_tmdNativeAim=1;
     TestUnwind();
     NativeOwnedInventory::badContext=true;
     NativeTmdAim::Aim((void*)1000,nullptr,o,d);
-    assert(!g_tmdNativeAim&&o[0]==7&&d[0]==1);
+    assert(!g_tmdNativeAim&&!g_tmdGazeAim&&o[0]==7&&d[0]==1);
     std::puts("PASS TMD native adapter: original forwarded exactly once; local-only outputs, nested aging, SEH unwind, OFF/pause/cinema/stale/invalid/gun/thread refusal");
 }

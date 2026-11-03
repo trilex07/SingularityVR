@@ -4047,6 +4047,7 @@ volatile LONG g_tmdYawTenths = 0, g_tmdPitchTenths = 0;
 volatile LONG g_tmdRollTenths = 0;
 volatile LONG g_tmdOnOffHand = 1;      // ini [Input] TmdOnOffHand - the whole feature's off switch
 volatile LONG g_tmdNativeAim = 0;     // [Input] TmdNativeAim: audited local TMD getter experiment, OFF
+static LONG g_tmdGazeAim=0;           // [Input] TmdGazeAim: fresh Toolkit gaze, hand ray fallback
 volatile LONG g_lockerVirtualOrdinary = 0; // [Input] LockerVirtualOrdinary: phase B plan logs only, OFF
 volatile LONG g_lockerVirtualApply = 0;    // [Input] LockerVirtualApply: phase C TArray rewrite on focus, OFF
 volatile LONG g_lockerStationGrantOrdinary = 0; // [Input] LockerStationGrantOrdinary: station grant + wheel test, OFF
@@ -5390,6 +5391,7 @@ float g_headFovDeg = 0.0f;
 XrPosef g_eyePose[2]{};
 XrFovf  g_eyeFov[2]{};
 bool    g_haveEyes = false;
+static ULONGLONG g_gazeHeadSampleMs=0;
 int     g_framesSubmitted = 0;
 
 // ---------------------------------------------------------------- the frame copy, measured
@@ -13027,6 +13029,7 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
     XrViewState vs{ XR_TYPE_VIEW_STATE };
     g_hotPathSampler.count(hotpath::Counter::xr_locate_views);
     g_eyePositionsValid=false;
+    g_gazeHeadSampleMs=0;
     if (XR_SUCCEEDED(xrLocateViews(g_xrSession, &vli, &vs, 2, &n, views)) && n >= 1 &&
         (vs.viewStateFlags & XR_VIEW_STATE_ORIENTATION_VALID_BIT)) {
         // keep the per-eye poses/FOVs for the projection layer submitted below
@@ -13035,6 +13038,7 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
         for (uint32_t i = 0; i < n && i < 2; ++i) { g_eyePose[i] = views[i].pose; g_eyeFov[i] = views[i].fov; }
         g_haveEyes = (n >= 2);
         g_eyePositionsValid=g_haveEyes && (vs.viewStateFlags & XR_VIEW_STATE_POSITION_VALID_BIT)!=0;
+        if(g_haveEyes)g_gazeHeadSampleMs=GetTickCount64();
         g_headFovDeg = (fabsf(views[0].fov.angleLeft) + fabsf(views[0].fov.angleRight)) * 57.2957795f;
 
         const XrQuaternionf& q = views[0].pose.orientation;
@@ -17838,6 +17842,19 @@ static void BuildTmdC(float C[4][4]) {    float G[3]; TmdAnchorWorld(G);
         sample.forward[1]=cosf(pitch)*sinf(yaw);sample.forward[2]=sinf(pitch);
         for(unsigned i=0;i<3;++i){sample.anchor[i]=G[i];sample.camera[i]=g_camPos[i];}
         sample.pawn=g_playerPawn;sample.time=GetTickCount64();
+        if(Rd(g_tmdGazeAim)&&Rd(g_gazeEnabled)&&g_haveEyes&&g_gazeHeadSampleMs&&
+           sample.time>=g_gazeHeadSampleMs&&sample.time-g_gazeHeadSampleMs<=100) {
+            float direction[3];
+            if(g_gazeReader.Read(direction,&sample.gazeTime)) {
+                const auto& l=g_eyePose[0];const auto& r=g_eyePose[1];
+                const auto head=cinemascreen::Centre(
+                    {l.position.x,l.position.y,l.position.z,l.orientation.x,l.orientation.y,l.orientation.z,l.orientation.w},
+                    {r.position.x,r.position.y,r.position.z,r.orientation.x,r.orientation.y,r.orientation.z,r.orientation.w});
+                const auto world=WwRotate({head.qx,head.qy,head.qz,head.qw},{direction[0],direction[1],direction[2]});
+                const float xr[3]{world.x,world.y,world.z};
+                sample.gazeValid=tmdaim::TrackingGazeDirection(xr,g_centreYaw,g_baseYaw*k,sample.gazeWorld);
+            }
+        }
         NativeTmdAim::Publish(sample);
     }
 }
@@ -21638,6 +21655,18 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
         if(body&&(numVertices==8297||numVertices==11387||numVertices==11378||numVertices==11389)&&
            g_boundShaderLayout.boneRegs>=(body->rootSlot+1)*3) {
             dualGunBones=(unsigned)g_boundShaderLayout.boneRegs/3;
+            // CTAB is capacity, not the current mesh bone map. Only a matching
+            // original cooked IB may narrow this range to its audited slots.
+            const auto dualKind=NextKind(body->verts);
+            const auto* dualSpec=weaponreloadanim::Find(dualKind);
+            const auto dualIndex=weaponreload::Index(dualKind);
+            if(dualSpec&&dualIndex<3&&g_nextIBVerified[dualIndex]&&
+               dualSpec->vertices==body->verts&&dualSpec->slots<=dualGunBones) {
+                IDirect3DIndexBuffer9* bound=nullptr;
+                const bool exact=SUCCEEDED(dev->GetIndices(&bound))&&bound==g_nextIB[dualIndex];
+                dualGunBones=dualtmdgunpose::PaletteBones(dualGunBones,dualSpec->slots,exact);
+                hipknife::Release(bound);
+            }
             dualGunKey={g_playerPawn,(uintptr_t)(unsigned)Rd(g_weaponObj),
                 (unsigned)numVertices,(unsigned)body->rootSlot};
             dualGunMatrices=g_boundShaderLayout.local>=0&&
@@ -38427,6 +38456,8 @@ void LoadIniSettings() {
     g_tmdGravityGrip=GetPrivateProfileIntA("Input","TmdGravityGrip",1,path)!=0;
     Log("ini: TmdGravityGrip=%d (L1 free left Grip -> native AntiGrav; support/reload priority)",g_tmdGravityGrip?1:0);
     InterlockedExchange(&g_tmdNativeAim,GetPrivateProfileIntA("Input","TmdNativeAim",0,path)!=0);
+    InterlockedExchange(&g_tmdGazeAim,GetPrivateProfileIntA("Input","TmdGazeAim",0,path)!=0);
+    Log("ini: TmdGazeAim=%ld (Toolkit gaze direction, fresh head pose; missing/stale gaze -> hand ray)",Rd(g_tmdGazeAim));
     InterlockedExchange(&g_dualWeaponTmdReady,GetPrivateProfileIntA("Input","DualWeaponTmdReady",0,path)!=0);
     InterlockedExchange(&g_dualWeaponTmdGunScale,GetPrivateProfileIntA("Input","DualWeaponTmdGunScale",0,path)!=0);
     Log("ini: DualWeaponTmdGunScale=%ld (default OFF; owned gun_scale result only)",Rd(g_dualWeaponTmdGunScale));

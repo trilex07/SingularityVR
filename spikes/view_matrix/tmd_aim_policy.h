@@ -1,12 +1,28 @@
 #pragma once
 #include <cmath>
 #include <cstdint>
+#include "pose_conversion.h"
 namespace tmdaim {
 struct Pose {
     float matrix[4][4]{},anchor[3]{},camera[3]{},forward[3]{};
+    float gazeWorld[3]{};
+    bool gazeValid=false;
     std::uintptr_t pawn=0;
-    std::uint64_t time=0;
+    std::uint64_t time=0,gazeTime=0;
 };
+inline bool TrackingGazeDirection(const float (&xr)[3],float centreYaw,float baseYaw,float (&world)[3]) {
+    const auto v=vrpose::TrackingDeltaToWorldUU({xr[0],xr[1],xr[2]},centreYaw,baseYaw,1.f);
+    const float n=vrpose::Length(v);
+    if(!std::isfinite(n)||n<.5f||n>1.5f)return false;
+    world[0]=v.x/n;world[1]=v.y/n;world[2]=v.z/n;return true;
+}
+inline bool GazeDirection(const Pose& p,float* direction,std::uint64_t now) {
+    if(!p.gazeValid||!direction||!p.gazeTime||now<p.gazeTime||now-p.gazeTime>100)return false;
+    const float n=std::sqrt(p.gazeWorld[0]*p.gazeWorld[0]+p.gazeWorld[1]*p.gazeWorld[1]+p.gazeWorld[2]*p.gazeWorld[2]);
+    if(!std::isfinite(n)||n<.5f||n>1.5f)return false;
+    for(unsigned i=0;i<3;++i)direction[i]=p.gazeWorld[i]/n;
+    return true;
+}
 inline bool Current(const Pose& p,std::uintptr_t pawn,std::uint64_t now) {
     return pawn && p.pawn==pawn && p.time && now>=p.time && now-p.time<=150;
 }

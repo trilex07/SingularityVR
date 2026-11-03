@@ -1,6 +1,7 @@
 #include "../dual_tmd_weapon_pose.h"
 #include <cassert>
 #include <cstdio>
+#include <limits>
 
 using namespace dualtmdgunpose;
 static Mat Matrix(const float (&rows)[4][4]) {
@@ -104,6 +105,38 @@ int main() {
     assert(!reference.ObserveWrist(key,animatedTmdWrist,raw,3010,longNow+503,false));
     assert(!reference.ObserveWrist(key,animatedTmdWrist,raw,3012,longNow+500,false));
     assert(reference.wristFrame==3011&&reference.wristTick==longNow+501);
+    // Controller translation/rotation after L2 must move every point of the
+    // gun by that SAME world delta. At the unchanged reference pose both
+    // multiplication orders cancel, which concealed the old defect.
+    Mat moved=raw;
+    moved.m[3][0]=20;moved.m[3][1]=-7;moved.m[3][2]=4;
+    assert(reference.Correct(key,original,4,local,ride,moved,3012,longNow+502,right,&sameFrameGun));
+    assert(LargestDifference(sameFrameGun,Product(expected,moved))<.03f);
+    moved.m[0][0]=0;moved.m[0][1]=1;moved.m[1][0]=-1;moved.m[1][1]=0;
+    assert(reference.Correct(key,original,4,local,ride,moved,3012,longNow+502,right,&sameFrameGun));
+    assert(LargestDifference(sameFrameGun,Product(expected,moved))<.03f);
+    Mat inverseWrist;assert(skeletal::Inverse(inverseWrist.m,normalWrist.m));
+    const auto historical=Product(Product(normalWrist,moved),Product(inverseWrist,expected));
+    const float oldError=Distance(historical,Product(expected,moved));
+    assert(oldError>1.f); // old order must demonstrably fail this same fixture
+    std::printf("row-vector motion regression: old position error %.4f UU; corrected %.6f UU\n",
+        oldError,Distance(sameFrameGun,Product(expected,moved)));
+    // Native camera/mesh tail changes must cancel out, not own the weapon.
+    Mat cameraLocal=local;cameraLocal.m[3][0]+=11;cameraLocal.m[3][2]-=9;
+    assert(reference.Correct(key,original,4,cameraLocal,ride,moved,3012,longNow+502,right,&sameFrameGun));
+    assert(LargestDifference(sameFrameGun,Product(expected,moved))<.03f);
+
+    // CTAB declares 75 slots but the audited body only consumes its own map.
+    // Unused registers are not skin matrices; active invalid slots still reject.
+    assert(PaletteBones(75,4,true)==4&&PaletteBones(75,4,false)==75);
+    assert(PaletteBones(3,4,true)==3&&PaletteBones(75,0,true)==75);
+    original[4][0][0]=std::numeric_limits<float>::quiet_NaN();
+    assert(reference.Correct(key,original,PaletteBones(75,4,true),local,ride,raw,3012,longNow+502,right));
+    assert(!reference.Correct(key,original,PaletteBones(75,4,false),local,ride,raw,3012,longNow+502,right,nullptr,&gate));
+    assert(gate==CorrectGate::Bone);
+    original[1][0][0]=std::numeric_limits<float>::quiet_NaN();
+    assert(!reference.Correct(key,original,4,local,ride,raw,3012,longNow+502,right,nullptr,&gate));
+    assert(gate==CorrectGate::Bone);
     Key other=key;++other.weapon;
     assert(!reference.Correct(other,original,4,local,ride,raw,3012,longNow+502,right,nullptr,&gate));
     assert(gate==CorrectGate::Reference);

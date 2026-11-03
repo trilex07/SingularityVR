@@ -27,6 +27,26 @@ int main(){
     for(unsigned bit=0;bit<5;++bit){bool gate[]{true,true,true,true,true};gate[bit]=false;
         assert(!tmdaim::Eligible(gate[0],gate[1],gate[2],gate[3],gate[4],false));}
     assert(!tmdaim::Eligible(true,true,true,true,true,true));
+    // Gaze is a direction override; missing/invalid samples leave the hand ray
+    // unchanged. Toolkit VIEW conversion precedes this tracking->game map.
+    tmdaim::Pose gaze;gaze.gazeTime=100;
+    float axis[3]{7,8,9};
+    assert(!tmdaim::GazeDirection(gaze,axis,100)&&axis[0]==7);
+    const float forwardXr[3]{0,0,-1};
+    assert(tmdaim::TrackingGazeDirection(forwardXr,0,0,gaze.gazeWorld));
+    gaze.gazeValid=true;
+    assert(tmdaim::GazeDirection(gaze,axis,100)&&near(axis[0],1)&&near(axis[1],0));
+    const float quarter=1.57079632679f;
+    assert(tmdaim::TrackingGazeDirection(forwardXr,0,quarter,gaze.gazeWorld));
+    assert(tmdaim::GazeDirection(gaze,axis,100)&&near(axis[0],0)&&near(axis[1],1));
+    assert(tmdaim::TrackingGazeDirection(forwardXr,quarter,quarter,gaze.gazeWorld));
+    assert(tmdaim::GazeDirection(gaze,axis,100)&&near(axis[0],-1)&&near(axis[1],0));
+    assert(!tmdaim::GazeDirection(gaze,axis,201));
+    assert(!tmdaim::GazeDirection(gaze,axis,99));
+    const float invalidXr[3]{0,0,0};
+    assert(!tmdaim::TrackingGazeDirection(invalidXr,0,0,gaze.gazeWorld));
+    gaze.gazeWorld[0]=std::numeric_limits<float>::quiet_NaN();axis[0]=7;
+    assert(!tmdaim::GazeDirection(gaze,axis,100)&&axis[0]==7);
     for(int yaw=-180;yaw<=180;yaw+=15)for(int pitch=-90;pitch<=90;pitch+=15)
     for(float scale:{0.5f,1.f,2.f}) {
         const float y=yaw*0.01745329252f,q=pitch*0.01745329252f;

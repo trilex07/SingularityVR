@@ -22,11 +22,13 @@ class Reader {
         __except(EXCEPTION_EXECUTE_HANDLER){return false;}
     }
 public:
-    bool Read(float (&d)[3]){
+    bool Read(float (&d)[3],std::uint64_t* publishMs=nullptr){
         AcquireSRWLockExclusive(&lock);
         svr::psvr2::GazeSample s{};const bool read=ReadSample(s);
         ReleaseSRWLockExclusive(&lock);
-        return read&&Direction(s,GetTickCount64(),d);
+        const bool valid=read&&Direction(s,GetTickCount64(),d);
+        if(publishMs)*publishMs=valid?s.publishMs:0;
+        return valid;
     }
     void Close(){
         AcquireSRWLockExclusive(&lock);

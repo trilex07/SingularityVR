@@ -13,6 +13,10 @@
 namespace dualtmdgunpose {
 using armbind::Mat;
 constexpr unsigned kMaxBones=75;
+inline unsigned PaletteBones(unsigned shaderCapacity,unsigned auditedSlots,bool exactIndexIdentity) {
+    return exactIndexIdentity&&auditedSlots&&auditedSlots<=shaderCapacity?
+        auditedSlots:shaderCapacity;
+}
 struct Key {
     std::uintptr_t pawn=0,weapon=0;
     unsigned verts=0,rootSlot=0;
@@ -93,7 +97,10 @@ struct Reference {
             if(!pending||!(key==k)||pendingFrame!=frame){pending=false;return false;}
             Mat inverse;
             if(!skeletal::Inverse(inverse.m,wrist.m))return false;
-            const Mat relative=Product(inverse,pendingGun);
+            // Row vectors: gunLocal * wristWorld = gunWorld. A left-side
+            // inverse cancels only at the reference pose and rotates the
+            // controller translation when the player subsequently moves.
+            const Mat relative=Product(pendingGun,inverse);
             if(!Uniform(relative))return false;
             gunFromWrist=relative;tick=now;valid=true;
             normalWrist=wrist;normalRawController=rawController;
@@ -129,7 +136,7 @@ struct Reference {
         if(!armbind::FromGpu(original[k.rootSlot],root)||!armbind::Rigid(root)||
            !skeletal::Inverse(inverseRoot.m,root.m))return fail(CorrectGate::Root);
         const Mat predictedWrist=Product(Product(normalWrist,inverseController),rawController);
-        const Mat desiredFinal=Product(predictedWrist,gunFromWrist);
+        const Mat desiredFinal=Product(gunFromWrist,predictedWrist);
         const Mat targetSkin=Product(desiredFinal,inverseTail);
         const Mat delta=Product(inverseRoot,targetSkin);
         if(!Uniform(predictedWrist)||!Uniform(desiredFinal))return fail(CorrectGate::Predicted);

@@ -196,7 +196,7 @@ static void UpdateNextReload(bool context,bool grip,bool supportLatched,bool cir
     const bool shoulderGripEdge=in.grip&&!g_nextReloadState.transaction.priorGrip;
     const auto priorReachUntil=g_nextReloadState.transaction.reachUntil;
     const auto priorPhase=g_nextReloadState.transaction.phase;
-    if(kind==Kind::Kasimov&&priorPhase==Phase::Carrying){
+    if(UsesMeasuredInsertion(kind)&&priorPhase==Phase::Carrying){
         // Match the original clip joint which Socket() publishes. The hand
         // controller is not that joint: the source-derived palm mount has a
         // nonzero translation. Keep shoulder acquisition on the raw hand.
@@ -213,6 +213,12 @@ static void UpdateNextReload(bool context,bool grip,bool supportLatched,bool cir
             weaponcarry::Matrix(kind,wristTracking,magazine);
         if(f.insertionValid)f.insertionPoint=weaponreload::Transform({},magazine);
     }
+    static unsigned insertionReceipts=0;
+    if(f.measuredInsertion&&priorPhase==Phase::Carrying&&
+       !in.grip&&g_nextReloadState.transaction.priorGrip&&insertionReceipts++<16)
+        Log("reload measured insertion: kind=%d valid=%d handDist=%.4f clipDist=%.4f radius=%.4f",
+            int(kind),f.insertionValid?1:0,hipknife::Length(in.hand-in.socket),
+            f.insertionValid?hipknife::Length(f.insertionPoint-in.socket):-1.f,calibration.gesture.socketRadius);
     const auto result=Update(g_nextReloadState,f,calibration);
     const auto& t=g_nextReloadState.transaction;
     const bool valid=in.context&&in.tracked&&in.ammoFresh&&centurionreload::AmmoValid(in)&&f.liveIdentityVerified;

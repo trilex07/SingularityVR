@@ -1,3 +1,11 @@
+## 2026-11-03 — A808198C accepted; Valkyrie/TMD/gaze candidate
+
+- User accepted installed A808198C and authorized main promotion; remote main is ecec5ebc. Accepted renderer, bank and user settings preserved.
+- New branch fixes proven controller-vs-magazine insertion origin and row-vector TMD gun attachment order. Captured-matrix motion fixture: old 90.5018 UU error, corrected 0.000008 UU.
+- Optional default-OFF TmdGazeAim uses existing Toolkit reader/local native getters; invalid or >100 ms gaze falls back to the hand. No native energy/ammo bypass.
+- Offline regressions PASS; new physical acceptance PENDING. No Steam writes or game launch for this candidate.
+- Details: docs/handoffs/valkyrie-insertion-tmd-pose-gaze-20261103.md.
+
 ## 2026-11-02 — A16FC192 physical acceptance and main promotion
 
 - PHYSICALLY_VERIFIED: user confirmed scripted mutant shots work and authorized

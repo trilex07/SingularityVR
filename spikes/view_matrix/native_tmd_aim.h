@@ -12,9 +12,10 @@ static SRWLOCK poseLock=SRWLOCK_INIT;
 static tmdaim::Pose pose{};
 static thread_local unsigned agingDepth=0;
 static volatile LONG hooksReady=0;
-static bool Enabled(){return InterlockedCompareExchange(&g_tmdNativeAim,0,0)!=0;}
+static bool Enabled(){return InterlockedCompareExchange(&g_tmdNativeAim,0,0)!=0||Rd(g_tmdGazeAim)!=0;}
 static void Fault(const char* site) {
     InterlockedExchange(&g_tmdNativeAim,0);
+    InterlockedExchange(&g_tmdGazeAim,0);
     static unsigned notes=0;
     if(notes<4){++notes;Log("TMD native aim: unreadable %s context; gate OFF, native forwarding retained",site);}
 }
@@ -60,13 +61,16 @@ static void Rewrite(void* self,float* start,float* direction,bool aging) {
         sample=pose;ReleaseSRWLockShared(&poseLock);
         if(!tmdaim::Current(sample,pawn,GetTickCount64()))return;
         float origin[3],axis[3];if(!tmdaim::Ray(sample,origin,axis))return;
+        // Optional fresh Toolkit gaze overrides direction only. Native hand
+        // origin, energy/power gates and the separate effect socket stay intact.
+        const bool gaze=Rd(g_tmdGazeAim)&&tmdaim::GazeDirection(sample,axis,GetTickCount64());
         // Native owns the out buffers and has already filled them. No UObject,
         // camera, inventory, shared gun aim or muzzle mailbox writes.
         for(unsigned i=0;i<3;++i){start[i]=origin[i];direction[i]=axis[i];}
         static unsigned receipts[2]{};auto& n=receipts[aging?1:0];
-        if(n<12){++n;Log("TMD native aim: %s pawn=%08X tmd=%08X age=%llums origin=(%.3f,%.3f,%.3f) direction=(%.6f,%.6f,%.6f) [getter output only; not pixel proof]",
+        if(n<12){++n;Log("TMD native aim: %s pawn=%08X tmd=%08X age=%llums origin=(%.3f,%.3f,%.3f) direction=(%.6f,%.6f,%.6f) gaze=%d [getter output only; not pixel proof]",
             aging?"aging":"aim",(unsigned)pawn,(unsigned)tmd,
-            (unsigned long long)(GetTickCount64()-sample.time),origin[0],origin[1],origin[2],axis[0],axis[1],axis[2]);}
+            (unsigned long long)(GetTickCount64()-sample.time),origin[0],origin[1],origin[2],axis[0],axis[1],axis[2],gaze?1:0);}
     } __except(GetExceptionCode()==EXCEPTION_ACCESS_VIOLATION?EXCEPTION_EXECUTE_HANDLER:EXCEPTION_CONTINUE_SEARCH) {
         Fault("getter");
     }
@@ -112,6 +116,7 @@ static void Poll() {
             // Keep callable trampolines after any enable attempt. Never null an
             // original while another thread might already be entering the detour.
             InterlockedExchange(&g_tmdNativeAim,0);
+            InterlockedExchange(&g_tmdGazeAim,0);
             Log("TMD native aim: enable failed, gate OFF; trampolines retained");return;
         }
         aimTarget=aim;agingTarget=aging;InterlockedExchange(&hooksReady,1);
