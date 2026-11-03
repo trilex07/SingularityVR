@@ -24,3 +24,13 @@ Accepted-session cinema receipts (private build/tmd-rigid-cinema/evidence/accept
 ## One acceptance session
 
 After controlled deployment, use TMD repeatedly while moving the head, walking and stick-turning with the right controller held steady; inspect gun-to-glove attachment, then support/release and reload. Start an engine cutscene and compare all four screen edges in each eye, full scene framing, subtitles and transition back to gameplay. Preserve accepted black-artifact, VFX and normal grip behavior. New candidate stays on its feature branch until physical acceptance; MAIN owns deployment.
+
+## Built/deployed candidate
+
+- Source: c3f60c0e838d017e6abc5ee9cb18c190d3eaeacc, dedicated fix/tmd-rigid-attachment-cinema-eyes branch.
+- x86 PE32 /O2 DLL: C84569BFECD18E06289EF5C980827677F6746EA9BE11DC8570BBCA9E00F7D73A.
+- Compiled ABI PASS: literal [eax+20Ch] factory and FName stack setup.
+- MAIN DLL-only Steam installation completed after elevated CIM game/restore-writer checks. All profile file hashes verified; INI remains FC5D4E1C7AE0A9D3F8AA9E80116FEAC3E3629B10A8FC9AA82697C030CFC21C72. No settings/assets replaced, game not launched, no rollback timer.
+- Previous 97F3D3FF backup: deployment/install-backups/20261103-103848. Deployment report: deployment/install-reports/20261103-103849.json.
+- Private artifacts, full logs and deployment profile/plan: build/tmd-rigid-cinema/.
+- New candidate physical PSVR2 acceptance PENDING. Only prior accepted improvement is on main.
