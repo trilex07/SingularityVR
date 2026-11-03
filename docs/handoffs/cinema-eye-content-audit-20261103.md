@@ -26,3 +26,11 @@ The audit does not fix the geometry; it deliberately preserves EBA33BED to avoid
 - Run gaze/cinema real D3D9Ex pixel/state regressions and x86 /O2 build. Preserve native ABI.
 - Physical/Steam capture PENDING. Active installation/session untouched until game closed and scoped diagnostic INI change reviewed.
 - One test only: enter the same cinema while wearing PSVR2, look at its centre for a second, then exit normally. No shooting, extra scenes or repeated baseline tests necessary. Once a successful receipt and capture exist, diagnose offline before requesting another headset session.
+
+## Built diagnostic identity
+
+Source: 3da12f8c495b26516a22c073c087e123aa225aec.
+DLL SHA256: 59171C5884107BC71C732EF48C96DD32BCE44805C9FBF0CD1847D6C1BB1E5786.
+Optimized x86 PE32 build PASS; actual compiled factory literal [eax+20Ch] and FName stack regression PASS. Audit/cinema geometry fixtures x86/x64 PASS. D3D9Ex actual pixel/state/caption/corner fixtures PASS; legacy D3D9 HAL NOT RUN (host rejected device 8876086C). No physical visual PASS claimed.
+
+Private immutable artifacts, linker map, deployment profile and exact two-entry change plan are staged under build/cinema-orientation-audit/. Read-only accepted-profile preflight PASS for all protected installed files and full INI. Only DLL and Diagnostic/CinemaEyeAudit=1 are planned; no assets or other settings change. Steam deployment NOT RUN: active Singularity process blocks writes. Installed EBA33BED remains unchanged.
