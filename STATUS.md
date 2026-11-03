@@ -1,3 +1,8 @@
+## 2026-11-03 — Cinema bootstrap/caption correction, physical PENDING
+
+- One-shot 59171C58 capture succeeded. User sees captions only in RIGHT eye. Mono anchor bypassed stereo fitting; native-camera upload return bypassed the established caption witness.
+- Scoped corrections and executable source-prefix/geometry/pixel regressions PASS; physical confirmation remains pending. See docs/handoffs/cinema-bootstrap-captions-20261103.md.
+
 ## 2026-11-03 — C84569BF weapon accepted; cinema frame still differs
 
 - Physical feedback: right gun attachment OK. Cinema right-eye border ends slightly earlier; previous common-FOV fit did not resolve it.
@@ -5548,3 +5553,4 @@ Toggle with **F6**.
 ## 2026-11-03 — Consolidated gravity/audio/movie/menu/cinema candidate
 
 Branch `fix/tmd-gravity-rifle-audio-crash`. L1 native AntiGrav arbitration, verified Valkyrie Vorbis header repair, imported memory-backed Polish movie routing, contextual pointer geometry and affine stereo captions: offline tests PASS; final /O2 artifact staged privately. See `docs/handoffs/gravity-rifle-movies-context-cinema-20261103.md` for evidence levels and hashes. Steam/game/HMD NOT RUN. Shorter cinema edge remains a physical acceptance dependency; no speculative per-eye crop applied. No merge/release.
+

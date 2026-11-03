@@ -54,6 +54,15 @@ int main(){
         const cinemascreen::Pose eyes[2]={{-.032f,0,0,0,0,0,1},{.032f,0,0,0,0,0,1}};
         const cinemascreen::Fov fovs[2]={{-1.2f,.7f,-.8f,.8f},{-.5f,1.3f,-.65f,.9f}};
         const auto stereoHead=cinemascreen::Centre(eyes[0],eyes[1]);
+        // Actual failing order: an initial native mono frame latches first.
+        // Stereo must replace that unvalidated anchor, not return early.
+        cinemascreen::Anchor bootstrap;
+        assert(bootstrap.Latch(stereoHead,2,1.3f,.9f,16.f/9));
+        const float monoWidth=bootstrap.width;
+        assert(bootstrap.valid && !bootstrap.stereoFitted);
+        assert(bootstrap.LatchStereo(stereoHead,2,1.3f,.9f,16.f/9,eyes,fovs));
+        assert(bootstrap.stereoFitted && bootstrap.width<monoWidth);
+        bootstrap.Reset();assert(!bootstrap.valid && !bootstrap.stereoFitted);
         cinemascreen::Anchor fitted;
         assert(fitted.LatchStereo(stereoHead,2,1.3f,.9f,16.f/9,eyes,fovs));
         assert(fitted.width<2*2*1.3f*.9f); // left-eye width alone clips the RIGHT eye

@@ -41,7 +41,8 @@ struct Anchor {
     Pose pose{};
     float width=0, height=0;
     bool valid=false;
-    void Reset() { pose=Pose{};width=height=0;valid=false; }
+    bool stereoFitted=false;
+    void Reset() { pose=Pose{};width=height=0;valid=false;stereoFitted=false; }
     // Pausing a cinematic does not end it: do not re-anchor on menu return.
     void Observe(bool cinematic, bool enabled) { if(!cinematic || !enabled)Reset(); }
     bool Latch(const Pose& head,float distance,float halfTanX,float widthFraction,float aspect) {
@@ -70,7 +71,7 @@ struct Anchor {
     // The old left-eye-only width ignored vertical/asymmetric FOV and IPD.
     bool LatchStereo(const Pose& head,float distance,float halfTanX,float fraction,float aspect,
                      const Pose (&eyes)[2],const Fov (&fovs)[2]) {
-        if(valid)return true; // preserve world anchoring after entry
+        if(valid && stereoFitted)return true; // mono bootstrap is NOT a stereo fit
         Anchor candidate;if(!candidate.Latch(head,distance,halfTanX,fraction,aspect))return false;
         float fit=1.f;
         const float yaw=2*std::atan2(candidate.pose.qy,candidate.pose.qw);
@@ -96,7 +97,7 @@ struct Anchor {
             }
         }
         if(!std::isfinite(fit)||fit<=0)return false;
-        candidate.width*=fit;candidate.height*=fit;*this=candidate;return true;
+        candidate.width*=fit;candidate.height*=fit;candidate.stereoFitted=true;*this=candidate;return true;
     }
 };
 inline int ClampDistanceMm(int mm) {return mm<800?800:mm>10000?10000:mm;}
