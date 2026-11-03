@@ -1,5 +1,6 @@
 #pragma once
 #include <cmath>
+#include <initializer_list>
 
 namespace cinemascreen {
 struct Pose { float x=0,y=0,z=0,qx=0,qy=0,qz=0,qw=1; };
@@ -8,6 +9,17 @@ inline Pose Centre(const Pose& l,const Pose& r) {
     return {(l.x+r.x)*.5f,(l.y+r.y)*.5f,(l.z+r.z)*.5f,
         (l.qx+sign*r.qx)*.5f,(l.qy+sign*r.qy)*.5f,
         (l.qz+sign*r.qz)*.5f,(l.qw+sign*r.qw)*.5f};
+}
+struct Fov { float left,right,down,up; }; // tangent slopes, not radians
+inline bool EyePoint(const Pose& eye,float x,float y,float z,float (&out)[3]) {
+    const float n=eye.qx*eye.qx+eye.qy*eye.qy+eye.qz*eye.qz+eye.qw*eye.qw;
+    if(!std::isfinite(n)||n<.25f||n>4.f)return false;
+    const float inv=1.f/std::sqrt(n),qx=-eye.qx*inv,qy=-eye.qy*inv,qz=-eye.qz*inv,qw=eye.qw*inv;
+    x-=eye.x;y-=eye.y;z-=eye.z;
+    const float tx=2*(qy*z-qz*y),ty=2*(qz*x-qx*z),tz=2*(qx*y-qy*x);
+    out[0]=x+qw*tx+qy*tz-qz*ty;out[1]=y+qw*ty+qz*tx-qx*tz;
+    out[2]=z+qw*tz+qx*ty-qy*tx;
+    return std::isfinite(out[0])&&std::isfinite(out[1])&&std::isfinite(out[2]);
 }
 struct Anchor {
     Pose pose{};
@@ -37,6 +49,38 @@ struct Anchor {
         const float w=2.f*distance*halfTanX*widthFraction,h=w/aspect;
         if(!std::isfinite(w) || !std::isfinite(h) || w<=0 || h<=0 || w>40.f || h>40.f)return false;
         pose=staged;width=w;height=h;valid=true;return true;
+    }
+    // One shared physical rectangle, fitted against BOTH actual eye frusta.
+    // The old left-eye-only width ignored vertical/asymmetric FOV and IPD.
+    bool LatchStereo(const Pose& head,float distance,float halfTanX,float fraction,float aspect,
+                     const Pose (&eyes)[2],const Fov (&fovs)[2]) {
+        if(valid)return true; // preserve world anchoring after entry
+        Anchor candidate;if(!candidate.Latch(head,distance,halfTanX,fraction,aspect))return false;
+        float fit=1.f;
+        const float yaw=2*std::atan2(candidate.pose.qy,candidate.pose.qw);
+        const float rx=std::cos(yaw),rz=-std::sin(yaw);
+        for(unsigned e=0;e<2;++e){
+            const auto f=fovs[e];
+            if(!std::isfinite(f.left)||!std::isfinite(f.right)||!std::isfinite(f.down)||
+               !std::isfinite(f.up)||f.left>=0||f.right<=0||f.down>=0||f.up<=0)return false;
+            float c[3];if(!EyePoint(eyes[e],candidate.pose.x,candidate.pose.y,candidate.pose.z,c)||c[2]>=0)return false;
+            for(int sx:{-1,1})for(int sy:{-1,1}){
+                float corner[3];
+                if(!EyePoint(eyes[e],candidate.pose.x+sx*candidate.width*.5f*rx,
+                    candidate.pose.y+sy*candidate.height*.5f,
+                    candidate.pose.z+sx*candidate.width*.5f*rz,corner))return false;
+                const float v[3]={corner[0]-c[0],corner[1]-c[1],corner[2]-c[2]};
+                // clip inequalities b + a*scale >= 0, including eye near-plane
+                const float b[5]={c[0]+f.left*c[2],-c[0]-f.right*c[2],
+                    c[1]+f.down*c[2],-c[1]-f.up*c[2],-c[2]};
+                const float a[5]={v[0]+f.left*v[2],-v[0]-f.right*v[2],
+                    v[1]+f.down*v[2],-v[1]-f.up*v[2],-v[2]};
+                for(unsigned i=0;i<5;++i){if(b[i]<=0)return false;
+                    if(a[i]<0)fit=std::fmin(fit,b[i]/-a[i]);}
+            }
+        }
+        if(!std::isfinite(fit)||fit<=0)return false;
+        candidate.width*=fit;candidate.height*=fit;*this=candidate;return true;
     }
 };
 inline int ClampDistanceMm(int mm) {return mm<800?800:mm>10000?10000:mm;}

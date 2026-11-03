@@ -1,3 +1,10 @@
+## 2026-11-03 — 97F3D3FF promoted; exact current-wrist/cinema follow-up
+
+- User accepted previous improvement and authorized main; remote main fast-forwarded to 009d2d12.
+- New scoped branch uses the same current-frame wrist target as the independent glove instead of raw-controller extrapolation; common cinema sizing now fits both actual eye frusta.
+- Offline palette, stereo/D3D9Ex and OLED regressions PASS. Physical attachment/edge symmetry remains PENDING; accepted installed 97F3D3FF is preserved.
+- Details: docs/handoffs/tmd-rigid-attachment-cinema-eyes-20261103.md.
+
 ## 2026-11-03 — CB43F6DC accepted and promoted; residual TMD turning
 
 - User accepted the installed CB43F6DC candidate and explicitly authorized main promotion. Remote main fast-forwarded to 752efc07.

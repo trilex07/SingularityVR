@@ -1,4 +1,5 @@
 #include "../dual_hand_action_pose.h"
+#include "../dual_tmd_weapon_pose.h"
 #include "../arm_natural.h"
 #include <cassert>
 #include <cstdio>
@@ -66,6 +67,49 @@ int main(int argc,char**argv){
         Mat stale=controller;assert(!f.Apply({10,1,2,gun},true,stale.m));assert(Error(stale,controller)==0);
         rs[0][0]=std::numeric_limits<float>::quiet_NaN();assert(!f.Capture(key,local,b.bind[9],ls,b.bind[51],rs));
         assert(!f.Current(key));
+    }
+    // Reproduce the runtime source -> independent palette -> final wrist path.
+    // A raw-controller extrapolation alone misses changes in the source local.
+    {
+        const dualaction::Key key{40,1,2,11387};
+        dualaction::Frame frame;
+        const Mat joint=Pose(.3f,-12,-133,12),initialLocal=Pose(.1f,3,4,-149);
+        float source[3][4];Skin(b.bind[51],joint,source);
+        float leftSource[3][4];Skin(b.bind[9],joint,leftSource);
+        const Mat raw=Pose(.4f,5,-7,3);
+        assert(frame.Capture(key,initialLocal,b.bind[9],leftSource,b.bind[51],source));
+        Mat initialRide=raw;assert(frame.Apply(key,true,initialRide.m));
+        Mat first;assert(frame.RightWrist(key,initialRide,first));
+        dualtmdgunpose::Reference attachment;
+        attachment.key={1,2,11387,0};attachment.valid=attachment.wristValid=true;
+        attachment.tick=100;attachment.wristTick=100;attachment.wristFrame=40;
+        attachment.gunFromWrist=Pose(.2f,2,-4,6);
+        attachment.normalWrist=first;attachment.normalRawController=raw;
+        float gpu[dualtmdgunpose::kMaxBones][3][4]{},result[dualtmdgunpose::kMaxBones][3][4]{};
+        armbind::ToGpu(Identity(),gpu[0]);
+        for(unsigned i=0;i<12;++i){
+            auto currentKey=key;currentKey.frame+=i;
+            const Mat localNow=Pose(.1f+i*.04f,3+i*.2f,4-i*.1f,-149);
+            assert(frame.Capture(currentKey,localNow,b.bind[9],leftSource,b.bind[51],source));
+            Mat ride=Pose(.4f+i*.1f,5+i,-7,3);assert(frame.Apply(currentKey,true,ride.m));
+            Mat exact;assert(frame.RightWrist(currentKey,ride,exact));
+            float delta[4][4],other[4][4],changed[3][4];
+            const Mat identity=Identity();
+            assert(skeletal::LocalDeltaPair(other,delta,localNow.m,identity.m,raw.m,ride.m));
+            skeletal::TransformBone(changed,source,delta);
+            Mat renderedJoint;assert(armbind::CurrentJoint(b.bind[51],changed,renderedJoint));
+            const Mat actualGlove=dualaction::Product(renderedJoint,localNow);
+            assert(Error(actualGlove,exact)<.003f);
+            attachment.wristFrame=currentKey.frame;attachment.wristTick=100+i;
+            Mat finalGun;
+            assert(attachment.Correct(attachment.key,gpu,1,identity,identity,raw,currentKey.frame,
+                100+i,result,&finalGun,nullptr,&exact));
+            assert(Error(finalGun,dualaction::Product(attachment.gunFromWrist,actualGlove))<.003f);
+            if(i==11)assert(Error(first,actualGlove)>1.f); // old unchanged-raw prediction diverges
+            auto staleKey=currentKey;++staleKey.frame;Mat sentinel=identity;
+            assert(!frame.RightWrist(staleKey,ride,sentinel)&&Error(sentinel,identity)==0);
+        }
+        puts("PASS exact attachment: real independent palette / changing camera-local / turning ride; no duplicate action transform");
     }
     Mat invalid=Identity(),out;
     invalid.m[0][0]=2;assert(!dualaction::ReferenceWithScale(invalid,dualhandreference::Left,out));

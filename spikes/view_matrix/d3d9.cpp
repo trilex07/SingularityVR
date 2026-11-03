@@ -14128,8 +14128,14 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
                             {r.position.x,r.position.y,r.position.z,r.orientation.x,r.orientation.y,r.orientation.z,r.orientation.w});
                         const auto& f=frame->useDerived?frame->derived:frame->fov[0];
                         const float halfTan=(tanf(f.angleRight)-tanf(f.angleLeft))*.5f;
-                        if(g_cinemaWorldAnchor.Latch(head,Rd(g_cutsceneScreenDistanceMm)/1000.f,halfTan,
-                            std::clamp(Rd(g_cutsceneCinemaScalePct)/100.f,.2f,1.f),frame->cineAspect)){
+                        const cinemascreen::Pose cinemaEyes[2]={
+                            {l.position.x,l.position.y,l.position.z,l.orientation.x,l.orientation.y,l.orientation.z,l.orientation.w},
+                            {r.position.x,r.position.y,r.position.z,r.orientation.x,r.orientation.y,r.orientation.z,r.orientation.w}};
+                        cinemascreen::Fov cinemaFovs[2];
+                        for(unsigned e=0;e<2;++e){const auto& ef=frame->fov[e];
+                            cinemaFovs[e]={tanf(ef.angleLeft),tanf(ef.angleRight),tanf(ef.angleDown),tanf(ef.angleUp)};}
+                        if(g_cinemaWorldAnchor.LatchStereo(head,Rd(g_cutsceneScreenDistanceMm)/1000.f,halfTan,
+                            std::clamp(Rd(g_cutsceneCinemaScalePct)/100.f,.2f,1.f),frame->cineAspect,cinemaEyes,cinemaFovs)){
                             const auto& a=g_cinemaWorldAnchor;
                             for(int eye=0;eye<2;++eye){
                                 auto& q=stereoQuads[eye];q.space=g_xrSpace;
@@ -17888,6 +17894,13 @@ static dualaction::Key DualActionKey() {
     return {(uint32_t)Rd(g_armPaletteFrameToken),(uint32_t)g_playerPawn,
         (uint32_t)Rd(g_weaponObj),(uint32_t)Rd(g_gunVerts)};
 }
+static bool SingleHandWeaponGrip(bool section,long verts,bool support) {
+    const bool live=Rd(g_weaponObj)!=0,holstered=Rd(g_weaponHolstered)!=0;
+    return handanchor::PistolGrip(section,live,holstered,verts,support) ||
+        handanchor::ValkyrieSingleGrip(g_valkyrieSingleGrip!=0,section,live,holstered,verts,support) ||
+        handanchor::VolkSingleGrip(g_volkAuthoredGrip!=0,section,live,holstered,verts,support) ||
+        handanchor::KasimovSingleGrip(g_kasimovAuthoredGrip!=0,section,live,holstered,verts,support);
+}
 static bool DualActionAllowed() {
     if(!Rd(g_dualHandActionPose))return false;
     return dualaction::Eligible({true,DualWeaponTmdContext(),
@@ -18498,14 +18511,7 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
     const bool supportGrip = Rd(g_twoHandActive) != 0;
     const long supportGunVerts = InterlockedCompareExchange(&g_gunVerts, 0, 0);
     const bool weaponGripSection=handanchor::WeaponGripSection(gloves,tmdGloves,DualWeaponTmdContext());
-    const bool weaponSingleHand = handanchor::PistolGrip(weaponGripSection,Rd(g_weaponObj)!=0,
-        Rd(g_weaponHolstered)!=0,supportGunVerts,supportGrip) ||
-        handanchor::ValkyrieSingleGrip(g_valkyrieSingleGrip!=0,weaponGripSection,Rd(g_weaponObj)!=0,
-            Rd(g_weaponHolstered)!=0,supportGunVerts,supportGrip) ||
-        handanchor::VolkSingleGrip(g_volkAuthoredGrip!=0,weaponGripSection,Rd(g_weaponObj)!=0,
-            Rd(g_weaponHolstered)!=0,supportGunVerts,supportGrip) ||
-        handanchor::KasimovSingleGrip(g_kasimovAuthoredGrip!=0,weaponGripSection,Rd(g_weaponObj)!=0,
-            Rd(g_weaponHolstered)!=0,supportGunVerts,supportGrip);
+    const bool weaponSingleHand = SingleHandWeaponGrip(weaponGripSection,supportGunVerts,supportGrip);
     if (weaponSingleHand) {
         BuildGunC(aimTarget);
         static LONG saidPistolAimGrip = 0;
@@ -21683,10 +21689,15 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
                     const auto now=GetTickCount64();
                     armbind::Mat correctedFinalGun;
                     dualtmdgunpose::CorrectGate correctionGate=dualtmdgunpose::CorrectGate::Pass;
+                    armbind::Mat exactWrist;
+                    const bool exactWristReady=DualActionAllowed() &&
+                        SingleHandWeaponGrip(handanchor::WeaponGripSection(false,true,DualWeaponTmdContext()),
+                            (long)numVertices,Rd(g_twoHandActive)!=0) &&
+                        g_dualActionFrame.RightWrist(DualActionKey(),dualGunRide,exactWrist);
                     if(g_dualTmdGunPose.Correct(dualGunKey,dualGunSaved,dualGunBones,
                            dualGunLocal,dualGunRide,dualGunRawController,
                            (unsigned)Rd(g_armPaletteFrameToken),now,dualGunAdjusted,
-                           &correctedFinalGun,&correctionGate)) {
+                           &correctedFinalGun,&correctionGate,exactWristReady?&exactWrist:nullptr)) {
                         const HRESULT setHr=g_origSetVSConstF(dev,g_boundShaderLayout.bones,
                             &dualGunAdjusted[0][0][0],dualGunBones*3);
                         if(SUCCEEDED(setHr)) {
@@ -21697,11 +21708,11 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
                                 armbind::FromGpu(dualGunSaved[dualGunKey.rootSlot],root);
                                 originalFinal=dualtmdgunpose::Product(
                                     dualtmdgunpose::Product(root,dualGunLocal),dualGunRide);
-                                Log("dual-tmd gun-pose: final wrist-relative body gun=%u root=%u frame=%ld original=(%.2f %.2f %.2f) corrected=(%.2f %.2f %.2f) support=%ld",
+                                Log("dual-tmd gun-pose: final wrist-relative body gun=%u root=%u frame=%ld original=(%.2f %.2f %.2f) corrected=(%.2f %.2f %.2f) support=%ld exactCurrentWrist=%d",
                                     numVertices,dualGunKey.rootSlot,Rd(g_armPaletteFrameToken),
                                     originalFinal.m[3][0],originalFinal.m[3][1],originalFinal.m[3][2],
                                     correctedFinalGun.m[3][0],correctedFinalGun.m[3][1],correctedFinalGun.m[3][2],
-                                    Rd(g_twoHandActive));
+                                    Rd(g_twoHandActive),exactWristReady?1:0);
                             }
                         } else {
                             // D3D9 may reject a write after device loss. Restore

@@ -121,7 +121,7 @@ struct Reference {
                  const Mat& local,const Mat& ride,const Mat& rawController,
                  unsigned frame,std::uint64_t now,
                  float result[kMaxBones][3][4],Mat* finalGun=nullptr,
-                 CorrectGate* rejected=nullptr) const {
+                 CorrectGate* rejected=nullptr,const Mat* currentWrist=nullptr) const {
         if(rejected)*rejected=CorrectGate::Pass;
         const auto fail=[&](CorrectGate gate) {if(rejected)*rejected=gate;return false;};
         if(!valid||!wristValid||!(key==k))return fail(CorrectGate::Reference);
@@ -135,7 +135,9 @@ struct Reference {
            !skeletal::Inverse(inverseTail.m,tail.m))return fail(CorrectGate::Inverse);
         if(!armbind::FromGpu(original[k.rootSlot],root)||!armbind::Rigid(root)||
            !skeletal::Inverse(inverseRoot.m,root.m))return fail(CorrectGate::Root);
-        const Mat predictedWrist=Product(Product(normalWrist,inverseController),rawController);
+        if(currentWrist&&!Uniform(*currentWrist))return fail(CorrectGate::Predicted);
+        const Mat predictedWrist=currentWrist?*currentWrist:
+            Product(Product(normalWrist,inverseController),rawController);
         const Mat desiredFinal=Product(gunFromWrist,predictedWrist);
         const Mat targetSkin=Product(desiredFinal,inverseTail);
         const Mat delta=Product(inverseRoot,targetSkin);

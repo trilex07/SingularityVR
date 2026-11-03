@@ -50,5 +50,32 @@ int main(){
     assert(!a.Latch(head,-1,1,.6f,2));assert(!a.Latch(head,2,1,1.1f,2));
     assert(cinemascreen::ClampDistanceMm(-1)==800 && cinemascreen::ClampDistanceMm(2000)==2000 &&
            cinemascreen::ClampDistanceMm(20000)==10000);
+    {
+        const cinemascreen::Pose eyes[2]={{-.032f,0,0,0,0,0,1},{.032f,0,0,0,0,0,1}};
+        const cinemascreen::Fov fovs[2]={{-1.2f,.7f,-.8f,.8f},{-.5f,1.3f,-.65f,.9f}};
+        const auto stereoHead=cinemascreen::Centre(eyes[0],eyes[1]);
+        cinemascreen::Anchor fitted;
+        assert(fitted.LatchStereo(stereoHead,2,1.3f,.9f,16.f/9,eyes,fovs));
+        assert(fitted.width<2*2*1.3f*.9f); // left-eye width alone clips the RIGHT eye
+        for(unsigned eye=0;eye<2;++eye)for(int x:{-1,1})for(int y:{-1,1}){
+            float p[3];assert(cinemascreen::EyePoint(eyes[eye],x*fitted.width*.5f,y*fitted.height*.5f,-2,p));
+            const float tx=p[0]/-p[2],ty=p[1]/-p[2];
+            assert(tx>=fovs[eye].left-1e-5f&&tx<=fovs[eye].right+1e-5f);
+            assert(ty>=fovs[eye].down-1e-5f&&ty<=fovs[eye].up+1e-5f);
+        }
+        cinemascreen::Anchor swapped;const cinemascreen::Pose reverseEyes[2]={eyes[1],eyes[0]};
+        const cinemascreen::Fov reverseFov[2]={fovs[1],fovs[0]};
+        assert(swapped.LatchStereo(stereoHead,2,1.3f,.9f,16.f/9,reverseEyes,reverseFov));
+        assert(near(swapped.width,fitted.width)&&near(swapped.height,fitted.height));
+        assert(near(fitted.width/fitted.height,16.f/9));
+        const float lockedWidth=fitted.width;
+        assert(fitted.LatchStereo(stereoHead,2,4,1,1,eyes,fovs)&&fitted.width==lockedWidth);
+        cinemascreen::Fov invalid[2]={fovs[0],fovs[1]};invalid[1].right=0;
+        cinemascreen::Anchor bad;assert(!bad.LatchStereo(stereoHead,2,1,.6f,2,eyes,invalid)&&!bad.valid);
+        float rotated[3];const cinemascreen::Pose yawEye{0,0,0,0,.70710678f,0,.70710678f};
+        assert(cinemascreen::EyePoint(yawEye,-2,0,0,rotated));
+        assert(std::fabs(rotated[0])<1e-5f&&std::fabs(rotated[2]+2)<1e-5f);
+        puts("PASS shared cinema bounds: asymmetric eye FOV/IPD, vertical clip, eye-order parity, aspect, latch and invalid refusal");
+    }
     std::puts("PASS: cinema LOCAL anchor stable under motion, aspect, pause/exit/new-scene lifecycle, invalid tracking fail-closed");
 }

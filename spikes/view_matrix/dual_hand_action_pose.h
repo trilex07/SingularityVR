@@ -47,7 +47,7 @@ inline bool Correction(const Mat& bind,const float skin[3][4],const Mat& local,
     out=result;return true;
 }
 struct Frame {
-    Key key{};bool valid=false;Mat local{},left{},right{};
+    Key key{};bool valid=false;Mat local{},left{},right{},rightSourceWorld{};
     void Clear(){valid=false;}
     bool Capture(Key k,const Mat& sourceLocal,const Mat& leftBind,const float leftSkin[3][4],
                  const Mat& rightBind,const float rightSkin[3][4]){
@@ -57,9 +57,21 @@ struct Frame {
         if(!k.pawn||!k.weapon||!reference||
            !Correction(leftBind,leftSkin,sourceLocal,dualhandreference::Left,l)||
            !Correction(rightBind,rightSkin,sourceLocal,*reference,r))return false;
+        Mat sourceJoint;
+        if(!armbind::CurrentJoint(rightBind,rightSkin,sourceJoint))return false;
+        rightSourceWorld=Product(sourceJoint,sourceLocal);
         key=k;local=sourceLocal;left=l;right=r;valid=true;return true;
     }
     bool Current(Key k)const{return valid&&key==k;}
+    // EXACT wrist consumed by LocalDeltaPair when the right glove targets
+    // BuildGunC: sourceJoint * local * (actionCorrection * controllerRide).
+    // No animation/reference extrapolation and no second action correction.
+    bool RightWrist(Key k,const Mat& finalRide,Mat& out)const {
+        if(!Current(k)||!Affine(finalRide))return false;
+        const Mat result=Product(rightSourceWorld,finalRide);
+        if(!Affine(result))return false;
+        out=result;return true;
+    }
     bool SameLocal(const Mat& other)const{
         if(!Affine(other))return false;
         for(unsigned i=0;i<4;++i)for(unsigned j=0;j<4;++j)
