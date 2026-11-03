@@ -91,6 +91,7 @@ static unsigned g_startupTimeoutMs=5000,g_startupMinVisibleMs=3000;
 #include "vr_scene_mode.h"
 #include "cutscene_mono.h" // CutsceneFlat mono-to-both-eyes fit math (no D3D)
 #include "cinema_world_screen.h"
+#include "cinema_eye_audit.h"
 #include "cinema_stereo.h"
 #include "gaze_reader.h"
 #include "cinematic_state_observation.h"
@@ -4842,6 +4843,8 @@ static LONG g_gazeEnabled=1,g_gazeWheel=0,g_gazeNis=0,g_stereoCinema=0;
 static unsigned g_cinemaStereoToken=~0u;
 static cinemastereo::NativeConvention g_cinemaConvention;
 static float g_cinemaNativeAspect=1.f;
+static bool g_cinemaEyeAudit=false;
+static cinemaeyeaudit::Gate g_cinemaEyeAuditGate;
 static svrgaze::Reader g_gazeReader;
 static LONG g_gazeWheelSector=-2,g_gazeWheelTime=0,g_gazeWheelEpoch=0;
 static svrgaze::Dwell g_gazeDwell;
@@ -13840,6 +13843,7 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
     XrCompositionLayerQuad cinemaQuad{ XR_TYPE_COMPOSITION_LAYER_QUAD };
     XrCompositionLayerQuad stereoQuads[2]{{XR_TYPE_COMPOSITION_LAYER_QUAD},{XR_TYPE_COMPOSITION_LAYER_QUAD}};
     bool cinemaQuadSubmitted=false;
+    bool cinemaAuditCaptured=false;
     XrCompositionLayerProjectionView projViews[2]{};
     const XrCompositionLayerBaseHeader* layers[2] = { nullptr };
     uint32_t layerCount = 0;
@@ -14149,6 +14153,31 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
                                 layers[eye]=reinterpret_cast<const XrCompositionLayerBaseHeader*>(&q);
                             }
                             layerCount=2;cinemaQuadSubmitted=true;
+                            if(g_cinemaEyeAuditGate.Ready(g_cinemaEyeAudit,
+                                frame->eyePositionsValid&&g_xrSessionState==XR_SESSION_STATE_FOCUSED)){
+                                Log("cinema-eye-audit BEGIN frame=%ld source=%ux%u aspect=%.7f tracking=%d anchor=%.5f,%.5f,%.5f",
+                                    Rd(g_armPaletteFrameToken),g_srcW,g_srcH,frame->cineAspect,
+                                    frame->eyePositionsValid?1:0,a.pose.x,a.pose.y,a.pose.z);
+                                for(unsigned e=0;e<2;++e){
+                                    const auto& q=stereoQuads[e];const auto& ep=cinemaEyes[e];
+                                    const cinemascreen::Pose screen{q.pose.position.x,q.pose.position.y,q.pose.position.z,
+                                        q.pose.orientation.x,q.pose.orientation.y,q.pose.orientation.z,q.pose.orientation.w};
+                                    cinemaeyeaudit::Bounds bounds;
+                                    const bool projected=cinemaeyeaudit::Project(ep,screen,q.size.width,q.size.height,cinemaFovs[e],bounds);
+                                    Log("cinema-eye-audit eye=%u eyePose=(%.7f %.7f %.7f; %.7f %.7f %.7f %.7f) quad=(%.7f %.7f %.7f; %.7f %.7f %.7f %.7f) size=%.7fx%.7f rect=%d,%d %dx%d swapchain=%p",
+                                        e,ep.x,ep.y,ep.z,ep.qx,ep.qy,ep.qz,ep.qw,
+                                        screen.x,screen.y,screen.z,screen.qx,screen.qy,screen.qz,screen.qw,q.size.width,q.size.height,
+                                        q.subImage.imageRect.offset.x,q.subImage.imageRect.offset.y,
+                                        q.subImage.imageRect.extent.width,q.subImage.imageRect.extent.height,(void*)q.subImage.swapchain);
+                                    constexpr float degrees=57.2957795f;const auto& ef=frame->fov[e];
+                                    Log("cinema-eye-audit eye=%u fovDegrees L/R/D/U=%.5f,%.5f,%.5f,%.5f edgeDegrees L/R/D/U=%.5f,%.5f,%.5f,%.5f projected=%d clippedX=%d clippedY=%d behind=%d",
+                                        e,ef.angleLeft*degrees,ef.angleRight*degrees,ef.angleDown*degrees,ef.angleUp*degrees,
+                                        bounds.left*degrees,bounds.right*degrees,bounds.down*degrees,bounds.up*degrees,
+                                        projected?1:0,bounds.outsideX?1:0,bounds.outsideY?1:0,bounds.behind?1:0);
+                                }
+                                SaveBackbufferCapture(gameDev,true);
+                                cinemaAuditCaptured=true;
+                            }
                             static unsigned pairNotes=0;
                             if(pairNotes<2){
                                 ++pairNotes;for(int e=0;e<2;++e){const auto& v=stereoQuads[e];
@@ -14188,6 +14217,7 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
     LARGE_INTEGER tXrEnd = Now();
     hotpath::scope xrSubmitScope(g_hotPathSampler, hotpath::Family::xr_submit);
     const XrResult frameEndResult=xrEndFrame(g_xrSession, &fei);
+    if(cinemaAuditCaptured)Log("cinema-eye-audit END xrEndFrame=%d; source capture is before D3D11 grading/compositor, not headset pixels",(int)frameEndResult);
     if(cinemaQuadSubmitted) {
         if(XR_FAILED(frameEndResult)) {
             InterlockedExchange(&g_cutsceneWorldScreen,0);
@@ -37750,6 +37780,7 @@ void LoadIniSettings() {
         GetPrivateProfileIntA("Render","CutsceneScreenDistanceMm",2000,path));
     Log("ini: CutsceneWorldScreen=%ld distance=%ldmm (LOCAL anchored quad, default OFF)",
         Rd(g_cutsceneWorldScreen),Rd(g_cutsceneScreenDistanceMm));
+    g_cinemaEyeAudit=GetPrivateProfileIntA("Diagnostic","CinemaEyeAudit",0,path)!=0;
     g_menuWorldScreen=GetPrivateProfileIntA("Render","MenuWorldScreen",0,path)?1:0;
     Log("ini: MenuWorldScreen=%ld (anchored cinema screen for main menu, default OFF)", Rd(g_menuWorldScreen));
     Log("ini: VideoStereo=%ld (%s)", InterlockedCompareExchange(&g_videoStereo, 0, 0),
