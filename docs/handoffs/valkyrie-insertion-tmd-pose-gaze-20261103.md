@@ -35,3 +35,11 @@ Use the accepted settings snapshot plus only TmdGazeAim=1 for this candidate. Ke
 3. Valid TMD target: look left/right with left hand held steady and activate Age/Impulse. Check gaze direction; briefly invalidate gaze and verify hand fallback. Native energy/gates remain normal.
 
 No automatic launch, test timer, Steam deployment or main merge of the new branch performed. Current Steam A808198C and INI hashes verified unchanged.
+
+## Final delivery
+
+- Source commit: `479c041b6e0ae6f8f9065c7536fa409c5522988d` (clean build).
+- x86 PE32 /O2 DLL: `CB43F6DCD1D8FD062981ECB840023432656AC5AD95F770C1D23D0CCE77A204BC`.
+- Compiled WeaponLocker ABI PASS: literal `[eax+20Ch]` and exact FName stack setup retained.
+- Private candidate, immutable artifact snapshot, provider/pose tests, captured session and exact deployment profile/plan: `build/next-weapon-reload/valkyrie-tmd-gaze-20261103/`.
+- Staged INI changes only `Input/TmdGazeAim=1`; code default remains OFF. Exact deployment guard preflight PASS. Steam A808198C and accepted INI remain unchanged; no game launch.
