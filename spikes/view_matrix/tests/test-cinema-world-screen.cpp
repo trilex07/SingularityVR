@@ -77,5 +77,36 @@ int main(){
         assert(std::fabs(rotated[0])<1e-5f&&std::fabs(rotated[2]+2)<1e-5f);
         puts("PASS shared cinema bounds: asymmetric eye FOV/IPD, vertical clip, eye-order parity, aspect, latch and invalid refusal");
     }
+    {
+        // Reproduce the observed border disparity: equal physical quad sizes
+        // do NOT imply equal eye-relative edges at 64 mm IPD / 2 m distance.
+        const cinemascreen::Pose eyes[2]={{-.032f,0,0,0,0,0,1},{.032f,0,0,0,0,0,1}};
+        const cinemascreen::Pose anchor{0,0,-2,0,0,0,1};
+        float oldL[3],oldR[3];
+        assert(cinemascreen::EyePoint(eyes[0],1,0,-2,oldL));
+        assert(cinemascreen::EyePoint(eyes[1],1,0,-2,oldR));
+        assert(std::fabs(oldL[0]/-oldL[2]-oldR[0]/-oldR[2])>.03f);
+        for(int step=0;step<12;++step){
+            const float yaw=step*.17f,dx=.032f*std::cos(yaw),dz=-.032f*std::sin(yaw);
+            const float cx=step*.07f,cy=step*.02f,cz=-step*.03f;
+            const cinemascreen::Pose moved[2]={
+                {cx-dx,cy,cz-dz,0,std::sin(yaw*.5f),0,std::cos(yaw*.5f)},
+                {cx+dx,cy,cz+dz,0,std::sin(yaw*.5f),0,std::cos(yaw*.5f)}};
+            cinemascreen::Pose screens[2];
+            for(unsigned e=0;e<2;++e)assert(cinemascreen::BinocularFramePose(anchor,moved,e,screens[e]));
+            for(int x:{-1,1})for(int y:{-1,1}){
+                float a[3],b[3];
+                assert(cinemascreen::EyePoint(moved[0],screens[0].x+x,screens[0].y+y*.5f,screens[0].z,a));
+                assert(cinemascreen::EyePoint(moved[1],screens[1].x+x,screens[1].y+y*.5f,screens[1].z,b));
+                for(unsigned k=0;k<3;++k)assert(near(a[k],b[k]));
+            }
+            assert(screens[0].qy==anchor.qy&&screens[1].qw==anchor.qw);
+            assert(near((screens[0].x+screens[1].x)*.5f,anchor.x));
+        }
+        cinemascreen::Pose output=anchor;const cinemascreen::Pose invalid[2]={eyes[0],eyes[0]};
+        assert(!cinemascreen::BinocularFramePose(anchor,invalid,0,output)&&output.z==anchor.z);
+        assert(!cinemascreen::BinocularFramePose(anchor,eyes,2,output));
+        puts("PASS cinema frame: observed IPD border disparity reproduced; both-eye corner parity under head/turn motion, fixed cyclopean anchor, invalid refusal");
+    }
     std::puts("PASS: cinema LOCAL anchor stable under motion, aspect, pause/exit/new-scene lifecycle, invalid tracking fail-closed");
 }

@@ -14140,7 +14140,11 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
                             for(int eye=0;eye<2;++eye){
                                 auto& q=stereoQuads[eye];q.space=g_xrSpace;
                                 q.eyeVisibility=eye?XR_EYE_VISIBILITY_RIGHT:XR_EYE_VISIBILITY_LEFT;
-                                q.pose={{a.pose.qx,a.pose.qy,a.pose.qz,a.pose.qw},{a.pose.x,a.pose.y,a.pose.z}};
+                                cinemascreen::Pose screenPose=a.pose;
+                                if(frame->eyePositionsValid)
+                                    cinemascreen::BinocularFramePose(a.pose,cinemaEyes,(unsigned)eye,screenPose);
+                                q.pose={{screenPose.qx,screenPose.qy,screenPose.qz,screenPose.qw},
+                                        {screenPose.x,screenPose.y,screenPose.z}};
                                 q.size={a.width,a.height};q.subImage=projViews[eye].subImage;
                                 layers[eye]=reinterpret_cast<const XrCompositionLayerBaseHeader*>(&q);
                             }
@@ -14154,7 +14158,7 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
                                         v.size.width,v.size.height,v.pose.position.x,v.pose.position.y,v.pose.position.z,
                                         (void*)v.subImage.swapchain,g_srcW,g_srcH);}
                             }
-                            static bool said=false;if(!said){said=true;Log("cinema stereo: LOCAL LEFT/RIGHT quad pair with distinct eye rects; physical acceptance pending");}
+                            static bool said=false;if(!said){said=true;Log("cinema stereo: LOCAL LEFT/RIGHT zero-disparity frame, distinct scene-eye rects; physical acceptance pending");}
                         }
                     }
                     NoteMenuLayerSubmitted(frame, monoCrop);

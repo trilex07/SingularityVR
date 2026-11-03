@@ -1,3 +1,9 @@
+## 2026-11-03 — C84569BF weapon accepted; cinema frame still differs
+
+- Physical feedback: right gun attachment OK. Cinema right-eye border ends slightly earlier; previous common-FOV fit did not resolve it.
+- Exact session receipts show equal quad sizes/poses. New isolated cinema branch removes screen-frame binocular translation disparity while retaining stereo scene content.
+- Physical outcome PENDING. Active Steam session left untouched. Details: docs/handoffs/cinema-frame-disparity-20261103.md.
+
 ## 2026-11-03 — 97F3D3FF promoted; exact current-wrist/cinema follow-up
 
 - User accepted previous improvement and authorized main; remote main fast-forwarded to 009d2d12.

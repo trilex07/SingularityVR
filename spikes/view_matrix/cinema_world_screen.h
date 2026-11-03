@@ -21,6 +21,22 @@ inline bool EyePoint(const Pose& eye,float x,float y,float z,float (&out)[3]) {
     out[2]=z+qw*tz+qx*ty-qy*tx;
     return std::isfinite(out[0])&&std::isfinite(out[1])&&std::isfinite(out[2]);
 }
+// Keep the cinema FRAME at zero binocular disparity while retaining the
+// independently rendered scene images. A shared physical plane instead gives
+// its edges IPD/distance disparity, even with exactly equal quad dimensions.
+// Translation only: preserve the world anchor orientation and head-motion pan.
+inline bool BinocularFramePose(const Pose& anchor,const Pose (&eyes)[2],unsigned eye,Pose& out) {
+    if(eye>1)return false;
+    const float dx=eyes[1].x-eyes[0].x,dy=eyes[1].y-eyes[0].y,dz=eyes[1].z-eyes[0].z;
+    const float separation=std::sqrt(dx*dx+dy*dy+dz*dz);
+    if(!std::isfinite(separation)||separation<.035f||separation>.09f)return false;
+    Pose staged=anchor;
+    staged.x+=eyes[eye].x-(eyes[0].x+eyes[1].x)*.5f;
+    staged.y+=eyes[eye].y-(eyes[0].y+eyes[1].y)*.5f;
+    staged.z+=eyes[eye].z-(eyes[0].z+eyes[1].z)*.5f;
+    if(!std::isfinite(staged.x)||!std::isfinite(staged.y)||!std::isfinite(staged.z))return false;
+    out=staged;return true;
+}
 struct Anchor {
     Pose pose{};
     float width=0, height=0;
