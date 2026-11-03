@@ -29,3 +29,7 @@ One targeted PSVR2 check when available: Valkyrie then Volk, Impulse L2, release
 - PASS: 23 optimized x86 fixtures, three wiring suites, OLED D3D11 CPU/GPU pixels and device-lifetime tests; actual compiled WeaponLocker factory literal [eax+20Ch] and FName stack fixture.
 - Private artifacts and candidate.json: build/tmd-stick-turn/. Accepted INI copied unchanged from the prior candidate.
 - Steam retained accepted CB43F6DC; new candidate NOT DEPLOYED. Physical result PENDING.
+
+## User-authorized persistent Steam deployment
+
+2026-11-03 10:06: deployed 97F3D3FF via guarded DLL-only installer after full CIM game/writer checks (both zero). Installed hash verified, INI unchanged FC5D4E1C7AE0A9D3F8AA9E80116FEAC3E3629B10A8FC9AA82697C030CFC21C72. Backup deployment/install-backups/20261103-100628; report deployment/install-reports/20261103-100628.json. No launch or timed rollback. Physical acceptance still pending. Cinema code/config unchanged: default engine-cinema scale 60%, Bink video scale 50%, screen distance 2000 mm (keys absent in current INI, so compiled defaults apply).
