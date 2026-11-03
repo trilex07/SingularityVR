@@ -22,3 +22,11 @@ Falsifier: if the edge discrepancy remains with translated poses, inspect conten
 - Stereo D3D9Ex pixel/state, gameplay and optimized build results recorded with final artifact identity below.
 - Active game is not modified or restarted. New candidate deployment requires game closed. No automatic rollback timer.
 - One targeted PSVR2 check: same scene, compare left/right border positions and full image, then head turn and return to gameplay. Gun attachment already confirmed and unchanged.
+
+## Final offline candidate
+
+- Source 0a790b3a; branch fix/cinema-zero-disparity-frame.
+- Optimized x86 PE32 DLL EBA33BEDA274C0DC11890FF62235AE3E74B3497B7EF3DD54D282AD3DEF79A24F.
+- x86/x64 gaze, cinema, damage haptics and mutant fixtures PASS; D3D9Ex pixel/state PASS. Legacy D3D9 HAL NOT RUN (host device rejected).
+- Actual compiled factory/FName ABI PASS, literal [eax+20Ch] preserved.
+- Private artifacts, exact change plan and accepted profile prepared in build/cinema-eye-followup. Steam not modified during active session; physical check PENDING.
