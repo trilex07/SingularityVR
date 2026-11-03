@@ -37,6 +37,22 @@ inline bool BinocularFramePose(const Pose& anchor,const Pose (&eyes)[2],unsigned
     if(!std::isfinite(staged.x)||!std::isfinite(staged.y)||!std::isfinite(staged.z))return false;
     out=staged;return true;
 }
+// User-calibration trial only: extend the RIGHT eye's LEFT edge by a
+// fraction of the original width. Preserve its right edge and source rectangle.
+// Default zero is an exact no-op; this is not a source-crop repair.
+inline bool ExtendRightEyeLeftEdge(Pose& pose,float& width,unsigned eye,int permille) {
+    if(eye>1 || permille<0 || permille>20)return false;
+    if(eye==0 || permille==0)return true;
+    const float n=pose.qx*pose.qx+pose.qy*pose.qy+pose.qz*pose.qz+pose.qw*pose.qw;
+    if(!std::isfinite(n)||n<.25f||n>4.f||!std::isfinite(width)||width<=0 ||
+       !std::isfinite(pose.x)||!std::isfinite(pose.y)||!std::isfinite(pose.z))return false;
+    const float rx=1-2*(pose.qy*pose.qy+pose.qz*pose.qz)/n;
+    const float ry=2*(pose.qx*pose.qy+pose.qw*pose.qz)/n;
+    const float rz=2*(pose.qx*pose.qz-pose.qw*pose.qy)/n;
+    const float extension=width*(permille/1000.f);
+    pose.x-=rx*extension*.5f;pose.y-=ry*extension*.5f;pose.z-=rz*extension*.5f;
+    width+=extension;return true;
+}
 struct Anchor {
     Pose pose{};
     float width=0, height=0;

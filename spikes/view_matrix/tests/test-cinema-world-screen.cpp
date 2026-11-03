@@ -117,5 +117,31 @@ int main(){
         assert(!cinemascreen::BinocularFramePose(anchor,eyes,2,output));
         puts("PASS cinema frame: observed IPD border disparity reproduced; both-eye corner parity under head/turn motion, fixed cyclopean anchor, invalid refusal");
     }
+    {
+        for(int step=0;step<16;++step){
+            const float t=step*.13f;
+            cinemascreen::Pose p{.4f,.5f,-2.3f,std::sin(t)*.3f,std::sin(t)*.4f,std::sin(t)*.5f,0};
+            p.qw=std::sqrt(1-p.qx*p.qx-p.qy*p.qy-p.qz*p.qz);
+            const auto original=p;float width=3.1274493f;
+            assert(cinemascreen::ExtendRightEyeLeftEdge(p,width,0,10));
+            assert(width==3.1274493f&&p.x==original.x&&p.y==original.y&&p.z==original.z);
+            assert(cinemascreen::ExtendRightEyeLeftEdge(p,width,1,0));
+            assert(width==3.1274493f&&p.x==original.x);
+            const float r[3]={1-2*(p.qy*p.qy+p.qz*p.qz),2*(p.qx*p.qy+p.qw*p.qz),2*(p.qx*p.qz-p.qw*p.qy)};
+            assert(cinemascreen::ExtendRightEyeLeftEdge(p,width,1,10));
+            const float oldC[3]={original.x,original.y,original.z},newC[3]={p.x,p.y,p.z};
+            assert(near(width,3.1274493f*1.01f));
+            for(int k=0;k<3;++k){
+                assert(near(oldC[k]+r[k]*3.1274493f*.5f,newC[k]+r[k]*width*.5f));
+                assert(near(newC[k]-r[k]*width*.5f,oldC[k]-r[k]*3.1274493f*.5f-r[k]*3.1274493f*.01f));
+            }
+            assert(p.qx==original.qx&&p.qy==original.qy&&p.qz==original.qz&&p.qw==original.qw);
+        }
+        cinemascreen::Pose bad{};bad.qw=0;float width=3;
+        assert(!cinemascreen::ExtendRightEyeLeftEdge(bad,width,1,10)&&width==3&&bad.x==0);
+        assert(!cinemascreen::ExtendRightEyeLeftEdge(bad,width,2,10));
+        assert(!cinemascreen::ExtendRightEyeLeftEdge(bad,width,1,21));
+        puts("PASS right-eye left-edge trial: fixed right edge, rotations, OFF/left identity, invalid refusal");
+    }
     std::puts("PASS: cinema LOCAL anchor stable under motion, aspect, pause/exit/new-scene lifecycle, invalid tracking fail-closed");
 }

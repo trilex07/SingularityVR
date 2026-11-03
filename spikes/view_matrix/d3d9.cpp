@@ -6014,6 +6014,7 @@ static IDirect3DSurface9* g_cineMonoTemp = nullptr;
 static UINT g_cineMonoTempW = 0, g_cineMonoTempH = 0;
 static D3DFORMAT g_cineMonoTempFmt = D3DFMT_UNKNOWN;
 static bool g_cineMonoFault = false;
+static LONG g_cinemaRightLeftExtensionPermille = 0;
 static LONG g_cutsceneCinemaScalePct = 60; // complete image; user found 85% too wide
 static LONG g_cutsceneNativeCameraFix = 1; // controlled native-camera experiment, cinema only
 static LONG g_cinemaMutantAimAssist = 0; // exact Tackle_Loop assist; opt-in controlled test
@@ -14151,9 +14152,12 @@ void UpdateFromHeadset(IDirect3DDevice9* gameDev) {
                                 cinemascreen::Pose screenPose=a.pose;
                                 if(frame->eyePositionsValid)
                                     cinemascreen::BinocularFramePose(a.pose,cinemaEyes,(unsigned)eye,screenPose);
+                                float screenWidth=a.width;
+                                cinemascreen::ExtendRightEyeLeftEdge(screenPose,screenWidth,(unsigned)eye,
+                                    Rd(g_cinemaRightLeftExtensionPermille));
                                 q.pose={{screenPose.qx,screenPose.qy,screenPose.qz,screenPose.qw},
                                         {screenPose.x,screenPose.y,screenPose.z}};
-                                q.size={a.width,a.height};q.subImage=projViews[eye].subImage;
+                                q.size={screenWidth,a.height};q.subImage=projViews[eye].subImage;
                                 layers[eye]=reinterpret_cast<const XrCompositionLayerBaseHeader*>(&q);
                             }
                             layerCount=2;cinemaQuadSubmitted=true;
@@ -37705,6 +37709,10 @@ void LoadIniSettings() {
         ClampVideoCinemaScale(GetPrivateProfileIntA("Render", "VideoCinemaScalePct", 50, path)));
     g_cutsceneCinemaScalePct = ClampVideoCinemaScale(
         GetPrivateProfileIntA("Render", "CutsceneCinemaScalePct", 60, path));
+    g_cinemaRightLeftExtensionPermille = std::clamp(
+        GetPrivateProfileIntA("Render","CinemaRightLeftExtensionPermille",0,path),0,20);
+    Log("cinema: right-eye left-edge trial=%ld permille (default OFF; physical acceptance pending)",
+        g_cinemaRightLeftExtensionPermille);
     g_cutsceneNativeCameraFix = GetPrivateProfileIntA("Render", "CutsceneNativeCameraFix", 1, path) ? 1 : 0;
     g_cinemaMutantAimAssist = GetPrivateProfileIntA("Render", "CinemaMutantAimAssist", 0, path) ? 1 : 0;
     g_gazeEnabled=GetPrivateProfileIntA("EyeTracking","Enabled",1,path)?1:0;

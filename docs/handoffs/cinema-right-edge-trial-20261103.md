@@ -1,0 +1,7 @@
+# Cinema right-eye left-edge compensation trial — 2026-11-03
+
+User explicitly requests a slightly longer LEFT edge of the RIGHT-eye cinema, alongside the relative 5% world-scale reduction (80 to76). Captions physically PASS on the retained baseline; residual border symmetry FAIL. The previous captured frame shows complete source rectangles and unclipped, equal projected edges. Therefore this change is a user-calibration experiment, NOT a proven repair of compositor/source clipping.
+
+`[Render] CinemaRightLeftExtensionPermille=0` defaults OFF; clamped0..20. Candidate uses10 (1% of original screen width). Only stereo cinema eye1 is affected. Width grows by extension; centre moves minus half-extension along the normalized screen-local right vector. The right edge is invariant; the left extends. Height, orientation, image rectangles, eye ownership and captions are unchanged. The right scene image is slightly stretched horizontally; physical comfort and border correspondence remain PENDING. No mono/video/menu/gameplay correction. WorldScalePct76 remains a personal trial; repository default80 unchanged.
+
+Geometry regressions exercise fixed right edge, exact OFF/left-eye identity, quaternion rotations and invalid refusal. D3D9Ex scene/caption pixels and native shot/haptic regressions must pass. Legacy D3D9 HAL host refusal is NOT RUN, not PASS. No headset or FPS claim from offline tests.
