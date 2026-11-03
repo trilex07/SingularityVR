@@ -126,6 +126,89 @@ int main() {
     assert(reference.Correct(key,original,4,cameraLocal,ride,moved,3012,longNow+502,right,&sameFrameGun));
     assert(LargestDifference(sameFrameGun,Product(expected,moved))<.03f);
 
+    // Actual CB43F6DC PSVR2 refusal, frame 7607. Rotation's pivot
+    // compensation was 258.909 UU, although the root moved only 211.930 UU.
+    // The coefficient-based guard fell back to the native/head-owned gun.
+    {
+        const float capturedRootRows[4][4]={
+            {0.3915916f,-0.07211018f,-0.9173095f,0.f},
+            {-0.5570611f,0.7748869f,-0.2987183f,0.f},
+            {0.7323517f,0.6279724f,0.2632686f,0.f},
+            {-98.98649f,-57.06403f,-39.52105f,1.f},
+        };
+        const Mat capturedRoot=Matrix(capturedRootRows);
+        const float capturedLocalRows[4][4]={
+            {-0.6800389f,0.7331761f,0.f,0.f},
+            {-8.978521e-17f,-8.327799e-17f,-1.f,0.f},
+            {-0.7331761f,-0.6800389f,1.224606e-16f,0.f},
+            {3.085938f,2.861816f,-148.75f,1.f},
+        };
+        const Mat capturedLocal=Matrix(capturedLocalRows);
+        const float capturedRideRows[4][4]={
+            {-0.7398694f,-0.097303f,0.07500491f,0.f},
+            {-0.09585835f,0.7436037f,0.01909769f,0.f},
+            {-0.07684296f,0.009252965f,-0.7459959f,0.f},
+            {3.528355f,16.89458f,-33.20248f,1.f},
+        };
+        const Mat capturedRide=Matrix(capturedRideRows);
+        const float capturedRawRows[4][4]={
+            {0.6464674f,-0.2221442f,0.3085965f,0.f},
+            {0.3625877f,0.5434458f,-0.3683704f,0.f},
+            {-0.1144988f,0.4667104f,0.5758224f,0.f},
+            {-8.98482f,3.405397f,-27.43406f,1.f},
+        };
+        const Mat capturedRaw=Matrix(capturedRawRows);
+        const float capturedWristRows[4][4]={
+            {0.5773802f,-0.2558765f,-0.4045485f,0.f},
+            {0.4154352f,0.5827417f,0.2243345f,0.f},
+            {0.2377937f,-0.3967866f,0.5903516f,0.f},
+            {-2.880146f,-20.69319f,-35.68251f,1.f},
+        };
+        const Mat capturedWrist=Matrix(capturedWristRows);
+        const float capturedNormalRows[4][4]={
+            {0.6155529f,0.4163581f,-0.1011957f,0.f},
+            {-0.2631842f,0.5071729f,0.4858082f,0.f},
+            {0.3381251f,-0.3632101f,0.5623609f,0.f},
+            {-1.640893f,-19.70633f,-19.61127f,1.f},
+        };
+        const Mat capturedNormal=Matrix(capturedNormalRows);
+        const float capturedAttachmentRows[4][4]={
+            {-0.9878559f,-0.09991282f,0.1189891f,0.f},
+            {-0.1040552f,-0.143295f,-0.9841951f,0.f},
+            {0.115384f,-0.9846237f,0.1311584f,0.f},
+            {-16.47694f,14.90055f,-107.3749f,1.f},
+        };
+        const Mat capturedAttachment=Matrix(capturedAttachmentRows);
+        Reference captured;
+        captured.key=key;captured.valid=captured.wristValid=true;
+        captured.tick=1000;captured.wristTick=1266;captured.wristFrame=7606;
+        captured.normalWrist=capturedWrist;captured.normalRawController=capturedNormal;
+        captured.gunFromWrist=capturedAttachment;
+        float palette[kMaxBones][3][4]{};
+        armbind::ToGpu(capturedRoot,palette[key.rootSlot]);
+        Mat actual;
+        assert(captured.Correct(key,palette,4,capturedLocal,capturedRide,capturedRaw,
+                                7607,1281,right,&actual,&gate));
+        Mat skin,inverseCapturedRoot;
+        assert(armbind::FromGpu(right[key.rootSlot],skin));
+        assert(skeletal::Inverse(inverseCapturedRoot.m,capturedRoot.m));
+        const Mat oldDelta=Product(inverseCapturedRoot,skin);
+        const auto oldP=armbind::Position(oldDelta);
+        const float oldLength=std::sqrt(oldP.x*oldP.x+oldP.y*oldP.y+oldP.z*oldP.z);
+        assert(oldLength>256.f && Distance(skin,capturedRoot)<256.f);
+        const Mat desired=Product(Product(Product(capturedAttachment,capturedWrist),
+            [&](){Mat inv;assert(skeletal::Inverse(inv.m,capturedNormal.m));return inv;}()),capturedRaw);
+        assert(LargestDifference(actual,desired)<.03f);
+        std::printf("captured turn guard: coefficient %.4f UU, root displacement %.4f UU, final error %.6f\n",
+                    oldLength,Distance(skin,capturedRoot),LargestDifference(actual,desired));
+        // A genuinely excessive root move still rejects; failed output is untouched.
+        Reference tooFar=captured;tooFar.gunFromWrist.m[3][0]+=2000.f;
+        float sentinel[kMaxBones][3][4];std::memcpy(sentinel,right,sizeof(right));
+        assert(!tooFar.Correct(key,palette,4,capturedLocal,capturedRide,capturedRaw,
+                               7607,1281,right,nullptr,&gate));
+        assert(gate==CorrectGate::Displacement && std::memcmp(sentinel,right,sizeof(right))==0);
+    }
+
     // CTAB declares 75 slots but the audited body only consumes its own map.
     // Unused registers are not skin matrices; active invalid slots still reject.
     assert(PaletteBones(75,4,true)==4&&PaletteBones(75,4,false)==75);

@@ -142,7 +142,11 @@ struct Reference {
         if(!Uniform(predictedWrist)||!Uniform(desiredFinal))return fail(CorrectGate::Predicted);
         if(!armbind::Rigid(targetSkin))return fail(CorrectGate::Target);
         if(!armbind::Rigid(delta))return fail(CorrectGate::Delta);
-        const auto p=armbind::Position(delta);
+        // Bound the displacement of the actual root, not the translation
+        // coefficient of a rotation about the skin-space origin. The latter
+        // includes pivot compensation and changes when the coordinate origin
+        // changes (e.g. native camera yaw after stick turning).
+        const auto p=armbind::Position(targetSkin)-armbind::Position(root);
         if(p.x*p.x+p.y*p.y+p.z*p.z>256.f*256.f)return fail(CorrectGate::Displacement);
         float staged[kMaxBones][3][4]{};
         for(unsigned i=0;i<bones;++i){

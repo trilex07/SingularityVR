@@ -1,3 +1,10 @@
+## 2026-11-03 — CB43F6DC accepted and promoted; residual TMD turning
+
+- User accepted the installed CB43F6DC candidate and explicitly authorized main promotion. Remote main fast-forwarded to 752efc07.
+- Acceptance preserves measured Valkyrie insertion, TMD pose order and optional gaze targeting. User additionally reported weapon detachment during stick turning after Impulse; this residual is NOT marked physical PASS.
+- Follow-up branch fix/tmd-weapon-stick-turn reproduces actual frame-7607 displacement rejection and fixes its origin-dependent measurement. Installed accepted DLL remains unchanged.
+- Evidence and test procedure: docs/handoffs/tmd-stick-turn-displacement-20261103.md.
+
 ## 2026-11-03 — A808198C accepted; Valkyrie/TMD/gaze candidate
 
 - User accepted installed A808198C and authorized main promotion; remote main is ecec5ebc. Accepted renderer, bank and user settings preserved.
