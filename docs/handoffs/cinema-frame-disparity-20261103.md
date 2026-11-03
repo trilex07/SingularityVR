@@ -30,3 +30,7 @@ Falsifier: if the edge discrepancy remains with translated poses, inspect conten
 - x86/x64 gaze, cinema, damage haptics and mutant fixtures PASS; D3D9Ex pixel/state PASS. Legacy D3D9 HAL NOT RUN (host device rejected).
 - Actual compiled factory/FName ABI PASS, literal [eax+20Ch] preserved.
 - Private artifacts, exact change plan and accepted profile prepared in build/cinema-eye-followup. Steam not modified during active session; physical check PENDING.
+
+## Steam installation
+
+MAIN deployed EBA33BED after full CIM game/writer checks on 2026-11-03. All 16 profile files verified; INI unchanged. Backup: deployment/install-backups/20261103-105921. Report: deployment/install-reports/20261103-105921.json. No launch or automatic rollback timer; PSVR2 acceptance PENDING.
