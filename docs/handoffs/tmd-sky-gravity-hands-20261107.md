@@ -85,3 +85,15 @@ both hands. Falls back to the existing path on any invalid input.
 L1: `test-tracked-grip-wrist.cpp` PASS (head/body/recenter invariance, four mounts).
 L2: optimized x86 build PASS, DLL SHA-256 `7F9FD554...E3F91A`.
 Physical PSVR2 alignment and both black artifacts: UNPROVEN.
+
+## Physical PSVR2 result 2026-11-07 22:32 (DLL 7F9FD554, SteamVR runtime)
+
+* TrackedGripWrist **FAILED / disproved**: receipts show applied=1 on both sides,
+  yet right gun pointed up and left hand was upside-down, fist toward camera.
+  The grip-quaternion axis mapping `{y,z,-x}` is wrong for real controllers; do not re-enable.
+* Bink/loading cinema showed crossed halves (right eye = left half, left eye = right half).
+  Source diff vs accepted 9488a26a touches no cinema code; build used `-Performance`.
+  Cause UNPROVEN; check whether accepted 7AD356F8 shows it before blaming this build.
+* TmdVisualAudit captured neutral, sky and gravity-input traces + SBS:
+  `build/psvr2-trackedgrip-20261107/` (shadow-pass-15292-1..3, capture_*.bmp). Not yet analysed.
+* Accepted DLL 7AD356F8 / INI 95D1EE33 restored and hash-verified.
