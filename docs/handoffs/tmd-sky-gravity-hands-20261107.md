@@ -106,3 +106,11 @@ Accepted 7AD356F8 was built WITHOUT -Performance; 7F9FD554 was built with it - p
 suspect for the crossed Bink/loading halves. 81A2FE6F is built without it.
 Installed with accepted INI + TrackedGripWrist=1 + TmdVisualAudit=1 only.
 Left-hand upside-down is NOT explained by 44deg pitch; physical result pending.
+
+## Crossed Bink/loading halves - origin
+
+Not the -Performance flag. The ini has `[Render] CutsceneStereoCinema=1`
+(c181f3a7, 2026-11-02, "native stereo cinema candidate") and
+`CinemaRightLeftExtensionPermille=20` (e4c2065a, 2026-11-03 trial). The 16:19/16:29
+SteamVR sessions ran a DLL that ignores both keys (no "stereo cinema" log line);
+7AD356F8 and every later build honour them. Test INI now sets both to 0. Pending user check.
