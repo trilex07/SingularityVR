@@ -13,6 +13,7 @@ static tmdgravity::Grip g_tmdGravityLatch;
 #include "hand_anchor_probe.h"
 #include "dual_hand_pose_probe.h"
 #include "hand_anchor_math.h"
+#include "tracked_grip_wrist.h"
 #include "two_hand_spread.h"
 #include "texture_bridge_contract.h"
 static LONG g_textureBridgeOwned=0;
@@ -2258,6 +2259,7 @@ static LONG g_dualWeaponTmdGunScale=0; // opt-in native gun_scale result, no cac
 static LONG g_dualWeaponTmdGunPose=0; // opt-in exact-weapon normal-root retarget during HANDS_TMD
 static dualtmdgunpose::Reference g_dualTmdGunPose;
 static LONG g_dualWeaponTmdRightWrist=0; // opt-in original TMD right-wrist target
+static bool g_trackedGripWrist=false; // opt-in anatomical grip pose; no guessed device mounting
 static LONG g_dualHandActionPose=0; // source-wrist normalization; default OFF
 static bool g_trackedDepthPrimeFix=false; // exact late-color siblings only; default OFF
 static bool g_trackedDepthPrimeProbe=false; // bounded first-refusal only; OFF
@@ -17958,12 +17960,45 @@ static bool DualActionAllowed() {
         NativeAnimatedHandsNow(),Rd(g_weaponHolstered)!=0,Rd(g_twoHandActive)!=0,
         g_nextOwnsGrip||g_centurionOwnsGrip||g_hipKnifeState.held>=0,AimHand()==1});
 }
+static bool TrackedGripCamera(int32_t& yaw,int32_t& pitch) {
+    // Native camera mode does not execute the matrix-rotation-only cache update.
+    // Read this frame's native rotation at the render consumer, without changing
+    // the global matrix-rotation cache or publishing gameplay aim.
+    if(!g_camera || !Readable((void*)(g_camera+ACTOR_ROTATION),12))return false;
+    const int32_t* rotation=reinterpret_cast<const int32_t*>(g_camera+ACTOR_ROTATION);
+    pitch=rotation[0];yaw=rotation[1];return true;
+}
 static bool ApplyDualActionC(float C[4][4],bool aim) {
     // Input/native gameplay threads never consume this render-owned frame cache.
     if(!Rd(g_dualHandActionPose)||GetCurrentThreadId()!=(DWORD)Rd(g_dualActionRenderThread)||
        !DualActionAllowed())return false;
     const auto key=DualActionKey();
-    const bool applied=g_dualActionFrame.Apply(key,aim,C);
+    bool applied=false;
+    const unsigned physical=aim?AimHand():OffHand();
+    if(g_trackedGripWrist && g_glovePoseValid[physical] && g_dualActionFrame.Current(key)) {
+        const auto& bind=armnatural::TmdBind();
+        const auto& source=aim?g_dualActionFrame.rightSourceWorld:g_dualActionFrame.leftSourceWorld;
+        float sourceScale=0;
+        armbind::Mat desired;
+        int32_t cameraYaw=0,cameraPitch=0;
+        if(bind.ready && TrackedGripCamera(cameraYaw,cameraPitch) && gloves::UniformScale(source.m,sourceScale) &&
+           trackedgrip::Desired(physical,key.vertices,g_glovePose[physical],
+               {g_centrePos[0],g_centrePos[1],g_centrePos[2]},g_centreYaw,
+               g_baseYaw*(6.2831853f/65536.f),MetresToUU(),sourceScale*Rd(g_gunScalePct)*.01f,
+               g_dualActionFrame.local,trackedgrip::NativeView(cameraYaw*(6.2831853f/65536.f),
+                   cameraPitch*(6.2831853f/65536.f)),desired))
+            applied=trackedgrip::Target(source,desired,C);
+    }
+    if(g_trackedGripWrist) {
+        static unsigned gripReceipts=0;
+        const unsigned bit=1u<<((aim?2:0)+(applied?1:0));
+        if(!(gripReceipts&bit)) {
+            gripReceipts|=bit;
+            Log("tracked-grip-wrist: frame=%u side=%u applied=%d gripValid=%d sourceCurrent=%d; current component/view mount to tracked grip quaternion, default OFF",
+                key.frame,physical,applied?1:0,g_glovePoseValid[physical]?1:0,g_dualActionFrame.Current(key)?1:0);
+        }
+    }
+    if(!applied)applied=g_dualActionFrame.Apply(key,aim,C);
     // One receipt per profile/side/outcome: exposes draw-before-witness ordering
     // without per-frame logging or GPU readback. Unknown profiles remain untouched.
     const unsigned profile=key.vertices==5799?0:key.vertices==11387?1:key.vertices==8297?2:key.vertices==11389?3:4;
@@ -17985,6 +18020,16 @@ static bool PublishDualActionSource(const trackedsource::Source& source,bool omi
     armbind::Mat local;memcpy(local.m,source.local,sizeof(local));
     const bool ready=g_dualActionFrame.Capture(key,local,bind.bind[9],source.left,bind.bind[51],source.right);
     InterlockedExchange(&g_dualActionRenderThread,(LONG)GetCurrentThreadId());
+    static unsigned basisSequence=0;
+    if(ready && g_tmdVisualAudit && shadowtrace::active && basisSequence!=shadowtrace::sequence) {
+        basisSequence=shadowtrace::sequence;
+        int32_t cameraYaw=0,cameraPitch=0;
+        const bool cameraKnown=TrackedGripCamera(cameraYaw,cameraPitch);
+        Log("tracked-grip basis: sequence=%u frame=%u gun=%u cameraKnown=%d cameraUU=%d,%d baseYaw=%d centreYaw=%.9g local=[%.9g,%.9g,%.9g;%.9g,%.9g,%.9g;%.9g,%.9g,%.9g] (ORIGINAL component, before correction)",
+            basisSequence,key.frame,key.vertices,cameraKnown,cameraYaw,cameraPitch,g_baseYaw,g_centreYaw,
+            local.m[0][0],local.m[0][1],local.m[0][2],local.m[1][0],local.m[1][1],local.m[1][2],local.m[2][0],local.m[2][1],local.m[2][2]);
+    }
+
     // Compare ORIGINAL uploads, not final independent palettes. A mismatch is
     // evidence of a different producer/space, not permission to freeze a pose.
     static dualaction::Key primeKey{};
@@ -18626,6 +18671,7 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
             if(g_gunHeadOffset){h.x+=g_hmdOffset[0];h.y+=g_hmdOffset[1];h.z+=g_hmdOffset[2];}
             if(!handanchor::TargetWrist(targetC[side],noTmdBind[side?51:9],
                 reinterpret_cast<const float (*)[4]>(&saved[ws[side]*3]),local,aim?primary:off,h))return 0;
+
         }
         memcpy(primary,targetC[AimHand()],sizeof(primary));memcpy(off,targetC[OffHand()],sizeof(off));
         static LONG saidAnchor=0;
@@ -34070,6 +34116,7 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
     shadowTraceStable=shadowTraceReady?std::min(shadowTraceStable+1,30u):0;
     const auto auditScene=g_tmdVisualSchedule.Update(g_tmdVisualAudit,
         shadowTraceStable>=15 && Rd(g_haveTMD)==1 && InGameplay() &&
+        (!Rd(g_dualHandActionPose)||!DualWeaponTmdContext()||dualhandreference::Right((unsigned)Rd(g_gunVerts))) &&
         !Rd(g_inCinematic)&&!Rd(g_panelOpen)&&!Rd(g_vrUiMenu)&&!Rd(g_gamePaused),
         shadowtrace::active||shadowtrace::pending,shadowtrace::sequence,
         g_handPitchRad[0],g_tmdGravityLatch.power,GetTickCount64());
@@ -38556,6 +38603,8 @@ void LoadIniSettings() {
     InterlockedExchange(&g_dualWeaponTmdRightWrist,GetPrivateProfileIntA("Input","DualWeaponTmdRightWrist",0,path)!=0);
     InterlockedExchange(&g_dualHandActionPose,GetPrivateProfileIntA("Input","DualHandActionPose",0,path)!=0);
     Log("ini: DualHandActionPose=%ld (default OFF; original material0 wrist parent, render only)",Rd(g_dualHandActionPose));
+    g_trackedGripWrist=GetPrivateProfileIntA("Input","TrackedGripWrist",0,path)!=0;
+    Log("ini: TrackedGripWrist=%d (default OFF; original anatomy -> live grip quaternion/position; shared hand/TMD/gun ride)",g_trackedGripWrist?1:0);
     g_trackedDepthPrimeFix=GetPrivateProfileIntA("Render","TrackedDepthPrimeFix",0,path)!=0;
     g_trackedDepthPrimeProbe=GetPrivateProfileIntA("Diagnostic","TrackedDepthPrimeProbe",0,path)!=0;
     g_trackedDepthSourcePose=GetPrivateProfileIntA("Render","TrackedDepthSourcePose",0,path)!=0;

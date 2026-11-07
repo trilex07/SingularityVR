@@ -47,7 +47,7 @@ inline bool Correction(const Mat& bind,const float skin[3][4],const Mat& local,
     out=result;return true;
 }
 struct Frame {
-    Key key{};bool valid=false;Mat local{},left{},right{},rightSourceWorld{};
+    Key key{};bool valid=false;Mat local{},left{},right{},rightSourceWorld{},leftSourceWorld{};
     void Clear(){valid=false;}
     bool Capture(Key k,const Mat& sourceLocal,const Mat& leftBind,const float leftSkin[3][4],
                  const Mat& rightBind,const float rightSkin[3][4]){
@@ -60,6 +60,8 @@ struct Frame {
         Mat sourceJoint;
         if(!armbind::CurrentJoint(rightBind,rightSkin,sourceJoint))return false;
         rightSourceWorld=Product(sourceJoint,sourceLocal);
+        if(!armbind::CurrentJoint(leftBind,leftSkin,sourceJoint))return false;
+        leftSourceWorld=Product(sourceJoint,sourceLocal);
         key=k;local=sourceLocal;left=l;right=r;valid=true;return true;
     }
     bool Current(Key k)const{return valid&&key==k;}

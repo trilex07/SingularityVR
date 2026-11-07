@@ -75,3 +75,13 @@ WeaponLocker regressions, Python wiring checks and OLED D3D11 GPU/reference
 comparisons. Additional shadow-trace and hand-anchor fixtures are recorded in
 the local build evidence. This is L1/L2 evidence only; all three requested
 visual/alignment corrections remain UNPROVEN pending the distinguishing capture.
+
+## Tracked grip wrist (MAIN continuation)
+
+Default-OFF `[Input] TrackedGripWrist=1` (requires `DualHandActionPose=1`):
+removes the native camera rotation from the component mount and drives the
+original hand/TMD/gun anatomy by the full live grip quaternion and position,
+both hands. Falls back to the existing path on any invalid input.
+L1: `test-tracked-grip-wrist.cpp` PASS (head/body/recenter invariance, four mounts).
+L2: optimized x86 build PASS, DLL SHA-256 `7F9FD554...E3F91A`.
+Physical PSVR2 alignment and both black artifacts: UNPROVEN.

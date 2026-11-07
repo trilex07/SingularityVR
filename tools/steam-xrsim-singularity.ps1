@@ -16,6 +16,7 @@ param(
     [switch]$RestartSteam,
     [switch]$KeepCandidate,
     [switch]$SkipLaunch,
+    [switch]$UseInstalled, # read-only payload: launch only an exact installed DLL/INI pair
     [switch]$NoRestore,
     [string]$ReportDirectory = 'C:\Users\Trilex\vr-mods\deployment\visual-audit-20261008'
 )
@@ -130,6 +131,12 @@ function Copy-Unlocked([string]$Source, [string]$Destination, [int]$Attempts = 1
     throw "Unable to replace file (sharing, access, or path failure): $Destination`nLast operation: $lastFailure`n$detail"
 }
 
+function Assert-GameClosed {
+    if (@(Get-Process -Name Singularity,SingularityVR -ErrorAction SilentlyContinue).Count) {
+        throw 'Singularity is running; normal exit required before install/restore (no forced termination).'
+    }
+}
+
 function Save-Backup {
     New-Item -ItemType Directory -Force -Path $backupDir | Out-Null
     $manifest = [ordered]@{}
@@ -145,7 +152,7 @@ function Restore-Backup {
     $manifestPath = Join-Path $backupDir 'manifest.json'
     if (-not (Test-Path -LiteralPath $manifestPath)) { return }
     $manifest = Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json
-    Stop-ExactProcesses @('Singularity','SingularityVR')
+    Assert-GameClosed
     foreach ($name in @('d3d9.dll','SingularityVR.ini','SingularityVfx.dll')) {
         $present = [bool]$manifest.$name
         $dst = Join-Path $gameDir $name
@@ -313,22 +320,46 @@ $report = [ordered]@{
 }
 
 try {
-    Stop-ExactProcesses @('Singularity','SingularityVR')
+    Assert-GameClosed
     if ($StopSteamVR) { Stop-ExactProcesses @('vrserver','vrcompositor','vrdashboard','steamvr') }
+    if ($UseInstalled) {
+        foreach ($name in @('d3d9.dll','SingularityVR.ini')) {
+            if ((Get-FileHash -LiteralPath (Join-Path $candidateDir $name)).Hash -ne
+                (Get-FileHash -LiteralPath (Join-Path $gameDir $name)).Hash) {
+                throw "UseInstalled requires exact installed identity: $name"
+            }
+        }
+        Write-Runner 'UseInstalled: no deployment or restore; exact installed DLL/INI verified.'
+    } else {
     Save-Backup
     Copy-Unlocked (Join-Path $candidateDir 'd3d9.dll') $dllPath
     Copy-Unlocked (Join-Path $candidateDir 'SingularityVR.ini') $iniPath
     $candidateVfx = Join-Path $candidateDir 'SingularityVfx.dll'
     if (Test-Path -LiteralPath $candidateVfx) { Copy-Unlocked $candidateVfx $vfxPath }
-    elseif (Test-Path -LiteralPath $vfxPath) { Remove-Item -LiteralPath $vfxPath -Force }
+    # An omitted optional VFX payload does not authorize removal of installed VFX.
+    }
     $report.dll_after_install = (Get-FileHash $dllPath -Algorithm SHA256).Hash
     Write-Runner "Installed candidate $candidateLabel ($($report.dll_after_install))."
 
     if (-not $SkipLaunch) {
-        $testBridge = Join-Path $repoRoot 'tools\singularityvr-test-bridge.ps1'
-        Write-Runner 'Running mandatory test-bridge Preflight before launch.'
-        & $testBridge -Action Preflight -SteamRoot $SteamRoot -LogRoot $logRoot `
-            -XrSimDirectory (Split-Path -Parent $RuntimeManifest) | Out-Host
+        # Read-only preflight uses the actual installed image, not the retired bridge.
+        $image = [IO.File]::ReadAllBytes($dllPath)
+        if ($image.Length -lt 64) { throw 'Candidate is not a PE image' }
+        $pe = [BitConverter]::ToInt32($image,0x3c)
+        if ($pe -lt 0 -or $pe+26 -gt $image.Length -or
+            [BitConverter]::ToUInt32($image,$pe) -ne 0x4550 -or
+            [BitConverter]::ToUInt16($image,$pe+4) -ne 0x14c -or
+            [BitConverter]::ToUInt16($image,$pe+24) -ne 0x10b -or
+            $report.dll_after_install -ne $report.dll_candidate) {
+            throw 'Installed candidate must be hash-identical x86 PE32'
+        }
+        $runtimeConfig = Get-Content -LiteralPath $RuntimeManifest -Raw | ConvertFrom-Json
+        $runtimeLibrary = [string]$runtimeConfig.runtime.library_path
+        if (-not [IO.Path]::IsPathRooted($runtimeLibrary)) {
+            $runtimeLibrary = Join-Path (Split-Path -Parent $RuntimeManifest) $runtimeLibrary
+        }
+        if (-not (Test-Path -LiteralPath $runtimeLibrary -PathType Leaf)) { throw 'Simulator library missing' }
+        Write-Runner 'Installed x86 PE32, candidate hash and simulator library preflight PASS.'
         $env:XR_RUNTIME_JSON = $RuntimeManifest
         $env:DVR_XRSIM_DIR = Split-Path -Parent $RuntimeManifest
         $logBefore = Get-NewestLog $startedAt
@@ -350,7 +381,7 @@ try {
                 Start-Sleep -Seconds 2
             }
             if (-not (Get-Process -Name steam -ErrorAction SilentlyContinue)) {
-                $steamBoot = Start-Process -FilePath $steamExe -WorkingDirectory $SteamRoot -ArgumentList @('-silent') -PassThru
+                $steamBoot = Start-Process -FilePath $steamExe -WorkingDirectory $SteamRoot -ArgumentList @('-silent') -WindowStyle Hidden -PassThru
                 Write-Runner "Started Steam client PID $($steamBoot.Id); waiting for app registry."
                 Start-Sleep -Seconds 12
             }
@@ -415,25 +446,27 @@ try {
         }
     }
     if ($report.launched) {
-        $testBridge = Join-Path $repoRoot 'tools\singularityvr-test-bridge.ps1'
-        try {
-            Write-Runner 'Collecting runtime log, captures, xrsim state, and manifest through the test bridge.'
-            & $testBridge -Action Collect -SteamRoot $SteamRoot -LogRoot $logRoot `
-                -XrSimDirectory (Split-Path -Parent $RuntimeManifest) | Out-Host
-        } catch {
-            Write-Runner "Test-bridge collection failed: $($_.Exception.Message)"
+        $evidenceDir = Join-Path $ReportDirectory ("evidence-"+$runStamp)
+        New-Item -ItemType Directory -Force -Path $evidenceDir | Out-Null
+        if ($log) { Copy-Item -LiteralPath $log.FullName -Destination (Join-Path $evidenceDir $log.Name) }
+        foreach ($name in @('state.json','xrsim.log')) {
+            $source = Join-Path (Split-Path -Parent $RuntimeManifest) $name
+            if (Test-Path -LiteralPath $source -PathType Leaf) {
+                Copy-Item -LiteralPath $source -Destination (Join-Path $evidenceDir $name)
+            }
         }
+        Write-Runner "Collected current run log and simulator state: $evidenceDir"
     }
     $env:XR_RUNTIME_JSON = $oldRuntime
     $env:DVR_XRSIM_DIR = $oldXrsimDir
     $report.finished = (Get-Date).ToString('o')
     Write-ReportFile
     Write-Runner "Cleanup report written"
-    if (-not $KeepCandidate -and -not $NoRestore -and (Test-Path -LiteralPath $backupDir)) {
+    if (-not $UseInstalled -and -not $KeepCandidate -and -not $NoRestore -and (Test-Path -LiteralPath $backupDir)) {
         try { Restore-Backup; $report.restored = $true }
         catch { $report.restore_error = $_.Exception.Message; Write-Runner "Restore error: $($_.Exception.Message)" }
     }
-    if (-not $KeepCandidate -and -not $NoRestore -and (Test-Path -LiteralPath $backupDir)) {
+    if (-not $UseInstalled -and -not $KeepCandidate -and -not $NoRestore -and (Test-Path -LiteralPath $backupDir)) {
         Write-Runner "Cleanup restore complete"
     } else {
         Write-Runner "Cleanup restore skipped by -NoRestore or -KeepCandidate"
