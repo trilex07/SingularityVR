@@ -137,3 +137,15 @@ Producer of the 1058x1080 pass not yet identified.
   rectangles in the room. Not yet proven to be the artifact rather than level geometry.
   Opaque foreground SceneColor group 414 (colorWrite=7, moved=2) is a lead, not proof.
   `tools/shadow-pass-groups.py <trace> <regex>` lists groups by PS CTAB names.
+
+## Gravity black rectangles - distinguishing experiment (E0E08775)
+
+User confirmed the two black rectangles in capture 22:53:24 ARE the artifact.
+Trace 17792-3: only the gravity frame contains modulate decal groups 311/312
+(srcBlend=DESTCOLOR dstBlend=ZERO, stride 12, PS CTAB DecalLocalBinormal/
+DecalLocalTangent, 4 draws per eye). Shadow projection 410/411 is in every frame and
+projector reconstruction never fired (ps gate = flashlight shader only), so neither
+is specific. Default-OFF `[Diagnostic] DropDecalLocalTangent=1` skips only indexed
+draws whose bound PS names DecalLocalTangent. Rectangles gone = producer proven;
+still present = decal hypothesis disproved. Cache keys on PS pointer without AddRef
+(diagnostic only).

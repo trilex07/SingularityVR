@@ -14840,8 +14840,27 @@ static HRESULT STDMETHODCALLTYPE ShadowTraceStretch(IDirect3DDevice9* dev,IDirec
     shadowtrace::NoteCopy(src,from,dst,to,filter,hr);return hr;
 }
 static ShadowSetPS shadowOriginalPS=nullptr;
+// [Diagnostic] DropDecalLocalTangent: default OFF distinguishing experiment for
+// the gravity black rectangles (trace 17792-3 groups 311/312, modulate decal PS
+// whose CTAB names DecalLocalBinormal/DecalLocalTangent, only in gravity frame).
+static bool g_dropDecalLocalTangent=false;
+static IDirect3DPixelShader9* g_decalLtCache[64]{};static bool g_decalLtMatch[64]{};static unsigned g_decalLtNext=0;
+static bool g_decalLtBound=false;static volatile LONG g_decalLtDropped=0;
+static bool DecalLocalTangentPS(IDirect3DPixelShader9* ps){
+    if(!ps)return false;
+    for(unsigned i=0;i<64;++i)if(g_decalLtCache[i]==ps)return g_decalLtMatch[i];
+    bool match=false;UINT bytes=0;
+    if(SUCCEEDED(ps->GetFunction(nullptr,&bytes))&&bytes>0&&bytes<=65536){
+        std::vector<unsigned char> code(bytes);UINT cap=bytes;
+        if(SUCCEEDED(ps->GetFunction(code.data(),&cap))){
+            static const char k[]="DecalLocalTangent";
+            match=std::search(code.begin(),code.end(),k,k+sizeof(k)-1)!=code.end();}}
+    const unsigned slot=g_decalLtNext++%64;g_decalLtCache[slot]=ps;g_decalLtMatch[slot]=match; // pointer identity only, no AddRef
+    if(match){static LONG said=0;if(!InterlockedExchange(&said,1))Log("decal-local-tangent: PS %p matched (%u bytes)",ps,bytes);}
+    return match;
+}
 static HRESULT STDMETHODCALLTYPE ShadowTraceSetPS(IDirect3DDevice9* dev,IDirect3DPixelShader9* ps) {
-    const HRESULT hr=shadowOriginalPS(dev,ps);if(SUCCEEDED(hr)){shadowtrace::bound.ps=ps;shadowfix::BindPS(ps);worldshadowfix::BindPS(ps);projectorfix::BindPS(ps);nativefx::BindPS(ps);}return hr;
+    const HRESULT hr=shadowOriginalPS(dev,ps);if(SUCCEEDED(hr)){shadowtrace::bound.ps=ps;shadowfix::BindPS(ps);worldshadowfix::BindPS(ps);projectorfix::BindPS(ps);nativefx::BindPS(ps);g_decalLtBound=g_dropDecalLocalTangent&&DecalLocalTangentPS(ps);}return hr;
 }
 // Fix-I/menu census: wire the dormant MenuDrawTrace recorder into the four draw hooks
 // (calls below) with path masks in StereoPairBody (1) and HudStereoPair (2); provider
@@ -21160,6 +21179,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
     hotpath::scope hotScope(g_hotPathSampler, hotpath::Family::draw_hook);
     MenuDrawTraceRecord(dev,1,t,primCount,numVertices,startIndex,minIndex,baseVertex,nullptr,0);   // fix-I census
     InterlockedIncrement(&g_frameDrawIdx);
+    if(g_decalLtBound){const LONG n=InterlockedIncrement(&g_decalLtDropped);if(n==1||n%2000==0)Log("decal-local-tangent: dropped=%ld",n);return D3D_OK;}
     if(g_tmdShortGauntlet && gloveisolate::IsArmFleshSection(numVertices,startIndex,primCount)) {
         static LONG saidExact=0;
         if(InterlockedCompareExchange(&saidExact,1,0)==0)
@@ -38633,6 +38653,8 @@ void LoadIniSettings() {
     g_trackedDepthSourcePose=GetPrivateProfileIntA("Render","TrackedDepthSourcePose",0,path)!=0;
     g_tmdTrackedMuzzle=GetPrivateProfileIntA("Render","TmdTrackedMuzzle",0,path)!=0;
     g_tmdVisualAudit=GetPrivateProfileIntA("Diagnostic","TmdVisualAudit",0,path)!=0;
+    g_dropDecalLocalTangent=GetPrivateProfileIntA("Diagnostic","DropDecalLocalTangent",0,path)!=0;
+    Log("ini: DropDecalLocalTangent=%d (default OFF; skip only modulate decals whose PS names DecalLocalTangent)",g_dropDecalLocalTangent?1:0);
     Log("ini: TmdVisualAudit=%d (default OFF; three bounded neutral/sky/gravity-input driver traces + SBS, no visual correction)",g_tmdVisualAudit?1:0);
     g_tmdTrackedBeam=GetPrivateProfileIntA("Render","TmdTrackedBeam",0,path)!=0;
     g_tmdTrackedAgeParticles=GetPrivateProfileIntA("Render","TmdTrackedAgeParticles",0,path)!=0;
