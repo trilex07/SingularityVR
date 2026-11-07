@@ -17981,8 +17981,13 @@ static bool ApplyDualActionC(float C[4][4],bool aim) {
         float sourceScale=0;
         armbind::Mat desired;
         int32_t cameraYaw=0,cameraPitch=0;
+        // PSVR2 22:32 evidence: grip = aim * rotX(+44.4deg), constant on both
+        // hands and all samples. The mount assumes -Z = barrel, which is the AIM
+        // axis; grip orientation pitched the gun ~44deg up. Grip position kept.
+        gloves::Pose drive=g_glovePose[physical];
+        {const auto& a=g_handAimOrientation[physical];drive.orientation={a.x,a.y,a.z,a.w};}
         if(bind.ready && TrackedGripCamera(cameraYaw,cameraPitch) && gloves::UniformScale(source.m,sourceScale) &&
-           trackedgrip::Desired(physical,key.vertices,g_glovePose[physical],
+           trackedgrip::Desired(physical,key.vertices,drive,
                {g_centrePos[0],g_centrePos[1],g_centrePos[2]},g_centreYaw,
                g_baseYaw*(6.2831853f/65536.f),MetresToUU(),sourceScale*Rd(g_gunScalePct)*.01f,
                g_dualActionFrame.local,trackedgrip::NativeView(cameraYaw*(6.2831853f/65536.f),

@@ -97,3 +97,12 @@ Physical PSVR2 alignment and both black artifacts: UNPROVEN.
 * TmdVisualAudit captured neutral, sky and gravity-input traces + SBS:
   `build/psvr2-trackedgrip-20261107/` (shadow-pass-15292-1..3, capture_*.bmp). Not yet analysed.
 * Accepted DLL 7AD356F8 / INI 95D1EE33 restored and hash-verified.
+
+## Candidate 81A2FE6F (aim-orientation tracked wrist)
+
+Evidence (22:32 log, 3 samples x 2 hands): inverse(aim)*grip = rotX(+44.4deg), constant.
+TrackedGripWrist now drives orientation from the aim quaternion, position from grip.
+Accepted 7AD356F8 was built WITHOUT -Performance; 7F9FD554 was built with it - prime
+suspect for the crossed Bink/loading halves. 81A2FE6F is built without it.
+Installed with accepted INI + TrackedGripWrist=1 + TmdVisualAudit=1 only.
+Left-hand upside-down is NOT explained by 44deg pitch; physical result pending.
