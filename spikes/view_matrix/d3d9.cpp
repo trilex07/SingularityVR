@@ -16509,7 +16509,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawPrim(IDirect3DDevice9* dev, D3DPRIMITIVETYPE 
     MenuDrawTraceRecord(dev,0,t,count,0,start,0,0,nullptr,0);   // fix-I census
     InterlockedIncrement(&g_frameDrawIdx);
     if (SuppressCapturedVrMenuDraw()) { nativefx::RouteObserve(6); return D3D_OK; }
-    ++g_vidFrameDraws;
+    if (InterlockedCompareExchange(&g_rtIsScene, 0, 0)) ++g_vidFrameDraws; // off-screen passes (1058x1080 eye copies) must not break the sole-draw Bink test
     if(g_boundShaderLayout.shadow){
         if (Rd(g_shadowTest)) { InterlockedIncrement(&g_shadowTestDropped); return D3D_OK; }
         ShadowMode3NoteGeneration(dev);return g_origDrawPrim(dev,t,start,count);
@@ -21313,7 +21313,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
             return D3D_OK;
         }
     }
-    ++g_vidFrameDraws;
+    if (InterlockedCompareExchange(&g_rtIsScene, 0, 0)) ++g_vidFrameDraws; // off-screen passes (1058x1080 eye copies) must not break the sole-draw Bink test
     // Indexed geometry cannot expose its vertices cheaply here, so v0 stays zero on these rows -
     // the texture and render-target columns are what this path contributes.
     if (primCount <= 4) VidProbeRecord(dev, 1, t, primCount, nullptr, 0);
@@ -24007,7 +24007,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawPrimUP(IDirect3DDevice9* dev, D3DPRIMITIVETYP
     if (primCount<=4) CaptureShadowEvidence(dev);
     if (!g_origDrawPrimUP) return D3DERR_INVALIDCALL;
     if (SuppressCapturedVrMenuDraw()) return D3D_OK;
-    ++g_vidFrameDraws;
+    if (InterlockedCompareExchange(&g_rtIsScene, 0, 0)) ++g_vidFrameDraws; // off-screen passes (1058x1080 eye copies) must not break the sole-draw Bink test
     if (primCount <= 4) VidProbeRecord(dev, 2, t, primCount, vtxData, vtxStride);
     // Touch nothing off the render thread - see the note above OnRenderThread.
     if (UserPtrInert()) return g_origDrawPrimUP(dev, t, primCount, vtxData, vtxStride);
@@ -24153,7 +24153,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrimUP(IDirect3DDevice9* dev, D3DPRIMI
         if (Rd(g_shadowTest)) { InterlockedIncrement(&g_shadowTestDropped); return D3D_OK; }
         ShadowMode3NoteGeneration(dev);return g_origDrawIndexedPrimUP(dev,t,minVtxIndex,numVertices,primCount,idxData,idxFormat,vtxData,vtxStride);
     }
-    ++g_vidFrameDraws;
+    if (InterlockedCompareExchange(&g_rtIsScene, 0, 0)) ++g_vidFrameDraws; // off-screen passes (1058x1080 eye copies) must not break the sole-draw Bink test
     if (primCount <= 4) VidProbeRecord(dev, 3, t, primCount, vtxData, vtxStride);
     if (UserPtrInert()) {
         nativefx::RouteObserve(OnRenderThread()?2:9);

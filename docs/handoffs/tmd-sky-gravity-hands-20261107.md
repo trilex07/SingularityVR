@@ -114,3 +114,14 @@ Not the -Performance flag. The ini has `[Render] CutsceneStereoCinema=1`
 `CinemaRightLeftExtensionPermille=20` (e4c2065a, 2026-11-03 trial). The 16:19/16:29
 SteamVR sessions ran a DLL that ignores both keys (no "stereo cinema" log line);
 7AD356F8 and every later build honour them. Test INI now sets both to 0. Pending user check.
+
+## Crossed Bink halves - actual cause (supersedes the INI-key note above)
+
+Setting CutsceneStereoCinema/CinemaRightLeftExtension to 0 did NOT help (22:48 run).
+Evidence: good 16:19 run stays VideoFlat ~940 frames with "video probe: 1 draw";
+22:48 run drops VideoFlat -> GameplayStereo at frame 14 with "3 draws": two extra
+DrawPrimUP stride 20, tex 2116x1080 fmt21 -> RT 1058x1080 (off-screen).
+IsVideoQuad requires g_vidFrameDraws==1, so the Bink quad lost classification.
+Fix: count only draws while the scene-sized target is bound (g_rtIsScene).
+Candidate 9D2C568D; INI = accepted + TrackedGripWrist=1 + TmdVisualAudit=1. Physical pending.
+Producer of the 1058x1080 pass not yet identified.
