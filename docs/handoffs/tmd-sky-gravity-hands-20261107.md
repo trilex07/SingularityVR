@@ -125,3 +125,15 @@ IsVideoQuad requires g_vidFrameDraws==1, so the Bink quad lost classification.
 Fix: count only draws while the scene-sized target is bound (g_rtIsScene).
 Candidate 9D2C568D; INI = accepted + TrackedGripWrist=1 + TmdVisualAudit=1. Physical pending.
 Producer of the 1058x1080 pass not yet identified.
+
+## PSVR2 22:51 (9D2C568D): video OK, rotation OK, shooting OK
+
+* User: Bink films correct, hand rotation and shooting correct. Left hand flickers.
+* Flicker hypothesis: ApplyDualActionC falls back to the legacy pose on frames where
+  the tracked source is not current. Candidate 21963140: hold the last tracked
+  correction up to 3 scene frames + 5 s stats line `tracked-grip-wrist stats`
+  (miss grip/source/math). Physical pending.
+* Audit trace PID 17792 seq 3 (gravity): SBS capture 22:53:24 shows two flat black
+  rectangles in the room. Not yet proven to be the artifact rather than level geometry.
+  Opaque foreground SceneColor group 414 (colorWrite=7, moved=2) is a lead, not proof.
+  `tools/shadow-pass-groups.py <trace> <regex>` lists groups by PS CTAB names.

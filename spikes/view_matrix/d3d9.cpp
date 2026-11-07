@@ -17995,6 +17995,24 @@ static bool ApplyDualActionC(float C[4][4],bool aim) {
             applied=trackedgrip::Target(source,desired,C);
     }
     if(g_trackedGripWrist) {
+        // Flicker evidence (22:51 PSVR2): left hand alternated between this pose
+        // and the legacy fallback. Hold the last tracked correction per side for
+        // up to 3 scene frames instead of popping to the legacy pose; count why.
+        static float lastC[2][4][4];static LONG lastFrame[2]={-100,-100};
+        static unsigned miss[2][3],held[2],ok[2];static ULONGLONG lastReport=0;
+        const unsigned s=aim?1:0;const LONG now=Rd(g_sceneModeFrame);
+        if(applied){memcpy(lastC[s],C,sizeof(lastC[s]));lastFrame[s]=now;++ok[s];}
+        else {
+            ++miss[s][!g_glovePoseValid[physical]?0:!g_dualActionFrame.Current(key)?1:2];
+            if(now-lastFrame[s]>=0&&now-lastFrame[s]<=3){memcpy(C,lastC[s],sizeof(lastC[s]));applied=true;++held[s];}
+        }
+        const ULONGLONG t=GetTickCount64();
+        if(t-lastReport>5000){lastReport=t;
+            Log("tracked-grip-wrist stats: left ok=%u held=%u miss(grip/source/math)=%u/%u/%u | right ok=%u held=%u miss=%u/%u/%u",
+                ok[0],held[0],miss[0][0],miss[0][1],miss[0][2],ok[1],held[1],miss[1][0],miss[1][1],miss[1][2]);
+            memset(miss,0,sizeof(miss));memset(held,0,sizeof(held));memset(ok,0,sizeof(ok));}
+    }
+    if(g_trackedGripWrist) {
         static unsigned gripReceipts=0;
         const unsigned bit=1u<<((aim?2:0)+(applied?1:0));
         if(!(gripReceipts&bit)) {
