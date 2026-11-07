@@ -34,6 +34,64 @@ still owns new L3/L4 separately for each weapon; SIDE does ZERO Steam.
 The HOLD and older receipts below are historical; the measured Centurion cause
 is now known, but these three profiles are not physically accepted by analogy.
 
+### Port implementation / L1 and clean L2 receipt
+
+Source `2128a4df8b6731d8d25b8e73858b4ed1690f510a` on PR45 branch. Generic
+resolver retains the exact wrapper/body/cast checks and publishes no result
+before the entire audit succeeds. All3 classes inherit the same audited methods,
+but each live profile still must independently pass. Auto-block preflight has
+3 attempts/profile at least1s apart, stops on ready, no permit/getter/refill call.
+Manual permits report their exact stage within the existing32-record/profile
+budget. No additional hook or full-reload fallback.
+
+Root/scope release now starts AT insertion, including WaitingNative, rather
+than waiting180ms or a HUD ACK. Body seating modifies ONLY ClipSlot(kind), every
+other bone remains byte-identical to the current native palette. After180ms
+that override also ends even if HUD ACK is late. Native dropped-magazine replay
+and the existing original material/shared-depth/Reset paths are unchanged.
+
+L1_PASS19 CPU/ABI +2 own-process D3D9Ex GPU programs,67 Python checks. All FOUR
+actual original wrapper decoders now tested by C++ against the archived text;
+all original body/every-byte mutation,60000 fake native transaction, duplicate/
+NPC/Centurion/holster isolation and live-count conservation tests still pass.
+Each of the3 original SVWA caches is tested over5001 samples, including immediate
+root/scope release, old flag0 behavior, late ACK and180ms boundary. First3
+synthetic native shot poses preserve translation/rotation of EVERY non-magazine
+bone byte-for-byte during seating; invalid palette cannot publish output.
+Structural guards pin lookup completion before Next, later full validation,
+bounded no-transfer preflight and actual body/attachment dispatcher wiring.
+The same3 original assets and synthetic native replay pass stereo/Reset GPU
+checks; this is NOT real game lighting, firing, stereo or physical acceptance.
+Log: `build/next-weapon-reload/refill-only/complete-lessons-tests.log`.
+
+L2_PASS clean source2128a4d, x86 PE32 014C/010B, `/O2`, performance
+instrumentation OFF. Existing unrelated warnings remain. DLL3203584 bytes:
+`90B6AB1D84E2DBAC3A29B072F7CAFF38E30BD867A3930010A2C57CA2E0A0E402`.
+Build receipt SHA256
+`937A005DCE8012E7DC555E6B134760D5ACBF2A9CB0AFF5FD15AA66A79575A296`.
+Log: `build/next-weapon-reload/refill-only/complete-lessons-build.log`.
+
+Private `build/next-weapon-reload/candidate-2128a4d/` prepared with the existing
+checked-in generator:11 payload hashes independently verified,9 original caches
+unchanged, DLL/receipt match source2128a4d, settings proposal ALL opt-ins OFF,
+NO installed INI/assets touched. Manifest SHA256
+`DBACD5D6AD619CEF0CDCA6D394D9B1046BBC693648B5453F76DFB5E6BF65F886`.
+Packaging log: `build/next-weapon-reload/refill-only/complete-lessons-package.log`.
+ZERO Steam by SIDE. Integrate source delta onto CURRENT MAIN; do not overwrite
+the physically accepted Centurion refill-only branch with this older shared
+hook's forwarding section. Keep BOTH separate scoped permit paths and ONE hook.
+
+Next MAIN gate: one weapon/session, same manual/native-magazine dependencies
+plus ReloadRefillOnly=1. Circle -> fresh ammo behind physical left shoulder ->
+insert/release (NO closing flick) -> fire first shots promptly. Check magazine
+seat, receiver/scope recoil, conserved native transfer/HUD ACK and no native
+ReloadFinished/camera shake/fire lock. Repeat empty/partial reserve as available,
+store without completing reload gives no ammo, pause/Options and normal exit.
+User stays in PSVR2 until exit; no mid-test chat. Read `next refill resolver`
+and `next refill-only` per profile. L3/L4 UNKNOWN for these3; no inferred PASS
+from Centurion acceptance. Fine carried-magazine hand fit/world occlusion remains
+the prior explicitly unverified visual scope, not silently declared accepted.
+
 HOLD after Centurion physical feedback13:52: its SAME resolver returned ready0
 before every transfer, despite offline PASS. These THREE weapons have no new
 physical result; do not infer they are broken in the same exact stage, but keep
