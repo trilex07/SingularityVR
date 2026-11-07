@@ -1,5 +1,9 @@
 ﻿#include "two_hand_grip.h"
 #include "tmd_gravity_grip.h"
+#include "tmd_visual_audit.h"
+static bool g_tmdVisualAudit=false;
+static tmdvisualaudit::Schedule g_tmdVisualSchedule;
+static tmdvisualaudit::Scene g_tmdVisualScene=tmdvisualaudit::Scene::None;
 static bool g_tmdGravityGrip=true;
 static tmdgravity::Grip g_tmdGravityLatch;
 #include "support_grip_probe.h"
@@ -17070,7 +17074,7 @@ static handanchor::WeaponProbe g_handAnchorRecords;
 static handanchor::Probe g_tmdHandAnchorRecords[2]; // eight final-bound samples/eye, opt-in
 static DWORD g_handAnchorThread=0;
 static void FlushHandAnchorProbe() {
-    if(!Rd(g_handAnchorProbe)||g_handAnchorThread!=GetCurrentThreadId())return;
+    if((!Rd(g_handAnchorProbe)&&!g_tmdVisualAudit)||g_handAnchorThread!=GetCurrentThreadId())return;
     handanchor::Record r;
     for(unsigned source=0;source<3;++source) {
         if(!(source?g_tmdHandAnchorRecords[source-1].Take(r):g_handAnchorRecords.Take(r)))continue;
@@ -22255,7 +22259,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
         // Existing opt-in probe extended to the physical symptom's exact TMD
         // glove section. Read the bound palette/IB before restoration, in EACH
         // eye; no pose writes, GPU readback, tracking bypass or guessed offset.
-        if(Rd(g_handAnchorProbe)&&assemblyGlove&&independentRegs&&eye<2&&nSeg>0&&
+        if((Rd(g_handAnchorProbe)||(g_tmdVisualAudit&&shadowtrace::active))&&assemblyGlove&&independentRegs&&eye<2&&nSeg>0&&
            armnatural::TmdBind().ready&&g_handPoseValid[0]&&g_handPositionValid[0]&&
            g_handPoseValid[1]&&g_handPositionValid[1]&&
            handanchor::GameplaySource(true,Rd(g_inCinematic)!=0,Rd(g_vrUiMenu)!=0,
@@ -34064,6 +34068,16 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
         g_handPositionValid[0] && g_handPositionValid[1];
     static unsigned shadowTraceStable=0;
     shadowTraceStable=shadowTraceReady?std::min(shadowTraceStable+1,30u):0;
+    const auto auditScene=g_tmdVisualSchedule.Update(g_tmdVisualAudit,
+        shadowTraceStable>=15 && Rd(g_haveTMD)==1 && InGameplay() &&
+        !Rd(g_inCinematic)&&!Rd(g_panelOpen)&&!Rd(g_vrUiMenu)&&!Rd(g_gamePaused),
+        shadowtrace::active||shadowtrace::pending,shadowtrace::sequence,
+        g_handPitchRad[0],g_tmdGravityLatch.power,GetTickCount64());
+    if(auditScene!=tmdvisualaudit::Scene::None) {
+        g_tmdVisualScene=auditScene;shadowtrace::pending=true;
+        Log("tmd-visual-audit: request=%s frame=%ld hands=%ld gravityInput=%d pitch=%.6g; input is not proof of native target acquisition",
+            tmdvisualaudit::Name(auditScene),Rd(g_sceneModeFrame),Rd(g_handsStatus),g_tmdGravityLatch.power?1:0,g_handPitchRad[0]);
+    }
     PollGameplayHotPath(shadowTraceStable>=15);
     if(Rd(g_equipmentHudTrace)||wristtrace::active){
     EquipmentWristPose tracePose;
@@ -34080,6 +34094,11 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
     if(shadowtrace::Boundary(s,shadowTraceStable>=15,g_logPath)){
         SaveBackbufferCapture(s,true); // Completed SBS scene, before menu/diagnostic overlays.
         nativefx::DumpWitness();
+        if(g_tmdVisualScene!=tmdvisualaudit::Scene::None) {
+            Log("tmd-visual-audit: completed=%s sequence=%u frame=%ld hands=%ld gravityInput=%d; inspect matching SBS pixels and shader dump, not counters alone",
+                tmdvisualaudit::Name(g_tmdVisualScene),shadowtrace::sequence,Rd(g_sceneModeFrame),Rd(g_handsStatus),g_tmdGravityLatch.power?1:0);
+            g_tmdVisualScene=tmdvisualaudit::Scene::None;
+        }
     }
     nativefx::Boundary(shadowTraceStable>=15&&!CutsceneNativeCameraArmed()&&!Rd(g_gamePaused)&&!Rd(g_panelOpen)&&!Rd(g_vrUiMenu)&&Rd(g_weaponObj)&&!Rd(g_weaponHolstered),shadowtrace::active||shadowtrace::pending,(unsigned)Rd(g_weaponObj),(unsigned)Rd(g_gunVerts));
     nativefx::Summary();
@@ -37323,6 +37342,16 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
         Log("shadow-pass focus context session=%d handPosition=%d,%d",(int)g_xrSessionState,
             g_handPositionValid[0]?1:0,g_handPositionValid[1]?1:0);
         shadowtrace::Arm(s);
+        if(g_tmdVisualAudit)for(unsigned side=0;side<2;++side) {
+            const auto& aim=g_handLastPos[side];const auto& q=g_handAimOrientation[side];
+            const auto& grip=g_glovePose[side];
+            Log("tmd-visual-audit: pose sequence=%u frame=%ld side=%u tracked=%d/%d gripValid=%d sampleMs=%lld UUperM=%.9g aimP=(%.9g,%.9g,%.9g) aimQ=(%.9g,%.9g,%.9g,%.9g)",
+                shadowtrace::sequence,Rd(g_sceneModeFrame),side,g_handPoseValid[side],g_handPositionValid[side],g_glovePoseValid[side],
+                (long long)InterlockedCompareExchange64(&g_handPoseSampleMs[side],0,0),MetresToUU(),aim.x,aim.y,aim.z,q.x,q.y,q.z,q.w);
+            Log("tmd-visual-audit: grip sequence=%u side=%u P=(%.9g,%.9g,%.9g) Q=(%.9g,%.9g,%.9g,%.9g); same handTime/reference-space as aim, no pose override",
+                shadowtrace::sequence,side,grip.position.x,grip.position.y,grip.position.z,
+                grip.orientation.x,grip.orientation.y,grip.orientation.z,grip.orientation.w);
+        }
     }
     g_mirrorPixelProbe.Before(s,g_sharedSurf9,g_logPath,(int)Rd(g_vrMenuClass),
         g_xrRunning&&g_xrSessionState==XR_SESSION_STATE_FOCUSED,g_mirrorProbeCurtain);
@@ -38531,6 +38560,8 @@ void LoadIniSettings() {
     g_trackedDepthPrimeProbe=GetPrivateProfileIntA("Diagnostic","TrackedDepthPrimeProbe",0,path)!=0;
     g_trackedDepthSourcePose=GetPrivateProfileIntA("Render","TrackedDepthSourcePose",0,path)!=0;
     g_tmdTrackedMuzzle=GetPrivateProfileIntA("Render","TmdTrackedMuzzle",0,path)!=0;
+    g_tmdVisualAudit=GetPrivateProfileIntA("Diagnostic","TmdVisualAudit",0,path)!=0;
+    Log("ini: TmdVisualAudit=%d (default OFF; three bounded neutral/sky/gravity-input driver traces + SBS, no visual correction)",g_tmdVisualAudit?1:0);
     g_tmdTrackedBeam=GetPrivateProfileIntA("Render","TmdTrackedBeam",0,path)!=0;
     g_tmdTrackedAgeParticles=GetPrivateProfileIntA("Render","TmdTrackedAgeParticles",0,path)!=0;
     Log("ini: TmdTrackedBeam=%d (default OFF; owned native aging-beam attachment, native endpoint preserved)",g_tmdTrackedBeam?1:0);
