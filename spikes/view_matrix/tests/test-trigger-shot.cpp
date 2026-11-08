@@ -37,6 +37,15 @@ int main() {
     const Command leftKick = runner.Select(ProfileFor(Weapon::Pistol, false), 2050);
     assert(leftKick.hand == Hand::Left);
 
+    assert(WeaponFromGunVerts(12444)==Weapon::Seeker);
+    assert(WeaponFromGunVerts(12436)==Weapon::Seeker);
+    const auto seekerWall=ProfileFor(Weapon::Seeker,false);
+    assert(seekerWall.effect==Effect::Weapon && seekerWall.strength==5);
+    runner.SetHand(Hand::Left);runner.OnShotFired(3000,Weapon::Seeker);
+    assert(runner.Select(seekerWall,3100).hand==Hand::Left);
+    assert(ValidKickCommand(runner.Select(seekerWall,3180)));
+    assert(Pack(runner.Select(seekerWall,3181))==Pack(seekerWall));
+    runner.Reset();assert(Pack(runner.Select(seekerWall,3100))==Pack(seekerWall));
     std::puts("PASS: shot-fired trigger resistance policy");
     return 0;
 }

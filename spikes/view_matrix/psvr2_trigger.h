@@ -34,7 +34,7 @@
 
 namespace psvr2trigger {
 
-enum class Weapon : std::uint8_t { Pistol, Rifle, Shotgun, Sniper, Tmd, Other };
+enum class Weapon : std::uint8_t { Pistol, Rifle, Shotgun, Sniper, Tmd, Other, Seeker };
 enum class Effect : std::uint8_t { Off, Weapon, Vibration, Feedback, SlopeFeedback };
 enum class Hand : std::uint8_t { Right = 0, Left = 1 };
 enum class OffReason : std::uint8_t {
@@ -89,6 +89,10 @@ inline Command ProfileFor(Weapon weapon, bool fireDown) {
     case Weapon::Sniper:
         c.effect = Effect::Weapon;
         c.start = 2; c.end = 5; c.strength = 6;
+        return c;
+    case Weapon::Seeker:
+        c.effect = Effect::Weapon;
+        c.start = 2; c.end = 5; c.strength = 5;
         return c;
     case Weapon::Tmd:
     case Weapon::Other:

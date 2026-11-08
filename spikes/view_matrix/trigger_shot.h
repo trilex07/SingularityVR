@@ -30,6 +30,7 @@ using psvr2trigger::Weapon;
 // Gatling has no fingerprinted mesh yet -> Other until the census fills it.
 inline Weapon WeaponFromGunVerts(unsigned gunVerts) {
     switch (gunVerts) {
+    case 12444: case 12436: return Weapon::Seeker; // audited Seeker mesh variants
     case 5799: return Weapon::Pistol;
     case 8297: return Weapon::Shotgun;
     case 11387: return Weapon::Rifle;
@@ -54,6 +55,7 @@ inline Kick KickFor(Weapon w) {
     case Weapon::Shotgun: return {2, 8, 35, 220};
     case Weapon::Rifle:   return {3, 7, 40, 120};
     case Weapon::Sniper:  return {2, 8, 30, 250};
+    case Weapon::Seeker:  return {2, 7, 32, 180};
     case Weapon::Tmd:
     case Weapon::Other:
     default:              return {0, 0, 0, 0};  // no kick

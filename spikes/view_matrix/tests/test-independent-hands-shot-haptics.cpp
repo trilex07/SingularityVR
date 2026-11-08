@@ -63,5 +63,14 @@ int main() {
     assert(!freehandpose::NativeCuffDraw(true,true,false,false,false,true));
     assert(tmdhaptics::ProfileFor(tmdhaptics::Power::Impulse).startAmp>
            tmdhaptics::ProfileFor(tmdhaptics::Power::Age).startAmp);
+    assert(FromVertices(12444)==Weapon::Seeker && FromVertices(12436)==Weapon::Seeker);
+    Engine seeker;
+    assert(!seeker.OnNativeReturn(4,4,Weapon::Seeker,1000));
+    assert(seeker.Sample(true,0,1000)==0);
+    assert(seeker.OnNativeReturn(4,5,Weapon::Seeker,1000));
+    assert(seeker.Sample(true,0,1109)>0);
+    assert(seeker.Sample(true,0,1111)==0);
+    assert(seeker.OnNativeReturn(5,6,Weapon::Seeker,1200));
+    assert(seeker.Sample(false,0,1201)==0 && seeker.Sample(true,0,1202)==0);
     return 0;
 }

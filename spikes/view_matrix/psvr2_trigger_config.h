@@ -193,6 +193,8 @@ inline psvr2trigger::Command ProfileFromConfig(psvr2trigger::Weapon weapon, bool
         c.end = p.sniper.b;
         c.strength = p.sniper.c;
         return c;
+    case Weapon::Seeker:
+        return ProfileFor(weapon, false);
     case Weapon::Tmd:
     case Weapon::Other:
         return OffCommand(OffReason::UnsupportedWeapon);

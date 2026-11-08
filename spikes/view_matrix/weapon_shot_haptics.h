@@ -3,10 +3,11 @@
 
 // Game-thread shot witness -> OpenXR-thread bounded amplitude. No controller polling.
 namespace weaponhaptics {
-enum class Weapon { Pistol, Rifle, Shotgun, Sniper, Other };
+enum class Weapon { Pistol, Rifle, Shotgun, Sniper, Other, Seeker };
 struct Profile { float amplitude; std::uint32_t ms; };
 inline Profile For(Weapon w) {
     switch (w) {
+    case Weapon::Seeker:  return {0.65f, 110};
     case Weapon::Pistol:  return {0.46f, 70};
     case Weapon::Rifle:   return {0.38f, 45};
     case Weapon::Shotgun: return {0.78f, 105};
@@ -16,6 +17,7 @@ inline Profile For(Weapon w) {
 }
 inline Weapon FromVertices(unsigned v) {
     switch (v) {
+    case 12444: case 12436: return Weapon::Seeker;
     case 5799: return Weapon::Pistol;
     case 11387: return Weapon::Rifle;
     case 8297: return Weapon::Shotgun;

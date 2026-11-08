@@ -5567,3 +5567,23 @@ DLL SHA256 F84837C8CA1E93945073965FF98C9BC1320BD9D12482936FC31EFB559F68315C.
 Guarded DLL-only deployment preserves user-confirmed E0E08775 settings/assets.
 New menu headset check NOT RUN. User confirmed prior TMD artifacts gone and left
 hand no longer flickers; diagnostic DropDecalLocalTangent remains enabled.
+
+## 2026-11-08 - Seeker shot haptics and adaptive triggers
+
+L1/L2_PASS, physical feel PENDING. Both audited Seeker variants 12444/12436 now
+map to a distinct weapon profile: trigger wall 2,5,5; native-shot vibration kick
+position 2, amplitude 7, frequency 32, duration 180 ms. OpenXR shot fallback is
+0.65 amplitude / 110 ms, cancelled when native rumble arrives (never additive).
+Seeker adaptive kick and rumble require local equipped weapon FireAmmunition and
+exact mShotCount +1 after native return; dry fire does not create a kick.
+Existing Haptics Enabled/Level and PSVR2 AdaptiveTriggers remain authoritative.
+Haptics/SeekerShotPulses defaults 1 for requested feature; 0 disables only its new
+rumble fallback. Existing WeaponShotPulses is preserved. Trigger wall clears on
+pause, loss of focus/tracking, holster and menus; weapon change resets old kicks.
+No continuous guidance-rumble effect added without a native guidance witness.
+Tests: independent-hand/native-count/dry-fire/pulse-expiry/cancellation PASS;
+trigger shot right/left/duration/reset and existing IPC/config/client suites PASS.
+x86 PE32 /O2 + static analysis build PASS; diff check PASS.
+DLL 374A8B48D5C44532E5C8D50F5CD295A1F638DE3B471B6F641190E807E3EC2F09.
+Guarded DLL-only deployment from F84837C8 with backup; exact INI/assets preserved.
+L3 gameplay/physical PSVR2 feel NOT RUN for this change; no headset acceptance claim.

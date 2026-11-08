@@ -793,6 +793,7 @@ LONG PackStick(int16_t x, int16_t y) {
 // high-frequency one. Sending each to the hand of the same name keeps that asymmetry meaningful
 // rather than averaging it away.
 volatile LONG g_rumbleL = 0, g_rumbleR = 0;   // 0..65535, as the game sends them
+static volatile LONG g_seekerHaptics = 1; // [Haptics] SeekerShotPulses; master Haptics still applies
 static volatile LONG g_weaponShotHaptics = 0; // opt-in until physical PSVR2 acceptance
 static SRWLOCK g_weaponHapticsLock = SRWLOCK_INIT;
 static LONG g_damagePulses=0;
@@ -4986,10 +4987,12 @@ static bool StartPsvr2TriggerClient() {
     return g_psvr2ClientStarted;
 }
 
+static bool TriggerHandTracked();
 static void UpdateAdaptiveTriggers() {
     if (!g_adaptiveTriggersEnabled) return;
     const bool focused = g_xrSessionState == XR_SESSION_STATE_FOCUSED;
-    const bool gameplay = InGameplay() && !Rd(g_vrUiMenu) && !Rd(g_vrMenuClass) && !Rd(g_panelOpen);
+    const bool gameplay = InGameplay() && !Rd(g_gamePaused) && !Rd(g_weaponHolstered) &&
+        TriggerHandTracked() && !Rd(g_vrUiMenu) && !Rd(g_vrMenuClass) && !Rd(g_panelOpen);
     const auto triggerHand = g_leftHanded ? psvr2trigger::Hand::Left : psvr2trigger::Hand::Right;
     const auto weapon = triggershot::WeaponFromGunVerts((unsigned)InterlockedCompareExchange(&g_gunVerts, 0, 0));
     psvr2trigger::Command command = psvr2trigger::OffCommand(psvr2trigger::OffReason::Inactive);
@@ -4998,6 +5001,8 @@ static void UpdateAdaptiveTriggers() {
         psvr2trigger::Command baseWall = psvr2config::ProfileFromConfig(weapon, false, g_psvr2Profiles);
         baseWall.hand = triggerHand;
         AcquireSRWLockExclusive(&g_shotRunLock);
+        static auto previousWeapon=psvr2trigger::Weapon::Other;
+        if(previousWeapon!=weapon){g_shotRun.Reset();previousWeapon=weapon;}
         g_shotRun.SetHand(triggerHand);
         command = g_shotRun.Select(baseWall, (unsigned)GetTickCount());
         ReleaseSRWLockExclusive(&g_shotRunLock);
@@ -10149,6 +10154,7 @@ volatile LONG g_swapSticks = 0;          // ini [Input] SwapSticks - live, on th
 
 // Which hand the gun and aim follow. The only thing the four aim sites need to know.
 inline int AimHand() { return g_leftHanded ? 0 : 1; }
+static bool TriggerHandTracked(){return g_handPoseValid[AimHand()]&&g_handPositionValid[AimHand()];}
 
 // ---- ⚠️ run 180: the shortest angle between two UE3 yaws. Two sites had this WRONG ----
 //
@@ -12885,7 +12891,8 @@ void SyncXRInput(XrTime displayTime) {
                 overlay = NativeTmdHaptics::Overlay(tmdGates);
             }
             const LONG lvl = Rd(g_hapticLevel) < 0 ? 0 : (Rd(g_hapticLevel) > 2 ? 2 : Rd(g_hapticLevel));
-            if (hand == AimHand() && Rd(g_weaponShotHaptics)) {
+            if (hand == AimHand() && (Rd(g_weaponShotHaptics) ||
+                (Rd(g_seekerHaptics) && seekergeometry::Vertices((unsigned)Rd(g_gunVerts))))) {
                 const bool shotGates = hapticsAllowed && handTracked && !Rd(g_gamePaused) &&
                     !Rd(g_inCinematic) && !uiMenu && !Rd(g_panelOpen) &&
                     g_xrSessionState == XR_SESSION_STATE_FOCUSED;
@@ -28286,7 +28293,7 @@ void __fastcall Hook_ProcessEvent(void* self, void* edx, void* Stack, void* Resu
     const bool cineWatch = InterlockedCompareExchange(&g_cutsceneAuto, 0, 0) != 0 &&
                            FnIdx(kFnSetCinematic) >= 0;
     int32_t fnIdx = -1;
-    if ((censusOn || routeTwo || cineWatch || Rd(g_cinematicSceneProbe) || Rd(g_cinematicEventBridge) || nativefx::Probe() || g_centurionReloadProbe || Rd(g_keepAcquiredWeapons) || singularity_gore::enabled || Rd(g_weaponShotHaptics) || Rd(g_damagePulses) ||
+    if ((censusOn || routeTwo || cineWatch || Rd(g_cinematicSceneProbe) || Rd(g_cinematicEventBridge) || nativefx::Probe() || g_centurionReloadProbe || Rd(g_keepAcquiredWeapons) || singularity_gore::enabled || Rd(g_weaponShotHaptics) || Rd(g_seekerHaptics) || g_adaptiveTriggersEnabled || Rd(g_damagePulses) ||
          (Rd(g_equipmentHudEnergy)&&self==(void*)(uintptr_t)(uint32_t)Rd(g_equipmentTmdPointer))) && Stack) {
         fnIdx = ScriptFuncNameIdx(Stack);
         InterlockedIncrement(&g_peSeen);
@@ -28696,7 +28703,7 @@ void __fastcall Hook_ProcessEvent(void* self, void* edx, void* Stack, void* Resu
             // stub alternates clips by sequence (its Unknown default). Game thread
             // only fills the mailbox; the render thread drains it in VfxEyeDraw.
             if (g_adaptiveTriggersEnabled && firedWindow && FnIdx(kFnFireFirst) >= 0 &&
-                fnIdx == FnIdx(kFnFireFirst)) {
+                fnIdx == FnIdx(kFnFireFirst) && !seekergeometry::Vertices((unsigned)Rd(g_gunVerts))) {
                 const unsigned verts = (unsigned)InterlockedCompareExchange(&g_gunVerts, 0, 0);
                 AcquireSRWLockExclusive(&g_shotRunLock);
                 g_shotRun.OnShotFired((unsigned)GetTickCount(), triggershot::WeaponFromGunVerts(verts));
@@ -28795,10 +28802,12 @@ void __fastcall Hook_ProcessEvent(void* self, void* edx, void* Stack, void* Resu
         damageBefore=*reinterpret_cast<const int*>(damagedPawn+g_offHealth);
     int shotBefore=-1, shotOffset=-1;
     const uintptr_t shotWeapon=(uintptr_t)self;
-    const bool localShot=Rd(g_weaponShotHaptics) && fnIdx>=0 && FnIdx(kFnFireFirst)>=0 &&
+    const bool seekerShot=seekergeometry::Vertices((unsigned)Rd(g_gunVerts));
+    const bool shotHaptics=Rd(g_hapticsEnabled) && (Rd(g_weaponShotHaptics)||(seekerShot&&Rd(g_seekerHaptics)));
+    const bool localShot=(shotHaptics||(seekerShot&&g_adaptiveTriggersEnabled)) && fnIdx>=0 && FnIdx(kFnFireFirst)>=0 &&
         fnIdx==FnIdx(kFnFireFirst) && shotWeapon!=0 &&
         shotWeapon==(uintptr_t)(uint32_t)Rd(g_weaponObj) &&
-        !Rd(g_weaponHolstered) && Rd(g_hapticsEnabled);
+        !Rd(g_weaponHolstered);
     if(localShot && Readable(self,OBJ_CLASS+sizeof(uintptr_t))){
         const uintptr_t cls=*reinterpret_cast<const uintptr_t*>(shotWeapon+OBJ_CLASS);
         static thread_local uintptr_t cachedShotClass=0;
@@ -28835,8 +28844,16 @@ void __fastcall Hook_ProcessEvent(void* self, void* edx, void* Stack, void* Resu
         shotAfter=*reinterpret_cast<const int32_t*>(shotWeapon+shotOffset);
         const auto weapon=weaponhaptics::FromVertices((unsigned)Rd(g_gunVerts));
         AcquireSRWLockExclusive(&g_weaponHapticsLock);
-        shotPulseArmed=g_weaponHaptics.OnNativeReturn(shotBefore,shotAfter,weapon,GetTickCount64());
+        if(shotHaptics)shotPulseArmed=g_weaponHaptics.OnNativeReturn(shotBefore,shotAfter,weapon,GetTickCount64());
         ReleaseSRWLockExclusive(&g_weaponHapticsLock);
+    }
+    // Seeker kick requires the native shot-count transaction, including dry-fire refusal.
+    // Ordinary weapon trigger routing remains on its existing path.
+    if(localShot && seekerShot && g_adaptiveTriggersEnabled &&
+       weaponhaptics::ShotCountAdvanced(shotBefore,shotAfter)) {
+        AcquireSRWLockExclusive(&g_shotRunLock);
+        g_shotRun.OnShotFired((unsigned)GetTickCount(),psvr2trigger::Weapon::Seeker);
+        ReleaseSRWLockExclusive(&g_shotRunLock);
     }
     if(localShot){
         static volatile LONG receipts=0;
@@ -37673,6 +37690,8 @@ void LoadIniSettings() {
     InterlockedExchange(&g_hapticsEnabled,GetPrivateProfileIntA("Haptics","Enabled",1,path)!=0);
     InterlockedExchange(&g_hapticLevel,GetPrivateProfileIntA("Haptics","Level",1,path));
     InterlockedExchange(&g_tmdPulses,GetPrivateProfileIntA("Haptics","TmdPulses",0,path)!=0);
+    InterlockedExchange(&g_seekerHaptics,GetPrivateProfileIntA("Haptics","SeekerShotPulses",1,path)!=0);
+    Log("ini: SeekerShotPulses=%ld (native shot-count witness, master Haptics applies)",Rd(g_seekerHaptics));
     InterlockedExchange(&g_weaponShotHaptics,
         GetPrivateProfileIntA("Haptics","WeaponShotPulses",0,path)!=0);
     InterlockedExchange(&g_damagePulses,GetPrivateProfileIntA("Haptics","DamagePulses",0,path)!=0);
