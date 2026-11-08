@@ -5554,3 +5554,16 @@ Toggle with **F6**.
 
 Branch `fix/tmd-gravity-rifle-audio-crash`. L1 native AntiGrav arbitration, verified Valkyrie Vorbis header repair, imported memory-backed Polish movie routing, contextual pointer geometry and affine stereo captions: offline tests PASS; final /O2 artifact staged privately. See `docs/handoffs/gravity-rifle-movies-context-cinema-20261103.md` for evidence levels and hashes. Steam/game/HMD NOT RUN. Shorter cinema edge remains a physical acceptance dependency; no speculative per-eye crop applied. No merge/release.
 
+
+## 2026-11-08 - Minimal VR Settings movement and aiming laser
+
+L2_PASS: expose existing PR_LASER beside PR_MOVEDIR in minimal Controls (8 rows).
+Move Direction HEAD uses Input/WalkDirection=0; HAND uses 1 (off-hand tracking,
+with head-relative fallback). Laser Sight ON/OFF persists Render/LaserSight.
+Both existing controls use the normal panel save path; no new input/render logic.
+Current installed preferences were HEAD and laser ON; no INI changes requested.
+x86 PE32 /O2 build and menu bound/persistence-path review PASS; diff check PASS.
+DLL SHA256 F84837C8CA1E93945073965FF98C9BC1320BD9D12482936FC31EFB559F68315C.
+Guarded DLL-only deployment preserves user-confirmed E0E08775 settings/assets.
+New menu headset check NOT RUN. User confirmed prior TMD artifacts gone and left
+hand no longer flickers; diagnostic DropDecalLocalTangent remains enabled.

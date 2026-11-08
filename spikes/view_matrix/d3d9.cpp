@@ -8439,7 +8439,7 @@ int g_panelPage = 0;
 int g_panelImageParent = 3;
 const int kMinimalRoot[] = { PR_GOTO_CTRL, PR_NOTESIZE, PR_POLISH, PR_UINARRATOR,
     PR_RELOAD_HINTS, PR_GOTO_NIS, PR_GOTO_TUTORIAL, PR_CLOSE };
-const int kMinimalControls[] = { PR_TURNMODE, PR_SNAPANGLE, PR_TURNSPEED, PR_MOVEDIR,
+const int kMinimalControls[] = { PR_TURNMODE, PR_SNAPANGLE, PR_TURNSPEED, PR_MOVEDIR, PR_LASER,
     PR_LEFTHAND, PR_RECENTERCHORD, PR_BACK };
 inline int PanelCountForPage(int page) {
     if (g_vrSettingsMinimal && page == 0) return (int)_countof(kMinimalRoot);
