@@ -196,6 +196,7 @@ static void BuildTmdAssemblyC(float C[4][4]);
 #include "trigger_shot.h"
 #include "laser_style.h"
 #include "tmd_gravity_decal.h"
+#include "game_build_layout.h"
 #include "weapon_shot_haptics.h"
 #include "damage_haptics.h"
 #include "psvr2_client.h"
@@ -1345,7 +1346,7 @@ typedef FRotator* (__fastcall* PFN_CalcViewRotation)(
     void* self, void* edx_unused,
     FRotator* outRot, uint32_t a2, uint32_t a3, uint32_t a4, float a5, float a6);
 
-const uintptr_t kCalcViewRotationAddr = 0x0104e390;   // no ASLR: file address == runtime
+const uintptr_t& kCalcViewRotationAddr = gamebuild::Current().calc;
 PFN_CalcViewRotation g_origCalcViewRotation = nullptr;
 
 struct FVec3 { float x, y, z; };
@@ -1453,8 +1454,8 @@ FRotator* __fastcall Hook_CalcViewRotation(void* self, void* edx,
 // The detour owns PITCH: the call site stores only [EAX] (pitch) into AActor::Rotation, while
 // yaw goes to a local and is handled further along. Direct writes to controller+0x64 were
 // already proven to steer yaw, so drive each axis where it actually works.
-const uintptr_t kGNamesTArray   = 0x01CD4A1C;
-const uintptr_t kGObjectsTArray = 0x01CD4A4C;
+const uintptr_t& kGNamesTArray   = gamebuild::Current().names;
+const uintptr_t& kGObjectsTArray = gamebuild::Current().objects;
 const int OBJ_OUTER = 0x28, OBJ_NAME = 0x2C, OBJ_CLASS = 0x34;
 const int ACTOR_ROTATION = 0x0060;    // pitch, yaw, roll
 const int CTL_ROTATION_2 = 0x05D4;
@@ -26520,7 +26521,7 @@ static void RefreshNativeCinematicState() {
     static int reader=-1;
     if(reader<0) {
         const auto code=reinterpret_cast<const unsigned char*>(GetModuleHandleA(nullptr))+nativecine::BoolExecRva;
-        reader=Readable(code,82)&&nativecine::SupportedReader(code,82)?1:0;
+        reader=Readable(code,82)&&nativecine::SupportedReader(code,82,gamebuild::Current().boolTable)?1:0;
         Log("native-cinematic: execBoolVariable fingerprint=%d; unsupported reader refuses correction",reader);
     }
     if(!reader || g_upChildren!=0x4c || g_upNext!=0x40 || g_upOffset!=0x64)return;
@@ -27623,7 +27624,7 @@ void ProbeTraceNative() {
 // the end of this one. The call site is authoritative: if the callee also cleaned, every call
 // would corrupt the stack by four bytes and the game would never run. Getting this backwards is
 // exactly what crashed the game twice on ProcessInternal, so it is checked rather than assumed.
-const uintptr_t kLineCheckAddr = 0x00BD79D0;
+const uintptr_t& kLineCheckAddr = gamebuild::Current().line;
 typedef void* (__cdecl *PFN_LineCheck)(void* params);
 PFN_LineCheck g_origLineCheck = nullptr;
 volatile LONG g_lineCheckLogged = 0;
@@ -27820,7 +27821,7 @@ void* __cdecl Hook_LineCheck(void* params) {
 //
 // arg1 is [ebp-0x64], the same local later handed to 0x00BD79D0 - which is what proves that one is
 // the result processor rather than the trace.
-const uintptr_t kSingleLineCheckAddr = 0x00A108B0;
+const uintptr_t& kSingleLineCheckAddr = gamebuild::Current().single;
 typedef int (__fastcall *PFN_SLC)(void* self, void* edx, void* hit, void* src,
                                   float* End, float* Start, uint32_t flags, void* extent, void* a7);
 PFN_SLC g_origSLC = nullptr;
@@ -39289,6 +39290,25 @@ void LoadIniSettings() {
 HRESULT STDMETHODCALLTYPE Hook_CreateDevice(IDirect3D9* self, UINT ad, D3DDEVTYPE t, HWND w, DWORD f,
                                             D3DPRESENT_PARAMETERS* pp, IDirect3DDevice9** out) {
     LoadIniSettings();
+    // Validate before any D3D device hooks, Ex conversion or native root walks.
+    // At this point the game's loader has reached its D3D startup, not DllMain.
+    // Cache the pre-detour verdict: subsequent CreateDevice calls see our own
+    // patched prologues and must not mistake them for an unsupported build.
+    static const auto layout=gamebuild::Select([](uintptr_t address,unsigned bytes)->const unsigned char*{
+        return Readable((const void*)address,bytes)?reinterpret_cast<const unsigned char*>(address):nullptr;
+    });
+    if(!layout){
+        Log("game-build: unsupported or ambiguous native layout; refusing VR device/native hooks");
+        return g_origCreateDevice(self,ad,t,w,f,pp,out);
+    }
+    if(!gamebuild::RuntimeAllowed(*layout)){
+        Log("game-build: %s core recognized; remaining native consumers unverified; refusing VR device/native hooks",layout->name);
+        return g_origCreateDevice(self,ad,t,w,f,pp,out);
+    }
+    gamebuild::Current()=*layout;
+    Log("game-build: %s verified calc=%08X names=%08X objects=%08X line=%08X single=%08X",
+        layout->name,(unsigned)layout->calc,(unsigned)layout->names,(unsigned)layout->objects,
+        (unsigned)layout->line,(unsigned)layout->single);
     char diagIni[MAX_PATH]{};
     if (IniPath(diagIni) && GetPrivateProfileIntA("Diagnostic", "Enabled", 0, diagIni)) {
         DiagEnable();
