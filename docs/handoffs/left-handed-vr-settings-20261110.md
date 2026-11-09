@@ -69,7 +69,13 @@ refusal PASS; native cinematic fixture PASS. DE remains runtime-disabled as
 described in gog-german-remaining-20261110.md. Historical menu-profile check
 still expects72 while unchanged default is100; not rerun as a left-hand gate.
 
-L2 build/provenance receipt is recorded after the final committed-source build.
+L2_PASS: committed-source build2e1d9d76cdad56813d23f3d8a6b106e807e4c870,
+x86 PE32 machine014C/magic010B, /O2, performanceInstrumentation=false.
+DLL SHA256 C52E1E11E2E27A9BDE7821FA79195D36B428C7E17A4460D228D661CA87F38083.
+Build manifest commit/branch/architecture/optimization and actual DLL hash
+verified together; full committed build log left-committed-build.log.
+Installed Steam DLL still C6C1A5041F544CCFCA23DD5D3F475E989603698067504D4D65A813AFC4552B3B,
+read directly from C:/Program Files (x86)/Steam/steamapps/common/Singularity/Binaries/d3d9.dll.
 Logs in private build/shotgun-disc-gog-20261109/left-*-final.log. OLED/GPU runtime,
 Steam/GOG gameplay and physical headset acceptance NOT RUN. Existing installed
 and installer artifacts were not replaced.

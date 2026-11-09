@@ -1,7 +1,7 @@
 ## 2026-11-10 — Left-handed controls candidate; German continuation
 
 - Left-handed candidate L1_PASS: VR Controller setting keeps restart/persistence; gun L / TMD R / L3 wheel / L1 Use / ammo behind right shoulder. Trigger/grip roles, anatomical wrist pivots, TMD native-source/socket ride, reload ownership and rendered carry witnesses updated. Face/menu buttons retain physical actions to avoid Triangle reload/pause conflict.
-- 26-fixture dual-TMD suite plus additional controls/UI/attachment checks PASS. Both pure and actual x86 MinHook fake-inventory suites exercise60000 reload transactions each across3 weapons and both layouts. L2 committed-source provenance follows in docs/handoffs/left-handed-vr-settings-20261110.md. No runtime or physical acceptance; no installed/installer replacement.
+- 26-fixture dual-TMD suite plus additional controls/UI/attachment checks PASS. Both pure and actual x86 MinHook fake-inventory suites exercise60000 reload transactions each across3 weapons and both layouts. L2_PASS: committed2e1d9d76 x86 PE32 /O2, SHA C52E1E11E2E27A9BDE7821FA79195D36B428C7E17A4460D228D661CA87F38083; receipt in docs/handoffs/left-handed-vr-settings-20261110.md. No runtime or physical acceptance; no installed/installer replacement.
 - German continuation90662118 maps12 additional native blocks and7 globals;2 upgrade wrappers resolved by exact native registrations. Texture RHI still4 candidates; mapper REVIEW_REQUIRED/2 and DE initialization refusal preserved. See docs/handoffs/gog-german-remaining-20261110.md.
 - Limit: optional left-handed support gauntlet fit and palm alignment need physical evidence; source-authored right-handed pair/back-slot gates are retained. Full scope: docs/handoffs/left-handed-vr-settings-20261110.md.
 
