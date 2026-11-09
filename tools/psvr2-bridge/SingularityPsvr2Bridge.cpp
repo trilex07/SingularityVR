@@ -9,6 +9,7 @@
 #include <cstring>
 #include <cwchar>
 #include <new>
+#include "toolkit_loader_path.h"
 
 #include "../../spikes/view_matrix/psvr2_ipc.h"
 #include "../../spikes/view_matrix/psvr2_gaze_abi.h"
@@ -225,7 +226,9 @@ struct Backend {
     }
 
     bool Load(const wchar_t* path) {
-        loader = LoadLibraryExW(path, nullptr, LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR | LOAD_LIBRARY_SEARCH_DEFAULT_DIRS);
+        const auto resolved = ResolveToolkitLoader(path);
+        Log().Write("bridge", "Toolkit loader path: %ls", resolved.c_str());
+        loader = LoadLibraryExW(resolved.c_str(), nullptr, LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR | LOAD_LIBRARY_SEARCH_DEFAULT_DIRS);
         if (!loader) return false;
         auto get = reinterpret_cast<GetModuleHandleFn>(GetProcAddress(loader, "psvr2_toolkit_loader_get_module_handle"));
         if (get) capi = static_cast<HMODULE>(SafeGetModuleHandle(get));
@@ -367,6 +370,16 @@ static DWORD ParseParentPid(int argc, wchar_t** argv) {
 }  // namespace
 
 int wmain(int argc, wchar_t** argv) {
+    // Read-only packaging fixture: no CAPI initialization, IPC or game process.
+    if (argc == 3 && wcscmp(argv[1], L"--resolve-loader") == 0) {
+        const auto resolved = ResolveToolkitLoader(argv[2]);
+        const int bytes = WideCharToMultiByte(CP_UTF8, 0, resolved.c_str(), -1, nullptr, 0, nullptr, nullptr);
+        if (bytes <= 0) return 1;
+        std::string utf8(static_cast<std::size_t>(bytes), '\0');
+        WideCharToMultiByte(CP_UTF8, 0, resolved.c_str(), -1, &utf8[0], bytes, nullptr, nullptr);
+        std::printf("%s\n", utf8.c_str());
+        return 0;
+    }
     if (argc < 3) {
         Log().Write("bridge", "usage: SingularityPsvr2Bridge.exe <loader-path> <token-or-probe> [--hardware|--probe-capi] [--parent <pid>] [--once]");
         return 2;
