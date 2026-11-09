@@ -5554,3 +5554,8 @@ Toggle with **F6**.
 
 Branch `fix/tmd-gravity-rifle-audio-crash`. L1 native AntiGrav arbitration, verified Valkyrie Vorbis header repair, imported memory-backed Polish movie routing, contextual pointer geometry and affine stereo captions: offline tests PASS; final /O2 artifact staged privately. See `docs/handoffs/gravity-rifle-movies-context-cinema-20261103.md` for evidence levels and hashes. Steam/game/HMD NOT RUN. Shorter cinema edge remains a physical acceptance dependency; no speculative per-eye crop applied. No merge/release.
 
+
+## 2026-11-09 — PSVR2 loader distribution (L1/L2 PASS)
+
+Bridge-only AppData fallback from exact distributed source fa4c3151. Explicit loader preserved; no x86 renderer or Steam changes. Evidence: docs/handoffs/psvr2-loader-discovery-20261109.md. Physical remote acceptance NOT RUN.
+
