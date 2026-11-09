@@ -1,5 +1,9 @@
 # Shotgun publication and offline edition checks — 2026-11-09
 
+Next stage: [GOG language inventory and German native input contracts](gog-languages-input-20261109.md).
+It supersedes the German input/menu/mouse/TMD mapping limitations below; remaining
+locker/inventory/scale/RTTI consumers and full runtime acceptance are still open.
+
 ## Published shotgun repair
 
 TrilexModInstaller branch fix/shotgun-audio-20261109, commit d6cf46b.

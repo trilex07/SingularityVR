@@ -19,8 +19,8 @@ inline const Layout& Alternate(){
 }
 inline Layout& Current(){static Layout p=English();return p;}
 // Recognizing the core map does not validate the remaining fixed-address
-// consumers (UI, missing mouse, lockers, haptics). Only the original map has
-// passed those additional offline checks. Never activate the partial DE port.
+// consumers (lockers, inventory, scale and RTTI witnesses). Input/menu/mouse/TMD
+// contracts now have separate measured profiles, but the DE port is incomplete.
 inline bool RuntimeAllowed(const Layout& p){return p.calc==English().calc&&p.names==English().names&&p.objects==English().objects&&p.line==English().line&&p.single==English().single&&p.boolTable==English().boolTable;}
 inline bool Equal(const unsigned char* p,const unsigned char* expected,unsigned n){return p&&!std::memcmp(p,expected,n);}
 template<class Reader> bool Matches(const Layout& p,Reader read){

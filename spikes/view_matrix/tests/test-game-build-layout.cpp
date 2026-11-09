@@ -1,4 +1,5 @@
 #include "../game_build_layout.h"
+#include "../game_build_input.h"
 #include <cassert>
 #include <cstdio>
 #include <vector>
@@ -39,6 +40,18 @@ int main(int argc,char** argv){
     const auto original=*selected;
     assert(gamebuild::RuntimeAllowed(original)==(std::string(argv[2])=="english-map"));
     assert(gamebuild::Matches(original,read));
+    const auto& input=gamebuild::InputFor(original);
+    assert(gamebuild::MatchesInput(input,read));
+    auto wrongSlot=input;wrongSlot.mouseSlot+=4;assert(!gamebuild::MatchesInput(wrongSlot,read));
+    auto wrongIdentity=input;wrongIdentity.padIdentity+=4;assert(!gamebuild::MatchesInput(wrongIdentity,read));
+    auto deniedInput=[&](uintptr_t address,unsigned n)->const unsigned char*{return address==input.engine?nullptr:read(address,n);};
+    assert(!gamebuild::MatchesInput(input,deniedInput));
+    assert(!gamebuild::MatchesInput(gamebuild::InputFor(std::string(argv[2])=="english-map"?gamebuild::Alternate():gamebuild::English()),read));
+    for(uintptr_t address:{input.mouse[0],input.mouse[1],input.mouse[2],input.mouse[3],input.padCallback,
+        input.cursor[0],input.cursor[1],input.cursor[2],input.start,input.stop,input.poll,input.padEnum,
+        input.refs[0],input.refs[1],input.refs[2],input.refs[3],input.refs[4]}){
+        image[address-0x400000]^=1;assert(!gamebuild::MatchesInput(input,read));image[address-0x400000]^=1;
+    }
     // Individually corrupt each identity/operand gate and require rejection.
     for(uintptr_t address:{original.calc,original.line,original.single,original.single+33,uintptr_t(0x48bce0),uintptr_t(0x42fcb5),uintptr_t(0x417ed8)}){
         image[address-0x400000]^=1;assert(!gamebuild::Select(read));image[address-0x400000]^=1;
@@ -46,5 +59,6 @@ int main(int argc,char** argv){
     auto denied=[&](uintptr_t address,unsigned n)->const unsigned char*{return address==original.objects?nullptr:read(address,n);};
     assert(!gamebuild::Select(denied));
     gamebuild::Current()=original;assert(gamebuild::Current().single==original.single);
-    printf("PASS %s: real PE mapped without executing; all gate mutations and unreadable root rejected\n",original.name);
+    assert(gamebuild::Input().padCallback==input.padCallback);
+    printf("PASS %s: real PE core + input contracts; gate mutations, mixed profiles and unreadable roots refused; no execution\n",original.name);
 }

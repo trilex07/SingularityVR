@@ -1,4 +1,5 @@
 #pragma once
+#include "game_build_input.h"
 // Include after Windows, MinHook and the mod's Log declaration. x86 only.
 // These guards bypass only verified mouse-specific blocks when the real device is absent.
 namespace missing_mouse {
@@ -65,16 +66,16 @@ static const unsigned short reloc0[]={1,11,36,65};
 static const unsigned short reloc1[]={1,18,31,44,50,61,74,98,111,130,226,272,284,317,326,357,369,402,411,441,471,484,536,566,607,638,669,727,836,882,894,927,936,967,979,1012,1021,1051,1270,1373,1379,1384,1404,1516,1522,1527,1547};
 static const unsigned short reloc2[]={1,14};
 static const unsigned short reloc3[]={1,18,32,42,48,60,73};
-static const Fingerprint fingerprints[]={
-{0xDD7439u,90u,0x72189A6Fu,reloc0,4},
-{0xDD325Bu,1629u,0x7D8B63DBu,reloc1,47},
-{0xDD5F2Bu,32u,0xC02CC0C4u,reloc2,2},
-{0xDCF3E0u,96u,0x807D0696u,reloc3,7},
-};
 static bool Install(){
  static LONG state=0;const LONG previous=InterlockedCompareExchange(&state,1,0);
  if(previous)return previous==2;
  unsigned char* image=(unsigned char*)GetModuleHandleW(nullptr);bool valid=false;
+ const auto& layout=gamebuild::Input();
+ const Fingerprint fingerprints[]={
+ {(unsigned)(layout.mouse[0]-0x400000),90u,layout.mouseHash[0],reloc0,4},
+ {(unsigned)(layout.mouse[1]-0x400000),1629u,layout.mouseHash[1],reloc1,47},
+ {(unsigned)(layout.mouse[2]-0x400000),32u,layout.mouseHash[2],reloc2,2},
+ {(unsigned)(layout.mouse[3]-0x400000),96u,layout.mouseHash[3],reloc3,7}};
  __try {
   const IMAGE_DOS_HEADER* dos=(const IMAGE_DOS_HEADER*)image;
   const IMAGE_NT_HEADERS32* nt=(const IMAGE_NT_HEADERS32*)(image+dos->e_lfanew);
@@ -84,11 +85,13 @@ static bool Install(){
   if(valid)for(unsigned i=0;i<4;++i)if(!Matches(image,fingerprints[i])){valid=false;break;}
  } __except(EXCEPTION_EXECUTE_HANDLER){valid=false;}
  if(!valid){Log("missing-mouse compatibility: exact loaded-code fingerprints rejected; no game guards installed");InterlockedExchange(&state,3);return false;}
- mouseSlot=(void**)(image+0x191FC78u);
- continueInit=image+0xDD7493u;continuePoll=image+0xDD38B8u;continueCoop=image+0xDD5F4Bu;
+ mouseSlot=(void**)(image+(layout.mouseSlot-0x400000));
+ continueInit=image+fingerprints[0].rva+fingerprints[0].length;
+ continuePoll=image+fingerprints[1].rva+fingerprints[1].length;
+ continueCoop=image+fingerprints[2].rva+fingerprints[2].length;
  const MH_STATUS init=MH_Initialize();
  if(init!=MH_OK && init!=MH_ERROR_ALREADY_INITIALIZED){Log("missing-mouse compatibility: MinHook init=%d",(int)init);InterlockedExchange(&state,3);return false;}
- void* sites[]={image+0xDD7439u,image+0xDD325Bu,image+0xDD5F2Bu,image+0xDCF3E0u};
+ void* sites[]={image+fingerprints[0].rva,image+fingerprints[1].rva,image+fingerprints[2].rva,image+fingerprints[3].rva};
  void* detours[]={(void*)&GuardInit,(void*)&GuardPoll,(void*)&GuardCoop,(void*)&GuardHelper};
  void** originals[]={&originalInit,&originalPoll,&originalCoop,(void**)&originalHelper};
  unsigned created=0;MH_STATUS hr=MH_OK;

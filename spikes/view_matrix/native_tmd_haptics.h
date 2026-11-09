@@ -1,4 +1,5 @@
 #pragma once
+#include "game_build_input.h"
 #include "tmd_haptics.h"
 
 // Native TMD power event source for tmd_haptics.h. Observation only: detours call the
@@ -34,7 +35,8 @@ static StartFn originalStart = nullptr;
 static StopFn  originalStop  = nullptr;
 
 constexpr uintptr_t kImageBase = 0x400000;
-constexpr uintptr_t kStartAddr = 0x100D790, kStopAddr = 0x100AEC0;
+static uintptr_t StartAddress(){return gamebuild::Input().start;}
+static uintptr_t StopAddress(){return gamebuild::Input().stop;}
 constexpr size_t    kStartSize = 248,       kStopSize = 194;
 constexpr unsigned long long kStartHash = 0x894F69CF191C20C7ull;
 constexpr unsigned long long kStopHash  = 0x1563D1E2018602DEull;
@@ -196,13 +198,13 @@ static float Overlay(bool gatesOk) {
 
 static void UnhookBoth() {
     if (originalStart) {
-        MH_DisableHook((void*)kStartAddr);
-        MH_RemoveHook((void*)kStartAddr);
+        MH_DisableHook((void*)StartAddress());
+        MH_RemoveHook((void*)StartAddress());
         originalStart = nullptr;
     }
     if (originalStop) {
-        MH_DisableHook((void*)kStopAddr);
-        MH_RemoveHook((void*)kStopAddr);
+        MH_DisableHook((void*)StopAddress());
+        MH_RemoveHook((void*)StopAddress());
         originalStop = nullptr;
     }
     InterlockedExchange(&hooksReady, 0);
@@ -224,29 +226,29 @@ static void Poll() {
         Log("TMD haptics: image base moved; refused");
         return;
     }
-    const bool sOk = NativeContextCursor::Method(kStartAddr, kStartSize, kStartHash);
-    const bool tOk = NativeContextCursor::Method(kStopAddr, kStopSize, kStopHash);
+    const bool sOk = NativeContextCursor::Method(StartAddress(), kStartSize, kStartHash);
+    const bool tOk = NativeContextCursor::Method(StopAddress(), kStopSize, kStopHash);
     if (!sOk || !tOk) {
         InterlockedExchange(&installAttempts, 3);
         Log("TMD haptics: contract refused start=%d stop=%d; no hook", sOk ? 1 : 0, tOk ? 1 : 0);
         return;
     }
 
-    if (MH_CreateHook((void*)kStartAddr, (void*)&Start, (void**)&originalStart) != MH_OK) {
+    if (MH_CreateHook((void*)StartAddress(), (void*)&Start, (void**)&originalStart) != MH_OK) {
         UnhookBoth();
         InterlockedExchange(&installAttempts, 3);
         Log("TMD haptics: MH_CreateHook failed for Start; permanently disabled");
         return;
     }
-    if (MH_CreateHook((void*)kStopAddr, (void*)&Stop, (void**)&originalStop) != MH_OK) {
+    if (MH_CreateHook((void*)StopAddress(), (void*)&Stop, (void**)&originalStop) != MH_OK) {
         UnhookBoth();
         InterlockedExchange(&installAttempts, 3);
         Log("TMD haptics: MH_CreateHook failed for Stop; unhooked both, permanently disabled");
         return;
     }
 
-    const MH_STATUS enStart = MH_EnableHook((void*)kStartAddr);
-    const MH_STATUS enStop  = MH_EnableHook((void*)kStopAddr);
+    const MH_STATUS enStart = MH_EnableHook((void*)StartAddress());
+    const MH_STATUS enStop  = MH_EnableHook((void*)StopAddress());
     if (enStart != MH_OK || enStop != MH_OK) {
         UnhookBoth();
         InterlockedExchange(&installAttempts, 3);

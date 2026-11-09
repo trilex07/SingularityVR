@@ -197,6 +197,7 @@ static void BuildTmdAssemblyC(float C[4][4]);
 #include "laser_style.h"
 #include "tmd_gravity_decal.h"
 #include "game_build_layout.h"
+#include "game_build_input.h"
 #include "weapon_shot_haptics.h"
 #include "damage_haptics.h"
 #include "psvr2_client.h"
