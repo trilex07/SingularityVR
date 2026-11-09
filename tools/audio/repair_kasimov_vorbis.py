@@ -1,4 +1,4 @@
-"""Repair pinned Kasimov/Centurion/Valkyrie remasters offline; preserve audio and offsets.
+"""Repair pinned weapon remasters offline; preserve audio and offsets.
 Use unpack_chunks.exe first, then pass its logical output. Never writes Steam.
 """
 import argparse,hashlib,json
@@ -8,6 +8,7 @@ from patch_opening_dialogue import bulks,require
 from ue3_sound_package import inspect
 from vorbis_fixed_allocation import pad_to_allocation
 PINS={
+    '57e8e5a37b667a4cb0a4ec4c2095ddda3782063e92a7aa559cf314d4b84f33a4':'shotgunFire35',
     '59e33f9950081e91916e07f3a86473b35826572e2dbdfa26d7749a4387d2618a':'machinegunFire57',
     'e2d5dcae9fa7815d8ee944c4ce62c0fa2bbde60a1303f45c61221c9cab60362b':'sniperFire08',
     'a5fa0d72bb6b32d845e6d0fc89990f18d3a87a9fac444d698689d74233756d39':'arPistolFire03',

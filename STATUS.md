@@ -5619,3 +5619,18 @@ installed and unchanged. Optional captured-pass filter is not an actor-ownership
 or root-cause fix. No performance measurements, Steam launch/deployment or
 physical acceptance this iteration. Details and candidate/installed hashes:
 docs/handoffs/offline-laser-tmd-20261109.md.
+
+## 2026-11-09 - Shotgun audio defect confirmed; disc/GOG audit
+
+L1_PASS / L2 fixture PASS: original remaster shotgunFire35 rejected by shipped
+native Vorbis decoder (-133); 53 other waves open. Hash-pinned header repair
+preserves all 92 compressed audio packets, PCM290980 bytes, properties and
+non-target logical bytes. Independently unpacked candidate and all54 native
+header opens PASS; fixed-allocation suite11 PASS. Player crash causality UNKNOWN
+without player hash/log/dump; candidate is not deployed or published.
+Read-only player crash collector added and exercised locally. Correct mod-log
+path is %LOCALAPPDATA%\SingularityVR\view_matrix.log, not Binaries.
+Disc EXE differs from current fixed-address map; GOG game EXE remains inside
+Inno installer, actual compatibility UNKNOWN. See
+ docs/handoffs/shotgun-audio-disc-gog-20261109.md for evidence, candidate hashes,
+installer reconstruction gap and per-edition implementation/test plan.
