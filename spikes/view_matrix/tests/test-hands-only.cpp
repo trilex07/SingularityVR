@@ -50,8 +50,9 @@ int main() {
     Expect(runsValid,"TMD hardware face runs are disjoint and within material 1");
     Expect(gloveisolate::TmdHardwareTrackedSide()==0&&
            gloveisolate::TmdHardwareDelta(0)==0&&
-           gloveisolate::TmdHardwareDelta(1)==1,
-           "native left TMD hardware shares physical left wrist delta in both handedness modes");
+           gloveisolate::TmdHardwareTrackedSide(1)==1&&
+           gloveisolate::TmdHardwareDelta(1)==0,
+           "native TMD hardware follows the off-hand role in both handedness modes");
     Expect(gloveisolate::IsTmdDevice("tmd_base")&&gloveisolate::IsTmdDevice("hinge1")&&
            gloveisolate::IsTmdDevice("rail_rot")&&gloveisolate::IsTmdDevice("nixie1")&&
            gloveisolate::IsTmdDevice("faceplate")&&gloveisolate::IsTmdDevice("wheel1"),

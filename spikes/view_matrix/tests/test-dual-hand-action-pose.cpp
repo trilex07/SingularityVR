@@ -23,7 +23,7 @@ int main(int argc,char**argv){
     blocked=c;blocked.carrying=true;assert(!dualaction::Eligible(blocked));
     blocked=c;blocked.nativeAnimation=true;assert(!dualaction::Eligible(blocked));
     blocked=c;blocked.tracked=false;assert(!dualaction::Eligible(blocked));
-    blocked=c;blocked.rightHanded=false;assert(!dualaction::Eligible(blocked));
+    blocked=c;blocked.supportedLayout=false;assert(!dualaction::Eligible(blocked));
     blocked=c;blocked.gameplay=false;assert(!dualaction::Eligible(blocked));
     blocked=c;blocked.holstered=true;assert(!dualaction::Eligible(blocked));
     float maximum=0;

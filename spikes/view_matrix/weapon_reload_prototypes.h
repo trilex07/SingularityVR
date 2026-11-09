@@ -15,7 +15,7 @@ namespace weaponreloadproto {
 inline bool ValkyrieKnifeCanBlock(bool enabled,bool ready,bool disabledByTmd){
     return enabled&&ready&&!disabledByTmd;
 }
-struct Shoulder {float left=.22f,down=.12f,back=.18f,leftExtension=0;};
+struct Shoulder {float left=.22f,down=.12f,back=.18f,leftExtension=0;bool right=false;};
 inline bool MidEye(hipknife::V left,hipknife::V right,hipknife::V& centre){
     if(!hipknife::Finite(left)||!hipknife::Finite(right))return false;
     const float separation=hipknife::Length(right-left);
@@ -24,9 +24,9 @@ inline bool MidEye(hipknife::V left,hipknife::V right,hipknife::V& centre){
 }
 inline hipknife::Pose Supply(hipknife::V headCentre,float latchedPhysicalYaw,const Shoulder& c){
     const hipknife::Q q{0,std::sin(latchedPhysicalYaw*.5f),0,std::cos(latchedPhysicalYaw*.5f)};
-    return {headCentre+hipknife::Rotate(q,{-c.left,-c.down,c.back}),q};
+    return {headCentre+hipknife::Rotate(q,{c.right?c.left:-c.left,-c.down,c.back}),q};
 }
-// Original spherical pouch plus a capsule going only toward physical left.
+// Original spherical pouch plus a capsule outward toward the ammo shoulder.
 // The segment begins at the OLD centre, so no previously valid point is lost.
 inline float ShoulderDistance(hipknife::V hand,hipknife::V originalCentre,
                               float physicalYaw,const Shoulder& c){
@@ -35,7 +35,7 @@ inline float ShoulderDistance(hipknife::V hand,hipknife::V originalCentre,
         return std::numeric_limits<float>::infinity();
     if(c.leftExtension<=0)return hipknife::Length(hand-originalCentre);
     const hipknife::Q q{0,std::sin(physicalYaw*.5f),0,std::cos(physicalYaw*.5f)};
-    const auto span=hipknife::Rotate(q,{-c.leftExtension,0,0});
+    const auto span=hipknife::Rotate(q,{c.right?c.leftExtension:-c.leftExtension,0,0});
     const float length2=hipknife::Dot(span,span);
     if(!std::isfinite(length2)||length2<=0)return std::numeric_limits<float>::infinity();
     const float along=std::clamp(hipknife::Dot(hand-originalCentre,span)/length2,0.f,1.f);
@@ -45,7 +45,7 @@ struct Calibration {
     bool ready=false;
     std::uint32_t revision=0; // caller increments on any calibration change
     centurionreload::Config gesture{}; // INERT until explicitly calibrated
-    Shoulder shoulder{}; // physical left/back; caller must use Supply, not old belt Pouch
+    Shoulder shoulder{}; // physical off-hand/back; use Supply, not old belt Pouch
     std::uint64_t gripReachMs=800; // bounded squeeze-before-reach, profile-owned
 };
 inline bool Valid(const Calibration& c){
@@ -73,7 +73,7 @@ struct Frame {
     Kind kind=Kind::None;
     const char* objectName=nullptr; // resolved base FName, not a class substring
     long meshWedges=0;
-    int aimHand=1; // first slice: right weapon, physical left interaction only
+    int aimHand=1; // physical weapon controller; shoulder must match opposite hand
     float bodyYaw=0; // physical head yaw for the independent shoulder anchor
     bool magazineReleaseDown=false; // named action LEVEL, PSVR2 binding: Circle
     bool nativePermitRequired=false,nativePermitConsumed=false; // real dispatcher evidence, not just conserved HUD change
@@ -112,7 +112,7 @@ struct State {
 };
 struct Result {
     Event event=Event::None;
-    bool reservePhysicalLeft=false;
+    bool reservePhysicalLeft=false; // legacy API name: reserves the current OFF hand
     bool reloadIntent=false; // abstract intent ONLY, never a native call
     bool ejectMagazine=false; // one visual/backend intent, NOT an inventory write
 };
@@ -123,12 +123,12 @@ inline Result Update(State& s,const Frame& f,const Calibration& c){
     const bool calibrated=Valid(c);
     const bool changed=(s.profile!=Kind::None&&s.profile!=f.kind)||
         (s.haveCalibration&&(s.calibrationRevision!=c.revision||!Same(s.priorCalibration,c.gesture)||
-            s.priorShoulder.left!=c.shoulder.left||s.priorShoulder.down!=c.shoulder.down||
+            s.priorShoulder.right!=c.shoulder.right||s.priorShoulder.left!=c.shoulder.left||s.priorShoulder.down!=c.shoulder.down||
             s.priorShoulder.back!=c.shoulder.back||s.priorShoulder.leftExtension!=c.shoulder.leftExtension||
             s.priorGripReachMs!=c.gripReachMs));
     const auto& in=f.gesture;auto& t=s.transaction;
     const bool gripEdge=in.grip&&!t.priorGrip,gripRelease=!in.grip&&t.priorGrip;
-    const bool core=f.enabled&&identity&&f.aimHand==1&&calibrated&&!changed&&
+    const bool core=f.enabled&&identity&&(f.aimHand==0||f.aimHand==1)&&(c.shoulder.right==(f.aimHand==0))&&calibrated&&!changed&&
         in.context&&in.tracked&&in.supported&&in.pawn&&in.weapon&&in.ammoFresh&&
         centurionreload::AmmoValid(in)&&hipknife::Finite(in.hand)&&hipknife::Finite(in.socket)&&
         hipknife::Finite(in.pouch)&&(!in.firing||t.phase!=Phase::Idle)&&in.nowMs>=t.lastMs&&

@@ -16,10 +16,10 @@ struct Key {
 };
 struct Context {
     bool enabled=false,dual=false,tracked=false,gameplay=false,nativeAnimation=false,
-         holstered=false,support=false,carrying=false,rightHanded=false;
+         holstered=false,support=false,carrying=false,supportedLayout=false;
 };
 inline bool Eligible(const Context& c){return c.enabled&&c.dual&&c.tracked&&c.gameplay&&
-    !c.nativeAnimation&&!c.holstered&&!c.support&&!c.carrying&&c.rightHanded;}
+    !c.nativeAnimation&&!c.holstered&&!c.support&&!c.carrying&&c.supportedLayout;}
 // A shared parent may carry the native component's uniform scale. Retain it;
 // singular/nonuniform/sheared poses are not eligible for this rigid correction.
 inline bool ReferenceWithScale(const Mat& current,const Mat& reference,Mat& out){

@@ -78,11 +78,12 @@ int main(){
             npc.clip=0;npc.reserve=73;assert(invoke(&npc)==1&&npc.clip==npc.capacity); // foreign object untouched
             weaponreloadproto::State state;weaponreloadproto::Frame frame;weaponreloadproto::Calibration cfg;
             cfg.ready=true;cfg.revision=1;frame.enabled=frame.liveIdentityVerified=true;frame.kind=profile.kind;
+            const bool leftHanded=(round&1)!=0;cfg.shoulder.right=leftHanded;frame.aimHand=leftHanded?0:1;
             frame.meshWedges=profile.meshWedges;frame.objectName=profile.objectName;
             auto& in=frame.gesture;in.context=in.supported=in.tracked=in.ammoFresh=true;
             frame.nativePermitRequired=true;const unsigned startPermits=permits;
             in.pawn=20;in.weapon=selected;in.clip=weapon->clip;in.reserve=weapon->reserve;in.capacity=weapon->capacity;
-            in.socket={.2f,1,-.4f};in.pouch={-.22f,1,.18f};in.hand=in.socket;in.nowMs=clockMs;
+            in.socket={.2f,1,-.4f};in.pouch=weaponreloadproto::Supply({0,1.12f,0},0,cfg.shoulder).p;in.hand=in.socket;in.nowMs=clockMs;
             auto update=[&](){in.nowMs=++clockMs;return weaponreloadproto::Update(state,frame,cfg);};
             assert(update().event==weaponreloadproto::Event::None);
             frame.magazineReleaseDown=true;assert(update().ejectMagazine);
@@ -103,5 +104,5 @@ int main(){
     }
     assert(npc.calls==60000);
     assert(MH_DisableHook((void*)target)==MH_OK&&MH_RemoveHook((void*)target)==MH_OK&&MH_Uninitialize()==MH_OK);
-    puts("PASS OWN x86 /O2 shared detour: 3 weapons, 60000 OFF/ON Circle/insert ACKs, partial reserves, void/int ABI, no full reload on fast permit, no auto/duplicate/holster/Centurion leak");
+    puts("PASS OWN x86 /O2 shared detour: 3 weapons, both handedness layouts, 60000 OFF/ON Circle/insert ACKs, partial reserves, void/int ABI, no full reload on fast permit, no auto/duplicate/holster/Centurion leak");
 }
