@@ -195,6 +195,7 @@ static void BuildTmdAssemblyC(float C[4][4]);
 #include "psvr2_trigger_config.h"
 #include "trigger_shot.h"
 #include "laser_style.h"
+#include "tmd_gravity_decal.h"
 #include "weapon_shot_haptics.h"
 #include "damage_haptics.h"
 #include "psvr2_client.h"
@@ -8117,6 +8118,8 @@ inline SHORT DebugKey(int vk) {
 // it - a panel-backed setting has to be visible to the row text, the adjust and the save, all of which
 // live above the renderer.
 extern volatile LONG g_laserDotOnly;
+static LONG g_laserWidthPct=100,g_laserDotPct=100,g_laserBrightnessPct=100,g_laserShimmer=1;
+static int g_panelLaserParent=1;
 extern volatile LONG g_laserOn, g_laserLenUU;
 
 // The global anchor these slots override and seed from; defined with the gun transform.
@@ -8325,7 +8328,7 @@ enum { PR_ENABLEVR = 0, PR_CUTSCENEVIEW, PR_CINEMAMATTE, PR_AIMMETHOD, PR_MOVEDI
        PR_RELOAD_HINTS, PR_CLOSE,
        PR_GOTO_NIS, PR_NIS_SHARPEN, PR_NIS_STRENGTH,
        PR_OLED_PRESET,
-       PR_HAPTICS, PR_HAPTIC_LEVEL, PR_GAZE_WHEEL, PR_GAZE_NIS, PR_STEREO_CINEMA }; // append only
+       PR_HAPTICS, PR_HAPTIC_LEVEL, PR_GAZE_WHEEL, PR_GAZE_NIS, PR_STEREO_CINEMA, PR_GOTO_LASER, PR_LASERWIDTH, PR_DOTSIZE, PR_LASERBRIGHT, PR_LASERSHIMMER }; // append only
 
 // ---- ⭐ run 165: pages, because eleven rows is a list you scroll rather than read ----
 //
@@ -8360,7 +8363,7 @@ enum { PR_ENABLEVR = 0, PR_CUTSCENEVIEW, PR_CINEMAMATTE, PR_AIMMETHOD, PR_MOVEDI
 //   - No page is longer than 10 rows, which keeps every page inside the range that was drawing
 //     before any of this. It also nearly DOUBLES the glyph - px is derived from this number, and at
 //     17 it had hit the floor of 3 that the comment below calls unreadable through a lens.
-const int kPanelPages    = 13;     // + NIS sharpening controls
+const int kPanelPages    = 14;     // + NIS sharpening controls
 const int kPanelRowsMax  = 13;     // DISPLAY needs 13 for TEXTURES (was 12); effective px stays 3 via floor-raiser
 const uint8_t kPageRows[kPanelPages][kPanelRowsMax] = {
     { PR_ENABLEVR, PR_CUTSCENEVIEW, PR_CINEMAMATTE, PR_AIMMETHOD, PR_GOTO_CTRL, PR_GOTO_COMFORT,
@@ -8380,7 +8383,7 @@ const uint8_t kPageRows[kPanelPages][kPanelRowsMax] = {
     // ⭐ run 230: NOTE SIZE is the HUD-inset row this page was created expecting. It belongs here
     // for the reason the page exists - it is judged by READING, and a setting judged by reading has
     // to be adjustable while you are reading. A relaunch per guess costs a headset run each.
-    { PR_CROSSHAIR, PR_LASER, PR_MUZZLEFX, PR_WORLDSCALE, PR_GUNSCALE, PR_MENUOVERLAY, PR_NOTESIZE,
+    { PR_CROSSHAIR, PR_GOTO_LASER, PR_MUZZLEFX, PR_WORLDSCALE, PR_GUNSCALE, PR_MENUOVERLAY, PR_NOTESIZE,
       PR_POLISH, PR_UINARRATOR, PR_GLOVEONLY, PR_VFXLOOK, PR_GOTO_NIS, PR_BACK },
     // ⭐ run 205: AIM PARTS is on the panel, not just the ini, because the ONLY sound way to compare
     // these is to toggle them IN PLACE - same spot, same view direction, seconds apart. Draw count in a
@@ -8425,9 +8428,10 @@ const uint8_t kPageRows[kPanelPages][kPanelRowsMax] = {
     { PR_TUT_STEP, PR_TUT_LINE1, PR_TUT_LINE2, PR_TUT_LINE3, PR_TUT_LINE4,
       PR_TUT_PREVIOUS, PR_TUT_NEXT, PR_TUT_LANGUAGE, PR_TUT_BACK },
     { PR_NIS_SHARPEN, PR_NIS_STRENGTH, PR_OLED_PRESET, PR_TEXTURES, PR_GAZE_WHEEL, PR_GAZE_NIS, PR_STEREO_CINEMA, PR_BACK },
+    { PR_LASER, PR_LASERWIDTH, PR_DOTSIZE, PR_LASERBRIGHT, PR_LASERSHIMMER, PR_BACK },
 };
 // ADVANCED lost MENU CAM in run 180 and gained WEAPON FX in 181; DISPLAY gained MUZZLE FX in 189.
-const int kPageCount[kPanelPages] = { 13, 12, 5, 13, 10, 7, 13, 6, 8, 6, 3, 9, 8 };
+const int kPageCount[kPanelPages] = { 13, 12, 5, 13, 10, 7, 13, 6, 8, 6, 3, 9, 8, 6 };
 
 // Width per page, so a two-row sub-page is not as wide as the root. Sized to the longest row/title/
 // footer the page can display, not to what it happens to show now - that is what keeps the box from
@@ -8436,17 +8440,17 @@ const int kPageCount[kPanelPages] = { 13, 12, 5, 13, 10, 7, 13, 6, 8, 6, 3, 9, 8
 // plate. The widest settings strings are "AIM METHOD MOTION CONTROLLER" and
 // "MOVE DIRECTION HAND (NO TRACKING)".
 // ⭐ run 249: TMD BONES is 30 for "BONE MODE      NUDGE (find it)", its longest reachable value.
-const int kPageCols[kPanelPages] = { 34, 35, 30, 33, 32, 30, 30, 30, 30, 32, 30, 40, 34 };
+const int kPageCols[kPanelPages] = { 34, 35, 30, 33, 32, 30, 30, 30, 30, 32, 30, 40, 34, 34 };
 const char* kPageName[kPanelPages] = { "VR SETTINGS", "CONTROLLER", "COMFORT", "DISPLAY",
                                        "ADVANCED", "WEAPON ALIGN", "TMD ALIGN",
                                        "TMD BONES", "TMD MESH", "HANDS", "LANGUAGE / JEZYK",
-                                       "TUTORIAL", "DISPLAY IMAGE" };
+                                       "TUTORIAL", "DISPLAY IMAGE", "AIMING LASER" };
 
 int g_panelPage = 0;
 int g_panelImageParent = 3;
 const int kMinimalRoot[] = { PR_GOTO_CTRL, PR_NOTESIZE, PR_POLISH, PR_UINARRATOR,
     PR_RELOAD_HINTS, PR_GOTO_NIS, PR_GOTO_TUTORIAL, PR_CLOSE };
-const int kMinimalControls[] = { PR_TURNMODE, PR_SNAPANGLE, PR_TURNSPEED, PR_MOVEDIR, PR_LASER,
+const int kMinimalControls[] = { PR_TURNMODE, PR_SNAPANGLE, PR_TURNSPEED, PR_MOVEDIR, PR_LASER, PR_GOTO_LASER,
     PR_LEFTHAND, PR_RECENTERCHORD, PR_BACK };
 inline int PanelCountForPage(int page) {
     if (g_vrSettingsMinimal && page == 0) return (int)_countof(kMinimalRoot);
@@ -8608,6 +8612,13 @@ void PanelSaveRow(int rowId, const char* path) {
             _snprintf_s(v, sizeof(v), _TRUNCATE, "%ld",
                         InterlockedCompareExchange(&g_aimMethod, 0, 0));
             WritePrivateProfileStringA("Input", "AimMethod", v, path); return;
+        case PR_LASERWIDTH: case PR_DOTSIZE: case PR_LASERBRIGHT: case PR_LASERSHIMMER: {
+            const char* key=rowId==PR_LASERWIDTH?"LaserWidthPct":rowId==PR_DOTSIZE?"LaserDotSizePct":rowId==PR_LASERBRIGHT?"LaserBrightnessPct":"LaserShimmer";
+            const LONG value=rowId==PR_LASERWIDTH?g_laserWidthPct:rowId==PR_DOTSIZE?g_laserDotPct:rowId==PR_LASERBRIGHT?g_laserBrightnessPct:g_laserShimmer;
+            _snprintf_s(v,sizeof(v),_TRUNCATE,"%ld",value);
+            WritePrivateProfileStringA("Render",key,v,path);return;
+        }
+        case PR_GOTO_LASER:return;
         case PR_LASER:
             _snprintf_s(v, sizeof(v), _TRUNCATE, "%ld",
                         InterlockedCompareExchange(&g_laserOn, 0, 0));
@@ -8901,7 +8912,7 @@ void PanelSave() {
     // Every page, every row - so the set that is SAVED is by construction the set that is SHOWN.
     for (int page = 0; page < kPanelPages; ++page) {
         // Minimal UI must not rewrite hidden renderer/hand calibration options.
-        if (g_vrSettingsMinimal && page != 0 && page != 1 && page != 10 && page != 11 && page != 12) continue;
+        if (g_vrSettingsMinimal && page != 0 && page != 1 && page != 10 && page != 11 && page != 12 && page != 13) continue;
         for (int i = 0; i < PanelCountForPage(page); ++i)
             PanelSaveRow(PanelIdForPage(page, i), path);
     }
@@ -8951,6 +8962,11 @@ void PanelRowText(int row, char* out, size_t cap) {
             _snprintf_s(out, cap, _TRUNCATE, "CINEMA MATTE   %s",
                         InterlockedCompareExchange(&g_sceneCinemaMask, 0, 0) ? "ON" : "OFF");
             break;
+        case PR_GOTO_LASER: _snprintf_s(out,cap,_TRUNCATE,"LASER OPTIONS >");break;
+        case PR_LASERWIDTH: _snprintf_s(out,cap,_TRUNCATE,"BEAM WIDTH     %ld%%",g_laserWidthPct);break;
+        case PR_DOTSIZE: _snprintf_s(out,cap,_TRUNCATE,"DOT SIZE       %ld%%",g_laserDotPct);break;
+        case PR_LASERBRIGHT: _snprintf_s(out,cap,_TRUNCATE,"BRIGHTNESS     %ld%%",g_laserBrightnessPct);break;
+        case PR_LASERSHIMMER: _snprintf_s(out,cap,_TRUNCATE,"DOT SHIMMER    %s",g_laserShimmer?"ON":"OFF");break;
         case PR_LASER:
             _snprintf_s(out, cap, _TRUNCATE, "LASER SIGHT    %s",
                         !Rd(g_laserOn)?"OFF":Rd(g_laserDotOnly)?"DOT":"BEAM + DOT");
@@ -9956,6 +9972,11 @@ void PanelAdjust(int row, int dir) {
         case PR_GOTO_TMDBONE: g_panelPage = 7; g_panelRow = 0; return;
         case PR_GOTO_TMDMESH: g_panelPage = 8; g_panelRow = 0; return;
         case PR_BACK_TMD:     g_panelPage = 6; g_panelRow = 0; return;
+        case PR_GOTO_LASER:g_panelLaserParent=g_panelPage;g_panelPage=13;g_panelRow=0;return;
+        case PR_LASERWIDTH:g_laserWidthPct=laserstyle::Clamp(g_laserWidthPct+dir*10,25,200);break;
+        case PR_DOTSIZE:g_laserDotPct=laserstyle::Clamp(g_laserDotPct+dir*10,25,250);break;
+        case PR_LASERBRIGHT:g_laserBrightnessPct=laserstyle::Clamp(g_laserBrightnessPct+dir*10,10,100);break;
+        case PR_LASERSHIMMER:g_laserShimmer=!g_laserShimmer;break;
         case PR_LASER: {
             const int mode=laserstyle::Next(laserstyle::Mode(Rd(g_laserOn)!=0,Rd(g_laserDotOnly)!=0),dir);
             InterlockedExchange(&g_laserDotOnly,mode==1?1:0);
@@ -9978,7 +9999,7 @@ void PanelAdjust(int row, int dir) {
             else                           g->pitchTenths += dir;
             break;
         }
-        case PR_BACK:         g_panelPage = g_panelPage == 12 ? g_panelImageParent : 0;
+        case PR_BACK:         g_panelPage = g_panelPage == 13 ? g_panelLaserParent : g_panelPage == 12 ? g_panelImageParent : 0;
                               g_panelRow = 0; return;
         default:
             // Always recoverable, by two independent routes: the panel is opened by holding a
@@ -14857,6 +14878,8 @@ static ShadowSetPS shadowOriginalPS=nullptr;
 // the gravity black rectangles (trace 17792-3 groups 311/312, modulate decal PS
 // whose CTAB names DecalLocalBinormal/DecalLocalTangent, only in gravity frame).
 static bool g_dropDecalLocalTangent=false;
+static bool g_tmdGravityDecalFix=false;
+static bool g_tmdGravityDecalBound=false;
 static IDirect3DPixelShader9* g_decalLtCache[64]{};static bool g_decalLtMatch[64]{};static unsigned g_decalLtNext=0;
 static bool g_decalLtBound=false;static volatile LONG g_decalLtDropped=0;
 static bool DecalLocalTangentPS(IDirect3DPixelShader9* ps){
@@ -14873,7 +14896,13 @@ static bool DecalLocalTangentPS(IDirect3DPixelShader9* ps){
     return match;
 }
 static HRESULT STDMETHODCALLTYPE ShadowTraceSetPS(IDirect3DDevice9* dev,IDirect3DPixelShader9* ps) {
-    const HRESULT hr=shadowOriginalPS(dev,ps);if(SUCCEEDED(hr)){shadowtrace::bound.ps=ps;shadowfix::BindPS(ps);worldshadowfix::BindPS(ps);projectorfix::BindPS(ps);nativefx::BindPS(ps);g_decalLtBound=g_dropDecalLocalTangent&&DecalLocalTangentPS(ps);}return hr;
+    const HRESULT hr=shadowOriginalPS(dev,ps);if(SUCCEEDED(hr)){shadowtrace::bound.ps=ps;shadowfix::BindPS(ps);worldshadowfix::BindPS(ps);projectorfix::BindPS(ps);nativefx::BindPS(ps);g_decalLtBound=g_dropDecalLocalTangent&&DecalLocalTangentPS(ps);
+        // Exact bytecode identity: no allocation, pointer cache or name-based overmatch.
+        g_tmdGravityDecalBound=false;
+        if(g_tmdGravityDecalFix&&ps){UINT n=0;unsigned char code[2132];
+            if(SUCCEEDED(ps->GetFunction(nullptr,&n))&&n==sizeof(code)&&SUCCEEDED(ps->GetFunction(code,&n)))
+                g_tmdGravityDecalBound=tmdgravitydecal::Shader(code,n);
+        }}return hr;
 }
 // Fix-I/menu census: wire the dormant MenuDrawTrace recorder into the four draw hooks
 // (calls below) with path masks in StereoPairBody (1) and HudStereoPair (2); provider
@@ -21192,6 +21221,23 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
     hotpath::scope hotScope(g_hotPathSampler, hotpath::Family::draw_hook);
     MenuDrawTraceRecord(dev,1,t,primCount,numVertices,startIndex,minIndex,baseVertex,nullptr,0);   // fix-I census
     InterlockedIncrement(&g_frameDrawIdx);
+    if(g_tmdGravityDecalBound&&g_tmdGravityDecalFix){
+        DWORD state[13]{};const D3DRENDERSTATETYPE ids[]={D3DRS_COLORWRITEENABLE,D3DRS_ZWRITEENABLE,
+            D3DRS_ALPHABLENDENABLE,D3DRS_SRCBLEND,D3DRS_DESTBLEND,D3DRS_STENCILENABLE,D3DRS_BLENDOP,
+            D3DRS_ZENABLE,D3DRS_ZFUNC,D3DRS_SEPARATEALPHABLENDENABLE,D3DRS_SRCBLENDALPHA,
+            D3DRS_DESTBLENDALPHA,D3DRS_BLENDOPALPHA};
+        bool valid=true;for(unsigned i=0;i<13;++i)valid=SUCCEEDED(dev->GetRenderState(ids[i],&state[i]))&&valid;
+        IDirect3DVertexBuffer9* vb=nullptr;UINT offset=0,stride=0;
+        valid=SUCCEEDED(dev->GetStreamSource(0,&vb,&offset,&stride))&&valid;if(vb)vb->Release();
+        const bool context=VrModeOn()&&InGameplay()&&Rd(g_haveTMD)==1&&Rd(g_handsStatus)==HANDS_TMD&&
+            !Rd(g_gamePaused)&&!Rd(g_vrUiMenu)&&!Rd(g_panelOpen)&&!Rd(g_inCinematic)&&Rd(g_rtIsScene);
+        if(tmdgravitydecal::Drop({valid,context,(unsigned)t,stride,offset,numVertices,primCount,
+                state[0],state[1],state[2],state[3],state[4],state[5],state[6],
+                state[7],state[8],state[9],state[10],state[11],state[12]})){
+            static unsigned receipts=0;if(receipts++<4)Log("tmd-gravity-decal: exact captured pass suppressed PS=9CE7CA1D verts=%u prims=%u",numVertices,primCount);
+            return D3D_OK;
+        }
+    }
     if(g_decalLtBound){const LONG n=InterlockedIncrement(&g_decalLtDropped);if(n==1||n%2000==0)Log("decal-local-tangent: dropped=%ld",n);return D3D_OK;}
     if(g_tmdShortGauntlet && gloveisolate::IsArmFleshSection(numVertices,startIndex,primCount)) {
         static LONG saidExact=0;
@@ -30476,7 +30522,7 @@ void DrawLaserSight(IDirect3DDevice9* dev) {
     dev->SetRenderState(D3DRS_SCISSORTESTENABLE, FALSE);
 
     const float halfW = (float)(vp.Width / 2);
-    const float laserShimmer=laserstyle::Shimmer(GetTickCount());
+    const float laserShimmer=(g_laserShimmer?laserstyle::Shimmer(GetTickCount()):1.f);
     for (int eye = 0; eye < 2; ++eye) {
         float m[16];
         memcpy(m, g_camMats[slot].m, sizeof(m));
@@ -30501,9 +30547,11 @@ void DrawLaserSight(IDirect3DDevice9* dev) {
             (LONG)(vp.X+(eye+1)*halfW),(LONG)(vp.Y+vp.Height)};
         dev->SetScissorRect(&eyeRect);
         dev->SetRenderState(D3DRS_SCISSORTESTENABLE,TRUE);
-        const float width=laserstyle::HalfWidth(halfW);
+        const float width=laserstyle::HalfWidth(halfW)*g_laserWidthPct*.01f;
         const float shimmer=laserShimmer; // same phase in BOTH eyes
+        const auto tint=[&](DWORD c){return laserstyle::Brightness(c,g_laserBrightnessPct);};
         const auto beam=[&](float radius,DWORD colour) {
+            colour=tint(colour);
             float dx=sx1-sx0,dy=sy1-sy0;
             const float length=std::sqrt(dx*dx+dy*dy);
             if(length<.5f)return; // dot still draws when line projects to a point
@@ -30518,12 +30566,12 @@ void DrawLaserSight(IDirect3DDevice9* dev) {
             beam(width,0xA0FF5050);      // thin translucent core
         }
         const auto dot=[&](float radius,DWORD centre) {
-            LaserVtx v[18];v[0]={sx1,sy1,0,1,centre};
+            LaserVtx v[18];v[0]={sx1,sy1,0,1,tint(centre)};
             for(unsigned n=0;n<=16;++n){const float angle=n*(6.2831853f/16);
                 v[n+1]={sx1+std::cos(angle)*radius,sy1+std::sin(angle)*radius,0,1,0x00FF3030};}
             g_origDrawPrimUP(dev,D3DPT_TRIANGLEFAN,16,v,sizeof(LaserVtx));
         };
-        const float radius=laserstyle::DotRadius(halfW);
+        const float radius=laserstyle::DotRadius(halfW)*g_laserDotPct*.01f;
         dot(radius*2.5f,(DWORD(48*shimmer)<<24)|0x00FF3030);
         dot(radius,0xFFFF6060);
         dot(radius*.45f,0xFFFFE8D8); // small bright centre; never modulate aim position
@@ -37599,6 +37647,7 @@ HRESULT STDMETHODCALLTYPE Hook_ResetDevice(IDirect3DDevice9* dev, D3DPRESENT_PAR
     InterlockedIncrement(&g_diagResetCount);
     if(pp){InterlockedExchange(&g_diagResetRequestW,LONG(pp->BackBufferWidth));InterlockedExchange(&g_diagResetRequestH,LONG(pp->BackBufferHeight));}
     if (pp && dev) GuardResetSize(pp);
+    g_tmdGravityDecalBound=false;g_decalLtBound=false;memset(g_decalLtCache,0,sizeof g_decalLtCache);
     ReleaseWristResources();
     g_cinemaWasActive=false;g_cinemaStereoToken=~0u;memset(g_cinemaNativeValid,0,sizeof g_cinemaNativeValid);
     ReleaseCutsceneMonoResources(); // DEFAULT-pool compose surface; rebuilt lazily
@@ -37609,6 +37658,7 @@ HRESULT STDMETHODCALLTYPE Hook_ResetDeviceEx(IDirect3DDevice9Ex* dev, D3DPRESENT
     InterlockedIncrement(&g_diagResetCount);
     if(pp){InterlockedExchange(&g_diagResetRequestW,LONG(pp->BackBufferWidth));InterlockedExchange(&g_diagResetRequestH,LONG(pp->BackBufferHeight));}
     if (pp && dev) GuardResetSize(pp);
+    g_tmdGravityDecalBound=false;g_decalLtBound=false;memset(g_decalLtCache,0,sizeof g_decalLtCache);
     ReleaseWristResources();
     g_cinemaWasActive=false;g_cinemaStereoToken=~0u;memset(g_cinemaNativeValid,0,sizeof g_cinemaNativeValid);
     ReleaseCutsceneMonoResources(); // DEFAULT-pool compose surface; rebuilt lazily
@@ -38703,6 +38753,8 @@ void LoadIniSettings() {
     g_trackedDepthSourcePose=GetPrivateProfileIntA("Render","TrackedDepthSourcePose",0,path)!=0;
     g_tmdTrackedMuzzle=GetPrivateProfileIntA("Render","TmdTrackedMuzzle",0,path)!=0;
     g_tmdVisualAudit=GetPrivateProfileIntA("Diagnostic","TmdVisualAudit",0,path)!=0;
+    g_tmdGravityDecalFix=GetPrivateProfileIntA("Render","TmdGravityDecalFix",0,path)!=0;
+    Log("ini: TmdGravityDecalFix=%d (exact PS 2132/9CE7CA1D and captured modulate draw gate, default OFF)",g_tmdGravityDecalFix?1:0);
     g_dropDecalLocalTangent=GetPrivateProfileIntA("Diagnostic","DropDecalLocalTangent",0,path)!=0;
     Log("ini: DropDecalLocalTangent=%d (default OFF; skip only modulate decals whose PS names DecalLocalTangent)",g_dropDecalLocalTangent?1:0);
     Log("ini: TmdVisualAudit=%d (default OFF; three bounded neutral/sky/gravity-input driver traces + SBS, no visual correction)",g_tmdVisualAudit?1:0);
@@ -39136,6 +39188,10 @@ void LoadIniSettings() {
     InterlockedExchange(&g_laserOn,
                         GetPrivateProfileIntA("Render", "LaserSight", 0, path) ? 1 : 0);
     InterlockedExchange(&g_laserDotOnly,GetPrivateProfileIntA("Render","LaserDotOnly",0,path)?1:0);
+    g_laserWidthPct=laserstyle::Clamp(GetPrivateProfileIntA("Render","LaserWidthPct",100,path),25,200);
+    g_laserDotPct=laserstyle::Clamp(GetPrivateProfileIntA("Render","LaserDotSizePct",100,path),25,250);
+    g_laserBrightnessPct=laserstyle::Clamp(GetPrivateProfileIntA("Render","LaserBrightnessPct",100,path),10,100);
+    g_laserShimmer=GetPrivateProfileIntA("Render","LaserShimmer",1,path)!=0;
     LONG llen = GetPrivateProfileIntA("Render", "LaserLengthUU", 4000, path);
     if (llen < 100)    llen = 100;
     if (llen > 100000) llen = 100000;

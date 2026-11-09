@@ -5607,3 +5607,15 @@ DLL C6C1A5041F544CCFCA23DD5D3F475E989603698067504D4D65A813AFC4552B3B.
 Guarded DLL-only installation backs up 374A8B48; existing INI/assets/TMD/Seeker preserved.
 Falsifier: modes fail to persist, dot disappears on zero-length projected beam,
 eye-seam spill, state leakage or uncomfortable shimmer in actual headset.
+
+## 2026-11-09 - Offline laser controls and captured TMD decal gate
+
+L1_PASS / L2_PASS: laser options subpage (beam width, dot size, alpha brightness,
+shimmer), actual source-extracted Windows INI roundtrip/default/clamp test,
+measured shader positive + 2132 byte mutation rejections, individual draw gate
+rejections, trigger-shot and independent-hands haptic regressions; x86 PE32 /O2.
+New Render/TmdGravityDecalFix defaults OFF; accepted broad workaround remains
+installed and unchanged. Optional captured-pass filter is not an actor-ownership
+or root-cause fix. No performance measurements, Steam launch/deployment or
+physical acceptance this iteration. Details and candidate/installed hashes:
+docs/handoffs/offline-laser-tmd-20261109.md.
