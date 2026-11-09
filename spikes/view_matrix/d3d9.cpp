@@ -1,4 +1,5 @@
 ﻿#include "two_hand_grip.h"
+#include "handedness.h"
 #include "tmd_gravity_grip.h"
 #include "tmd_visual_audit.h"
 static bool g_tmdVisualAudit=false;
@@ -8554,7 +8555,7 @@ extern int g_leftHanded, g_leftHandedPending;
 // Defined beside g_leftHandedPending; declared here so the panel rows above can read it.
 extern int g_texQuality, g_texQualityApplied;
 // Defined with the handedness globals; the panel's MOVE DIRECTION row is the first thing to read it.
-inline int OffHand() { return g_leftHanded ? 1 : 0; }
+inline int OffHand() { return handedness::Off(g_leftHanded!=0); }
 
 // Written on CLOSE, not on every change. Changes apply live so turn speed can be felt while the
 // stick is moving, but the file only ever receives a value that was settled on - a mis-set number
@@ -9069,7 +9070,7 @@ void PanelRowText(int row, char* out, size_t cap) {
         case PR_TMDROLL:
             _snprintf_s(out, cap, _TRUNCATE, "TMD ROLL   %+.1f", Rd(g_tmdRollTenths) / 10.0f);  break;
         case PR_TMD_HELP_IMPULSE:
-            _snprintf_s(out, cap, _TRUNCATE, "L2: IMPULSE (LEFT TRIGGER)"); break;
+            _snprintf_s(out, cap, _TRUNCATE, "%s",g_leftHanded?"R2: IMPULSE (RIGHT TRIGGER)":"L2: IMPULSE (LEFT TRIGGER)"); break;
         case PR_TMD_HELP_AGE:
             _snprintf_s(out, cap, _TRUNCATE, "LEFT SQUARE: AGE / RENOVATE"); break;
         case PR_TMD_HELP_RULES:
@@ -9327,8 +9328,8 @@ void PanelRowText(int row, char* out, size_t cap) {
         case PR_LEFTHAND:
             // The marker is the whole point of this row existing rather than the setting being
             // ini-only: it says the value moved AND that nothing has happened yet.
-            _snprintf_s(out, cap, _TRUNCATE, "LEFT HANDED    %s%s",
-                        g_leftHandedPending ? "ON" : "OFF",
+            _snprintf_s(out, cap, _TRUNCATE, "LEFT HANDED %s%s",
+                        g_leftHandedPending ? "ON [GUN L / TMD R / L3 / L1 / AMMO R]" : "OFF",
                         (g_leftHandedPending != g_leftHanded) ? "  *RESTART*" : "");
             break;
         case PR_TEXTURES: {
@@ -9365,14 +9366,14 @@ void PanelRowText(int row, char* out, size_t cap) {
         case PR_TUT_STEP: {
             const bool polish = VrTutorialLanguage() == vrtutorial::Language::Polish;
             const vrtutorial::Step& step =
-                vrtutorial::GetStep(VrTutorialLanguage(), VrTutorialStep());
+                vrtutorial::GetStep(VrTutorialLanguage(), VrTutorialStep(),g_leftHanded!=0);
             _snprintf_s(out, cap, _TRUNCATE, "%d/%d %s", VrTutorialStep() + 1,
                         vrtutorial::kStepCount, step.title);
             break;
         }
         case PR_TUT_LINE1: case PR_TUT_LINE2: case PR_TUT_LINE3: case PR_TUT_LINE4: {
             const int line = row - PR_TUT_LINE1;
-            const char* text = vrtutorial::GetStep(VrTutorialLanguage(), VrTutorialStep()).line[line];
+            const char* text = vrtutorial::GetStep(VrTutorialLanguage(), VrTutorialStep(),g_leftHanded!=0).line[line];
             _snprintf_s(out, cap, _TRUNCATE, "%s", text);
             break;
         }
@@ -10064,13 +10065,13 @@ static void UpdateVrPromptControls(){
     }
     c[vrprompts::Fire]=BoundPromptControl(g_actFire);
     c[vrprompts::Aim]=BoundPromptControl(g_actAltFire);
-    if(AimHand()==1&&Rd(g_haveTMD)==1)c[vrprompts::Aim]=vrprompts::Unbound;
-    c[vrprompts::Cycle]=BoundPromptControl(g_actR3);
+    if(Rd(g_haveTMD)==1)c[vrprompts::Aim]=vrprompts::Unbound;
+    c[vrprompts::Cycle]=BoundPromptControl(g_leftHanded?g_actL3:g_actR3);
     c[vrprompts::Reload]=c[vrprompts::Use];
-    const bool layout=g_reloadControlLayout&&AimHand()==1&&!Rd(g_swapSticks);
+    const bool layout=g_reloadControlLayout&&!Rd(g_swapSticks);
     if(layout){
-        c[vrprompts::Reload]=BoundPromptControl(g_actUiBack);
-        c[vrprompts::Health]=BoundPromptControl(g_actUiSelect);
+        c[vrprompts::Reload]=BoundPromptControl(g_padButtons[1].action);
+        c[vrprompts::Health]=BoundPromptControl(g_padButtons[0].action);
         c[vrprompts::Jump]=BoundPromptControl(g_actTurn,true);
     }
     if(!Rd(g_swapSticks)&&BoundPromptControl(g_actTurn,true)==vrprompts::RightUp)c[vrprompts::Crouch]=vrprompts::RightDown;
@@ -10160,10 +10161,11 @@ volatile LONG g_cutsceneLockCamera = 0;  // ini [Input] CutsceneLockCamera - off
 // reported it forced them to aim or move with the wrong hand, and Valve separated them in Update
 // 1.2. Copying the fixed version rather than the shipped one.
 //
-//   LeftHanded  the GUN and the BUTTONS move to the other hand. Sticks do not.
+//   LeftHanded  gun/TMD, trigger/grip and wheel roles exchange physical hands.
+//               Face/menu controls retain their physical buttons; sticks do not exchange.
 //   SwapSticks  movement and turning trade sticks. Nothing else changes.
 //
-// ⚠️ LeftHanded is INI-ONLY and needs a relaunch, and that is not laziness: OpenXR binding
+// ⚠️ LeftHanded is available in VR settings and needs a relaunch, and that is not laziness: OpenXR binding
 // suggestions are fixed when the action set is attached, so a live toggle would change the value
 // and not the bindings. The panel's own header states the rule - a setting that appears to change
 // and silently does nothing is worse than one that is not offered - and this session has produced
@@ -10182,7 +10184,7 @@ int g_texQuality = 0, g_texQualityApplied = 0;
 volatile LONG g_swapSticks = 0;          // ini [Input] SwapSticks - live, on the CONTROLLER page
 
 // Which hand the gun and aim follow. The only thing the four aim sites need to know.
-inline int AimHand() { return g_leftHanded ? 0 : 1; }
+inline int AimHand() { return handedness::Aim(g_leftHanded!=0); }
 static bool TriggerHandTracked(){return g_handPoseValid[AimHand()]&&g_handPositionValid[AimHand()];}
 
 // ---- ⚠️ run 180: the shortest angle between two UE3 yaws. Two sites had this WRONG ----
@@ -10630,14 +10632,13 @@ bool InitXRInput() {
         " Panel: TMD ALIGN.",
         Rd(g_tmdOnOffHand), Rd(g_tmdFwd), Rd(g_tmdRight), Rd(g_tmdUp),
         Rd(g_tmdYawTenths) / 10.0f, Rd(g_tmdPitchTenths) / 10.0f);
-            // Read BEFORE the binding table is built below - that is the whole reason this one is
-            // not on the panel.
+            // Pending VR-panel edits take effect together before XR bindings attach.
             g_leftHanded = g_leftHandedPending =
                 GetPrivateProfileIntA("Input", "LeftHanded", 0, path) ? 1 : 0;
             InterlockedExchange(&g_swapSticks,
                 GetPrivateProfileIntA("Input", "SwapSticks", 0, path) ? 1 : 0);
             if (g_leftHanded)
-                Log("input: LEFT-HANDED - gun and buttons mirrored. Sticks are NOT swapped (that is"
+                Log("input: LEFT-HANDED - gun L, TMD R, wheel L3, Use L1, ammo right shoulder; face/menu buttons retain physical names. Sticks are NOT swapped (that is"
                     " SwapSticks). MENU stays on the LEFT controller: the Touch profile has no"
                     " right-hand menu/click and system/click is reserved by the runtime.");
             {
@@ -10907,30 +10908,7 @@ bool InitXRInput() {
     // The mapping was already written down correctly - "x<->a and y<->b" - and then not implemented.
     // Mirroring a Touch binding is a swap of the hand AND of the face-button name together.
     auto mirrorHand = [&](const char* p, char* buf, size_t cap) -> const char* {
-        if (!g_leftHanded || !p) return p;
-        if (strstr(p, "/input/menu/click")) return p;            // left-hand only, see above
-        // The four hand-exclusive components, remapped to their opposite-hand counterpart.
-        struct { const char* from; const char* to; } kFace[] = {
-            { "/user/hand/right/input/a/", "/user/hand/left/input/x/"  },
-            { "/user/hand/right/input/b/", "/user/hand/left/input/y/"  },
-            { "/user/hand/left/input/x/",  "/user/hand/right/input/a/" },
-            { "/user/hand/left/input/y/",  "/user/hand/right/input/b/" },
-        };
-        for (auto& f : kFace) {
-            const size_t n = strlen(f.from);
-            if (strncmp(p, f.from, n) == 0) {
-                _snprintf_s(buf, cap, _TRUNCATE, "%s%s", f.to, p + n);
-                return buf;
-            }
-        }
-        // Everything else - trigger, squeeze, thumbstick, thumbrest - exists on both hands, so a
-        // plain hand swap is valid.
-        if (strncmp(p, "/user/hand/left/", 16) == 0)
-            _snprintf_s(buf, cap, _TRUNCATE, "/user/hand/right/%s", p + 16);
-        else if (strncmp(p, "/user/hand/right/", 17) == 0)
-            _snprintf_s(buf, cap, _TRUNCATE, "/user/hand/left/%s", p + 17);
-        else return p;
-        return buf;
+        return handedness::MirrorPath(g_leftHanded!=0,p,buf,cap);
     };
 
     // ---- run 274: one pass per interaction profile ----
@@ -11004,12 +10982,13 @@ bool InitXRInput() {
             // that is never suggested.
             if (g_leftHanded) {
                 char mb[64], pb[64];
-                const char* f = prof.map(mirrorHand(g_padButtons[i].path, mb, sizeof(mb)),
+                const char* f = prof.map(handedness::MirrorGameplayButton(g_padButtons[i].path)?mirrorHand(g_padButtons[i].path, mb, sizeof(mb)):g_padButtons[i].path,
                                          false, pb, sizeof(pb));
                 Log("  mirrored binding [%s]: %-40s -> %s", strrchr(prof.path, '/') + 1,
                     g_padButtons[i].path, f ? f : "(not on this profile)");
             }
-            add(g_padButtons[i].action, g_padButtons[i].path, true, false);
+            add(g_padButtons[i].action, g_padButtons[i].path,
+                handedness::MirrorGameplayButton(g_padButtons[i].path), false);
         }
         const char* hp[2] = { "/user/hand/left/output/haptic", "/user/hand/right/output/haptic" };
         if (!prof.poseOnly) {
@@ -11295,6 +11274,7 @@ void SyncXRInput(XrTime displayTime) {
     LARGE_INTEGER tSt = Now();
     getVec2(g_actMove, &mx, &my);
     getVec2(g_actTurn, &tx, &ty);
+    const float wheelStickX=g_leftHanded?mx:tx,wheelStickY=g_leftHanded?my:ty;
     const float reloadStickX=tx,reloadStickY=ty; // physical right before SwapSticks
     // ---- ⭐ run 170: SwapSticks, the southpaw option ----
     //
@@ -11585,7 +11565,7 @@ void SyncXRInput(XrTime displayTime) {
         g_ageBtnIdx>=0&&g_ageBtnIdx<kPadButtonCount&&sampledButtons[g_ageBtnIdx]?1:0);
     // Opt-in physical Sense layout. Keep the XR actions and native menu
     // select/back bindings intact. No extra polls and no hidden INI rewrites.
-    const bool reloadLayout=g_reloadControlLayout&&AimHand()==1&&!Rd(g_swapSticks);
+    const bool reloadLayout=g_reloadControlLayout&&!Rd(g_swapSticks);
     const bool reloadInputContext=feedGame&&VrModeOn()&&InGameplay()&&!uiMenu&&!Rd(g_gamePaused)&&
         !Rd(g_panelOpen)&&!Rd(g_weaponWheelOpen)&&!CutsceneNativeCameraArmed()&&
         g_xrSessionState==XR_SESSION_STATE_FOCUSED&&!sampledButtons[3]; // R3/wheel owns stick
@@ -11603,9 +11583,9 @@ void SyncXRInput(XrTime displayTime) {
     if(g_centurionReload||g_centurionReloadProbe||g_centurionNativeGuardMode)UpdateCenturionReload(
         feedGame&&VrModeOn()&&InGameplay()&&!uiMenu&&!Rd(g_gamePaused)&&
         !Rd(g_panelOpen)&&!Rd(g_weaponWheelOpen)&&!CutsceneNativeCameraArmed(),
-        OffHand()==0?rawSupportGrip:primaryGrip,g_supportLatch.Latched(),reloadActions.releaseCylinder);
+        rawSupportGrip,g_supportLatch.Latched(),reloadActions.releaseCylinder);
     if(NextReloadEnabled()||g_nextOwnsGrip||g_nextBlockFire)UpdateNextReload(reloadLayout&&reloadInputContext,
-        OffHand()==0?rawSupportGrip:primaryGrip,g_supportLatch.Latched(),sampledButtons[1]);
+        rawSupportGrip,g_supportLatch.Latched(),sampledButtons[1]);
     if(g_hipKnifeEnabled&&g_hipKnifeReady){
         hipknife::Frame f;
         f.enabled=true;f.focused=g_xrSessionState==XR_SESSION_STATE_FOCUSED;
@@ -11639,7 +11619,7 @@ void SyncXRInput(XrTime displayTime) {
             f.free[h]=h!=AimHand()||!WeaponPresentationInHands()||Rd(g_weaponHolstered);
             // Preserve the physical edge history; fabricating grip=false here
             // can produce a new knife pickup when reload ownership ends.
-            if(h==0&&(g_centurionOwnsGrip||g_nextOwnsGrip)){f.free[h]=false;g_hipKnifeState.edgeMs[h]=0;}
+            if(h==OffHand()&&(g_centurionOwnsGrip||g_nextOwnsGrip)){f.free[h]=false;g_hipKnifeState.edgeMs[h]=0;}
             f.trigger[h]=h==AimHand()?Rd(g_rawTrigger)>128:Rd(g_rawAltTrigger)>128;
         }
         // MAIN round 15: capture the grip rising edge BEFORE Update consumes it
@@ -11751,7 +11731,7 @@ void SyncXRInput(XrTime displayTime) {
         }
     }
     const bool supportGrip=rawSupportGrip&&!g_tmdGravityLatch.power&&!hipknife::Reserves(g_hipKnifeState,OffHand())&&
-        !(OffHand()==0&&(g_nextOwnsGrip||g_centurionOwnsGrip||(g_centurionReload&&g_centurionConfig.cylinderGestures&&
+        !((g_nextOwnsGrip||g_centurionOwnsGrip||(g_centurionReload&&g_centurionConfig.cylinderGestures&&
             centurionreload::Active(g_centurionState.phase))));
     static bool priorSupportGrip=false;
     if(supportGrip!=priorSupportGrip)InterlockedIncrement(supportGrip?&g_vrCounters.gripPressEdges:&g_vrCounters.gripReleaseEdges);
@@ -11788,8 +11768,8 @@ void SyncXRInput(XrTime displayTime) {
         s.presented=WeaponPresentationInHands();s.holstered=Rd(g_weaponHolstered)!=0;
         s.paused=Rd(g_gamePaused)!=0;s.menu=Rd(g_vrUiMenu)!=0;
         s.knife=hipknife::Reserves(g_hipKnifeState,OffHand());
-        s.reload=OffHand()==0&&(g_nextOwnsGrip||g_centurionOwnsGrip);
-        s.cylinder=OffHand()==0&&g_centurionReload&&g_centurionConfig.cylinderGestures&&
+        s.reload=(g_nextOwnsGrip||g_centurionOwnsGrip);
+        s.cylinder=g_centurionReload&&g_centurionConfig.cylinderGestures&&
             centurionreload::Active(g_centurionState.phase);
         s.pistol=pistolSupport;s.closeLongGun=closeLongGun;s.acquire=supportAcquire;s.active=supportActive;
         s.hands=(int)Rd(g_handsStatus);s.aimHand=AimHand();s.offHand=OffHand();
@@ -11813,7 +11793,7 @@ void SyncXRInput(XrTime displayTime) {
     }
     const bool steadyBusy=g_nextBlockFire||g_nextOwnsGrip||g_centurionOwnsGrip||
         g_hipKnifeState.held>=0||Rd(g_weaponHolstered)||Rd(g_weaponWheelOpen);
-    const bool steadyAimHeld=weaponsteady::Hold(g_weaponSteady!=0&&AimHand()==1,
+    const bool steadyAimHeld=weaponsteady::Hold(g_weaponSteady!=0,
         reloadInputContext,supportTracked,Rd(g_gunVerts)==11389,supportActive,
         sampledButtons[2],steadyBusy);
     static bool priorSteady=false;static unsigned steadyNotes=0;
@@ -11947,8 +11927,9 @@ void SyncXRInput(XrTime displayTime) {
         Log("weapon holster: RESET (tracking/gameplay/weapon gate)");
     }
     const bool triangleHeld = getBool(g_actTriangle);
-    const bool l3Held = getBool(g_actL3);
-    bool r3Held = getBool(g_actR3);
+    const bool physicalL3 = getBool(g_actL3), physicalR3 = getBool(g_actR3);
+    const bool l3Held = handedness::WheelVeto(g_leftHanded!=0,physicalL3,physicalR3);
+    bool r3Held = handedness::WheelButton(g_leftHanded!=0,physicalL3,physicalR3);
     if (InterlockedCompareExchange(&g_forceDesktopAutomation, 0, 0))
         r3Held = desktopAutomationR3;
     if (g_recenterChord.Update(l3Held, r3Held)) {
@@ -11990,7 +11971,7 @@ void SyncXRInput(XrTime displayTime) {
     int handSector = -2;
     const bool handPick = Rd(g_wwPickSource) != 0;
     if (handPick && g_weaponWheelState.open && Rd(g_wwHandAnchorOk) &&
-        g_handPositionValid[1] && g_haveEyes) {
+        g_handPositionValid[AimHand()] && g_haveEyes) {
         wheel_layout::EyeBasis eye;
         eye.pos = { g_eyePose[0].position.x, g_eyePose[0].position.y, g_eyePose[0].position.z };
         eye.fwd = WwRotate(g_eyePose[0].orientation, { 0, 0, -1 });
@@ -11998,9 +11979,9 @@ void SyncXRInput(XrTime displayTime) {
         eye.up = WwRotate(g_eyePose[0].orientation, { 0, 1, 0 });
         eye.tanHalfX = g_targetTanX;
         eye.tanHalfY = g_targetTanY;
-        const float dx = (g_handLastPos[1].x - g_headPosXR[0]) - g_wwHandAnchor.x;
-        const float dy = (g_handLastPos[1].y - g_headPosXR[1]) - g_wwHandAnchor.y;
-        const float dz = (g_handLastPos[1].z - g_headPosXR[2]) - g_wwHandAnchor.z;
+        const float dx = (g_handLastPos[AimHand()].x - g_headPosXR[0]) - g_wwHandAnchor.x;
+        const float dy = (g_handLastPos[AimHand()].y - g_headPosXR[1]) - g_wwHandAnchor.y;
+        const float dz = (g_handLastPos[AimHand()].z - g_headPosXR[2]) - g_wwHandAnchor.z;
         handSector = wheel_layout::HandSector(dx, dy, dz, eye, (int)g_weaponWheelSlots);
     }
     if(Rd(g_gazeEnabled)&&Rd(g_gazeWheel)&&g_weaponWheelState.open){
@@ -12014,8 +11995,8 @@ void SyncXRInput(XrTime displayTime) {
     if(r3Held&&!g_weaponWheelState.priorR3)NativeOwnedInventory::Refresh();
     const weaponwheel::Event wheelEvent = weaponwheel::Update(
         g_weaponWheelState, r3Held, l3Held, (wheelHasWeapon && (!uiMenu || stationWheel) && feedGame && !Rd(g_gamePaused)),
-        WeaponPresentationInHands(), Rd(g_weaponHolstered), tx,
-        (g_weaponWheelObserved&&!Rd(g_forceDesktopAutomation))?-ty:ty,
+        WeaponPresentationInHands(), Rd(g_weaponHolstered), g_leftHanded?wheelStickX:tx,
+        (g_weaponWheelObserved&&!Rd(g_forceDesktopAutomation))?-(g_leftHanded?wheelStickY:ty):(g_leftHanded?wheelStickY:ty),
         (int)g_weaponWheelSlots, handSector);
     if (wheelEvent == weaponwheel::Event::Open) {
         InterlockedExchange(&g_gazeWheelSector,-2);InterlockedExchange(&g_gazeWheelTime,0);
@@ -12026,17 +12007,17 @@ void SyncXRInput(XrTime displayTime) {
         InterlockedExchange(&g_weaponWheelSelection, -1);
         InterlockedExchange(&g_weaponWheelCommit, 0);
         InterlockedExchange(&g_weaponWheelPulseGap, 0);
-        if (handPick && g_handPositionValid[1]) {
-            g_wwHandAnchor.x = g_handLastPos[1].x - g_headPosXR[0];
-            g_wwHandAnchor.y = g_handLastPos[1].y - g_headPosXR[1];
-            g_wwHandAnchor.z = g_handLastPos[1].z - g_headPosXR[2];
+        if (handPick && g_handPositionValid[AimHand()]) {
+            g_wwHandAnchor.x = g_handLastPos[AimHand()].x - g_headPosXR[0];
+            g_wwHandAnchor.y = g_handLastPos[AimHand()].y - g_headPosXR[1];
+            g_wwHandAnchor.z = g_handLastPos[AimHand()].z - g_headPosXR[2];
             InterlockedExchange(&g_wwHandAnchorOk, 1);
         } else {
             InterlockedExchange(&g_wwHandAnchorOk, 0);
         }
         MaybeLoadWheelCatalog();
-        Log("weapon wheel: OPEN slots=%ld (R3 held; %s selects, release commits)%s",
-            g_weaponWheelSlots, handPick ? "right hand moves" : "right stick",
+        Log("weapon wheel: OPEN slots=%ld (%s held; %s selects, release commits)%s",
+            g_weaponWheelSlots, g_leftHanded?"L3":"R3", handPick ? "weapon hand moves" : "weapon-hand stick",
             stationWheel ? " [station locker]" : "");
         if (handPick && !Rd(g_wwHandAnchorOk))
             Log("weapon wheel: hand anchor invalid at open - stick fallback for this open");
@@ -12129,15 +12110,15 @@ void SyncXRInput(XrTime displayTime) {
     if (trianglePressed) btns |= XI_START;
     // Reload/shoulder FSMs above have first refusal; native AntiGrav remains
     // authoritative for ownership, targets and energy. No native UObject call here.
-    const bool gravityHeld=OffHand()==0?rawSupportGrip:primaryGrip;
+    const bool gravityHeld=rawSupportGrip;
     const bool gravityEligible=feedGame&&VrModeOn()&&InGameplay()&&!uiMenu&&!Rd(g_gamePaused)&&
         !Rd(g_panelOpen)&&!CutsceneNativeCameraArmed()&&g_xrSessionState==XR_SESSION_STATE_FOCUSED&&
         !Rd(g_weaponWheelOpen)&&!r3Held&&!r3Released&&Rd(g_haveTMD)==1&&
-        AimHand()==1&&g_handPoseValid[0]&&g_handPositionValid[0];
+        g_handPoseValid[OffHand()]&&g_handPositionValid[OffHand()];
     const bool gravityReserved=supportActive||g_supportLatch.Latched()||
         g_nextOwnsGrip||g_nextBlockFire||g_centurionOwnsGrip||
         (g_centurionReload&&centurionreload::Active(g_centurionState.phase))||
-        hipknife::Reserves(g_hipKnifeState,0);
+        hipknife::Reserves(g_hipKnifeState,OffHand());
     const bool gravityDown=g_tmdGravityLatch.Update(g_tmdGravityGrip,
         gravityHeld,gravityEligible,gravityReserved);
     static bool healthWasDown = false;
@@ -12145,9 +12126,9 @@ void SyncXRInput(XrTime displayTime) {
     static bool knifeImpulseWasDown = false;
     static dualtmd::PowerLatch dualPowerLatch[2];
     const bool dualContext=DualWeaponTmdContext();
-    const bool dualOwnsPower=Rd(g_dualWeaponTmdReady)&&Rd(g_haveTMD)==1&&AimHand()==1&&g_hipKnifeState.held<0;
+    const bool dualOwnsPower=Rd(g_dualWeaponTmdReady)&&Rd(g_haveTMD)==1&&g_hipKnifeState.held<0;
     const bool dualPowerReserved=!dualContext||supportActive||g_centurionOwnsGrip||g_nextOwnsGrip||
-        Rd(g_weaponWheelOpen)||!g_handPoseValid[0]||!g_handPositionValid[0];
+        Rd(g_weaponWheelOpen)||!g_handPoseValid[OffHand()]||!g_handPositionValid[OffHand()];
     for (int i = 0; i < kPadButtonCount; ++i) {
         const bool legacyHealth=!strcmp(g_padButtons[i].name,"health");
         const auto face=i==g_jumpBtnIdx?reloadcontrols::Face::Cross:
@@ -12161,8 +12142,7 @@ void SyncXRInput(XrTime displayTime) {
         // R1 = the existing primary Use/grip action. Consume only in the
         // scoped two-hand context; never emit native use/reload while steadying.
         if(steadyAimHeld&&i==2)down=false;
-        if((g_centurionOwnsGrip||g_nextOwnsGrip)&&((OffHand()==0&&i==g_impulseBtnIdx)||
-           (AimHand()==0&&!strcmp(g_padButtons[i].name,"use"))))down=false;
+        if((g_centurionOwnsGrip||g_nextOwnsGrip)&&(i==g_impulseBtnIdx))down=false;
         // During a transaction, reserve the shared Use/reload bit as well:
         // an accidental primary squeeze must not reload before insertion.
         if(g_centurionReload&&g_centurionState.phase!=centurionreload::Phase::Idle&&
@@ -12832,7 +12812,7 @@ void SyncXRInput(XrTime displayTime) {
     // Keep Impulse in btns; consume only its duplicate analog ADS channel.
     // Optical Kasimov requests have their own ownership and remain intact.
     if(!uiMenu&&feedGame&&VrModeOn()&&InGameplay()&&!Rd(g_gamePaused)&&
-       !Rd(g_panelOpen)&&AimHand()==1&&Rd(g_haveTMD)==1&&
+       !Rd(g_panelOpen)&&Rd(g_haveTMD)==1&&
        g_impulseBtnIdx>=0&&g_impulseBtnIdx<kPadButtonCount&&
        g_padButtons[g_impulseBtnIdx].mask==XI_RSHOULDER&&
        sampledButtons[g_impulseBtnIdx]&&!nearEyeRequested)
@@ -17299,7 +17279,7 @@ static bool DualWeaponTmdContext() {
     if(!Rd(g_dualWeaponTmdReady))return false;
     return dualtmd::Context(Rd(g_dualWeaponTmdReady)!=0,VrModeOn(),InGameplay(),Rd(g_haveTMD)==1,
         NativeCinematicHandsNow()||NativeRestraintHandsNow()||Rd(g_inCinematic)!=0,
-        Rd(g_vrUiMenu)!=0||Rd(g_panelOpen)!=0,Rd(g_gamePaused)!=0,AimHand()==1);
+        Rd(g_vrUiMenu)!=0||Rd(g_panelOpen)!=0,Rd(g_gamePaused)!=0,AimHand()==0||AimHand()==1);
 }
 static bool WeaponPresentationInHands() {
     return dualtmd::Weapon(WeaponInHands(),DualWeaponTmdContext(),Rd(g_weaponObj)!=0,(int)Rd(g_handsStatus));
@@ -18021,7 +18001,7 @@ static bool DualActionAllowed() {
         g_handPoseValid[0]&&g_handPositionValid[0]&&g_handPoseValid[1]&&g_handPositionValid[1],
         g_sceneMode.Current()==vrscene::Mode::GameplayStereo&&!Rd(g_gamePaused)&&!Rd(g_vrUiMenu),
         NativeAnimatedHandsNow(),Rd(g_weaponHolstered)!=0,Rd(g_twoHandActive)!=0,
-        g_nextOwnsGrip||g_centurionOwnsGrip||g_hipKnifeState.held>=0,AimHand()==1});
+        g_nextOwnsGrip||g_centurionOwnsGrip||g_hipKnifeState.held>=0,AimHand()==0||AimHand()==1});
 }
 static bool TrackedGripCamera(int32_t& yaw,int32_t& pitch) {
     // Native camera mode does not execute the matrix-rotation-only cache update.
@@ -18050,7 +18030,9 @@ static bool ApplyDualActionC(float C[4][4],bool aim) {
         gloves::Pose drive=g_glovePose[physical];
         {const auto& a=g_handAimOrientation[physical];drive.orientation={a.x,a.y,a.z,a.w};}
         if(bind.ready && TrackedGripCamera(cameraYaw,cameraPitch) && gloves::UniformScale(source.m,sourceScale) &&
-           trackedgrip::Desired(physical,key.vertices,drive,
+           // Native mount belongs to the source role; physical selects the
+           // controller sample. A left-held gun still has the native gun mount.
+           trackedgrip::Desired(aim?1u:0u,key.vertices,drive,
                {g_centrePos[0],g_centrePos[1],g_centrePos[2]},g_centreYaw,
                g_baseYaw*(6.2831853f/65536.f),MetresToUU(),sourceScale*Rd(g_gunScalePct)*.01f,
                g_dualActionFrame.local,trackedgrip::NativeView(cameraYaw*(6.2831853f/65536.f),
@@ -18248,6 +18230,9 @@ static void BuildLiveControllerC(float C[4][4], bool aimHand, bool dualAction=tr
 // Enable only the existing independent, right-handed dual presentation. Missing
 // assets/tracking keep the old hardware-hidden support policy; never expose arm faces.
 static bool TmdSupportAssemblyEnabled() {
+    // The source sleeve/support mount is authored for the left forearm. Keep
+    // hardware hidden during left-handed support until its mirrored fit exists.
+    if(g_leftHanded)return false;
     return tmdsupport::Enabled(g_tmdSupportGauntlet,
         g_tmdShortGauntlet && g_tmdShortGauntletRenderer.Ready(),
         g_nativeCuffClosure && g_nativeCuffRenderer.Ready() && g_nativeGloveRenderer.Ready() &&
@@ -18259,7 +18244,7 @@ static bool TmdSupportAssemblyEnabled() {
 static bool SeekerSupportActive(){
     const bool seekerGrip=g_seekerSupportGrip&&seekergeometry::Vertices(Rd(g_gunVerts))&&Rd(g_twoHandActive);
     const bool active=seekerGrip&&
-        !Rd(g_weaponHolstered)&&AimHand()==1&&g_handPoseValid[0]&&g_handPositionValid[0]&&
+        !Rd(g_weaponHolstered)&&g_handPoseValid[0]&&g_handPositionValid[0]&&
         g_handPoseValid[1]&&g_handPositionValid[1]&&
         !NativeAnimatedHandsNow()&&g_sceneMode.Current()==vrscene::Mode::GameplayStereo;
     if(seekerGrip) {
@@ -18275,6 +18260,7 @@ static bool SeekerSupportActive(){
     return active;
 }
 static bool AuthoredLeftSupport(long gun) {
+    if(g_leftHanded)return false; // native pair owns anatomical right gun/left support
     return dualtmd::UseWeaponAuthoredPair(
         SupportGripFor(gun).mode==SupportGripMode::AuthoredPair ||
         (gun==11387 && g_valkyrieAuthoredGrip) ||
@@ -18282,7 +18268,7 @@ static bool AuthoredLeftSupport(long gun) {
         DualWeaponTmdContext(),(int)Rd(g_handsStatus),gun);
 }
 static void BuildTmdAssemblyC(float C[4][4]) {
-    BuildLiveControllerC(C,OffHand()!=0);
+    BuildLiveControllerC(C,false);
     if(!Rd(g_twoHandActive) || !TmdSupportAssemblyEnabled())return;
     float primary[4][4],off[4][4],weapon[4][4]{};
     BuildLiveControllerC(primary,true);BuildLiveControllerC(off,false);
@@ -18691,7 +18677,7 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
     const bool supportGrip = Rd(g_twoHandActive) != 0;
     const long supportGunVerts = InterlockedCompareExchange(&g_gunVerts, 0, 0);
     const bool weaponGripSection=handanchor::WeaponGripSection(gloves,tmdGloves,DualWeaponTmdContext());
-    const bool weaponSingleHand = SingleHandWeaponGrip(weaponGripSection,supportGunVerts,supportGrip);
+    const bool weaponSingleHand = !g_leftHanded && SingleHandWeaponGrip(weaponGripSection,supportGunVerts,supportGrip);
     if (weaponSingleHand) {
         BuildGunC(aimTarget);
         static LONG saidPistolAimGrip = 0;
@@ -18710,6 +18696,17 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
         if(g_thisDrawMoved==1)BuildGunC(base);
         else if(g_thisDrawMoved==2)BuildTmdC(base);
         else if(g_thisDrawMoved==3)BuildTmdAssemblyC(base);
+    }
+    // Hardware originates on native left wrist even when the TMD controller is
+    // physical right. Preserve its own source correction; anatomical gloves
+    // below receive separate wrist pivots. Socket meshes use this same ride.
+    float hardwareDelta[4][4];
+    if(g_leftHanded){
+        float unused[4][4];
+        if(g_thisDrawMoved==1)BuildGunC(base);
+        else if(g_thisDrawMoved==2)BuildTmdC(base);
+        else if(g_thisDrawMoved==3)BuildTmdAssemblyC(base);
+        if(!skeletal::LocalDeltaPair(hardwareDelta,unused,local,base,off,primary))return 0;
     }
     const bool wristAnchor = freeWrist || (gloves && Rd(g_noTmdPaletteFix) && Rd(g_gloveIsolate)==2 && !supportGrip && handValid[0] && handValid[1] &&
         handanchor::GameplaySource(Rd(g_noTmdWristAnchorFix)!=0,Rd(g_inCinematic)!=0,
@@ -18781,6 +18778,24 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
                 memcpy(off,targetOff,sizeof(off));
         }
     }
+    if(g_leftHanded&&(tmdGloves||tmdBase||tmdExtra)&&!supportGrip){
+        const auto& bind=armnatural::TmdBind();
+        if(!bind.ready)return 0;
+        for(int side=0;side<2;++side){
+            if(!handValid[side])continue;
+            const int ws=GloveFindSlot(sectionMap,slots,GloveRefs(),89,handedness::WristName(side));
+            if(ws<0)continue; // hardware-only section has no anatomical wrist
+            const bool aim=side==AimHand();
+            armik::V h{float(Rd(aim?g_handOffX:g_offHandOffX))/kHandFixed,
+                float(Rd(aim?g_handOffY:g_offHandOffY))/kHandFixed,
+                float(g_gunSignPosZ*Rd(aim?g_handOffZ:g_offHandOffZ))/kHandFixed};
+            if(g_gunHeadOffset){h.x+=g_hmdOffset[0];h.y+=g_hmdOffset[1];h.z+=g_hmdOffset[2];}
+            float target[4][4];
+            if(!handanchor::TargetWrist(target,bind.bind[handedness::Wrist(side)],
+                reinterpret_cast<const float (*)[4]>(saved+ws*3),local,aim?primary:off,h))return 0;
+            memcpy(aim?primary:off,target,sizeof(target));
+        }
+    }
     // A held weapon owns the authored right-hand grip. Its target is BuildGunC;
     // the free-wrist translation below is only consumed without that grip.
     if(!(DualActionAllowed()&&g_dualActionFrame.Current(DualActionKey())) &&
@@ -18817,12 +18832,12 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
             }
             armbind::Mat sourceLocal,gun,target;
             memcpy(sourceLocal.m,local,sizeof(local));BuildGunC(gun.m);
-            const int wrist=GloveFindSlot(sectionMap,slots,GloveRefs(),89,"l_arm_wrist");
+            const int wrist=GloveFindSlot(sectionMap,slots,GloveRefs(),89,handedness::WristName(OffHand()));
             const armbind::Mat* bind=nullptr;
-            if(tmdGloves&&armnatural::TmdBind().ready)bind=&armnatural::TmdBind().bind[9];
+            if(tmdGloves&&armnatural::TmdBind().ready)bind=&armnatural::TmdBind().bind[handedness::Wrist(OffHand())];
             static armbind::Mat noTmd[90];static bool haveNoTmd=false;
             if(gloves){if(!haveNoTmd)haveNoTmd=armbind::BuildReference(bindassets::noTmd,90,noTmd);
-                if(haveNoTmd)bind=&noTmd[9];}
+                if(haveNoTmd)bind=&noTmd[handedness::Wrist(OffHand())];}
             const auto pawn=(uint32_t)g_playerPawn,weapon=(uint32_t)Rd(g_weaponObj),frame=(uint32_t)Rd(g_sceneModeFrame);
             bool ready=bind&&wrist>=0&&seekergeometry::SupportTarget(kasimov?kasimovsupport::LeftGrip:seekergeometry::LeftGrip,witness,pawn,weapon,GetTickCount64(),
                 *bind,reinterpret_cast<const float(*)[4]>(saved+wrist*3),sourceLocal,gun,target);
@@ -18926,16 +18941,12 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
             continue;
         }
         if (gloveisolate::IsTmdDevice(boneName)) {
-            // Hardware retains its native animated palette, but must receive
-            // the SAME rigid correction as the anatomical left wrist. Leaving
-            // it native here detached it from the independently tracked glove.
-            // Apply to each original skin matrix: hinge/disc animation survives.
-            // This hardware is attached to the mesh's physical LEFT wrist.
-            // In left-handed mode that wrist consumes the aim delta instead of
-            // the off-hand delta; its validity remains physical side 0.
-            if((tmdBase||tmdGloves||tmdExtra)&&handValid[gloveisolate::TmdHardwareTrackedSide()])
+            // Keep the native left-source device animation and target the TMD
+            // controller. Left-handed anatomical gloves use their own pivots;
+            // hardware keeps the same native-source ride as socket attachments.
+            if((tmdBase||tmdGloves||tmdExtra)&&handValid[gloveisolate::TmdHardwareTrackedSide(OffHand())])
                 skeletal::TransformBone(&changed[b*3],&saved[b*3],
-                    gloveisolate::TmdHardwareDelta(OffHand())==0?delta:rightDelta);
+                    g_leftHanded?hardwareDelta:delta);
             continue;
         }
         if (rigidGloves &&
@@ -19004,7 +19015,7 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
     // Material 0 must not receive a glove-only parking offset while attached.
     const bool attachedTmdGlove=g_tmdShortGauntlet && tmdGloves &&
         Rd(g_gloveIsolate)==2 && (!supportGrip || TmdSupportAssemblyEnabled());
-    const float leftShift = (attachedTmdGlove || (supportGrip && weaponDeltaUsed && (tmdGloves || SeekerSupportActive())) || wristAnchor || offWristAnchor || nativeOffKnife || nativeCarry || !weaponInHand) ? 0.f
+    const float leftShift = (g_leftHanded || attachedTmdGlove || (supportGrip && weaponDeltaUsed && (tmdGloves || SeekerSupportActive())) || wristAnchor || offWristAnchor || nativeOffKnife || nativeCarry || !weaponInHand) ? 0.f
         : (float)InterlockedCompareExchange(&g_gloveLeftShiftUU, 0, 0);
     // Idle shift parks the free left glove off the native gun-hold. During an authored
     // pistol grip that same nudge is what puts the support hand beside the weapon.
@@ -19101,7 +19112,7 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
         float digits[2][5];for(unsigned side=0;side<2;++side)for(unsigned d=0;d<5;++d)
             digits[side][d]=joint&&(int)side==held?g_knifeHandData.fingers[side][d]:g_gloveBlend[side];
         float physicalBlend[2]{g_gloveBlend[0],g_gloveBlend[1]};
-        if(nativeCarry)physicalBlend[0]=nextCarry?weaponcarry::Curl(nextCarryVisual.kind):centurionphysical::Curl;
+        if(nativeCarry)physicalBlend[OffHand()]=nextCarry?weaponcarry::Curl(nextCarryVisual.kind):centurionphysical::Curl;
         g_nativeGlovePoseThisDraw=g_nativeGloveRenderer.Pose(changed,physicalBlend,joint?digits:nullptr,joint?held:-1,fingerMask,nativeCarry);
         g_nativeFreeOffhandPoseThisDraw=nativeFreeOffhand&&g_nativeGlovePoseThisDraw;
         if(nativeFreeOffhand){
@@ -19130,14 +19141,14 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
         if(g_knifeHandPoseThisDraw)std::memcpy(g_knifeHandLocal.m,local,sizeof(local));
     }
     const auto carrySource=weaponcarry::Source(nextCarryVisual.kind,nextCarry,gloves,tmdGloves,
-        g_nativeGlovePoseThisDraw,handValid[0],wristBone[0]);
-    if(carrySource!=weaponcarry::WristSource::None&&wristSlot[0]>=0){
+        g_nativeGlovePoseThisDraw,handValid[OffHand()],wristBone[OffHand()],handedness::Wrist(OffHand()));
+    if(carrySource!=weaponcarry::WristSource::None&&wristSlot[OffHand()]>=0){
         const armbind::Mat* wristBind=nullptr;
         if(carrySource==weaponcarry::WristSource::NoTmd)
-            wristBind=&g_nativeGloveRenderer.WristReference(0);
+            wristBind=&g_nativeGloveRenderer.WristReference(OffHand());
         else {
             const auto& tmdBind=armnatural::TmdBind();
-            if(tmdBind.ready)wristBind=&tmdBind.bind[9];
+            if(tmdBind.ready)wristBind=&tmdBind.bind[handedness::Wrist(OffHand())];
         }
         armbind::Mat tracking,chain,actualLocal,actualBase=centurionvisual::Identity(),desired;
         std::memcpy(actualLocal.m,local,sizeof(local));
@@ -19148,10 +19159,10 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
         if(wristBind&&weaponreload::TrackingMap({g_centrePos[0],g_centrePos[1],g_centrePos[2]},g_centreYaw,
              g_baseYaw*(6.2831853f/65536.f),MetresToUU(),tracking)&&
            weaponcarry::WristTracking(*wristBind,
-             reinterpret_cast<const float(*)[4]>(changed+wristSlot[0]*3),chain,tracking,desired)){
-            const auto& p=g_handLastPos[0];const auto& q=g_handAimOrientation[0];
+             reinterpret_cast<const float(*)[4]>(changed+wristSlot[OffHand()]*3),chain,tracking,desired)){
+            const auto& p=g_handLastPos[OffHand()];const auto& q=g_handAimOrientation[OffHand()];
             const hipknife::Pose sensor{{p.x,p.y,p.z},{q.x,q.y,q.z,q.w}};
-            const auto sampleMs=(std::uint64_t)InterlockedCompareExchange64(&g_handPoseSampleMs[0],0,0);
+            const auto sampleMs=(std::uint64_t)InterlockedCompareExchange64(&g_handPoseSampleMs[OffHand()],0,0);
             g_nextWristStaged={true,nextCarryVisual.kind,nextCarryVisual.pawn,nextCarryVisual.weapon,
                 nextCarryVisual.since,GetTickCount64(),desired,carrySource,sensor,sampleMs};
             g_nextWristStagedFromTmd=carrySource==weaponcarry::WristSource::Tmd;
@@ -19185,7 +19196,7 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
         }
     }
     if(physicalActive&&((gloves&&slots==(int)gloveisolate::kNoTmdCookedPaletteCount)||
-        (tmdGloves&&handValid[0]&&wristBone[0]==9u&&armnatural::TmdBind().ready))){
+        (tmdGloves&&handValid[OffHand()]&&wristBone[OffHand()]==handedness::Wrist(OffHand())&&armnatural::TmdBind().ready))){
         armbind::Mat tracking;
         armbind::Mat actualLocal,actualBase=centurionvisual::Identity();
         std::memcpy(actualLocal.m,local,sizeof(local));
@@ -19195,16 +19206,16 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
         if(centurionvisual::TrackingMap({g_centrePos[0],g_centrePos[1],g_centrePos[2]},g_centreYaw,
             g_baseYaw*(6.2831853f/65536.f),MetresToUU(),tracking)){
             const auto chain=centurionvisual::Product(actualLocal,actualBase);
-            bool right[45]{};if(gloves)for(int i=0;i<slots;++i)right[i]=gloveisolate::NoTmdCookedHandSide(sectionMap[i])==1;
+            bool right[45]{};if(gloves)for(int i=0;i<slots;++i)right[i]=gloveisolate::NoTmdCookedHandSide(sectionMap[i])==AimHand();
             const bool capture=physicalVisual.phase!=(int)centurionreload::Phase::WaitingNative&&
                 physicalVisual.phase!=(int)centurionreload::Phase::Cooldown;
             if(gloves&&!centurionvisual::ReleaseNative(g_centurionRefillOnly!=0,physicalVisual.closed)&&
                g_centurionRightHand.Apply(physicalVisual.clip.pawn,physicalVisual.clip.weapon,physicalVisual.transaction,
                 capture,changed,(unsigned)slots,right,chain,tracking,physicalVisual.aim))InterlockedIncrement(&g_centurionRightHeld);
-            if(centurionCarry&&((gloves&&g_nativeGlovePoseThisDraw)||tmdGloves)&&wristSlot[0]>=0){
+            if(centurionCarry&&((gloves&&g_nativeGlovePoseThisDraw)||tmdGloves)&&wristSlot[OffHand()]>=0){
                 armbind::Mat desired;
-                if(centurionphysical::Grip(tmdGloves?armnatural::TmdBind().bind[9]:g_nativeGloveRenderer.WristReference(0),
-                    reinterpret_cast<const float(*)[4]>(changed+wristSlot[0]*3),chain,tracking,desired)){
+                if(centurionphysical::Grip(tmdGloves?armnatural::TmdBind().bind[handedness::Wrist(OffHand())]:g_nativeGloveRenderer.WristReference(OffHand()),
+                    reinterpret_cast<const float(*)[4]>(changed+wristSlot[OffHand()]*3),chain,tracking,desired)){
                     const auto point=centurionvisual::Point({},desired);
                     g_centurionGripStaged={{physicalVisual.clip.pawn,physicalVisual.clip.weapon,physicalVisual.transaction,physicalNow,point,true},desired};
                 }
@@ -19214,11 +19225,11 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
     // Stage only the exact material-1 SVTG palette. The ordinary hardware
     // palette is uploaded unchanged; sleeve bones are committed only after
     // its replacement index buffer has actually bound successfully.
-    if(tmdBase && handValid[0])
+    if(tmdBase && handValid[OffHand()])
         shortSleeveReady=tmdsleeve::Stage(sectionMap,(unsigned)slots,
             reinterpret_cast<const float (*)[4]>(saved),
             reinterpret_cast<const float (*)[4]>(changed),
-            gloveisolate::TmdHardwareDelta(OffHand())==0?delta:rightDelta,shortSleeve);
+            g_leftHanded?hardwareDelta:delta,shortSleeve);
     // Internal palette writes must bypass camera/HUD upload classification.
     if(g_tmdKnifePaletteProbe&&tmdGloves&&g_hipKnifeState.held==1){
         static unsigned samples=0;
@@ -19668,8 +19679,8 @@ static bool FgHidden(IDirect3DDevice9* dev,UINT verts, UINT first, UINT triangle
             g_xrSessionState==XR_SESSION_STATE_FOCUSED,
             !Rd(g_gamePaused) && !Rd(g_vrUiMenu) && !Rd(g_inCinematic),FgMatchWindow(),
             g_boundShaderLayout.shadow,
-            g_handPoseValid[gloveisolate::TmdHardwareTrackedSide()] &&
-                g_handPositionValid[gloveisolate::TmdHardwareTrackedSide()]};
+            g_handPoseValid[gloveisolate::TmdHardwareTrackedSide(OffHand())] &&
+                g_handPositionValid[gloveisolate::TmdHardwareTrackedSide(OffHand())]};
         const auto gate=tmdgauntlet::FirstEntryGate(entry);
         if(gate==tmdgauntlet::Gate::Pass) {
             if(shortTmdAdmitted)*shortTmdAdmitted=true;
@@ -22129,7 +22140,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
             armbind::Mat controller,clipTracking;BuildGunC(controller.m);hipknife::V socket;
             if(weaponreload::Socket(g_nextAnimation[2],socketPalette,local,controller,
                 {g_centrePos[0],g_centrePos[1],g_centrePos[2]},g_centreYaw,g_baseYaw*(6.2831853f/65536.f),MetresToUU(),socket,&clipTracking)&&
-                hipknife::Length(socket-hipknife::V{g_handLastPos[1].x,g_handLastPos[1].y,g_handLastPos[1].z})<=.75f)
+                hipknife::Length(socket-hipknife::V{g_handLastPos[AimHand()].x,g_handLastPos[AimHand()].y,g_handLastPos[AimHand()].z})<=.75f)
                 kasimovSocketStaged={true,weaponreload::Kind::Kasimov,(uint32_t)g_playerPawn,
                     (uint32_t)Rd(g_weaponObj),GetTickCount64(),socket,clipTracking,skin};
         }
@@ -27362,7 +27373,7 @@ static void PolishRewriteFString(void* result, const wchar_t* section = nullptr,
     const char* visible=mapped?pl:en;
     prompttokens::Result rewritten;
     if(prompts){
-        const bool layout=g_reloadControlLayout&&AimHand()==1&&!Rd(g_swapSticks);
+        const bool layout=g_reloadControlLayout&&!Rd(g_swapSticks);
         if(cleanup){
             vrprompts::Control controls[vrprompts::Count]{};
             for(int i=0;i<vrprompts::Count;++i)controls[i]=(vrprompts::Control)InterlockedCompareExchange(&g_vrPromptControls[i],0,0);
@@ -29483,7 +29494,7 @@ static void DrawNextReloadHint(IDirect3DDevice9* dev) {
         SUCCEEDED(dev->GetRenderTarget(0,&oldRt))&&oldRt;
     if(!state||desc.Width<4||desc.Height<4){if(oldRt)oldRt->Release();back->Release();return;}
     const auto& step=vrtutorial::GetStep(
-        PolishLocalization::PL().IsPolishEnabled()?vrtutorial::Language::Polish:vrtutorial::Language::English,stepIndex);
+        PolishLocalization::PL().IsPolishEnabled()?vrtutorial::Language::Polish:vrtutorial::Language::English,stepIndex,g_leftHanded!=0);
     if(!step.line[3][0])rows=3;
     const int half=int(desc.Width/2),h=int(desc.Height);
     int widest=0;for(int i=0;i<rows;++i)widest=std::max(widest,TextGlyphCount(step.line[i]));
@@ -31503,7 +31514,8 @@ static void UpdateCenturionReload(bool context,bool grip,bool supportLatched,boo
     const ULONGLONG now=GetTickCount64();
     const uintptr_t weapon=(uintptr_t)(uint32_t)Rd(g_weaponObj),pawn=g_playerPawn;
     const uintptr_t hud=g_hudObject;
-    const bool supported=AimHand()==1&&OffHand()==0&&Rd(g_gunVerts)==5799;
+    g_centurionConfig.rightShoulder=g_leftHanded!=0;
+    const bool supported=Rd(g_gunVerts)==5799;
     int32_t health=-1;
     const bool alive=pawn&&g_offHealth>=0&&TryLoadAlignedI32(pawn+g_offHealth,&health)&&health>0;
     const bool eligible=context&&supported&&alive&&hud&&pawn&&weapon;
@@ -31562,16 +31574,16 @@ static void UpdateCenturionReload(bool context,bool grip,bool supportLatched,boo
     f.ammoFresh=observation.Fresh((uint32_t)pawn,(uint32_t)weapon,(uint32_t)hud,now);
     f.firing=Rd(g_rawTrigger)>26;f.supportLatched=supportLatched;
     f.releaseCylinder=releaseCylinder;
-    f.handBusy=hipknife::Reserves(g_hipKnifeState,0);
+    f.handBusy=hipknife::Reserves(g_hipKnifeState,OffHand());
     f.tracked=g_handPositionValid[0]&&g_handPositionValid[1]&&
         g_handPoseValid[0]&&g_handPoseValid[1]&&g_handTracked[0]&&g_handTracked[1];
-    const auto& hp=g_handLastPos[0];const auto& gp=g_handLastPos[1];const auto& q=g_handAimOrientation[1];
+    const auto& hp=g_handLastPos[OffHand()];const auto& gp=g_handLastPos[AimHand()];const auto& q=g_handAimOrientation[AimHand()];
     f.hand={hp.x,hp.y,hp.z};
     f.gun={{gp.x,gp.y,gp.z},{q.x,q.y,q.z,q.w}};
     f.socket=hipknife::V{gp.x,gp.y,gp.z}+hipknife::Rotate({q.x,q.y,q.z,q.w},g_centurionConfig.socketLocal);
     if(g_centurionTrackedCylinder){
         f.socketFresh=false;
-        const auto& leftQ=g_handAimOrientation[0];hipknife::Pose carried;
+        const auto& leftQ=g_handAimOrientation[OffHand()];hipknife::Pose carried;
         bool carriedValid=centurionclip::Mount({f.hand,{leftQ.x,leftQ.y,leftQ.z,leftQ.w}},g_centurionClipConfig,carried);
         if(g_centurionPhysicalPolish&&g_centurionState.phase==centurionreload::Phase::Carrying){
             carriedValid=false;
@@ -31652,7 +31664,7 @@ static void UpdateCenturionReload(bool context,bool grip,bool supportLatched,boo
         const bool visible=f.context&&f.supported&&f.tracked&&f.ammoFresh&&centurionreload::AmmoValid(f);
         const auto hintUntil=(visible&&f.enabled&&g_centurionVisual.clip.weapon==f.weapon&&
             g_centurionVisual.clip.pawn==f.pawn)?g_centurionVisual.hintUntilMs:0;
-        const auto& leftQ=g_handAimOrientation[0];
+        const auto& leftQ=g_handAimOrientation[OffHand()];
         g_centurionVisual={visible,f.pouch,f.socket,f.hand,(int)g_centurionState.phase,
             {visible,g_centurionState.phase,{f.hand,{leftQ.x,leftQ.y,leftQ.z,leftQ.w}},f.pawn,f.weapon,now}};
         g_centurionVisual.source=centurionreload::Pouch(shoulderHead,shoulderYaw,g_centurionConfig);
@@ -32539,8 +32551,8 @@ void DrawWeaponWheel(IDirect3DDevice9* dev) {
         dev->SetTexture(0, g_hudAtlasTex);
         dev->SetFVF(D3DFVF_XYZRHW | D3DFVF_DIFFUSE | D3DFVF_TEX1);
     }
-    const uipointer::V hand{g_handLastPos[1].x, g_handLastPos[1].y + 0.12f,
-                            g_handLastPos[1].z};
+    const uipointer::V hand{g_handLastPos[AimHand()].x, g_handLastPos[AimHand()].y + 0.12f,
+                            g_handLastPos[AimHand()].z};
     const float pi = 3.14159265358979323846f;
     const wheel_layout::Metrics safeMetrics=wheel_layout::RoundMetrics((int)d.Height);
     int wheelCx[2]{},wheelCy[2]{};
@@ -32783,9 +32795,9 @@ void DrawWeaponWheel(IDirect3DDevice9* dev) {
     static bool said = false;
     if (!said) {
         said = true;
-        Log(roundOn ? "weapon wheel: overlay active (round, right-hand anchor, %d sectors)"
-            : katorgaIcons ? "weapon wheel: overlay active (Katorga icons, right-hand anchor, %d sectors)"
-                           : "weapon wheel: overlay active (right-hand anchor, %d sectors)", slots);
+        Log(roundOn ? "weapon wheel: overlay active (round, weapon-hand anchor, %d sectors)"
+            : katorgaIcons ? "weapon wheel: overlay active (Katorga icons, weapon-hand anchor, %d sectors)"
+                           : "weapon wheel: overlay active (weapon-hand anchor, %d sectors)", slots);
     }
     g_wristState->Apply();
     if (old) g_origSetRenderTarget(dev, 0, old);
@@ -38854,7 +38866,7 @@ void LoadIniSettings() {
     if(g_centurionRefillOnly&&(!g_centurionPhysicalPolish||!g_centurionNativeTap||g_centurionNativeGuardMode!=2)){
         g_centurionRefillOnly=0;Log("centurion refill-only: requires physical polish + native tap + guard2; disabled");}
     Log("ini: CenturionRefillOnly=%d (default OFF; audited native refill without starting Reload; NOT runtime acceptance)",g_centurionRefillOnly);
-    Log("ini: ReloadControlLayout=%d CylinderGestures=%d (default OFF; right-handed/unswapped only: Cross=health Circle=cylinder right-stick-up=jump; wheel retained, hold-Cross laser disabled)",
+    Log("ini: ReloadControlLayout=%d CylinderGestures=%d (default OFF; unswapped sticks: Cross=health Circle=cylinder right-stick-up=jump; wheel retained, hold-Cross laser disabled)",
         g_reloadControlLayout,g_centurionConfig.cylinderGestures?1:0);
     g_centurionClipConfig.offset={
         std::clamp(IniSignedInt("Input","ReloadClipRightMm",0,path)*.001f,-.15f,.15f),
@@ -38877,7 +38889,7 @@ void LoadIniSettings() {
     g_centurionConfig.socketLocal.z=std::clamp(IniSignedInt("Input","ReloadSocketBackMm",-80,path)*.001f,-.30f,.30f);
     Log("ini: CenturionManualReload=%d NativeReloadTap=%d ReloadProbe=%d (default OFF; gesture prototype, UE3 owns ammo)",
         g_centurionReload,g_centurionNativeTap,g_centurionReloadProbe);
-    if(g_centurionReload)Log("centurion reload: ammo at LEFT SHOULDER left=%.2f down=%.2f back=%.2f radius=%.2f, grip window=650ms; nativeGuardMode=%d (hit/ammo evidence still required)",
+    if(g_centurionReload)Log("centurion reload: ammo at off-hand shoulder lateral=%.2f down=%.2f back=%.2f radius=%.2f, grip window=650ms; nativeGuardMode=%d (hit/ammo evidence still required)",
         g_centurionConfig.shoulderLeft,g_centurionConfig.shoulderDown,g_centurionConfig.shoulderBack,g_centurionConfig.pouchRadius,g_centurionNativeGuardMode);
     g_hipKnifeEnabled=GetPrivateProfileIntA("Input","HipKnifeEnabled",0,path)?1:0;
     g_knifeHandGrip=GetPrivateProfileIntA("Render","KnifeHandGripEnabled",0,path)!=0;
@@ -38910,7 +38922,7 @@ void LoadIniSettings() {
     g_weaponWheelSlots = GetPrivateProfileIntA("Input", "WeaponWheelSlots", 4, path);
     if (g_weaponWheelSlots < 2) g_weaponWheelSlots = 2;
     if (g_weaponWheelSlots > 8) g_weaponWheelSlots = 8;
-    Log("weapon wheel: R3 hold, right stick sectors=%ld, release commits native cycle-weapon pulses",
+    Log("weapon wheel: weapon-hand stick click/selection, sectors=%ld, release commits native cycle-weapon pulses",
         g_weaponWheelSlots);
     const int iniShowArms = GetPrivateProfileIntA("Render", "ShowControllerArms", 0, path);
     g_showControllerArms = 0;

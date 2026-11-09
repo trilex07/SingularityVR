@@ -15,8 +15,14 @@ int main(){
             assert(!std::strcmp(s.title,names[i]));
             assert(std::strstr(s.line[0]," O," )||std::strstr(s.line[0]," O TO"));
             for(const char* line:s.line)assert(line&&*line&&std::strlen(line)<96);
+            const auto left=vrtutorial::GetStep(language,page,true);
+            assert(!std::strcmp(left.line[0],s.line[0])); // Circle never aliases Triangle/pause
+            const char* shoulder=page==4?left.line[2]:left.line[1];
+            assert(std::strstr(shoulder,language==vrtutorial::Language::Polish?"PRAWEGO BARKU":"RIGHT SHOULDER"));
         }
     }
+    const auto wheel=vrtutorial::GetStep(vrtutorial::Language::English,2,true);
+    assert(std::strstr(wheel.line[0],"L3")&&std::strstr(wheel.line[2],"R3 CANCELS"));
     assert(vrtutorial::ReloadStep(0)==-1&&vrtutorial::ReloadStep(3314)==-1);
     char out[256];
     auto r=prompttokens::Rewrite("[use] [jump] [reload] [health]",out,sizeof(out),true,true,false);

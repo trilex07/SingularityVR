@@ -98,10 +98,24 @@ inline int ReloadStep(unsigned vertices) {
     return vertices==5799?4:vertices==11387?3:vertices==8297?6:vertices==11389?7:-1;
 }
 
-inline const Step& GetStep(Language language, int index) {
+inline Step GetStep(Language language, int index, bool leftHanded=false) {
     if (index < 0) index = 0;
     if (index >= kStepCount) index = kStepCount - 1;
-    return language == Language::Polish ? kPolish[index] : kEnglish[index];
+    const bool polish=language==Language::Polish;
+    Step s=polish?kPolish[index]:kEnglish[index];
+    if(!leftHanded)return s;
+    if(index==1)s.line[0]=polish?"PODNIES PRZEDMIOT LEWYM CHWYTEM (L1)":"PICK UP ITEMS WITH LEFT GRIP (L1)";
+    if(index==2){
+        s.line[0]=polish?"PRZYTRZYMAJ L3, ABY OTWORZYC KOLO":"HOLD L3 TO OPEN THE WEAPON WHEEL";
+        s.line[1]=polish?"PORUSZ LEWA DLONIA, ABY WYBRAC SLOT":"MOVE YOUR LEFT HAND TO A SLOT";
+        s.line[2]=polish?"PUSC L3, ABY ZATWIERDZIC; R3 ANULUJE":"RELEASE L3 TO EQUIP; R3 CANCELS";
+    }
+    if(index==3||index==6||index==7)s.line[1]=polish?
+        "PRAWYM CHWYTEM WEZ NOWY ZZA PRAWEGO BARKU":
+        "RIGHT GRIP: GRAB ONE BEHIND RIGHT SHOULDER";
+    if(index==4)s.line[2]=polish?"WEZ NOWY BEBEN ZZA PRAWEGO BARKU":
+        "GET A FRESH DRUM BEHIND RIGHT SHOULDER";
+    return s;
 }
 
 inline const char* LanguageLabel(Language language) {

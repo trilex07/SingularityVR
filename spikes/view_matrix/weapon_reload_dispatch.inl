@@ -98,7 +98,7 @@ static void UpdateNextReload(bool context,bool grip,bool supportLatched,bool cir
     const bool alive=pawn&&g_offHealth>=0&&TryLoadAlignedI32(pawn+g_offHealth,&health)&&health>0;
     const bool objectMatch=profile&&NextObject(weapon,kind);
     const bool identity=profile&&index<3&&g_nextReload[index]&&g_nextReady[index]&&!Rd(g_nextFault[index])&&
-        g_nextPresentation.Allowed()&&AimHand()==1&&OffHand()==0&&objectMatch;
+        g_nextPresentation.Allowed()&&objectMatch;
     static centurionreload::AmmoObservation ammo;
     static centurionreload::HudReseatPolicy hudReseat;
     static uintptr_t hudClass=0;static int offsets[3]{-1,-1,-1};static ULONGLONG nextSample=0,nextResolve=0;
@@ -156,19 +156,19 @@ static void UpdateNextReload(bool context,bool grip,bool supportLatched,bool cir
     f.liveIdentityVerified=native&&witness.Current(kind,(uint32_t)pawn,(uint32_t)weapon,now);
     auto& in=f.gesture;in.enabled=identity;in.context=eligible&&WeaponInHands()&&!Rd(g_weaponHolstered)&&
         g_xrSessionState==XR_SESSION_STATE_FOCUSED;in.pawn=(uint32_t)pawn;in.weapon=(uint32_t)weapon;
-    in.supported=identity;in.tracked=g_handPositionValid[0]&&g_handPositionValid[1]&&
-        g_handPoseValid[0]&&g_handPoseValid[1]&&g_handTracked[0]&&g_handTracked[1];
+    in.supported=identity;in.tracked=g_handPositionValid[OffHand()]&&g_handPositionValid[AimHand()]&&
+        g_handPoseValid[OffHand()]&&g_handPoseValid[AimHand()]&&g_handTracked[OffHand()]&&g_handTracked[AimHand()];
     in.clip=ammo.counts[0];in.reserve=ammo.counts[1];in.capacity=ammo.counts[2];in.nowMs=now;in.grip=grip;
     in.ammoFresh=ammo.Fresh((uint32_t)pawn,(uint32_t)weapon,(uint32_t)hud,now);
     in.firing=Rd(g_rawTrigger)>26;in.supportLatched=supportLatched;
     const bool knifeCanBlock=kind==Kind::Valkyrie ?
         ValkyrieKnifeCanBlock(g_hipKnifeEnabled!=0,g_hipKnifeReady,KnifeDisabledByTmd()) : true;
-    in.handBusy=knifeCanBlock&&hipknife::Reserves(g_hipKnifeState,0);
-    const auto& left=g_handLastPos[0];const auto& right=g_handLastPos[1];
-    const auto& lq=g_handAimOrientation[0];const auto& rq=g_handAimOrientation[1];
+    in.handBusy=knifeCanBlock&&hipknife::Reserves(g_hipKnifeState,OffHand());
+    const auto& left=g_handLastPos[OffHand()];const auto& right=g_handLastPos[AimHand()];
+    const auto& lq=g_handAimOrientation[OffHand()];const auto& rq=g_handAimOrientation[AimHand()];
     in.hand={left.x,left.y,left.z};in.socket=witness.socket;
     in.gun={{right.x,right.y,right.z},{rq.x,rq.y,rq.z,rq.w}};
-    Calibration calibration;calibration.ready=f.liveIdentityVerified;calibration.revision=1;
+    Calibration calibration;calibration.shoulder.right=g_leftHanded!=0;calibration.ready=f.liveIdentityVerified;calibration.revision=1;
     calibration.gesture.socketLocal={};calibration.gesture.socketRadius=.16f;calibration.gesture.pullDistance=.30f;
     if(index<2)calibration.gesture.socketRadius=.01f*float(g_nextInsertRadiusCm[index]);
     // Only these two profiles use the new, bounded shoulder capsule. The
@@ -208,7 +208,7 @@ static void UpdateNextReload(bool context,bool grip,bool supportLatched,bool cir
         armbind::Mat wristTracking,magazine;
         const hipknife::Pose handPose{in.hand,{lq.x,lq.y,lq.z,lq.w}};
         f.insertionValid=carriedWrist.Resolve(kind,in.pawn,in.weapon,g_nextReloadState.transaction.since,now,
-            handPose,(std::uint64_t)InterlockedCompareExchange64(&g_handPoseSampleMs[0],0,0),
+            handPose,(std::uint64_t)InterlockedCompareExchange64(&g_handPoseSampleMs[OffHand()],0,0),
             in.tracked,g_reloadCarryTrackedContinuity,wristTracking)&&
             weaponcarry::Matrix(kind,wristTracking,magazine);
         if(f.insertionValid)f.insertionPoint=weaponreload::Transform({},magazine);
@@ -290,8 +290,8 @@ static void UpdateNextReload(bool context,bool grip,bool supportLatched,bool cir
         if(result.event==Event::Discarded&&index<3){
             armbind::Mat currentWrist;
             const bool physicalWrist=g_nextWrist.Resolve(kind,in.pawn,in.weapon,g_nextVisual.since,now,
-                next.hand,(std::uint64_t)InterlockedCompareExchange64(&g_handPoseSampleMs[0],0,0),
-                g_handTracked[0]&&g_handPositionValid[0]&&g_handPoseValid[0],
+                next.hand,(std::uint64_t)InterlockedCompareExchange64(&g_handPoseSampleMs[OffHand()],0,0),
+                g_handTracked[OffHand()]&&g_handPositionValid[OffHand()]&&g_handPoseValid[OffHand()],
                 g_reloadCarryTrackedContinuity,currentWrist);
             const bool placed=g_reloadPalmGrip&&g_nextNativeMagazine ?
                 physicalWrist&&weaponcarry::Matrix(kind,currentWrist,next.drop) :
@@ -456,7 +456,7 @@ static int PrepareNextReload(IDirect3DDevice9* dev,INT base,UINT min,UINT vertic
         {g_centrePos[0],g_centrePos[1],g_centrePos[2]},g_centreYaw,g_baseYaw*(6.2831853f/65536.f),MetresToUU(),socket,&clipTracking)){note(8);return 0;}
     // Refuse an absolute/other-space matrix rather than publishing a far-away
     // or frozen interaction point. This is a validity bound, not calibration.
-    const auto& hand=g_handLastPos[1];
+    const auto& hand=g_handLastPos[AimHand()];
     const float socketHandDistance=hipknife::Length(socket-hipknife::V{hand.x,hand.y,hand.z});
     if(socketHandDistance>.75f){
         // Read-only, bounded evidence for the failed native-to-XR transform.
@@ -527,12 +527,12 @@ static int PrepareNextReload(IDirect3DDevice9* dev,INT base,UINT min,UINT vertic
             const bool palm=g_reloadPalmGrip&&visual.phase==weaponreload::Phase::Carrying;
             // Wait for a successfully drawn glove witness. Never substitute an
             // AIM-space magazine inside the hand when its wrist is unavailable.
-            const auto& lp=g_handLastPos[0];const auto& lq=g_handAimOrientation[0];
+            const auto& lp=g_handLastPos[OffHand()];const auto& lq=g_handAimOrientation[OffHand()];
             const hipknife::Pose liveLeft{{lp.x,lp.y,lp.z},{lq.x,lq.y,lq.z,lq.w}};
             armbind::Mat currentTracking;bool continued=false;
             const bool currentWrist=palm&&wrist.Resolve(kind,visual.pawn,visual.weapon,visual.since,now,
-                liveLeft,(std::uint64_t)InterlockedCompareExchange64(&g_handPoseSampleMs[0],0,0),
-                g_handTracked[0]&&g_handPositionValid[0]&&g_handPoseValid[0],
+                liveLeft,(std::uint64_t)InterlockedCompareExchange64(&g_handPoseSampleMs[OffHand()],0,0),
+                g_handTracked[OffHand()]&&g_handPositionValid[OffHand()]&&g_handPoseValid[OffHand()],
                 g_reloadCarryTrackedContinuity,currentTracking,&continued);
             static weaponcarry::FrameWrist frameWrist;
             armbind::Mat stableTracking;bool reused=false;
