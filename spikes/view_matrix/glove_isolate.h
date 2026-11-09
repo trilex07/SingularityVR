@@ -74,8 +74,8 @@ inline constexpr unsigned TmdHardwareFaceCount(){
     unsigned n=0;for(const auto& run:kTmdHardwareFaces)n+=run.last-run.first+1;return n;
 }
 static_assert(TmdHardwareFaceCount()==6527,"preserve measured TMD hardware cut");
-inline int TmdHardwareTrackedSide() { return 0; } // original rig: physical left wrist
-inline int TmdHardwareDelta(int offHand) { return offHand==0 ? 0 : offHand==1 ? 1 : -1; }
+inline int TmdHardwareTrackedSide(int offHand=0) { return offHand; } // logical TMD controller
+inline int TmdHardwareDelta(int offHand) { return offHand==0 || offHand==1 ? 0 : -1; }
 
 // Exact mixed section identity, never a vertex-count-only match.
 inline bool IsArmFleshSection(unsigned verts, unsigned first, unsigned triangles) {

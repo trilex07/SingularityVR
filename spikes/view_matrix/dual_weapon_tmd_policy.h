@@ -4,8 +4,8 @@
 // Presentation/input ownership only. Never changes native HANDS state or powers.
 namespace dualtmd {
 inline bool Context(bool enabled, bool vr, bool gameplay, bool owned,
-                    bool nativeHands, bool menu, bool paused, bool rightHanded) {
-    return enabled && vr && gameplay && owned && !nativeHands && !menu && !paused && rightHanded;
+                    bool nativeHands, bool menu, bool paused, bool supportedLayout) {
+    return enabled && vr && gameplay && owned && !nativeHands && !menu && !paused && supportedLayout;
 }
 inline bool Weapon(bool nativeWeapon, bool context, bool equipped, int hands) {
     return nativeWeapon || (context && equipped && hands == 1);

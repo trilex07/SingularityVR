@@ -9,12 +9,12 @@ inline bool CarrySectionEligible(Kind kind,bool noTmdGlove){
     return noTmdGlove||weaponreload::Index(kind)<3;
 }
 // All three existing magazine mounts are wrist-local. The original TMD
-// material-0 publishes that same physical left wrist after stereo submission.
+// material-0 publishes the selected physical ammo wrist after stereo submission.
 inline WristSource Source(Kind kind,bool carrying,bool noTmdGlove,bool tmdGlove,
-                          bool noTmdPosed,bool leftTracked,unsigned wristBone){
+                          bool noTmdPosed,bool ammoTracked,unsigned wristBone,unsigned expectedWrist=9u){
     if(!carrying)return WristSource::None;
     if(noTmdGlove&&noTmdPosed)return WristSource::NoTmd;
-    if(weaponreload::Index(kind)<3&&tmdGlove&&leftTracked&&wristBone==9u)
+    if(weaponreload::Index(kind)<3&&tmdGlove&&ammoTracked&&wristBone==expectedWrist&&(expectedWrist==9u||expectedWrist==51u))
         return WristSource::Tmd;
     return WristSource::None;
 }

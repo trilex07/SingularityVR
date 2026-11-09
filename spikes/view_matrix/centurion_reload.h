@@ -6,11 +6,12 @@
 namespace centurionreload {
 using hipknife::V; using hipknife::Pose;
 struct Config {
+    bool rightShoulder=false; // left-handed layout: ammo on physical right
     bool cylinderGestures=false; // optional circle/open/dump/insert/close path
     bool circleOpens=false; // separate default-OFF tracked-cylinder experiment
     bool upwardEjection=false; // physical-polish opt-in; old route unchanged
     bool deliberateClose=false; // do not treat slow placement/holstering as flick
-    // Physical left shoulder, tracking metres. Yaw only: usable seated and
+    // Physical ammo shoulder (left by default), tracking metres. Yaw only: usable seated and
     // looking down, separate from both existing hip holsters. Old belt INI
     // keys intentionally do not move this anchor back into the knife zone.
     float shoulderLeft=.22f,shoulderDown=.12f,shoulderBack=.18f,pouchRadius=.17f;
@@ -29,7 +30,7 @@ inline bool HeadCentre(V leftEye,V rightEye,V& out){
 }
 inline Pose Pouch(V head,float yaw,const Config& c={}) {
     const hipknife::Q q{0,std::sin(yaw*.5f),0,std::cos(yaw*.5f)};
-    return {head+hipknife::Rotate(q,{-c.shoulderLeft,-c.shoulderDown,c.shoulderBack}),q};
+    return {head+hipknife::Rotate(q,{c.rightShoulder?c.shoulderLeft:-c.shoulderLeft,-c.shoulderDown,c.shoulderBack}),q};
 }
 inline bool Near(V a,V b,float r){return hipknife::Finite(a)&&hipknife::Finite(b)&&
     r>0&&hipknife::Length(a-b)<=r;}

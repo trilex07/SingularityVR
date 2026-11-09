@@ -11,9 +11,10 @@ using V=hipknife::V;
 struct Fixture {
     State s;Frame f;Calibration c;
     const V withdrawn{.2f,1,-.8f};
-    explicit Fixture(const Profile& p){
+    explicit Fixture(const Profile& p,bool leftHanded=false){
         f.enabled=true;f.liveIdentityVerified=true;f.kind=p.kind;
         f.objectName=p.objectName;f.meshWedges=p.meshWedges;
+        f.aimHand=leftHanded?0:1;c.shoulder.right=leftHanded;
         auto& in=f.gesture;
         in.context=in.tracked=in.supported=in.ammoFresh=true;
         in.pawn=20;in.weapon=10;in.clip=2;in.reserve=25;in.capacity=6;
@@ -399,14 +400,14 @@ int main(int argc,char** argv){
     unsigned transactions=0;
     for(const auto& p:profiles){
         TestDefaultsAndIdentity(p);TestCancellation(p);TestInsertComfort(p);TestAmmoAndTimeout(p);TestEveryPhase(p);TestCircleAndOwnership(p);
-        for(unsigned cycle=0;cycle<10000;++cycle){
-            Fixture x(p);x.Insert();
+        for(unsigned cycle=0;cycle<10000;++cycle)for(bool left:{false,true}){
+            Fixture x(p,left);x.Insert();
             for(unsigned i=0;i<4;++i)assert(!x.Tick(false,x.f.gesture.socket).reloadIntent);
             x.f.gesture.clip=6;x.f.gesture.reserve=21;
             assert(x.Tick(false,x.f.gesture.socket).event==E::Acknowledged);++transactions;
         }
     }
-    assert(transactions==30000);
+    assert(transactions==60000);
     if(argc>1){assert(argc==4);ValidateAsset(argv[1],547,596);ValidateAsset(argv[2],242,198);ValidateAsset(argv[3],170,180);}
     std::printf("next-weapon reload L1 PASS: 3 profiles, Circle eject/shoulder/insert with NO flick, %u conserved synthetic transactions, default OFF/identity/calibration/ownership/held-input gates; pure policy fixture, NOT native inventory proof; private assets %s\n",
         transactions,argc==4?"validated":"not requested");

@@ -39,6 +39,9 @@ int main(){
     assert(weaponcarry::Source(Kind::Volk,false,false,true,false,true,9)==WristSource::None);
     assert(weaponcarry::Source(Kind::Volk,true,false,true,false,false,9)==WristSource::None);
     assert(weaponcarry::Source(Kind::Volk,true,false,true,false,true,51)==WristSource::None);
+    assert(weaponcarry::Source(Kind::Volk,true,false,true,false,true,51,51)==WristSource::Tmd);
+    assert(weaponcarry::Source(Kind::Volk,true,false,true,false,true,9,51)==WristSource::None);
+    assert(weaponcarry::Source(Kind::Volk,true,false,true,false,false,51,51)==WristSource::None);
     const auto& tmd=armnatural::TmdBind();assert(tmd.ready);
     for(int turn=0;turn<2;++turn){
         auto skin=Identity(),chain=Identity(),world=Identity(),tracked=Identity(),expected=Identity();
