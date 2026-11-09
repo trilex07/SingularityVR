@@ -27,6 +27,20 @@ GLOBALS = [
     ('mouse_y', 0x1cf5674), ('left_button', 0x1cf568c),
     ('pad_identity', 0x1d1fc7c), ('mouse_slot', 0x1d1fc78),
 ]
+REMAINING_BLOCKS = [
+    ('start',0xf11430,128),('pop',0xf17f60,128),('load',0xf23840,128),
+    ('equip',0xf00f50,128),('load_upgrades',0xf87c80,128),('upgrade',0xf87e60,128),
+    ('destroy',0xa05790,128),('pop_destroy_call',0xf18059,32),
+    ('append_name',0x4affd0,64),('factory',0xfd2320,128),
+    ('get_game_system',0xefa070,32),('has_weapon',0x102f700,128),
+    ('scale_getter',0xb3e400,64),('scale_consumer',0xaec25d,26),
+]
+REMAINING_GLOBALS = [
+    ('locker_vtable',0x19a0948),('inventory_vtable',0x19cb480),
+    ('game_system_vtable',0x19cdbf8),('game_system_ptr',0x1cf394c),
+    ('inventory_global',0x1cf74e4),('empty_string',0x179e4d0),
+    ('rhi_surface_vtable',0x17b4474),('rhi_texture_vtable',0x17b441c),
+]
 
 
 def load(path):
@@ -62,13 +76,15 @@ def main():
     parser.add_argument('reference', type=Path)
     parser.add_argument('candidate', type=Path)
     parser.add_argument('--output', type=Path, required=True)
+    parser.add_argument('--scope', choices=['input','remaining'], default='input')
     args = parser.parse_args()
     source, relocations, text = load(args.reference)
     candidate, _, candidate_text = load(args.candidate)
     md = capstone.Cs(capstone.CS_ARCH_X86, capstone.CS_MODE_32)
     md.detail = True
     rows = []
-    for name, va, size in BLOCKS:
+    blocks, globals_ = (BLOCKS,GLOBALS) if args.scope=='input' else (REMAINING_BLOCKS,REMAINING_GLOBALS)
+    for name, va, size in blocks:
         regex, fixed = pattern(source, relocations, va-0x400000, size, md)
         found = [m.start() for m in regex.finditer(candidate, candidate_text[0], sum(candidate_text))]
         row = dict(name=name, reference=f'{va:08X}', bytes=size, fixedBytes=fixed,
@@ -77,7 +93,7 @@ def main():
             row['candidateSha256'] = hashlib.sha256(candidate[found[0]:found[0]+size]).hexdigest().upper()
         rows.append(row)
     globals_report = []
-    for name, va in GLOBALS:
+    for name, va in globals_:
         refs = []
         for match in re.finditer(re.escape(struct.pack('<I', va)), source[text[0]:sum(text)]):
             at = match.start()+text[0]
