@@ -194,6 +194,7 @@ static void BuildTmdAssemblyC(float C[4][4]);
 #include "psvr2_trigger.h"
 #include "psvr2_trigger_config.h"
 #include "trigger_shot.h"
+#include "laser_style.h"
 #include "weapon_shot_haptics.h"
 #include "damage_haptics.h"
 #include "psvr2_client.h"
@@ -8115,6 +8116,7 @@ inline SHORT DebugKey(int vk) {
 // The laser toggle, defined with the drawing code it controls. Declared here because the PANEL owns
 // it - a panel-backed setting has to be visible to the row text, the adjust and the save, all of which
 // live above the renderer.
+extern volatile LONG g_laserDotOnly;
 extern volatile LONG g_laserOn, g_laserLenUU;
 
 // The global anchor these slots override and seed from; defined with the gun transform.
@@ -8609,7 +8611,9 @@ void PanelSaveRow(int rowId, const char* path) {
         case PR_LASER:
             _snprintf_s(v, sizeof(v), _TRUNCATE, "%ld",
                         InterlockedCompareExchange(&g_laserOn, 0, 0));
-            WritePrivateProfileStringA("Render", "LaserSight", v, path); return;
+            WritePrivateProfileStringA("Render", "LaserSight", v, path);
+            _snprintf_s(v,sizeof(v),_TRUNCATE,"%ld",Rd(g_laserDotOnly));
+            WritePrivateProfileStringA("Render","LaserDotOnly",v,path); return;
         // ⭐ run 217: every occupied slot is written on any weapon row, not just the one being edited.
         // The rows share one table and PanelSave walks rows, so writing "the row I touched" would drop
         // a weapon you tuned earlier in the same session. Nav rows return silently; these do not,
@@ -8949,7 +8953,7 @@ void PanelRowText(int row, char* out, size_t cap) {
             break;
         case PR_LASER:
             _snprintf_s(out, cap, _TRUNCATE, "LASER SIGHT    %s",
-                        InterlockedCompareExchange(&g_laserOn, 0, 0) ? "ON" : "OFF");
+                        !Rd(g_laserOn)?"OFF":Rd(g_laserDotOnly)?"DOT":"BEAM + DOT");
             break;
         // The weapon rows report NO WEAPON rather than a stale number when nothing is latched, because
         // adjusting a value that belongs to a gun you are not holding is the confusing case.
@@ -9952,10 +9956,12 @@ void PanelAdjust(int row, int dir) {
         case PR_GOTO_TMDBONE: g_panelPage = 7; g_panelRow = 0; return;
         case PR_GOTO_TMDMESH: g_panelPage = 8; g_panelRow = 0; return;
         case PR_BACK_TMD:     g_panelPage = 6; g_panelRow = 0; return;
-        case PR_LASER:
-            InterlockedExchange(&g_laserOn,
-                                InterlockedCompareExchange(&g_laserOn, 0, 0) ? 0 : 1);
+        case PR_LASER: {
+            const int mode=laserstyle::Next(laserstyle::Mode(Rd(g_laserOn)!=0,Rd(g_laserDotOnly)!=0),dir);
+            InterlockedExchange(&g_laserDotOnly,mode==1?1:0);
+            InterlockedExchange(&g_laserOn,mode!=0?1:0);
             break;
+        }
         // ⭐ run 217: the weapon rows. GunAlignFor creates the slot on first adjustment, seeded from the
         // global anchor - so tuning always starts from what you are already looking at, never a jump.
         // With no weapon latched there is nothing to key on and the press does nothing, which the row
@@ -30378,6 +30384,7 @@ static void DrawStateReadout(IDirect3DDevice9* dev) {
 // The screen positions are computed HERE, on the CPU, from the same camera matrix the stereo path
 // remaps - once per eye, with the same ApplyEyeRemap the geometry gets. That keeps the laser in the
 // same space as the world it is drawn over without touching the game pipeline at all.
+volatile LONG g_laserDotOnly = 0; // [Render] LaserDotOnly; retains LaserSight on/off compatibility
 volatile LONG g_laserOn = 0;          // ini [Render] LaserSight - OFF by default
 volatile LONG g_laserLenUU = 4000;    // ini [Render] LaserLengthUU
 
@@ -30428,7 +30435,7 @@ void DrawLaserSight(IDirect3DDevice9* dev) {
     // aid that already works. Off while it is up.
     if (ScopeActive()) return;
 
-    float dir[3]; GunAimDir(dir);      // ⭐ run 219: shared with the ADS pull-back - see GunAimDir
+    float dir[3]; if(!GunAimDir(dir))return;      // ⭐ run 219: shared with the ADS pull-back - see GunAimDir
 
     // ⭐ run 218: the gun's real pivot, not the view anchor. See GunPivotWorld for what run 217 got wrong.
     float A[3]; GunPivotWorld(A);
@@ -30455,12 +30462,21 @@ void DrawLaserSight(IDirect3DDevice9* dev) {
     dev->SetTexture(0, nullptr);
     dev->SetFVF(D3DFVF_XYZRHW | D3DFVF_DIFFUSE);
     dev->SetRenderState(D3DRS_ZENABLE, D3DZB_FALSE);  // v1: over everything. Depth is a later question
-    dev->SetRenderState(D3DRS_ALPHABLENDENABLE, FALSE);
+    dev->SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
+    dev->SetRenderState(D3DRS_SRCBLEND,D3DBLEND_SRCALPHA);
+    dev->SetRenderState(D3DRS_DESTBLEND,D3DBLEND_INVSRCALPHA);
+    dev->SetRenderState(D3DRS_BLENDOP,D3DBLENDOP_ADD);
+    dev->SetTextureStageState(0,D3DTSS_COLOROP,D3DTOP_SELECTARG1);
+    dev->SetTextureStageState(0,D3DTSS_COLORARG1,D3DTA_DIFFUSE);
+    dev->SetTextureStageState(0,D3DTSS_ALPHAOP,D3DTOP_SELECTARG1);
+    dev->SetTextureStageState(0,D3DTSS_ALPHAARG1,D3DTA_DIFFUSE);
+    dev->SetTextureStageState(1,D3DTSS_COLOROP,D3DTOP_DISABLE);
     dev->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
     dev->SetRenderState(D3DRS_LIGHTING, FALSE);
     dev->SetRenderState(D3DRS_SCISSORTESTENABLE, FALSE);
 
     const float halfW = (float)(vp.Width / 2);
+    const float laserShimmer=laserstyle::Shimmer(GetTickCount());
     for (int eye = 0; eye < 2; ++eye) {
         float m[16];
         memcpy(m, g_camMats[slot].m, sizeof(m));
@@ -30480,23 +30496,38 @@ void DrawLaserSight(IDirect3DDevice9* dev) {
         const float sx1 = (cb[0]/cb[3] * 0.5f + 0.5f) * (float)vp.Width  + (float)vp.X;
         const float sy1 = (0.5f - cb[1]/cb[3] * 0.5f) * (float)vp.Height + (float)vp.Y;
 
-        // A screen-space quad along the segment. Width scaled off the eye half so it looks the same
-        // at any resolution.
-        float dx = sx1 - sx0, dy = sy1 - sy0;
-        const float L = sqrtf(dx*dx + dy*dy);
-        if (L < 0.5f) continue;
-        dx /= L; dy /= L;
-        const float w = halfW * 0.0015f + 0.5f;      // about 2 px at 1280 per eye
-        const float px = -dy * w, py = dx * w;
-
-        const DWORD col = 0xFFFF2020;                 // red, opaque
-        LaserVtx v[4] = {
-            { sx0 + px, sy0 + py, 0.0f, 1.0f, col },
-            { sx1 + px, sy1 + py, 0.0f, 1.0f, col },
-            { sx0 - px, sy0 - py, 0.0f, 1.0f, col },
-            { sx1 - px, sy1 - py, 0.0f, 1.0f, col },
+        // Per-eye clipping prevents glow/near-origin geometry bleeding across the seam.
+        RECT eyeRect={(LONG)(vp.X+eye*halfW),(LONG)vp.Y,
+            (LONG)(vp.X+(eye+1)*halfW),(LONG)(vp.Y+vp.Height)};
+        dev->SetScissorRect(&eyeRect);
+        dev->SetRenderState(D3DRS_SCISSORTESTENABLE,TRUE);
+        const float width=laserstyle::HalfWidth(halfW);
+        const float shimmer=laserShimmer; // same phase in BOTH eyes
+        const auto beam=[&](float radius,DWORD colour) {
+            float dx=sx1-sx0,dy=sy1-sy0;
+            const float length=std::sqrt(dx*dx+dy*dy);
+            if(length<.5f)return; // dot still draws when line projects to a point
+            dx/=length;dy/=length;
+            const float px=-dy*radius,py=dx*radius;
+            LaserVtx v[4]={{sx0+px,sy0+py,0,1,colour},{sx1+px,sy1+py,0,1,colour},
+                {sx0-px,sy0-py,0,1,colour},{sx1-px,sy1-py,0,1,colour}};
+            g_origDrawPrimUP(dev,D3DPT_TRIANGLESTRIP,2,v,sizeof(LaserVtx));
         };
-        g_origDrawPrimUP(dev, D3DPT_TRIANGLESTRIP, 2, v, sizeof(LaserVtx));
+        if(!Rd(g_laserDotOnly)) {
+            beam(width*2.5f,0x16FF3030); // restrained soft halo
+            beam(width,0xA0FF5050);      // thin translucent core
+        }
+        const auto dot=[&](float radius,DWORD centre) {
+            LaserVtx v[18];v[0]={sx1,sy1,0,1,centre};
+            for(unsigned n=0;n<=16;++n){const float angle=n*(6.2831853f/16);
+                v[n+1]={sx1+std::cos(angle)*radius,sy1+std::sin(angle)*radius,0,1,0x00FF3030};}
+            g_origDrawPrimUP(dev,D3DPT_TRIANGLEFAN,16,v,sizeof(LaserVtx));
+        };
+        const float radius=laserstyle::DotRadius(halfW);
+        dot(radius*2.5f,(DWORD(48*shimmer)<<24)|0x00FF3030);
+        dot(radius,0xFFFF6060);
+        dot(radius*.45f,0xFFFFE8D8); // small bright centre; never modulate aim position
+
     }
 
     dev->SetRenderState(D3DRS_SCISSORTESTENABLE, oldSc);
@@ -39104,6 +39135,7 @@ void LoadIniSettings() {
     // like every other panel-backed setting.
     InterlockedExchange(&g_laserOn,
                         GetPrivateProfileIntA("Render", "LaserSight", 0, path) ? 1 : 0);
+    InterlockedExchange(&g_laserDotOnly,GetPrivateProfileIntA("Render","LaserDotOnly",0,path)?1:0);
     LONG llen = GetPrivateProfileIntA("Render", "LaserLengthUU", 4000, path);
     if (llen < 100)    llen = 100;
     if (llen > 100000) llen = 100000;

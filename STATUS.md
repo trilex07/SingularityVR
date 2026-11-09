@@ -5587,3 +5587,23 @@ x86 PE32 /O2 + static analysis build PASS; diff check PASS.
 DLL 374A8B48D5C44532E5C8D50F5CD295A1F638DE3B471B6F641190E807E3EC2F09.
 Guarded DLL-only deployment from F84837C8 with backup; exact INI/assets preserved.
 L3 gameplay/physical PSVR2 feel NOT RUN for this change; no headset acceptance claim.
+
+## 2026-11-09 - Thin laser and optional dot reticle
+
+User physically likes existing aiming laser but requests thinner beam and dot-only
+selection in VR Settings. Existing implementation was an opaque wide screen quad.
+Replace with ~5x thinner translucent core and faint halo, plus radial alpha dot with
+bright centre and subtle halo shimmer. No aim-position jitter or per-frame allocations.
+Controls/LASER SIGHT cycles OFF -> DOT -> BEAM + DOT (reverse adjustment supported).
+Render/LaserSight remains boolean; Render/LaserDotOnly persists style; legacy hold-A
+on/off preserves selected style. Defaults preserve enable state, beam now includes dot.
+Each eye uses existing submitted camera transform and its own scissor; shimmer clock
+sample is shared across eyes. Captured full device state restored after UP draws.
+Dot is an aiming-direction marker at LaserLengthUU, NOT a collision/hit-surface dot;
+no true environmental particle scattering or volumetric lighting is implemented.
+L1_PASS: real executable mode/reverse/wrap, thin-width, dot size and shimmer bounds.
+L2_PASS: x86 PE32 /O2 build/static analysis and diff checks. New appearance L3/L4 NOT RUN.
+DLL C6C1A5041F544CCFCA23DD5D3F475E989603698067504D4D65A813AFC4552B3B.
+Guarded DLL-only installation backs up 374A8B48; existing INI/assets/TMD/Seeker preserved.
+Falsifier: modes fail to persist, dot disappears on zero-length projected beam,
+eye-seam spill, state leakage or uncomfortable shimmer in actual headset.
