@@ -98,3 +98,29 @@ native or asset contract in the renderer. Next audit:
   verdict before enabling a German runtime candidate. Keep object/resource gates.
 
 No request for a headset test yet: offline work still remains.
+
+Additional unique normalized measurements for that next audit (not yet wired):
+
+| Method | EN | DE | DE full-body FNV64 |
+|---|---|---|---|
+| SwitchWeapon447 bytes,393 fixed | 01047220 | 01046EB0 | C2123218E4FC29B7 |
+| SelectOwned168 bytes,126 fixed | 0102F650 | 0102F2E0 | CDA7F393698092BE |
+| InputClassification784 bytes,605 fixed | 011D12F0 | 011D0F80 | 074473B46C584CFD |
+
+Input classification FNV32 changes EN9785AF65 -> DE6EBD5E5D. The existing Seeker
+fingerprints also differ: ENBD62E75D7EBD62DB / CB797F59504492C3. This is concrete
+evidence that remaining EN-only method gates cannot simply be presumed valid
+on DE. Private next-method report: build/shotgun-disc-gog-20261109/german-next-methods.json.
+
+## Committed-source L2 receipt
+
+- Code commit88a63813e766f3a88aaa9d563fde71b62e81700c; tracked tree clean at build.
+- `spikes/view_matrix/build.ps1` PASS; x86 PE32, Machine014C, Magic010B, /O2,
+  performanceInstrumentation=false. DLL digest independently rechecked:
+  82A47FE14FEAF28A95756F3118430B80C6C41BB1921DB8EB85BCA24BBF25D250.
+- Generated local receipt spikes/view_matrix/d3d9.build.json; build log
+  build/shotgun-disc-gog-20261109/german-native-build-final.log.
+- Installed Steam DLL independently rehashed unchanged:
+  C6C1A5041F544CCFCA23DD5D3F475E989603698067504D4D65A813AFC4552B3B.
+- This later documentation-only commit records that artifact; it does not
+  change its code provenance or publish a German runtime build.
