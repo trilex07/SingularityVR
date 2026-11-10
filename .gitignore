@@ -159,3 +159,4 @@ offline-deliverables/
 # Private headset evidence and CPU regression outputs; never game content in Git.
 /captures/user-headset-20261110/
 /build/tracked-support-cpu/
+/build/artifact-support-final/

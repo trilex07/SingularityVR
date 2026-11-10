@@ -926,3 +926,20 @@ machine before release.
   but debugging is much easier than it would be otherwise.
 - **`LARGE_ADDRESS_AWARE` is already set.** The LAA patch the reference project needed for its
   32-bit stereo memory budget is **not** required here.
+# 2026-11-10: isolated support + captured gravity-decal review candidate
+
+From verified C6-associated1b03 plus8ed2 support continuity, port only seven
+TMD filter hunks/header/test fromd9f0f4d1 (not its laser/UI work). Captured
+PS2132B/FNV32 9CE7CA1D and frame17792 groups311/312 exactly match both eyes'
+5161-vertex stride12 modulate/depth/blend class. DefaultOFF flag
+Render/TmdGravityDecalFix; fail closed on query/context/state mismatch.
+Reset/ResetEx clear only the new bound classification; existing broad diagnostic
+state policy is unchanged. No hook/engine call, matrix, timer or radius change.
+
+This is an opt-in captured-pass filter, not unique actor ownership or a proven
+engine repair. Current sky7243 groups462/463 (9 vertices/stride32/RGB opaque)
+are explicitly rejected by the CPU fixture: no claim this removes the sky stripe.
+Historical physically accepted3488084/5D49 shadow corrections remain unchanged.
+CPU captured shader positive/2132 mutations, all independent draw gates,
+range boundaries, support542 and exact action attachment pass. Production
+build/manifest and MAIN review are separate gates; no Steam/live/GPU work.

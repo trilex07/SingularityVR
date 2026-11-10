@@ -195,6 +195,7 @@ static void BuildTmdAssemblyC(float C[4][4]);
 #include "psvr2_trigger_config.h"
 #include "trigger_shot.h"
 #include "laser_style.h"
+#include "tmd_gravity_decal.h"
 #include "weapon_shot_haptics.h"
 #include "damage_haptics.h"
 #include "psvr2_client.h"
@@ -14858,6 +14859,8 @@ static ShadowSetPS shadowOriginalPS=nullptr;
 // the gravity black rectangles (trace 17792-3 groups 311/312, modulate decal PS
 // whose CTAB names DecalLocalBinormal/DecalLocalTangent, only in gravity frame).
 static bool g_dropDecalLocalTangent=false;
+static bool g_tmdGravityDecalFix=false;
+static bool g_tmdGravityDecalBound=false;
 static IDirect3DPixelShader9* g_decalLtCache[64]{};static bool g_decalLtMatch[64]{};static unsigned g_decalLtNext=0;
 static bool g_decalLtBound=false;static volatile LONG g_decalLtDropped=0;
 static bool DecalLocalTangentPS(IDirect3DPixelShader9* ps){
@@ -14874,7 +14877,13 @@ static bool DecalLocalTangentPS(IDirect3DPixelShader9* ps){
     return match;
 }
 static HRESULT STDMETHODCALLTYPE ShadowTraceSetPS(IDirect3DDevice9* dev,IDirect3DPixelShader9* ps) {
-    const HRESULT hr=shadowOriginalPS(dev,ps);if(SUCCEEDED(hr)){shadowtrace::bound.ps=ps;shadowfix::BindPS(ps);worldshadowfix::BindPS(ps);projectorfix::BindPS(ps);nativefx::BindPS(ps);g_decalLtBound=g_dropDecalLocalTangent&&DecalLocalTangentPS(ps);}return hr;
+    const HRESULT hr=shadowOriginalPS(dev,ps);if(SUCCEEDED(hr)){shadowtrace::bound.ps=ps;shadowfix::BindPS(ps);worldshadowfix::BindPS(ps);projectorfix::BindPS(ps);nativefx::BindPS(ps);g_decalLtBound=g_dropDecalLocalTangent&&DecalLocalTangentPS(ps);
+        // Exact bytecode identity: no allocation, pointer cache or name-based overmatch.
+        g_tmdGravityDecalBound=false;
+        if(g_tmdGravityDecalFix&&ps){UINT n=0;unsigned char code[2132];
+            if(SUCCEEDED(ps->GetFunction(nullptr,&n))&&n==sizeof(code)&&SUCCEEDED(ps->GetFunction(code,&n)))
+                g_tmdGravityDecalBound=tmdgravitydecal::Shader(code,n);
+        }}return hr;
 }
 // Fix-I/menu census: wire the dormant MenuDrawTrace recorder into the four draw hooks
 // (calls below) with path masks in StereoPairBody (1) and HudStereoPair (2); provider
@@ -21195,6 +21204,23 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
     hotpath::scope hotScope(g_hotPathSampler, hotpath::Family::draw_hook);
     MenuDrawTraceRecord(dev,1,t,primCount,numVertices,startIndex,minIndex,baseVertex,nullptr,0);   // fix-I census
     InterlockedIncrement(&g_frameDrawIdx);
+    if(g_tmdGravityDecalBound&&g_tmdGravityDecalFix){
+        DWORD state[13]{};const D3DRENDERSTATETYPE ids[]={D3DRS_COLORWRITEENABLE,D3DRS_ZWRITEENABLE,
+            D3DRS_ALPHABLENDENABLE,D3DRS_SRCBLEND,D3DRS_DESTBLEND,D3DRS_STENCILENABLE,D3DRS_BLENDOP,
+            D3DRS_ZENABLE,D3DRS_ZFUNC,D3DRS_SEPARATEALPHABLENDENABLE,D3DRS_SRCBLENDALPHA,
+            D3DRS_DESTBLENDALPHA,D3DRS_BLENDOPALPHA};
+        bool valid=true;for(unsigned i=0;i<13;++i)valid=SUCCEEDED(dev->GetRenderState(ids[i],&state[i]))&&valid;
+        IDirect3DVertexBuffer9* vb=nullptr;UINT offset=0,stride=0;
+        valid=SUCCEEDED(dev->GetStreamSource(0,&vb,&offset,&stride))&&valid;if(vb)vb->Release();
+        const bool context=VrModeOn()&&InGameplay()&&Rd(g_haveTMD)==1&&Rd(g_handsStatus)==HANDS_TMD&&
+            !Rd(g_gamePaused)&&!Rd(g_vrUiMenu)&&!Rd(g_panelOpen)&&!Rd(g_inCinematic)&&Rd(g_rtIsScene);
+        if(tmdgravitydecal::Drop({valid,context,(unsigned)t,stride,offset,numVertices,primCount,
+                state[0],state[1],state[2],state[3],state[4],state[5],state[6],
+                state[7],state[8],state[9],state[10],state[11],state[12]})){
+            static unsigned receipts=0;if(receipts++<4)Log("tmd-gravity-decal: exact captured pass suppressed PS=9CE7CA1D verts=%u prims=%u",numVertices,primCount);
+            return D3D_OK;
+        }
+    }
     if(g_decalLtBound){const LONG n=InterlockedIncrement(&g_decalLtDropped);if(n==1||n%2000==0)Log("decal-local-tangent: dropped=%ld",n);return D3D_OK;}
     if(g_tmdShortGauntlet && gloveisolate::IsArmFleshSection(numVertices,startIndex,primCount)) {
         static LONG saidExact=0;
@@ -37602,6 +37628,7 @@ HRESULT STDMETHODCALLTYPE Hook_ResetDevice(IDirect3DDevice9* dev, D3DPRESENT_PAR
     InterlockedIncrement(&g_diagResetCount);
     if(pp){InterlockedExchange(&g_diagResetRequestW,LONG(pp->BackBufferWidth));InterlockedExchange(&g_diagResetRequestH,LONG(pp->BackBufferHeight));}
     if (pp && dev) GuardResetSize(pp);
+    g_tmdGravityDecalBound=false;
     ReleaseWristResources();
     g_cinemaWasActive=false;g_cinemaStereoToken=~0u;memset(g_cinemaNativeValid,0,sizeof g_cinemaNativeValid);
     ReleaseCutsceneMonoResources(); // DEFAULT-pool compose surface; rebuilt lazily
@@ -37612,6 +37639,7 @@ HRESULT STDMETHODCALLTYPE Hook_ResetDeviceEx(IDirect3DDevice9Ex* dev, D3DPRESENT
     InterlockedIncrement(&g_diagResetCount);
     if(pp){InterlockedExchange(&g_diagResetRequestW,LONG(pp->BackBufferWidth));InterlockedExchange(&g_diagResetRequestH,LONG(pp->BackBufferHeight));}
     if (pp && dev) GuardResetSize(pp);
+    g_tmdGravityDecalBound=false;
     ReleaseWristResources();
     g_cinemaWasActive=false;g_cinemaStereoToken=~0u;memset(g_cinemaNativeValid,0,sizeof g_cinemaNativeValid);
     ReleaseCutsceneMonoResources(); // DEFAULT-pool compose surface; rebuilt lazily
@@ -38708,6 +38736,8 @@ void LoadIniSettings() {
     g_trackedDepthSourcePose=GetPrivateProfileIntA("Render","TrackedDepthSourcePose",0,path)!=0;
     g_tmdTrackedMuzzle=GetPrivateProfileIntA("Render","TmdTrackedMuzzle",0,path)!=0;
     g_tmdVisualAudit=GetPrivateProfileIntA("Diagnostic","TmdVisualAudit",0,path)!=0;
+    g_tmdGravityDecalFix=GetPrivateProfileIntA("Render","TmdGravityDecalFix",0,path)!=0;
+    Log("ini: TmdGravityDecalFix=%d (exact PS 2132/9CE7CA1D and captured modulate draw gate, default OFF)",g_tmdGravityDecalFix?1:0);
     g_dropDecalLocalTangent=GetPrivateProfileIntA("Diagnostic","DropDecalLocalTangent",0,path)!=0;
     Log("ini: DropDecalLocalTangent=%d (default OFF; skip only modulate decals whose PS names DecalLocalTangent)",g_dropDecalLocalTangent?1:0);
     Log("ini: TmdVisualAudit=%d (default OFF; three bounded neutral/sky/gravity-input driver traces + SBS, no visual correction)",g_tmdVisualAudit?1:0);
