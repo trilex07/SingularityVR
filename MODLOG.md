@@ -1,5 +1,16 @@
 # Reverse-engineering journal
 
+## 2026-11-10 — German native consumer profiles (offline)
+
+Resolved the14 remaining code consumers and8 globals through unique normalized
+blocks, exact native registration names and independent references. Texture RHI
+DE017B35B4 is pinned by2 allocation callers to constructor00520060; vtable entry
+005206D0 calls destructor005200F0, which stores the same class identity. Adjacent
+template entries are rejected. Existing ownership/COM/ABI guards remain intact;
+runtime DE refusal is retained pending broader method/asset contracts. Real EN/DE
+PE mutation and actual x86 hook tests PASS. Evidence and next gates:
+docs/handoffs/gog-german-native-consumers-20261110.md.
+
 2026-10-21 physical CD571D46: event bridge had zero invocations; existing cinema
 ON/OFF nevertheless occurred. User distinguishes visible cinematic hands from
 free tracked hands during subsequent escape. EPlayerHandsStatus has no bound

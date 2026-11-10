@@ -1,14 +1,15 @@
 #pragma once
+#include "game_build_native.h"
 #include <Windows.h>
 #include <cstdint>
 
 namespace LockerRetainPolicy {
 
-constexpr uintptr_t kFnDestroyItem = 0x00A05790u;
-constexpr uintptr_t kPopMenuDestroyCallSite = 0x00F18059u;
-constexpr uintptr_t kPopMenuDestroyReturn = 0x00F1805Eu; // byte immediately after E8 rel32
+inline const uintptr_t& kFnDestroyItem = gamebuild::NativeCurrent().destroy;
+inline const uintptr_t& kPopMenuDestroyCallSite = gamebuild::NativeCurrent().destroyCall;
+inline const uintptr_t& kPopMenuDestroyReturn = gamebuild::NativeCurrent().destroyReturn; // byte immediately after E8 rel32
 // PopMenu @ 0xF1804F: mov ecx, [0x1CF74E4] before destroyItem.
-constexpr uintptr_t kPopMenuInventoryGlobal = 0x01CF74E4u;
+inline const uintptr_t& kPopMenuInventoryGlobal = gamebuild::NativeCurrent().inventoryGlobal;
 
 // destroyItem @ 0xA05790: __thiscall, ret 0xC (capture-20261006-205508).
 // ECX = inventory manager from kPopMenuInventoryGlobal at the PopMenu callsite.

@@ -1,4 +1,5 @@
 #pragma once
+#include "game_build_native.h"
 // Minimal read-only WeaponLocker availability witness (+0x3E4 vs live catalog vs equip cycle).
 // Default OFF ([Diagnostic] LockerAvailabilityTrace=0). Separate from LockerNativeTrace.
 // Hooks: equip @ 0xF00F50 only. No Poll(), no progression/catalog writes, no page hooks.
@@ -16,15 +17,15 @@ void Log(_Printf_format_string_ const char* fmt, ...);
 
 namespace LockerAvailabilityTrace {
 
-constexpr uintptr_t kWeaponLockerVtable = 0x019A0948u;
+inline const uintptr_t& kWeaponLockerVtable = gamebuild::NativeCurrent().lockerVtable;
 constexpr uintptr_t kSlotEquip = 0x1F8u;
-constexpr uintptr_t kFnEquip = 0x00F00F50u;
-constexpr uintptr_t kGGameSystemPtr = 0x01CF394Cu;
+inline const uintptr_t& kFnEquip = gamebuild::NativeCurrent().equip;
+inline const uintptr_t& kGGameSystemPtr = gamebuild::NativeCurrent().gameSystemPtr;
 constexpr uintptr_t kCatalogDataOff = 0x160u;
 constexpr uintptr_t kCatalogCountOff = 0x164u;
 constexpr uintptr_t kCatalogStride = 0x50u;
 constexpr uintptr_t kPawnInvManager = 0x3D0u;
-constexpr uintptr_t kInventoryManagerVtable = 0x019CB480u;
+inline const uintptr_t& kInventoryManagerVtable = gamebuild::NativeCurrent().inventoryVtable;
 constexpr uintptr_t kMgrNativeMaskOff = 0x3E4u;
 
 constexpr unsigned kMaxCatalogScan = 32u;

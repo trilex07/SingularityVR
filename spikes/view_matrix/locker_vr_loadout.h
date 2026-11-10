@@ -1,4 +1,5 @@
 #pragma once
+#include "game_build_native.h"
 #include "MinHook.h"
 #include "locker_vr_loadout_acquire.h"
 #include "locker_vr_loadout_publish.h"
@@ -27,13 +28,13 @@ void Log(_Printf_format_string_ const char* fmt, ...);
 
 namespace LockerVrLoadout {
 
-constexpr uintptr_t kWeaponLockerVtable = 0x019A0948u;
+inline const uintptr_t& kWeaponLockerVtable = gamebuild::NativeCurrent().lockerVtable;
 constexpr uintptr_t kSlotPopMenu = 0x190u;
 constexpr uintptr_t kSlotLoad = 0x1F4u;
-constexpr uintptr_t kFnPopMenu = 0x00F17F60u;
-constexpr uintptr_t kFnLoad = 0x00F23840u;
-constexpr uintptr_t kFnLoadUpgrades = 0x00F87C80u;
-constexpr uintptr_t kFnEquip = 0x00F00F50u;
+inline const uintptr_t& kFnPopMenu = gamebuild::NativeCurrent().pop;
+inline const uintptr_t& kFnLoad = gamebuild::NativeCurrent().load;
+inline const uintptr_t& kFnLoadUpgrades = gamebuild::NativeCurrent().loadUpgrades;
+inline const uintptr_t& kFnEquip = gamebuild::NativeCurrent().equip;
 
 using FrameFn = void(__thiscall*)(void* self, void* frame);
 using ScriptExecFn = void(__thiscall*)(void* self, void* frame, void* result);

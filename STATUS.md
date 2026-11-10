@@ -1,3 +1,10 @@
+## 2026-11-10 — German locker/inventory/scale/RHI profiles, offline continuation
+
+- IMPLEMENTED_NOT_VERIFIED: remaining14 address consumers and8 globals now have independently measured EN/DE profiles. Texture specialization resolved through2 unique allocation callers and constructor/vtable/destructor agreement; existing COM/object ownership gates retained.
+- L1_PASS: real EN/DE PE contract/mutation fixtures (19 code contracts/profile), mixed-profile/unreadable rejection and stable selection roundtrip; German runtime refusal retained. Real x86 MinHook gun-scale fixture passes10000 ret8/x87 calls per profile. No game code executed.
+- L2_PASS: committed-source88a63813 x86 PE32 /O2 build, instrumentation OFF; DLL SHA25682A47FE14FEAF28A95756F3118430B80C6C41BB1921DB8EB85BCA24BBF25D250. Installed Steam DLL remains C6C1A504.
+- Full DE runtime compatibility remains UNKNOWN / NOT RUN. Broader reflected native-method fingerprints, ABI and localized asset witnesses still need review before enablement. No installed-game or installer changes. See docs/handoffs/gog-german-native-consumers-20261110.md.
+
 ## 2026-11-09 — Shotgun installer published; offline GOG/disc prerequisites
 
 - Follow-up: GOG has5 languages /2 configured EXEs. Spanish, French and Italian share byte-identical English EXE; Spanish has168 LOC_ESN packages plus1 size sidecar and its copyright movie. Language audit PASS.

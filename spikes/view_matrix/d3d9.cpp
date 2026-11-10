@@ -198,6 +198,7 @@ static void BuildTmdAssemblyC(float C[4][4]);
 #include "tmd_gravity_decal.h"
 #include "game_build_layout.h"
 #include "game_build_input.h"
+#include "game_build_native.h"
 #include "weapon_shot_haptics.h"
 #include "damage_haptics.h"
 #include "psvr2_client.h"
@@ -39307,6 +39308,7 @@ HRESULT STDMETHODCALLTYPE Hook_CreateDevice(IDirect3D9* self, UINT ad, D3DDEVTYP
         return g_origCreateDevice(self,ad,t,w,f,pp,out);
     }
     gamebuild::Current()=*layout;
+    gamebuild::NativeCurrent()=gamebuild::NativeFor(*layout);
     Log("game-build: %s verified calc=%08X names=%08X objects=%08X line=%08X single=%08X",
         layout->name,(unsigned)layout->calc,(unsigned)layout->names,(unsigned)layout->objects,
         (unsigned)layout->line,(unsigned)layout->single);

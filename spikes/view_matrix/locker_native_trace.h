@@ -1,4 +1,5 @@
 #pragma once
+#include "game_build_native.h"
 // Bounded read-only witness for RvUIGFxMovie_WeaponLocker native exec + pickup.
 // Default OFF ([Diagnostic] LockerNativeTrace=0). No TArray writes, grants, or scans.
 #include "MinHook.h"
@@ -16,20 +17,18 @@ void Log(_Printf_format_string_ const char* fmt, ...);
 
 namespace LockerNativeTrace {
 
-constexpr uintptr_t kWeaponLockerVtable = 0x019A0948u;
+inline const uintptr_t& kWeaponLockerVtable = gamebuild::NativeCurrent().lockerVtable;
 constexpr uintptr_t kSlotStart = 0x11Cu;
 constexpr uintptr_t kSlotPopMenu = 0x190u;
 constexpr uintptr_t kSlotLoad = 0x1F4u;
 constexpr uintptr_t kSlotEquip = 0x1F8u;
-constexpr uintptr_t kFnStart = 0x00F11430u;
-constexpr uintptr_t kFnPopMenu = 0x00F17F60u;
-constexpr uintptr_t kFnLoad = 0x00F23840u;
-constexpr uintptr_t kFnEquip = 0x00F00F50u;
+inline const uintptr_t& kFnStart = gamebuild::NativeCurrent().start;
+inline const uintptr_t& kFnPopMenu = gamebuild::NativeCurrent().pop;
+inline const uintptr_t& kFnLoad = gamebuild::NativeCurrent().load;
+inline const uintptr_t& kFnEquip = gamebuild::NativeCurrent().equip;
 // Page exec bodies: inspect_locker_page_methods.py (registration, NOT vtable slots).
-constexpr uintptr_t kFnLoadUpgrades = 0x00F87C80u;
-constexpr uintptr_t kFnUpgrade = 0x00F87E60u; // witness-only; do not hook (purchase/action exec)
-constexpr const char* kPrefixLoadUpgrades16 =
-    "7d4a11aa21143fd090b972fa6cd4d88bec7c600407e1e350f5d0df71c754784f";
+inline const uintptr_t& kFnLoadUpgrades = gamebuild::NativeCurrent().loadUpgrades;
+inline const uintptr_t& kFnUpgrade = gamebuild::NativeCurrent().upgrade; // witness-only; do not hook (purchase/action exec)
 
 constexpr unsigned kMethodCount = 5u;
 constexpr unsigned kMaxEvents = 96u;
@@ -376,8 +375,7 @@ inline void RollbackAllHooks() {
 
 inline bool Prefix16Matches(uintptr_t body) {
     if (!body || !PauseRttProbe::SafeRange(body, 16)) return false;
-    static const unsigned char kLoadUpgradesPrefix[16] = {0x55, 0x8B, 0xEC, 0x6A, 0xFF, 0x68, 0x68, 0x67,
-                                                          0x6E, 0x01, 0x64, 0xA1, 0x00, 0x00, 0x00, 0x00};
+    const auto& kLoadUpgradesPrefix = gamebuild::NativeCurrent().loadUpgradesPrefix;
     if (body == kFnLoadUpgrades) return memcmp((void*)body, kLoadUpgradesPrefix, 16) == 0;
     return false;
 }

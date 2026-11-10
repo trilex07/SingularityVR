@@ -1,4 +1,5 @@
 #pragma once
+#include "game_build_native.h"
 // Offline-pinned executable identity for locker VR loadout mutation helpers.
 // Text capture: research/etw/capture-20261006-205508/Singularity.text-memory.bin
 // (sha256 858f2fc33b1c99b3a4a27a817a11205da66414ee1b030a03df821f1ad6a0c78a).
@@ -19,16 +20,15 @@ namespace LockerVrLoadoutIdentity {
 
 constexpr uintptr_t kCaptureImageBase = 0x400000u;
 
-constexpr uintptr_t kPinnedAppendFNameVa = 0x4AFFD0u;
-constexpr uintptr_t kAppendFNameRvaFromImage = kPinnedAppendFNameVa - kCaptureImageBase;
+inline const uintptr_t& kPinnedAppendFNameVa = gamebuild::NativeCurrent().appendName;
+inline const uintptr_t& kAppendFNameRvaFromImage = gamebuild::NativeCurrent().appendRva;
 
-constexpr uintptr_t kPinnedFactoryVa = 0x00FD2320u;
-constexpr uintptr_t kExpectedFactoryRvaFromImage = kPinnedFactoryVa - kCaptureImageBase;
-constexpr uint64_t kExpectedFactoryFingerprint = 0xF2B5EBD13E8B220Full;
+inline const uintptr_t& kPinnedFactoryVa = gamebuild::NativeCurrent().factory;
+inline const uintptr_t& kExpectedFactoryRvaFromImage = gamebuild::NativeCurrent().factoryRva;
+inline const uint64_t& kExpectedFactoryFingerprint = gamebuild::NativeCurrent().factoryHash;
 
-constexpr uintptr_t kPinnedRvGameSystemVtableVa = 0x019CDBF8u;
-constexpr uintptr_t kExpectedRvGameSystemVtableRvaFromImage =
-    kPinnedRvGameSystemVtableVa - kCaptureImageBase;
+inline const uintptr_t& kPinnedRvGameSystemVtableVa = gamebuild::NativeCurrent().gameSystemVtable;
+inline const uintptr_t& kExpectedRvGameSystemVtableRvaFromImage = gamebuild::NativeCurrent().gameSystemVtableRva;
 constexpr unsigned kGameSystemFactoryVtableOff = 0x20Cu;
 
 constexpr unsigned kPrologueBytes = 16u;
@@ -36,8 +36,7 @@ constexpr unsigned kPrologueBytes = 16u;
 inline const unsigned char kAppendFNamePrologue[kPrologueBytes] = {
     0x55, 0x8B, 0xEC, 0x8B, 0x45, 0x0C, 0x56, 0x6A, 0x01, 0x50, 0x8B, 0xF1, 0x8B, 0x4D, 0x08, 0x6A};
 
-inline const unsigned char kFactoryPrologue[kPrologueBytes] = {
-    0x55, 0x8B, 0xEC, 0x6A, 0xFF, 0x68, 0x78, 0xE9, 0x6E, 0x01, 0x64, 0xA1, 0x00, 0x00, 0x00, 0x00};
+inline const unsigned char (&kFactoryPrologue)[kPrologueBytes] = gamebuild::NativeCurrent().factoryPrefix;
 
 inline uintptr_t ImageBase() {
     return reinterpret_cast<uintptr_t>(GetModuleHandleA(nullptr));

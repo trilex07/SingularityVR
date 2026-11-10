@@ -1,5 +1,9 @@
 #include "../game_build_layout.h"
 #include "../game_build_input.h"
+#include "../game_build_native.h"
+#include "../dual_tmd_gun_scale_policy.h"
+#include "../locker_retain_policy.h"
+#include "../inventory_retention_policy.h"
 #include <cassert>
 #include <cstdio>
 #include <vector>
@@ -40,6 +44,43 @@ int main(int argc,char** argv){
     const auto original=*selected;
     assert(gamebuild::RuntimeAllowed(original)==(std::string(argv[2])=="english-map"));
     assert(gamebuild::Matches(original,read));
+    const auto& native=gamebuild::NativeFor(original);
+    assert(gamebuild::MatchesNative(native,read));
+    const auto& other=gamebuild::NativeFor(std::string(argv[2])=="english-map"?gamebuild::Alternate():gamebuild::English());
+    assert(!gamebuild::MatchesNative(other,read));
+    for(const auto& code:native.code){
+        // Refuse corruption at either end, including the long allocation callers.
+        for(uintptr_t address:{code.address,code.address+code.bytes-1}){
+            image[address-0x400000]^=1;assert(!gamebuild::MatchesNative(native,read));image[address-0x400000]^=1;
+        }
+    }
+    for(uintptr_t address:{native.refs[0],native.refs[1],native.refs[2],native.refs[3],native.refs[4],native.refs[5],native.refs[6],
+        native.lockerVtable+0x11c,native.lockerVtable+0x190,native.lockerVtable+0x1f4,native.lockerVtable+0x1f8,
+        native.gameSystemVtable+0x20c,native.textureConstructor+0x69,native.textureCalls[0]+1,native.textureCalls[1]+1,
+        native.textureVtable,native.code[17].address+7,native.code[18].address+0x2b}){
+        image[address-0x400000]^=1;assert(!gamebuild::MatchesNative(native,read));image[address-0x400000]^=1;
+    }
+    auto deniedNative=[&](uintptr_t address,unsigned n)->const unsigned char*{return address==native.textureVtable?nullptr:read(address,n);};
+    assert(!gamebuild::MatchesNative(native,deniedNative));
+    auto mixedNative=native;mixedNative.textureVtable=other.textureVtable;assert(!gamebuild::MatchesNative(mixedNative,read));
+    mixedNative=native;mixedNative.destroyReturn=other.destroyReturn;assert(!gamebuild::MatchesNative(mixedNative,read));
+    mixedNative=native;mixedNative.scaleReturn=other.scaleReturn;assert(!gamebuild::MatchesNative(mixedNative,read));
+    mixedNative=native;mixedNative.hasWeapon=other.hasWeapon;assert(!gamebuild::MatchesNative(mixedNative,read));
+    mixedNative=native;mixedNative.factoryHash^=1;assert(!gamebuild::MatchesNative(mixedNative,read));
+    mixedNative=native;mixedNative.factoryPrefix[6]^=1;assert(!gamebuild::MatchesNative(mixedNative,read));
+    mixedNative=native;mixedNative.loadUpgradesPrefix[6]^=1;assert(!gamebuild::MatchesNative(mixedNative,read));
+    mixedNative=native;mixedNative.scaleGetterHash^=1;assert(!gamebuild::MatchesNative(mixedNative,read));
+    mixedNative=native;mixedNative.scaleConsumerHash^=1;assert(!gamebuild::MatchesNative(mixedNative,read));
+    mixedNative=native;mixedNative.factoryRva^=1;assert(!gamebuild::MatchesNative(mixedNative,read));
+    // Switch stable storage twice. Consumer references created before main()
+    // must follow selection, including returning from DE to the EN profile.
+    for(const auto* p:{&native,&other,&native}){
+        gamebuild::NativeCurrent()=*p;
+        assert(dualgunscale::Getter==p->scaleGetter&&dualgunscale::Consumer==p->scaleConsumer&&dualgunscale::Return==p->scaleReturn);
+        assert(dualgunscale::GetterHash==p->scaleGetterHash&&dualgunscale::ConsumerHash==p->scaleConsumerHash);
+        assert(LockerRetainPolicy::kFnDestroyItem==p->destroy&&LockerRetainPolicy::kPopMenuDestroyReturn==p->destroyReturn);
+        assert(inventoryretention::HasWeaponImpl==p->hasWeapon);
+    }
     const auto& input=gamebuild::InputFor(original);
     assert(gamebuild::MatchesInput(input,read));
     auto wrongSlot=input;wrongSlot.mouseSlot+=4;assert(!gamebuild::MatchesInput(wrongSlot,read));
@@ -60,5 +101,5 @@ int main(int argc,char** argv){
     assert(!gamebuild::Select(denied));
     gamebuild::Current()=original;assert(gamebuild::Current().single==original.single);
     assert(gamebuild::Input().padCallback==input.padCallback);
-    printf("PASS %s: real PE core + input contracts; gate mutations, mixed profiles and unreadable roots refused; no execution\n",original.name);
+    printf("PASS %s: real PE core + input + 19 native contracts; mutations, mixed profiles, selection roundtrip and unreadable roots refused; no execution\n",original.name);
 }

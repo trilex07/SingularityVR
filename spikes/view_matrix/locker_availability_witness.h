@@ -6,6 +6,7 @@
 #include "inventory_retention_policy.h"
 #include "native_owned_inventory.h"
 #include "pause_rtt_probe.h"
+#include "game_build_input.h"
 
 void Log(_Printf_format_string_ const char* fmt, ...);
 
@@ -37,7 +38,7 @@ inline void EnsureSessionLayout(uintptr_t engine) {
 }
 
 inline void LogSessionWeaponsTable(const char* tag) {
-    const uintptr_t engine = PauseRttProbe::Pointer(0x01CF8778u);
+    const uintptr_t engine = PauseRttProbe::Pointer(gamebuild::Input().engine);
     EnsureSessionLayout(engine);
     if (g_offEngineSessionManager < 0 || !engine) {
         Log("locker avail witness: %s SessionManager unresolved", tag);
