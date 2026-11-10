@@ -1,4 +1,5 @@
 #pragma once
+#include "game_build_native.h"
 
 // Reflected input-thread identity and bounded D3D-thread content diagnostics.
 // Native RHI layout is source-derived and checked against actual COM bindings.
@@ -70,7 +71,7 @@ static IDirect3DSurface9* NativeSurface(uintptr_t target, uintptr_t resource) {
     // validated by ExactTexture below. Do not infer a D3D pointer from an
     // arbitrary UObject field or a matching render-target size.
     if (surfaceRhi < 12 ||
-        Pointer(surfaceRhi - 12) != image + 0x013B4474) return nullptr;
+        Pointer(surfaceRhi - 12) != image + (gamebuild::NativeCurrent().surfaceVtable - 0x400000)) return nullptr;
     const uintptr_t surface = Pointer(surfaceRhi - 4);
     return surface >= 0x10000 ? (IDirect3DSurface9*)surface : nullptr;
 }
@@ -84,8 +85,8 @@ static bool ExactTexture(uintptr_t target, uintptr_t resource, IDirect3DTexture9
     // Native creation returns wrapper base+0xC; COM is base+8 (RHI-4).
     // Both constructors and live class identities corroborate this layout.
     if (surfaceRhi < 12 || textureRhi < 12 ||
-        Pointer(surfaceRhi - 12) != image + 0x013B4474 ||
-        Pointer(textureRhi - 12) != image + 0x013B441C) return false;
+        Pointer(surfaceRhi - 12) != image + (gamebuild::NativeCurrent().surfaceVtable - 0x400000) ||
+        Pointer(textureRhi - 12) != image + (gamebuild::NativeCurrent().textureVtable - 0x400000)) return false;
     return Pointer(surfaceRhi - 4) == (uintptr_t)surface &&
         Pointer(textureRhi - 4) == (uintptr_t)texture;
 }
@@ -107,8 +108,8 @@ static void ContentBind(IDirect3DSurface9* surface) {
             const uintptr_t surfaceRhi = Pointer(resource + 0x48), textureRhi = Pointer(resource + 0x64);
             const uintptr_t image = (uintptr_t)GetModuleHandleA(nullptr);
             if (NativeResourceContract(target, resource) && surfaceRhi >= 12 && textureRhi >= 12 &&
-                Pointer(surfaceRhi - 12) == image + 0x013B4474 &&
-                Pointer(textureRhi - 12) == image + 0x013B441C) {
+                Pointer(surfaceRhi - 12) == image + (gamebuild::NativeCurrent().surfaceVtable - 0x400000) &&
+                Pointer(textureRhi - 12) == image + (gamebuild::NativeCurrent().textureVtable - 0x400000)) {
                 expectedSurface = Pointer(surfaceRhi - 4);
                 expectedTexture = Pointer(textureRhi - 4);
             }

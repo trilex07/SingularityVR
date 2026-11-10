@@ -8,6 +8,7 @@
 #include <cstdint>
 #include <initializer_list>
 #include "MinHook.h"
+#include "../dual_tmd_gun_scale_policy.h"
 static LONG g_dualWeaponTmdGunScale=0,g_weaponHolstered=0,g_weaponObj=1,g_handsStatus=1,g_rawAltTrigger=255;
 static LONG g_rawTrigger=0,g_rawImpulsePressed=0,g_vrMenuClass=0,g_gamePaused=0;
 static uintptr_t g_camera=0,g_controller=0,g_playerPawn=0;
@@ -44,38 +45,42 @@ static uintptr_t P(uintptr_t p){
     if(p==pawn+0x1024)return fieldNode;
     if(p==pawn+0x500)return fieldMesh;
     if(p==node)return 3000;
-    if(p==3000+0x140)return 0xb3e400;
+    if(p==3000+0x140)return dualgunscale::Getter;
     return 0;
 }
 }
 namespace NativeContextCursor{
-static bool Method(uintptr_t p,size_t,uint64_t){return p==0xb3e400||p==0xaec25d;}
+static bool Method(uintptr_t p,size_t,uint64_t){return p==dualgunscale::Getter||p==dualgunscale::Consumer;}
 }
 #include "../native_dual_tmd_gun_scale.h"
 using NativeGetter=float (__thiscall*)(void*,int,void*);
 static __declspec(noinline) float Invoke(NativeGetter f,void* self,int bone,void* m){return f(self,bone,m);}
 static float Scale(){return *(float*)(nodeBytes+0x7c);}
-int main(){
+int main(int argc,char** argv){
     static_assert(sizeof(void*)==4,"x86 fixture required");
+    assert(argc==1||(argc==2&&!strcmp(argv[1],"german")));
+    const auto& layout=argc==2?gamebuild::Alternate():gamebuild::English();
+    gamebuild::Current()=layout;gamebuild::NativeCurrent()=gamebuild::NativeFor(layout);
     auto a=(unsigned char*)VirtualAlloc((void*)0xb30000,0x10000,MEM_RESERVE|MEM_COMMIT,PAGE_READWRITE);
     auto b=(unsigned char*)VirtualAlloc((void*)0xae0000,0x10000,MEM_RESERVE|MEM_COMMIT,PAGE_READWRITE);
     assert(a==(void*)0xb30000&&b==(void*)0xae0000);
     const unsigned char getter[]={0xd9,0x41,0x7c,0xc2,8,0};
-    memcpy(a+0xe400,getter,sizeof(getter));
+    memcpy((void*)dualgunscale::Getter,getter,sizeof(getter));
     // ECX=this; at entry [esp+4]=bone,[esp+8]=component. Two pushes then
     // CALL EAX at AEC26A, RET8. ST(0) propagates unchanged to the caller.
-    const unsigned char caller[]={0xb8,0,0xe4,0xb3,0,0xff,0x74,0x24,8,0xff,0x74,0x24,8,0xff,0xd0,0xc2,8,0};
-    memcpy(b+0xc25d,caller,sizeof(caller));DWORD old=0;
+    unsigned char caller[]={0xb8,0,0,0,0,0xff,0x74,0x24,8,0xff,0x74,0x24,8,0xff,0xd0,0xc2,8,0};
+    const uint32_t address=(uint32_t)dualgunscale::Getter;memcpy(caller+1,&address,4);
+    memcpy((void*)dualgunscale::Consumer,caller,sizeof(caller));DWORD old=0;
     assert(VirtualProtect(a,0x10000,PAGE_EXECUTE_READ,&old));
     assert(VirtualProtect(b,0x10000,PAGE_EXECUTE_READ,&old));
     FlushInstructionCache(GetCurrentProcess(),a,0x10000);FlushInstructionCache(GetCurrentProcess(),b,0x10000);
     *(int*)(nodeBytes+0x40)=100;*(float*)(nodeBytes+0x7c)=0;
     *(float*)(otherBytes+0x7c)=0;
-    auto call=(NativeGetter)(b+0xc25d),direct=(NativeGetter)(a+0xe400);
+    auto call=(NativeGetter)dualgunscale::Consumer,direct=(NativeGetter)dualgunscale::Getter;
     assert(MH_Initialize()==MH_OK);
     NativeDualTmdGunScale::Poll();assert(!NativeDualTmdGunScale::target);
     g_dualWeaponTmdGunScale=1;NativeDualTmdGunScale::Poll();
-    assert(NativeDualTmdGunScale::target==0xb3e400&&NativeDualTmdGunScale::control==node);
+    assert(NativeDualTmdGunScale::target==dualgunscale::Getter&&NativeDualTmdGunScale::control==node);
     // Runtime regression: inventory camera reflection misses a pawn while
     // the independent reciprocal local-player route still identifies it.
     NativeDualTmdGunScale::control=NativeDualTmdGunScale::localPawn=0;
@@ -123,5 +128,6 @@ int main(){
     bad=true;assert(Invoke(call,nodeBytes,52,meshBytes)==0);assert(!g_dualWeaponTmdGunScale);bad=false;
     assert(MH_Uninitialize()==MH_OK);assert(Invoke(call,nodeBytes,52,meshBytes)==0);
     VirtualFree(a,0,MEM_RELEASE);VirtualFree(b,0,MEM_RELEASE);
-    puts("PASS real x86 MinHook producer: 10000 ret8/x87 calls; ownership/caller/thread/OFF/native-hands/holster/GC refusal; no pose cache, no state writes");
+    printf("PASS %s real x86 MinHook producer: 10000 ret8/x87 calls; ownership/caller/thread/OFF/native-hands/holster/GC refusal; no pose cache, no state writes\n",layout.name);
+    return 0;
 }

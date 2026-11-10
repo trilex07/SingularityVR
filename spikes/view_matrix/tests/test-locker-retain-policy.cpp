@@ -2,15 +2,18 @@
 #include <cassert>
 #include <cstdio>
 
-int main() {
+int main(int argc,char** argv) {
     using namespace LockerRetainPolicy;
+    assert(argc==1||(argc==2&&!std::strcmp(argv[1],"german")));
+    const auto& layout=argc==2?gamebuild::Alternate():gamebuild::English();
+    gamebuild::Current()=layout;gamebuild::NativeCurrent()=gamebuild::NativeFor(layout);
 
     constexpr DWORD kTid = 8804u;
     constexpr uintptr_t kMgr = 0x1BD77000u;
     constexpr uintptr_t kOtherMgr = 0x1BD78000u;
 
     assert(kPopMenuDestroyReturn == kPopMenuDestroyCallSite + 5);
-    assert(kPopMenuInventoryGlobal == 0x01CF74E4u);
+    assert(kPopMenuInventoryGlobal == (argc==2?0x01CF64E4u:0x01CF74E4u));
 
     auto acceptPopMenuShape = [&]() {
         return ShouldSuppress(true, true, kPopMenuDestroyReturn, kTid, kTid, kMgr, kMgr, 0, 1, true, true, true);
@@ -35,6 +38,6 @@ int main() {
     assert(!PopMenuDestroyArgsMatch(1, 1));
     assert(!PopMenuDestroyArgsMatch(0, 0));
 
-    puts("test-locker-retain-policy: PASS");
+    printf("test-locker-retain-policy %s: PASS\n",layout.name);
     return 0;
 }

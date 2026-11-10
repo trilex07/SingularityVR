@@ -1,5 +1,9 @@
 # German remaining native consumers — 2026-11-10
 
+Follow-up: the texture ambiguity below is resolved and these consumers are now
+ported behind the unchanged DE refusal. See
+gog-german-native-consumers-20261110.md for the superseding evidence and tests.
+
 Offline continuation after c6fe8548. No game/setup execution, installed changes,
 DRM edits, or public compatibility enablement. Input contracts remain separate
 from full DE initialization, which is still refused.

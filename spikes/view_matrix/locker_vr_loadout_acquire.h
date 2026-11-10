@@ -1,4 +1,5 @@
 #pragma once
+#include "game_build_native.h"
 #include "locker_vr_loadout_identity.h"
 #include "locker_vr_loadout_runtime.h"
 #include "locker_vr_loadout_preview_policy.h"
@@ -18,7 +19,7 @@ int RunAuditedPickupRestore(void* pawn, void* archetype);
 
 namespace LockerVrLoadoutAcquire {
 
-constexpr uintptr_t kFnAppendFName = 0x4AFFD0u;
+inline const uintptr_t& kFnAppendFName = gamebuild::NativeCurrent().appendName;
 constexpr uintptr_t kGsVtableLookupOff = 0x20Cu;
 
 inline volatile LONG g_factoryWitnessed = 0;

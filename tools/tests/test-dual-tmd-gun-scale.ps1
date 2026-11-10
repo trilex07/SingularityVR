@@ -12,4 +12,6 @@ Push-Location $out
 try {
     cmd /c "`"$vc`" x86 >nul && cl /nologo /O2 /EHsc /std:c++17 /I`"$mh/include`" `"$src`" $($c -join ' ') /Fe:test-dual-tmd-gun-scale.exe /link /BASE:0x400000 /DYNAMICBASE:NO /MAP:test-dual-tmd-gun-scale.map && test-dual-tmd-gun-scale.exe"
     if($LASTEXITCODE -ne 0){throw 'Gun-scale real x86 adapter regression failed'}
+    & ./test-dual-tmd-gun-scale.exe german
+    if($LASTEXITCODE -ne 0){throw 'German gun-scale real x86 adapter regression failed'}
 } finally {Pop-Location}

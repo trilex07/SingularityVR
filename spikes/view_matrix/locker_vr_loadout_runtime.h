@@ -1,4 +1,5 @@
 #pragma once
+#include "game_build_native.h"
 #include "locker_vr_loadout_identity.h"
 #include "locker_vr_loadout_policy.h"
 #include "native_owned_inventory.h"
@@ -10,15 +11,15 @@ extern void Log(_Printf_format_string_ const char* fmt, ...);
 
 namespace LockerVrLoadoutRuntime {
 
-constexpr uintptr_t kGGameSystemPtr = 0x01CF394Cu;
-constexpr uintptr_t kFnGetGameSystem = 0xEFA070u;
+inline const uintptr_t& kGGameSystemPtr = gamebuild::NativeCurrent().gameSystemPtr;
+inline const uintptr_t& kFnGetGameSystem = gamebuild::NativeCurrent().getGameSystem;
 constexpr uintptr_t kCatalogDataOff = 0x160u;
 constexpr uintptr_t kCatalogCountOff = 0x164u;
 constexpr uintptr_t kCatalogStride = 0x50u;
 constexpr uintptr_t kPawnInvManager = 0x3D0u;
-constexpr uintptr_t kInventoryManagerVtable = 0x019CB480u;
+inline const uintptr_t& kInventoryManagerVtable = gamebuild::NativeCurrent().inventoryVtable;
 constexpr uintptr_t kMgrNativeMaskOff = 0x3E4u;
-constexpr uintptr_t kDefaultEmptyFString = 0x179E4D0u;
+inline const uintptr_t& kDefaultEmptyFString = gamebuild::NativeCurrent().emptyString;
 
 inline uintptr_t RelocatedDataAddress(uintptr_t pinnedVa) {
     return LockerVrLoadoutIdentity::ImageBase() + (pinnedVa - LockerVrLoadoutIdentity::kCaptureImageBase);

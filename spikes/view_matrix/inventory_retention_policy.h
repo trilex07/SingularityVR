@@ -1,4 +1,5 @@
 #pragma once
+#include "game_build_native.h"
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
@@ -52,5 +53,5 @@ inline unsigned WeaponBit(int v){return v==5799?1u:v==11387?2u:v==8297?4u:v==113
 // recomputed from the file, while the neighbour pointer can - and it was
 // verified offline against the owned EXE (tools/reload/
 // verify_pawn_weapon_selector.py).
-inline constexpr uintptr_t HasWeaponImpl=0x0102F700ull;
+inline const uintptr_t& HasWeaponImpl = gamebuild::NativeCurrent().hasWeapon;
 }
