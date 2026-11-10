@@ -2262,6 +2262,7 @@ static LONG g_dualWeaponTmdGunPose=0; // opt-in exact-weapon normal-root retarge
 static dualtmdgunpose::Reference g_dualTmdGunPose;
 static LONG g_dualWeaponTmdRightWrist=0; // opt-in original TMD right-wrist target
 static bool g_trackedGripWrist=false; // opt-in anatomical grip pose; no guessed device mounting
+static bool g_trackedGripSupportContinuity=false; // default OFF; right wrist retained during support
 static LONG g_dualHandActionPose=0; // source-wrist normalization; default OFF
 static bool g_trackedDepthPrimeFix=false; // exact late-color siblings only; default OFF
 static bool g_trackedDepthPrimeProbe=false; // bounded first-refusal only; OFF
@@ -17990,7 +17991,8 @@ static bool DualActionAllowed() {
         g_handPoseValid[0]&&g_handPositionValid[0]&&g_handPoseValid[1]&&g_handPositionValid[1],
         g_sceneMode.Current()==vrscene::Mode::GameplayStereo&&!Rd(g_gamePaused)&&!Rd(g_vrUiMenu),
         NativeAnimatedHandsNow(),Rd(g_weaponHolstered)!=0,Rd(g_twoHandActive)!=0,
-        g_nextOwnsGrip||g_centurionOwnsGrip||g_hipKnifeState.held>=0,AimHand()==1});
+        g_nextOwnsGrip||g_centurionOwnsGrip||g_hipKnifeState.held>=0,AimHand()==1,
+        g_trackedGripWrist&&g_trackedGripSupportContinuity});
 }
 static bool TrackedGripCamera(int32_t& yaw,int32_t& pitch) {
     // Native camera mode does not execute the matrix-rotation-only cache update.
@@ -18003,7 +18005,8 @@ static bool TrackedGripCamera(int32_t& yaw,int32_t& pitch) {
 static bool ApplyDualActionC(float C[4][4],bool aim) {
     // Input/native gameplay threads never consume this render-owned frame cache.
     if(!Rd(g_dualHandActionPose)||GetCurrentThreadId()!=(DWORD)Rd(g_dualActionRenderThread)||
-       !DualActionAllowed())return false;
+       !DualActionAllowed()||!dualaction::SideEligible(Rd(g_twoHandActive)!=0,
+           g_trackedGripWrist&&g_trackedGripSupportContinuity,aim))return false;
     const auto key=DualActionKey();
     bool applied=false;
     const unsigned physical=aim?AimHand():OffHand();
@@ -38697,6 +38700,8 @@ void LoadIniSettings() {
     InterlockedExchange(&g_dualHandActionPose,GetPrivateProfileIntA("Input","DualHandActionPose",0,path)!=0);
     Log("ini: DualHandActionPose=%ld (default OFF; original material0 wrist parent, render only)",Rd(g_dualHandActionPose));
     g_trackedGripWrist=GetPrivateProfileIntA("Input","TrackedGripWrist",0,path)!=0;
+    g_trackedGripSupportContinuity=GetPrivateProfileIntA("Input","TrackedGripSupportContinuity",0,path)!=0;
+    Log("ini: TrackedGripSupportContinuity=%d (default OFF; requires TrackedGripWrist; right correction only during support)",g_trackedGripSupportContinuity?1:0);
     Log("ini: TrackedGripWrist=%d (default OFF; original anatomy -> live grip quaternion/position; shared hand/TMD/gun ride)",g_trackedGripWrist?1:0);
     g_trackedDepthPrimeFix=GetPrivateProfileIntA("Render","TrackedDepthPrimeFix",0,path)!=0;
     g_trackedDepthPrimeProbe=GetPrivateProfileIntA("Diagnostic","TrackedDepthPrimeProbe",0,path)!=0;

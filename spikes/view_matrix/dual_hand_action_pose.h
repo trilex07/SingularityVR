@@ -16,10 +16,14 @@ struct Key {
 };
 struct Context {
     bool enabled=false,dual=false,tracked=false,gameplay=false,nativeAnimation=false,
-         holstered=false,support=false,carrying=false,rightHanded=false;
+         holstered=false,support=false,carrying=false,rightHanded=false,
+         supportContinuity=false;
 };
 inline bool Eligible(const Context& c){return c.enabled&&c.dual&&c.tracked&&c.gameplay&&
-    !c.nativeAnimation&&!c.holstered&&!c.support&&!c.carrying&&c.rightHanded;}
+    !c.nativeAnimation&&!c.holstered&&(!c.support||c.supportContinuity)&&!c.carrying&&c.rightHanded;}
+// Support owns the left target. Only the right correction continues across its
+// edge; never replace the authored/fore-end support target with a free wrist.
+inline bool SideEligible(bool support,bool continuity,bool aim){return !support||!continuity||aim;}
 // A shared parent may carry the native component's uniform scale. Retain it;
 // singular/nonuniform/sheared poses are not eligible for this rigid correction.
 inline bool ReferenceWithScale(const Mat& current,const Mat& reference,Mat& out){

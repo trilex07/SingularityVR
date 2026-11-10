@@ -1,5 +1,23 @@
 # Engine notes — Singularity (UE3, x86, July 2010)
 
+## 2026-11-10 — tracked right wrist lost at support transition
+
+Fresh headset log PID54060 shows Impulse activation, HANDS_TMD, then actual
+support ACQUIRED with Valkyrie11387. C6/current D8DB profile enables
+DualHandActionPose and TrackedGripWrist. Existing dualaction::Eligible rejects
+support unconditionally; CaptureDualActionPose clears the current frame and
+ApplyDualActionC no longer supplies the tracked correction to BuildGunC or the
+right glove. This proves a source-path discontinuity, not the entire pixel cause.
+
+Isolated default-OFF Input/TrackedGripSupportContinuity requires the existing
+TrackedGripWrist opt-in. It admits the original same-frame source capture on
+support and applies its correction to the right side only. The left hand keeps
+the existing support target. Native animation/carry/holster/tracking/gameplay,
+render-thread and exact source/frame/identity gates remain. No radius, timing,
+input, engine hook, native ammo or shader classifier change. CPU RED5 -> GREEN0
+and exhaustive flag-OFF context controls are recorded in the handoff. No product
+DLL build/install/runtime or headset acceptance is claimed for this candidate.
+
 Reverse-engineering knowledge base. Every address below is a **file/preferred address** with
 image base `0x00400000`, derived from the **GOG** binary
 (`R:\GOG\Singularity\Binaries\Singularity.exe`), analysed in Ghidra 12.1.2.
