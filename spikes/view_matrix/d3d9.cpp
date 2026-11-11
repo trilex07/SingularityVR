@@ -62,6 +62,11 @@ static unsigned g_startupTimeoutMs=5000,g_startupMinVisibleMs=3000;
 #include "locker_loadout_icons.h"
 #include "weapon_wheel_layout.h"
 #include "health_gesture.h"
+#include "wrist_equipment_policy.h"
+#include "wrist_equipment_pose.h"
+#include "wrist_equipment_source_policy.h"
+#include "wrist_equipment_depth_policy.h"
+#include "wrist_equipment_art.h"
 #include "plates_atlas.h"
 #include <wincodec.h>
 #include "grip_latch.h"
@@ -976,6 +981,7 @@ volatile LONG g_ctlForXi = 0;
 // Defined next to the Present-time rotation write it mirrors - the two are the same operation at
 // two different instants in the tick, and keeping them apart is how they get out of step.
 void WriteAimAtInputPoll();
+void RefreshEquipmentSourceAtInput();
 
 DWORD WINAPI Hook_XInputGetState(DWORD idx, XiState* st) {
     const int64_t diagStart = g_diagEnabled ? DiagQpc() : 0;
@@ -997,6 +1003,7 @@ DWORD WINAPI Hook_XInputGetState(DWORD idx, XiState* st) {
     // again and this is the end of the time-split idea. Binary, one run, and the two candidate
     // orderings are the only two there are.
     WriteAimAtInputPoll();
+    if(idx==0)RefreshEquipmentSourceAtInput();
     InterlockedIncrement(&g_xiCalls);
     if (idx < 4) InterlockedIncrement(&g_xiCallsByIndex[idx]);
 
@@ -2031,7 +2038,9 @@ WantedName g_wantNames[] = {
     // Run 199: the heal window asks "can this heal do anything" before showing the arms.
     { "Health", -1 }, { "HealthMax", -1 },
     // Run 200: ...and "do I even have an item". See the note at FindHudObject.
-    { "mHealthPackCount", -1 },
+    { "mHealthPackCount", -1 }, { "mTMDEnergy", -1 },
+    { "mE99TechCount", -1 }, { "mE99VialCount", -1 },
+    { "GetTMDEnergyMax", -1 }, { "sharedHUD", -1 },
     // Run 201: READ ONLY - what does the game think the player's eye height is? See ReportEyeHeight.
     { "BaseEyeHeight", -1 }, { "EyeHeight", -1 },
     // ⭐ run 227: the one question every mesh-latch heuristic has been guessing at: is a weapon EQUIPPED.
@@ -2369,9 +2378,8 @@ static centurionphysical::RightHold g_centurionRightHand;
 static SRWLOCK g_centurionGripLock=SRWLOCK_INIT;
 static centurionphysical::GripWitness g_centurionGrip,g_centurionGripStaged;
 static volatile LONG g_centurionRightHeld=0,g_centurionPalmPublished=0,g_centurionPalmReplays=0;
-static IDirect3DIndexBuffer9* g_centurionAnimationIB=nullptr;
-static bool g_centurionAnimationIBValid=false,g_centurionAnimationFault=false;
-static unsigned g_centurionAnimationIBAttempts=0;
+static centurionhd::IndexWitness g_centurionAnimationIndices;
+static bool g_centurionAnimationFault=false;
 static volatile LONG g_centurionAnimationDraws=0,g_centurionAnimationWitness=0;
 static hipknife::Renderer g_centurionShellRenderer;
 static bool g_centurionShellReady=false,g_centurionShellFault=false,g_centurionShellWarmed=false;
@@ -2453,6 +2461,31 @@ static seekergeometry::SupportFrame g_seekerSupportFrame;
 static seekergeometry::IndexIdentity g_seekerIndices;
 static weaponcarry::Wrist g_nextWrist,g_nextWristStaged;
 static bool g_nextWristStagedFromTmd=false;
+struct EquipmentWristPose { bool valid=false,fromTmd=false; uintptr_t pawn=0;
+    ULONGLONG sampled=0,controllerSample=0; armbind::Mat tracking{},nativeTracking{}; unsigned frame=0; };
+static EquipmentWristPose g_equipmentWrist,g_equipmentWristStaged;
+static SRWLOCK g_equipmentWristLock=SRWLOCK_INIT;
+static LONG g_equipmentHud=0,g_equipmentHudSuppress=0,g_equipmentHudEnergy=0;
+static LONG g_equipmentHudPreviewNoDepth=0;
+static LONG g_equipmentHudTrace=0,g_equipmentHudOcclusion=0;
+static LONG g_equipmentHudTextQuarterTurn=1;
+static LONG g_equipmentHudTech=0,g_equipmentHudSupplies=0;
+static LONG g_equipmentHudOffsetMm[3]{-25,-80,0},g_equipmentHudScalePct=100;
+static LONG g_equipmentHudDrew=0,g_equipmentHudVisible=0;
+static LONG g_equipmentHudPolish=0,g_equipmentHudNormalSign=1;
+static LONG g_equipmentHudAngleDeg[3]{0,0,0};
+static volatile LONG g_equipmentEnergyMaxBits=0,g_equipmentEnergyMaxOwner=0;
+static volatile LONGLONG g_equipmentEnergyMaxMs=0;
+static volatile LONG g_equipmentTmdPointer=0;
+struct EquipmentSourceCache {
+    uintptr_t controller=0,pawn=0,hud=0,hudClass=0;
+    int tech=-1,packs=-1,vials=-1,energy=-1;
+    uintptr_t tmd=0,tmdClass=0;
+    int tmdEnergy=-1;
+    ULONGLONG sampled=0;
+};
+static EquipmentSourceCache g_equipmentSource;
+static SRWLOCK g_equipmentSourceLock=SRWLOCK_INIT;
 static int g_weaponTraceRigidOrigin=0; // default-OFF ray translation correction
 static int g_weaponMeasuredAim=0; // default OFF; exact rendered barrel direction
 static int g_centurionAimProbe=0; // read-only: compare native shot, controller aim and rendered +X
@@ -3471,6 +3504,82 @@ void ResolveGameplayOffsets() {
         " mLoopingMuzzleFXEmitter +0x%03X",
         (unsigned)g_weaponFxClass, g_offMuzzle1st, g_offMuzzleLoop1st, g_offMuzzleIron,
         g_offMuzzleLoopIron, g_offMuzzleEmitter);
+}
+
+// XInput's existing game-input seam owns wrist HUD property resolution. The
+// Present path only copies this small immutable snapshot; no object-graph or
+// property-chain walk can occur while the stereo frame is being submitted.
+void RefreshEquipmentSourceAtInput(){
+    if(!Rd(g_equipmentHud))return;
+    static volatile LONG lastTick=0;
+    const DWORD tick=GetTickCount();
+    const DWORD previous=(DWORD)InterlockedCompareExchange(&lastTick,0,0);
+    if(previous&&(DWORD)(tick-previous)<100)return;
+    if((DWORD)InterlockedCompareExchange(&lastTick,(LONG)tick,(LONG)previous)!=previous)return;
+    const uintptr_t controller=(uintptr_t)(uint32_t)Rd(g_ctlForXi);
+    const uintptr_t pawn=g_playerPawn;
+    EquipmentSourceCache next;
+    next.controller=controller;next.pawn=pawn;
+    static uintptr_t controllerClass=0,hudClass=0;
+    static int offShared=-1,offPawn=-1,offTech=-1,offPacks=-1,offVials=-1,offEnergy=-1;
+    static uintptr_t tmdClass=0;
+    static int offTmdEnergy=-1;
+    static DWORD retry=0;
+    if(controller&&pawn&&Readable((void*)(controller+OBJ_CLASS),4)){
+        const uintptr_t cc=*reinterpret_cast<const uintptr_t*>(controller+OBJ_CLASS);
+        if(cc!=controllerClass||((offShared<0||offPawn<0)&&((DWORD)(tick-retry)>=1000))){
+            controllerClass=cc;retry=tick;
+            offShared=PropOffsetInChain(cc,"sharedHUD");
+            offPawn=PropOffsetInChain(cc,"Pawn");
+        }
+        if(offShared>=0&&offPawn>=0&&
+           Readable((void*)(controller+offShared),4)&&Readable((void*)(controller+offPawn),4)&&
+           *reinterpret_cast<const uintptr_t*>(controller+offPawn)==pawn){
+            const uintptr_t hud=*reinterpret_cast<const uintptr_t*>(controller+offShared);
+            if(hud&&Readable((void*)(hud+OBJ_CLASS),4)){
+                const uintptr_t hc=*reinterpret_cast<const uintptr_t*>(hud+OBJ_CLASS);
+                // Ownership comes from the local controller's sharedHUD field;
+                // required properties validate its shape without a GObjects scan.
+                if(hc){
+                    if(hc!=hudClass||((offTech<0||offPacks<0||offVials<0||offEnergy<0)&&
+                                    (DWORD)(tick-retry)>=1000)){
+                        hudClass=hc;retry=tick;
+                        offTech=PropOffsetInChain(hc,"mE99TechCount");
+                        offPacks=PropOffsetInChain(hc,"mHealthPackCount");
+                        offVials=PropOffsetInChain(hc,"mE99VialCount");
+                        offEnergy=PropOffsetInChain(hc,"mTMDEnergy");
+                        Log("equipment source: local HUD=%08X class=%08X offsets tech=%d packs=%d vials=%d energy=%d",
+                            (unsigned)hud,(unsigned)hc,offTech,offPacks,offVials,offEnergy);
+                    }
+                    if(offTech>=0||offPacks>=0||offVials>=0){
+                        next.hud=hud;next.hudClass=hc;
+                        next.tech=offTech;next.packs=offPacks;
+                        next.vials=offVials;next.energy=offEnergy;
+                        next.sampled=GetTickCount64();
+                    }
+                }
+            }
+        }
+    }
+    if(next.hud&&g_offTMD>=0&&Readable((void*)(pawn+g_offTMD),4)){
+        const uintptr_t tmd=*reinterpret_cast<const uintptr_t*>(pawn+g_offTMD);
+        if(tmd&&Readable((void*)(tmd+OBJ_CLASS),4)){
+            const uintptr_t tc=*reinterpret_cast<const uintptr_t*>(tmd+OBJ_CLASS);
+            if(tc){
+                static DWORD tmdPropRetry=0;
+                if(tc!=tmdClass||(offTmdEnergy<0&&
+                    (!tmdPropRetry||(DWORD)(tick-tmdPropRetry)>=1000))){
+                    tmdPropRetry=tick;
+                    tmdClass=tc;offTmdEnergy=PropOffsetInChain(tc,"mTMDEnergy");
+                }
+                next.tmd=tmd;next.tmdClass=tc;next.tmdEnergy=offTmdEnergy;
+            }
+        }
+    }
+    InterlockedExchange(&g_equipmentTmdPointer,(LONG)next.tmd);
+    if(TryAcquireSRWLockExclusive(&g_equipmentSourceLock)){
+        g_equipmentSource=next;ReleaseSRWLockExclusive(&g_equipmentSourceLock);
+    }
 }
 
 // ============ ⭐ run 189: suppress the first-person muzzle FX at the source ==================
@@ -5187,6 +5296,8 @@ inline void InvalidateCamMats() {
 
 struct ShaderLayoutEntry { IDirect3DVertexShader9* shader; skeletal::Layout layout; };
 #include "shadow_pass_trace.h"
+#include "wrist_equipment_trace.h"
+#include "wrist_equipment_occlusion.h"
 #include "shadow_receiver_fix.h"
 #include "shadow_world_receiver_fix.h"
 #include "shadow_clear_gate.h"
@@ -6085,6 +6196,7 @@ static thread_local unsigned g_scopeNativeDraws=0,g_scopeNativeUploads=0;
 static bool NativeScopeRendering(){return g_scopeNativeDepth!=0;}
 void DrawWristHealth(IDirect3DDevice9* dev);   // ⭐ run 217: defined late, called from the copy
 void DrawHealthPlate(IDirect3DDevice9* dev);   // Katorga plate: gesture-gated, left glove
+void DrawEquipmentWrist(IDirect3DDevice9* dev);
 void DrawAmmoPlate(IDirect3DDevice9* dev);     // Katorga ammo plate: held gun, hides on R3
 static void DrawDiegeticCenturion(IDirect3DDevice9* dev); // diegetic Centurion counter (default OFF)
 void DrawHolsterMarker(IDirect3DDevice9* dev); // MAIN: white ring at the hip while a gun is held
@@ -6132,6 +6244,7 @@ const CopySlot* CopyBackbufferToD3D11(IDirect3DDevice9* dev) {
     DrawCustomGloves(dev);
     DrawScopePip(dev);
     DrawLaserSight(dev);
+    DrawEquipmentWrist(dev);
     DrawWristHealth(dev);
     DrawHealthPlate(dev);
     // Diegetic counters run BEFORE the ammo plates: their per-frame drew-latch
@@ -10119,7 +10232,7 @@ bool InitXRInput() {
     g_centurionAnimation={};g_centurionNativeAnimation={};g_centurionAnimationFault=false;g_centurionRootHold={};g_centurionTrackedRoot={};
     g_centurionRightHand={};g_centurionGripStaged={};
     if(TryAcquireSRWLockExclusive(&g_centurionGripLock)){g_centurionGrip={};ReleaseSRWLockExclusive(&g_centurionGripLock);}
-    hipknife::Release(g_centurionAnimationIB);g_centurionAnimationIBValid=false;g_centurionAnimationIBAttempts=0;
+    g_centurionAnimationIndices.Reset();
     if(g_centurionReload&&g_centurionCylinderAnimation){
         char path[MAX_PATH]{};
         if(IniPath(path)){
@@ -14480,6 +14593,7 @@ static PFN_DrawPrimUP shadowNativeUP=nullptr;
 static PFN_DrawIndexedPrimUP shadowNativeIndexedUP=nullptr;
 static thread_local unsigned g_nativeFxStereoPairDepth=0;
 extern volatile LONG g_inForeground;
+extern volatile LONG g_frameDrawIdx;
 extern int g_thisDrawMoved;
 extern volatile LONG g_fgDrawCount;
 static HRESULT STDMETHODCALLTYPE ShadowTracePrim(IDirect3DDevice9* dev,D3DPRIMITIVETYPE t,UINT first,UINT prims) {
@@ -15039,7 +15153,7 @@ HRESULT StereoPairBody(IDirect3DDevice9* dev, DrawFn&& draw) {
         dev->SetRenderState(D3DRS_SCISSORTESTENABLE, TRUE);
     }
 
-    float mat[16];
+    float mat[16],wristBase[16]{};int wristConv=-1;
     HRESULT hr = S_OK;
 
     if (dbg != 2) {
@@ -15051,6 +15165,9 @@ HRESULT StereoPairBody(IDirect3DDevice9* dev, DrawFn&& draw) {
             memcpy(mat, cs.m, sizeof(mat));
             ApplyEyeRemap(reinterpret_cast<Reg4*>(mat), cs.conv, -0.5f);
             if (i == 0 && !g_thisDrawMoved) { VfxCaptureEyeMat(mat, cs.conv, 0); VfxCaptureBaseCam(cs.m, cs.conv); }
+            if(wristdepth::state.enabled&&i==0&&cs.reg==0){
+                memcpy(wristBase,mat,sizeof wristBase);wristConv=cs.conv;
+            }
             if (g_thisDrawMoved) {
                 // Pivot on the camera: the gun hangs off the view, so turning it about the eye is
                 // what makes it point where the controller points. Pivoting on the world origin
@@ -15075,13 +15192,19 @@ HRESULT StereoPairBody(IDirect3DDevice9* dev, DrawFn&& draw) {
             if(int(cs.reg)==g_boundShaderLayout.viewProjection&&g_thisDrawMoved==1)ScopeProjectNativeLens(mat,cs.conv,0,full);
             g_origSetVSConstF(dev, cs.reg, mat, 4);
         }
+        auto* wristEye=wristtrace::Eye(dev,(unsigned)Rd(g_frameDrawIdx),0,Rd(g_inForeground),
+            g_thisDrawMoved,(int)g_camMats[slots[0]].reg,g_camMats[slots[0]].conv);
         if(g_knifeHandGrip)g_knifeStereoEye=0;
         hr = draw();
+        if(wristEye)wristEye->hr=hr;
+        if(wristdepth::state.enabled&&wristConv>=0&&SUCCEEDED(hr))
+            wristdepth::state.Eye(dev,Rd(g_inForeground)?1:0,0,wristBase,wristConv,full);
         if(g_knifeHandGrip)g_knifeStereoEye=-1;
         VfxEyeDraw(dev, 0); // host VFX, left eye: matrices for this eye still bound
     }
 
     if (dbg != 1) {
+        wristConv=-1;
         RECT rr = { (LONG)full.X + halfW, (LONG)full.Y,
                     (LONG)(full.X + full.Width), (LONG)(full.Y + full.Height) };
         if (useScissor) dev->SetScissorRect(&rr);
@@ -15093,6 +15216,9 @@ HRESULT StereoPairBody(IDirect3DDevice9* dev, DrawFn&& draw) {
             ApplyOffset(reinterpret_cast<Reg4*>(mat), cs.conv, g_eyeDeltaUU);
             ApplyEyeRemap(reinterpret_cast<Reg4*>(mat), cs.conv, +0.5f);
             if (i == 0 && !g_thisDrawMoved) { VfxCaptureEyeMat(mat, cs.conv, 1); VfxCaptureBaseCam(cs.m, cs.conv); }
+            if(wristdepth::state.enabled&&i==0&&cs.reg==0){
+                memcpy(wristBase,mat,sizeof wristBase);wristConv=cs.conv;
+            }
             if (g_thisDrawMoved) {
                 // Pivot on the camera: the gun hangs off the view, so turning it about the eye is
                 // what makes it point where the controller points. Pivoting on the world origin
@@ -15105,8 +15231,13 @@ HRESULT StereoPairBody(IDirect3DDevice9* dev, DrawFn&& draw) {
             if(int(cs.reg)==g_boundShaderLayout.viewProjection&&g_thisDrawMoved==1)ScopeProjectNativeLens(mat,cs.conv,1,full);
             g_origSetVSConstF(dev, cs.reg, mat, 4);
         }
+        auto* wristEye=wristtrace::Eye(dev,(unsigned)Rd(g_frameDrawIdx),1,Rd(g_inForeground),
+            g_thisDrawMoved,(int)g_camMats[slots[0]].reg,g_camMats[slots[0]].conv);
         if(g_knifeHandGrip)g_knifeStereoEye=1;
         HRESULT hr2 = draw();
+        if(wristEye)wristEye->hr=hr2;
+        if(wristdepth::state.enabled&&wristConv>=0&&SUCCEEDED(hr2))
+            wristdepth::state.Eye(dev,Rd(g_inForeground)?1:0,1,wristBase,wristConv,full);
         if(g_knifeHandGrip)g_knifeStereoEye=-1;
         if (dbg == 2) hr = hr2;
         VfxEyeDraw(dev, 1); // host VFX, right eye: matrices for this eye still bound
@@ -18647,6 +18778,33 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
             g_nextWristStagedFromTmd=carrySource==weaponcarry::WristSource::Tmd;
         }
     }
+    // Publish only the exact physical-left wrist from this draw's validated
+    // section palette. The tracking map is the same one used by reload carry;
+    // no ActorX sign conversion or controller pose is applied a second time.
+    if(Rd(g_equipmentHud)&&wristSlot[0]>=0&&handValid[0]){
+        const armbind::Mat* bind=nullptr;
+        bool fromTmd=false;
+        static armbind::Mat noTmdBind[90];static bool noTmdReady=false;
+        if(gloves&&wristBone[0]==9){
+            if(!noTmdReady)noTmdReady=armbind::BuildReference(bindassets::noTmd,90,noTmdBind);
+            if(noTmdReady)bind=&noTmdBind[9];
+        }
+        else if(tmdGloves&&wristBone[0]==9&&armnatural::TmdBind().ready){
+            bind=&armnatural::TmdBind().bind[9];fromTmd=true;
+        }
+        armbind::Mat tracking,actualLocal,actualBase=centurionvisual::Identity(),desired;
+        std::memcpy(actualLocal.m,local,sizeof(local));
+        if(g_thisDrawMoved==1)BuildGunC(actualBase.m);
+        else if(g_thisDrawMoved==2)BuildTmdC(actualBase.m);
+        else if(g_thisDrawMoved==3)BuildTmdAssemblyC(actualBase.m);
+        if(bind&&weaponreload::TrackingMap({g_centrePos[0],g_centrePos[1],g_centrePos[2]},
+              g_centreYaw,g_baseYaw*(6.2831853f/65536.f),MetresToUU(),tracking)&&
+           wristhud::FinalWrist(*bind,
+              reinterpret_cast<const float(*)[4]>(changed+wristSlot[0]*3),actualLocal,actualBase,tracking,desired)){
+            g_equipmentWristStaged={true,fromTmd,g_playerPawn,GetTickCount64(),
+                (ULONGLONG)InterlockedCompareExchange64(&g_handPoseSampleMs[0],0,0),desired,tracking,wristdepth::state.frame};
+        }
+    }
     if(physicalActive&&((gloves&&slots==(int)gloveisolate::kNoTmdCookedPaletteCount)||
         (tmdGloves&&handValid[0]&&wristBone[0]==9u&&armnatural::TmdBind().ready))){
         armbind::Mat tracking;
@@ -20271,8 +20429,41 @@ typedef HRESULT (STDMETHODCALLTYPE *PFN_Clear)(IDirect3DDevice9*, DWORD, const D
 PFN_SetViewport g_origSetViewport = nullptr;
 PFN_Clear       g_origClear = nullptr;
 static PFN_Clear shadowNativeClear=nullptr;
+using PFN_WristCreateDepth=HRESULT (STDMETHODCALLTYPE*)(IDirect3DDevice9*,UINT,UINT,D3DFORMAT,D3DMULTISAMPLE_TYPE,DWORD,BOOL,IDirect3DSurface9**,HANDLE*);
+static PFN_WristCreateDepth g_origWristCreateDepth=nullptr;
+static HRESULT STDMETHODCALLTYPE Hook_WristCreateDepth(IDirect3DDevice9* dev,UINT w,UINT h,D3DFORMAT fmt,
+    D3DMULTISAMPLE_TYPE ms,DWORD quality,BOOL discard,IDirect3DSurface9** out,HANDLE* shared){
+    // A discardable DS cannot legally survive the switch at the foreground
+    // clear. Preserve only full-backbuffer D24S8 allocations for this opt-in
+    // route. Actual scene identity is still established by both world draws.
+    BOOL actual=discard;
+    if(wristdepth::state.enabled&&fmt==D3DFMT_D24S8&&ms==D3DMULTISAMPLE_NONE&&!quality){
+        IDirect3DSurface9* back=nullptr;D3DSURFACE_DESC d{};
+        if(SUCCEEDED(dev->GetBackBuffer(0,0,D3DBACKBUFFER_TYPE_MONO,&back))&&back){
+            if(SUCCEEDED(back->GetDesc(&d))&&w==d.Width&&h==d.Height)actual=FALSE;
+            back->Release();
+        }
+    }
+    const HRESULT hr=g_origWristCreateDepth(dev,w,h,fmt,ms,quality,actual,out,shared);
+    if(SUCCEEDED(hr)&&out)wristdepth::Created(*out,actual);
+    return hr;
+}
+static HRESULT STDMETHODCALLTYPE Hook_WristDepthBind(IDirect3DDevice9* dev,IDirect3DSurface9* surface){
+    return wristdepth::state.Bind(dev,surface);
+}
 static HRESULT STDMETHODCALLTYPE ShadowTraceClear(IDirect3DDevice9* dev,DWORD count,const D3DRECT* rects,DWORD flags,D3DCOLOR colour,float z,DWORD stencil) {
+    auto* wristEvent=wristtrace::Clear(dev,(unsigned)Rd(g_frameDrawIdx),Rd(g_inForeground),flags,z);
+    const bool split=wristdepth::state.BeforeClear(dev,Rd(g_inForeground)!=0,count,flags);
     const HRESULT hr=shadowNativeClear(dev,count,rects,flags,colour,z,stencil);
+    if(FAILED(hr)&&wristdepth::state.active)wristdepth::state.failed=true;
+    if(split&&Rd(g_equipmentHudTrace)){
+        static unsigned receipts=0;if(receipts<4){++receipts;
+            Log("wrist depth split [%u/4]: frame=%u draw=%ld world=%p foreground=%p size=%ux%u flags=%lX clear=%08X",
+                receipts,wristdepth::state.frame,Rd(g_frameDrawIdx),wristdepth::state.world,
+                wristdepth::state.foreground,wristdepth::state.desc.Width,wristdepth::state.desc.Height,flags,(unsigned)hr);
+        }
+    }
+    if(wristEvent)wristEvent->hr=hr;
     shadowtrace::NoteClear(dev,count,flags,colour,z,stencil,hr);return hr;
 }
 
@@ -20570,25 +20761,14 @@ static int PrepareCenturionCylinder(IDirect3DDevice9* dev,INT baseVertex,UINT ve
         centurionvisual::Time((centurionreload::Phase)visual.phase,visual.since,visual.closed,now,g_centurionRefillOnly!=0):
         centurionanim::Time((centurionreload::Phase)visual.phase,visual.since,now);
     if(!time.active)return -1;
-    IDirect3DIndexBuffer9* ib=nullptr;
-    if(FAILED(dev->GetIndices(&ib))||!ib)return -1;
-    if(ib!=g_centurionAnimationIB){
-        InterlockedExchange(&g_centurionShellSeenGun,0);
-        hipknife::Release(g_centurionAnimationIB);g_centurionAnimationIB=ib;ib->AddRef();
-        g_centurionAnimationIBValid=false;
-        if(g_centurionAnimationIBAttempts<4){
-            ++g_centurionAnimationIBAttempts;
-            D3DINDEXBUFFER_DESC desc{};void* data=nullptr;
-            constexpr UINT bytes=6767*3*2;
-            if(SUCCEEDED(ib->GetDesc(&desc))&&desc.Format==D3DFMT_INDEX16&&desc.Size>=bytes&&
-               SUCCEEDED(ib->Lock(0,bytes,&data,D3DLOCK_READONLY))){
-                const bool matches=data&&centurionanim::Hash((const unsigned char*)data,bytes)==g_centurionAnimation.indexHash;
-                g_centurionAnimationIBValid=SUCCEEDED(ib->Unlock())&&matches;
-            }
-            InterlockedExchange(&g_centurionAnimationWitness,g_centurionAnimationIBValid?1:-1);
-        }
+    // The animation and HD body use the same original cooked index stream.
+    // Cache by retained COM resource identity: alternating known IBs must not
+    // exhaust a four pointer-change budget and permanently drop the cylinder.
+    if(g_centurionAnimation.indexHash!=centurionhd::Profile::SourceIbHash||
+       !g_centurionAnimationIndices.Observe(dev)){
+        InterlockedExchange(&g_centurionAnimationWitness,-1);return -1;
     }
-    ib->Release();if(!g_centurionAnimationIBValid)return -1;
+    InterlockedExchange(&g_centurionAnimationWitness,1);
     float changed[15][4];
     if(FAILED(dev->GetVertexShaderConstantF(layout.bones,&saved[0][0],15))){
         InterlockedExchange(&g_centurionShellSeenGun,0);return -1;
@@ -21135,6 +21315,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
     float shortSleevePalette[45][4];bool shortSleeveReady=false;
     g_centurionGripStaged={};
     g_nextWristStaged={};
+    g_equipmentWristStaged={};
     g_nextWristStagedFromTmd=false;
     const int independentRegs=t==D3DPT_TRIANGLELIST ? PrepareIndependentLeft(dev,numVertices,startIndex,primCount,
         independentSaved,shortSleevePalette,shortSleeveReady) : 0;
@@ -21538,6 +21719,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
     unsigned assemblyEye=0;
     tmdmuzzle::Witness tmdSocketEye[2];
     bool tmdSocketDrawn[2]{};
+    bool equipmentWristEyeDrawn[2]{};
     armbind::Mat dualRightWristEye[2],dualRightRawEye[2];
     bool dualRightWristDrawn[2]{};
     const HRESULT dhr = FAILED(sleevePaletteHr)?sleevePaletteHr:StereoPair(dev, [&] {
@@ -21914,6 +22096,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
         return hr;
         };
         const HRESULT eyeHr=drawEye();
+        if(eye<2)equipmentWristEyeDrawn[eye]=SUCCEEDED(eyeHr);
         if(eye<2)tmdSocketDrawn[eye]=SUCCEEDED(eyeHr)&&tmdSocketEye[eye].valid;
         if(eye<2)dualRightWristDrawn[eye]=SUCCEEDED(eyeHr)&&dualRightWristDrawn[eye];
         if(poseIndex<6){g_dualPoseRecords[poseIndex].drawHr=eyeHr;g_dualPoseRecords[poseIndex].submitted=1;}
@@ -21971,6 +22154,15 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
                 Log("next carry wrist: kind=%d TMD material-0 published after stereo draw, wrist bone=9, segments=%d",
                     int(g_nextWristStaged.kind),nSeg);
         }
+    }
+    if(Rd(g_equipmentHud)&&independentRegs&&equipmentWristEyeDrawn[0]&&equipmentWristEyeDrawn[1]&&
+       SUCCEEDED(dhr)&&SUCCEEDED(nativeRestore)&&
+       SUCCEEDED(handRestore)&&(!g_equipmentWristStaged.fromTmd||nSeg>0)&&
+       g_equipmentWristStaged.valid&&TryAcquireSRWLockExclusive(&g_equipmentWristLock)){
+        g_equipmentWrist=g_equipmentWristStaged;
+        ReleaseSRWLockExclusive(&g_equipmentWristLock);
+        wristtrace::Wrist(dev,(unsigned)Rd(g_frameDrawIdx),g_equipmentWristStaged.sampled,
+            g_equipmentWristStaged.controllerSample,&g_equipmentWristStaged.tracking.m[0][0]);
     }
     if(g_centurionPhysicalPolish&&independentRegs&&SUCCEEDED(dhr)&&SUCCEEDED(nativeRestore)&&SUCCEEDED(handRestore)&&
        nSeg>0&&g_centurionGripStaged.identity.valid&&TryAcquireSRWLockExclusive(&g_centurionGripLock)){
@@ -27586,7 +27778,8 @@ void __fastcall Hook_ProcessEvent(void* self, void* edx, void* Stack, void* Resu
     const bool cineWatch = InterlockedCompareExchange(&g_cutsceneAuto, 0, 0) != 0 &&
                            FnIdx(kFnSetCinematic) >= 0;
     int32_t fnIdx = -1;
-    if ((censusOn || routeTwo || cineWatch || Rd(g_cinematicSceneProbe) || Rd(g_cinematicEventBridge) || nativefx::Probe() || g_centurionReloadProbe || Rd(g_keepAcquiredWeapons) || singularity_gore::enabled || Rd(g_weaponShotHaptics)) && Stack) {
+    if ((censusOn || routeTwo || cineWatch || Rd(g_cinematicSceneProbe) || Rd(g_cinematicEventBridge) || nativefx::Probe() || g_centurionReloadProbe || Rd(g_keepAcquiredWeapons) || singularity_gore::enabled || Rd(g_weaponShotHaptics) ||
+         (Rd(g_equipmentHudEnergy)&&self==(void*)(uintptr_t)(uint32_t)Rd(g_equipmentTmdPointer))) && Stack) {
         fnIdx = ScriptFuncNameIdx(Stack);
         InterlockedIncrement(&g_peSeen);
         if (fnIdx < 0) InterlockedIncrement(&g_peUnnamed);
@@ -28118,6 +28311,25 @@ void __fastcall Hook_ProcessEvent(void* self, void* edx, void* Stack, void* Resu
         const LONG n=InterlockedIncrement(&receipts);
         if(n<=12)Log("weapon haptics witness [%ld/12]: weapon=%08X verts=%ld shotOffset=%d count=%d->%d armed=%d",
             n,(unsigned)shotWeapon,Rd(g_gunVerts),shotOffset,shotBefore,shotAfter,shotPulseArmed?1:0);
+    }
+    // Observe the game's own RvTMD maximum getter after its natural script
+    // invocation. No speculative direct ProcessEvent call or guessed scale.
+    if(Rd(g_equipmentHudEnergy)&&fnIdx>=0&&fnIdx==WantedIdx("GetTMDEnergyMax")&&
+       Result&&Readable(Result,sizeof(float))&&g_playerPawn&&g_offTMD>=0&&
+       Readable((void*)(g_playerPawn+g_offTMD),sizeof(uintptr_t))&&
+       *reinterpret_cast<const uintptr_t*>(g_playerPawn+g_offTMD)==(uintptr_t)self){
+        const float maximum=*reinterpret_cast<const float*>(Result);
+        if(std::isfinite(maximum)&&maximum>0.f&&maximum<100000.f){
+            std::int32_t bits;std::memcpy(&bits,&maximum,4);
+            InterlockedExchange(&g_equipmentEnergyMaxBits,bits);
+            InterlockedExchange(&g_equipmentEnergyMaxOwner,(LONG)(uintptr_t)self);
+            InterlockedExchange64(&g_equipmentEnergyMaxMs,(LONGLONG)GetTickCount64());
+            if(Rd(g_equipmentHudTrace)){
+                static unsigned receipts=0;
+                if(receipts++<12)Log("wrist live energy maximum: owner=%08X maximum=%.9g natural=1 ms=%llu",
+                    (unsigned)(uintptr_t)self,maximum,(unsigned long long)GetTickCount64());
+            }
+        }
     }
     if(fnIdx>=0&&fnIdx==FnIdx(kFnPlayerTick)&&
        (uintptr_t)self==(uintptr_t)(uint32_t)Rd(g_ctlForXi))NativeScopeTick();
@@ -29999,8 +30211,7 @@ void ReleaseWristResources() {
     g_gloveRenderer.ReleaseGPU();g_gloveReplacementSeen=false;
     g_hipKnifeRenderer.ReleaseGPU();
     g_centurionClipRenderer.ReleaseGPU();g_centurionClipFault=false;
-    hipknife::Release(g_centurionAnimationIB);g_centurionAnimationIBValid=false;
-    g_centurionAnimationIBAttempts=0;g_centurionAnimationFault=false;g_centurionRootHold={};g_centurionTrackedRoot={};
+    g_centurionAnimationIndices.Reset();g_centurionAnimationFault=false;g_centurionRootHold={};g_centurionTrackedRoot={};
     g_centurionRightHand={};g_centurionGripStaged={};
     if(TryAcquireSRWLockExclusive(&g_centurionGripLock)){g_centurionGrip={};ReleaseSRWLockExclusive(&g_centurionGripLock);}
     g_centurionShellRenderer.ReleaseGPU();g_centurionShellFault=false;g_centurionShellWarmed=false;
@@ -30008,6 +30219,13 @@ void ReleaseWristResources() {
     ReleaseNextReloadGPU();CancelNextReload();
     g_centurionPresentationSafety.Reset();
     hipknife::Release(g_centurionMarkerState);
+    wristdepth::state.Release();
+    wristdepth::pixelWitness.Release();
+    if(wristdepth::pixelWitness.started)wristdepth::pixelWitness.done=true;
+    wristtrace::Reset();
+    AcquireSRWLockExclusive(&g_equipmentWristLock);g_equipmentWrist={};g_equipmentWristStaged={};ReleaseSRWLockExclusive(&g_equipmentWristLock);
+    InterlockedExchange(&g_equipmentHudDrew,0);
+    InterlockedExchange(&g_equipmentHudVisible,0);
     shadowtrace::Release();shadowtrace::pending=false;shadowfix::Release();worldshadowfix::Release();projectorfix::Release();
     PauseRttProbe::ReleaseContent();
     ReleaseVrMenuResources();
@@ -30057,6 +30275,8 @@ void DrawCustomGloves(IDirect3DDevice9* dev) {
     back->Release();
 }
 void DrawWristHealth(IDirect3DDevice9* dev) {
+    if(wristhud::SuppressLegacy(Rd(g_equipmentHudSuppress)!=0,
+       (Rd(g_equipmentHudDrew)&1)!=0,(Rd(g_equipmentHudDrew)&2)!=0,true))return;
     const bool hudGameplay = g_sceneMode.Current() == vrscene::Mode::GameplayStereo &&
         !Rd(g_inCinematic) && !CutsceneNativeCameraArmed();
     // If the optional plate atlas failed to load, retain the plain wrist bar
@@ -32005,7 +32225,380 @@ static void MaybeLoadPlatesAtlas(IDirect3DDevice9* dev) {
 // left-hand anchor. Appears only on face-raise (hysteresis).
 // HP comes from the cached pawn (never a scan from rendering);
 // unknown HP hides the bar, never a guessed full one.
+// One read-only snapshot per frame. Every optional field is independently
+// validated; a missing offset never becomes an example value on the display.
+static wristhud::Values EquipmentValues(){
+    wristhud::Values v;
+    const uintptr_t pawn=g_playerPawn;
+    if(pawn&&g_offHealth>=0&&g_offHealthMax>=0&&
+       Readable((void*)(pawn+g_offHealth),4)&&Readable((void*)(pawn+g_offHealthMax),4)){
+        const auto h=healthbar::DecodeLiveHealth(
+            *reinterpret_cast<const std::int32_t*>(pawn+g_offHealth),
+            *reinterpret_cast<const std::int32_t*>(pawn+g_offHealthMax));
+        if(h.valid){v.health=true;v.hp=h.current;v.maxHp=h.maximum;}
+    }
+    if(!Rd(g_equipmentHudTech)&&!Rd(g_equipmentHudSupplies)&&!Rd(g_equipmentHudEnergy))return v;
+    EquipmentSourceCache source;
+    if(!TryAcquireSRWLockShared(&g_equipmentSourceLock))return v;
+    source=g_equipmentSource;ReleaseSRWLockShared(&g_equipmentSourceLock);
+    const uintptr_t hud=source.hud;
+    const uintptr_t liveClass=hud&&Readable((void*)(hud+OBJ_CLASS),sizeof(uintptr_t))?
+        *reinterpret_cast<const uintptr_t*>(hud+OBJ_CLASS):0;
+    if(!wristhud::SourceCurrent(source.controller,source.pawn,hud,source.hudClass,
+        source.sampled,(uintptr_t)(uint32_t)Rd(g_ctlForXi),pawn,liveClass,GetTickCount64())){
+        InterlockedExchange(&g_equipmentTmdPointer,0);return v;
+    }
+    auto count=[hud](int offset,int& out,bool& valid){
+        if(offset<0||!Readable((void*)(hud+offset),4))return;
+        const int x=*reinterpret_cast<const std::int32_t*>(hud+offset);
+        if(wristhud::ValidCount(x)){out=x;valid=true;}
+    };
+    if(Rd(g_equipmentHudTech))count(source.tech,v.e99Tech,v.tech);
+    if(Rd(g_equipmentHudSupplies)){
+        count(source.packs,v.healthPacks,v.packs);count(source.vials,v.e99Vials,v.vials);
+    }
+    // Both readings must belong to the same local TMD. The maximum is only
+    // accepted after the game's own getter naturally returns a fresh float.
+    if(Rd(g_equipmentHudEnergy)&&source.tmd&&source.tmdEnergy>=0&&
+       Readable((void*)(source.tmd+OBJ_CLASS),4)&&
+       *reinterpret_cast<const uintptr_t*>(source.tmd+OBJ_CLASS)==source.tmdClass&&
+       Readable((void*)(source.tmd+source.tmdEnergy),4)){
+        const uintptr_t tmd=source.tmd;
+        const auto owner=(uintptr_t)(uint32_t)InterlockedCompareExchange(&g_equipmentEnergyMaxOwner,0,0);
+        const auto maxMs=(std::uint64_t)InterlockedCompareExchange64(&g_equipmentEnergyMaxMs,0,0);
+        const std::int32_t maxBits=InterlockedCompareExchange(&g_equipmentEnergyMaxBits,0,0);
+        float maximum,current;std::memcpy(&maximum,&maxBits,4);
+        current=*reinterpret_cast<const float*>(tmd+source.tmdEnergy);
+        if(tmd&&tmd==owner&&wristhud::Current(maxMs,GetTickCount64(),1500)&&
+           wristhud::ValidEnergy(current,maximum)){
+            v.energy=true;v.tmd=current;v.maxTmd=maximum;
+        }
+    }
+    return v;
+}
+
+// State changes only, capped for the entire process. Values come from the
+// same validated snapshot used to draw; unavailable rows remain flagged false.
+static void EquipmentLiveReceipt(const wristhud::Values& v){
+    if(!Rd(g_equipmentHudTrace))return;
+    static unsigned count=0;static ULONGLONG last=0;
+    static wristhud::Values old;static bool have=false;
+    const auto now=GetTickCount64();if(count>=32||(last&&now-last<250))return;
+    last=now;
+    if(have&&v.health==old.health&&v.energy==old.energy&&v.tech==old.tech&&
+       v.packs==old.packs&&v.vials==old.vials&&v.hp==old.hp&&v.maxHp==old.maxHp&&
+       v.tmd==old.tmd&&v.maxTmd==old.maxTmd&&v.e99Tech==old.e99Tech&&
+       v.healthPacks==old.healthPacks&&v.e99Vials==old.e99Vials)return;
+    old=v;have=true;++count;
+    EquipmentSourceCache source;
+    if(TryAcquireSRWLockShared(&g_equipmentSourceLock)){
+        source=g_equipmentSource;ReleaseSRWLockShared(&g_equipmentSourceLock);
+    }
+    Log("wrist live [%u/32]: ms=%llu pawn=%08X ctl=%08X hud=%08X tmd=%08X hpValid=%d hp=%.9g/%.9g energyValid=%d energy=%.9g/%.9g techValid=%d tech=%d packsValid=%d packs=%d vialsValid=%d vials=%d maxAgeMs=%llu",
+        count,(unsigned long long)now,(unsigned)g_playerPawn,(unsigned)source.controller,(unsigned)source.hud,(unsigned)source.tmd,
+        v.health?1:0,v.hp,v.maxHp,v.energy?1:0,v.tmd,v.maxTmd,v.tech?1:0,v.e99Tech,
+        v.packs?1:0,v.healthPacks,v.vials?1:0,v.e99Vials,
+        (unsigned long long)(now-(ULONGLONG)InterlockedCompareExchange64(&g_equipmentEnergyMaxMs,0,0)));
+}
+static void EquipmentGateReceipt(unsigned gate,const char* reason){
+    if(!Rd(g_equipmentHudTrace)||gate>=16)return;
+    static unsigned seen=0;const unsigned bit=1u<<gate;if(seen&bit)return;seen|=bit;
+    Log("wrist HUD gate=%u reason=%s (once per reason)",gate,reason);
+}
+void DrawEquipmentWrist(IDirect3DDevice9* dev){
+    static bool shown=false;
+    if(wristdepth::pixelWitness.Poll()){
+        const auto& p=wristdepth::pixelWitness.pixels;
+        Log("wrist HUD pixels: worldMask=%lu,%lu foregroundComposite=%lu,%lu (GPU samples, alpha>0; no flush/wait)",p[0][0],p[0][1],p[1][0],p[1][1]);
+    }
+    InterlockedExchange(&g_equipmentHudDrew,0);
+    InterlockedExchange(&g_equipmentHudVisible,0);
+    // Scene depth is cleared before the first-person pass; there is no
+    // preserved world depth or per-eye native Z mapping at Present. Refuse a
+    // depth-tested draw until both witnesses exist. Preview is explicitly
+    // opt-in and can never suppress the existing health display.
+    const bool occluded=Rd(g_equipmentHudOcclusion)!=0;
+    const bool depthReady=occluded&&wristdepth::state.Ready();
+    const wristhud::DepthEvidence depthEvidence{depthReady,depthReady,depthReady,depthReady};
+    if(!wristhud::MayDraw(Rd(g_equipmentHud)!=0,Rd(g_equipmentHudPreviewNoDepth)!=0,depthEvidence)||
+       !wristhud::RuntimeAllowed(VrModeOn(),g_haveEyes,Rd(g_gamePaused)!=0,
+           Rd(g_vrUiMenu)!=0,Rd(g_panelOpen)!=0,Rd(g_inCinematic)!=0,
+           Rd(g_twoHandActive)!=0,g_sceneMode.Current()==vrscene::Mode::GameplayStereo)||
+       !g_origSetRenderTarget||!g_origDrawPrimUP){shown=false;EquipmentGateReceipt(0,"mode/depth/runtime gate");return;}
+    EquipmentWristPose pose;
+    if(!TryAcquireSRWLockShared(&g_equipmentWristLock))return;
+    pose=g_equipmentWrist;ReleaseSRWLockShared(&g_equipmentWristLock);
+    const auto now=GetTickCount64();
+    if(!pose.valid||pose.pawn!=g_playerPawn||!g_handPositionValid[0]||
+       !wristhud::Current(pose.sampled,now)||
+       !wristhud::Current(pose.controllerSample,now)){shown=false;EquipmentGateReceipt(1,"missing/foreign/stale final left wrist or controller");return;}
+    if(occluded&&(!depthReady||pose.frame!=wristdepth::state.frame)){
+        if(Rd(g_equipmentHudTrace)){static unsigned receipts=0;
+            if(receipts<4){++receipts;const auto& s=wristdepth::state;
+                Log("wrist depth unavailable [%u/4]: frame=%u poseFrame=%u active=%d failed=%d world=%p fg=%p mask=%p worldEyes=%d%d fgEyes=%d%d",
+                    receipts,s.frame,pose.frame,s.active,s.failed,s.world,s.foreground,s.mask,
+                    s.cameras[0][0].valid,s.cameras[0][1].valid,s.cameras[1][0].valid,s.cameras[1][1].valid);}}
+        EquipmentGateReceipt(7,"missing same-frame preserved world/foreground depth or camera");return;
+    }
+    const auto values=EquipmentValues();
+    EquipmentLiveReceipt(values);
+    if(!values.health&&!values.energy&&!values.tech&&!values.packs&&!values.vials){shown=false;EquipmentGateReceipt(2,"no validated local-player values");return;}
+    const float unit=MetresToUU();
+    const float scale=std::clamp(Rd(g_equipmentHudScalePct),60L,150L)/100.f;
+    const float w=.155f*unit*scale,h=.104f*unit*scale;
+    const float ox=Rd(g_equipmentHudOffsetMm[0])*.001f*unit;
+    const float oy=Rd(g_equipmentHudOffsetMm[1])*.001f*unit;
+    const float oz=Rd(g_equipmentHudOffsetMm[2])*.001f*unit;
+    const float toRad=3.14159265358979323846f/180.f;
+    const float yaw=Rd(g_equipmentHudAngleDeg[0])*toRad;
+    const float pitch=Rd(g_equipmentHudAngleDeg[1])*toRad;
+    const float roll=Rd(g_equipmentHudAngleDeg[2])*toRad;
+    const float cy=cosf(yaw),sy=sinf(yaw),cp=cosf(pitch),sp=sinf(pitch),
+                cr=cosf(roll),sr=sinf(roll);
+    auto point=[&](float x,float y){
+        // Rotate the complete logical display, not the controller or wrist.
+        // The physical 155 x 104 mm footprint is unchanged.
+        if(Rd(g_equipmentHudTextQuarterTurn))wristdepth::QuarterTurn(x,y);
+        const float a=(x-.5f)*w,b=(.5f-y)*h;
+        const float rx=a*cr-b*sr,ry=a*sr+b*cr;
+        const float px=rx*cy+ry*sp*sy;
+        const float py=ry*cp;
+        const float pz=-rx*sy+ry*sp*cy;
+        // Source bind: wrist-to-elbow runs along local -Y; finger spread runs
+        // along Z. Put the long display axis down the short forearm, with its
+        // front normal along -X, instead of spanning 155 mm across the wrist.
+        const auto p=centurionvisual::Point({ox-pz,oy-px,oz+py},pose.tracking);
+        return uipointer::V{p.x,p.y,p.z};};
+    const auto center=point(.5f,.5f),right=point(1.f,.5f),up=point(.5f,0.f);
+    const float ax=right.x-center.x,ay=right.y-center.y,az=right.z-center.z;
+    const float bx=up.x-center.x,by=up.y-center.y,bz=up.z-center.z;
+    float nx=ay*bz-az*by,ny=az*bx-ax*bz,nz=ax*by-ay*bx;
+    const float nl=sqrtf(nx*nx+ny*ny+nz*nz);
+    if(nl<.001f)return;nx/=nl;ny/=nl;nz/=nl;
+    const uipointer::V head{g_headPosXR[0],g_headPosXR[1],g_headPosXR[2]};
+    const float vx=head.x-center.x,vy=head.y-center.y,vz=head.z-center.z;
+    const float dist=sqrtf(vx*vx+vy*vy+vz*vz);
+    if(dist<.001f)return;
+    const float facing=(nx*vx+ny*vy+nz*vz)/dist*(Rd(g_equipmentHudNormalSign)<0?-1.f:1.f);
+    shown=wristhud::Visibility(shown,facing,dist,head.y-center.y,true,true,false,false,false,false);
+    if(!shown){EquipmentGateReceipt(3,"wrist not raised/inward-facing or outside comfortable range");return;}
+    uipointer::ScreenPoint projected[2][4];
+    for(int eye=0;eye<2;++eye){
+        auto* p=projected[eye];
+        if(!VrUiProjectEye(eye,point(0,0),p[0])||
+           !VrUiProjectEye(eye,point(1,0),p[1])||
+           !VrUiProjectEye(eye,point(0,1),p[2])||
+           !VrUiProjectEye(eye,point(1,1),p[3])){EquipmentGateReceipt(4,"corner behind eye/projection unavailable");return;}
+        for(const auto& q:projected[eye])if(q.u<0||q.u>1||q.v<0||q.v>1){EquipmentGateReceipt(5,"panel extends beyond eye bounds");return;}
+    }
+    auto projectDepth=[&](int phase,int eye,float x,float y,wristdepth::Projected& out){
+        const auto t=point(x,y);
+        const auto n=centurionvisual::Point({t.x,t.y,t.z},pose.nativeTracking);
+        const float p[3]{n.x,n.y,n.z};
+        return wristdepth::state.Project(phase,eye,p,out);
+    };
+    wristdepth::Projected depthCorners[2][2][4];
+    if(occluded)for(int phase=0;phase<2;++phase)for(int eye=0;eye<2;++eye)
+        for(int k=0;k<4;++k)if(!projectDepth(phase,eye,float(k&1),float(k>>1),depthCorners[phase][eye][k])){
+            EquipmentGateReceipt(8,"native per-eye XYZ projection outside captured scene depth");return;
+        }
+    if(occluded)for(int eye=0;eye<2;++eye)
+        if(!wristdepth::CompatibleW(depthCorners[0][eye],depthCorners[1][eye])){
+            EquipmentGateReceipt(9,"world/foreground projective W mismatch");return;
+        }
+    IDirect3DSurface9* back=nullptr,*old=nullptr,*depth=nullptr;
+    if(FAILED(dev->GetBackBuffer(0,0,D3DBACKBUFFER_TYPE_MONO,&back))||!back)return;
+    D3DSURFACE_DESC desc{};
+    if(FAILED(back->GetDesc(&desc))||desc.Width<8||desc.Height<8){back->Release();return;}
+    if(FAILED(dev->GetRenderTarget(0,&old))||!old){back->Release();return;}
+    dev->GetDepthStencilSurface(&depth);
+    D3DVIEWPORT9 previousViewport{};
+    if(FAILED(dev->GetViewport(&previousViewport))){old->Release();if(depth)depth->Release();back->Release();return;}
+    if(!g_wristState&&FAILED(dev->CreateStateBlock(D3DSBT_ALL,&g_wristState))){
+        if(old)old->Release();if(depth)depth->Release();back->Release();return;}
+    if(FAILED(g_wristState->Capture())){
+        if(old)old->Release();if(depth)depth->Release();back->Release();return;}
+    if(occluded&&(desc.Width!=wristdepth::state.desc.Width||desc.Height!=wristdepth::state.desc.Height||
+        desc.MultiSampleType!=D3DMULTISAMPLE_NONE)){
+        old->Release();if(depth)depth->Release();back->Release();return;
+    }
+    // State blocks do not restore render targets/depth attachments. Keep MRTs
+    // explicitly; own binds bypass the exact-scene redirect.
+    IDirect3DSurface9* mrt[3]{};
+    for(unsigned i=0;i<3;++i){dev->GetRenderTarget(i+1,&mrt[i]);g_origSetRenderTarget(dev,i+1,nullptr);}
+    wristdepth::state.internal=true;
+    dev->SetDepthStencilSurface(nullptr);
+    if(FAILED(g_origSetRenderTarget(dev,0,occluded?wristdepth::state.maskSurface:back))||
+       (occluded&&FAILED(dev->SetDepthStencilSurface(wristdepth::state.world)))){
+        g_wristState->Apply();dev->SetDepthStencilSurface(nullptr);
+        g_origSetRenderTarget(dev,0,old);dev->SetDepthStencilSurface(depth);
+        for(unsigned i=0;i<3;++i){g_origSetRenderTarget(dev,i+1,mrt[i]);if(mrt[i])mrt[i]->Release();}
+        dev->SetViewport(&previousViewport);
+        wristdepth::state.internal=false;
+        old->Release();if(depth)depth->Release();back->Release();return;
+    }
+    D3DVIEWPORT9 vp{0,0,desc.Width,desc.Height,0.f,1.f};dev->SetViewport(&vp);
+    dev->SetVertexShader(nullptr);dev->SetPixelShader(nullptr);dev->SetTexture(0,nullptr);
+    dev->SetTextureStageState(1,D3DTSS_COLOROP,D3DTOP_DISABLE);
+    dev->SetTextureStageState(1,D3DTSS_ALPHAOP,D3DTOP_DISABLE);
+    dev->SetRenderState(D3DRS_ALPHATESTENABLE,FALSE);
+    dev->SetRenderState(D3DRS_STENCILENABLE,FALSE);
+    dev->SetRenderState(D3DRS_FOGENABLE,FALSE);
+    dev->SetRenderState(D3DRS_COLORWRITEENABLE,0xF);
+    dev->SetRenderState(D3DRS_SRGBWRITEENABLE,FALSE);
+    dev->SetRenderState(D3DRS_SEPARATEALPHABLENDENABLE,FALSE);
+    dev->SetRenderState(D3DRS_BLENDOP,D3DBLENDOP_ADD);
+    dev->SetRenderState(D3DRS_ZENABLE,occluded?D3DZB_TRUE:D3DZB_FALSE);dev->SetRenderState(D3DRS_ZWRITEENABLE,FALSE);
+    dev->SetRenderState(D3DRS_ZFUNC,D3DCMP_LESSEQUAL);
+    dev->SetRenderState(D3DRS_DEPTHBIAS,0);
+    dev->SetRenderState(D3DRS_SLOPESCALEDEPTHBIAS,0);
+    dev->SetRenderState(D3DRS_FILLMODE,D3DFILL_SOLID);
+    dev->SetRenderState(D3DRS_ALPHABLENDENABLE,occluded?FALSE:TRUE);
+    dev->SetRenderState(D3DRS_SRCBLEND,D3DBLEND_SRCALPHA);
+    dev->SetRenderState(D3DRS_DESTBLEND,D3DBLEND_INVSRCALPHA);
+    dev->SetRenderState(D3DRS_LIGHTING,FALSE);dev->SetRenderState(D3DRS_CULLMODE,D3DCULL_NONE);
+    dev->SetRenderState(D3DRS_SCISSORTESTENABLE,TRUE);
+    dev->SetTextureStageState(0,D3DTSS_COLOROP,D3DTOP_SELECTARG1);
+    dev->SetTextureStageState(0,D3DTSS_COLORARG1,D3DTA_DIFFUSE);
+    dev->SetTextureStageState(0,D3DTSS_ALPHAOP,D3DTOP_SELECTARG1);
+    dev->SetTextureStageState(0,D3DTSS_ALPHAARG1,D3DTA_DIFFUSE);
+    dev->SetFVF(D3DFVF_XYZRHW|D3DFVF_DIFFUSE);
+    struct V{float x,y,z,rhw;DWORD color;};
+    static constexpr unsigned cap=12000;static thread_local V verts[cap];
+    struct Q{float x0,y0,x1,y1;DWORD color;};
+    static constexpr unsigned quadCap=cap/6;
+    static thread_local Q quads[quadCap];unsigned nq=0;bool overflow=false;
+    auto quad=[&](float x0,float y0,float x1,float y1,DWORD color){
+        if(nq<quadCap)quads[nq++]={x0,y0,x1,y1,color};else overflow=true;};
+    auto label=[&](const char* s,float x,float y,float cell,DWORD color){
+        for(;*s&&x<.96f;++s,x+=cell){
+            const auto bits=wristart::Glyph(*s);
+            for(int row=0;row<7;++row)for(int col=0;col<5;++col)
+                if(bits[row]&(1u<<(4-col)))
+                    quad(x+col*cell/6.f,y+row*cell/6.f,
+                         x+(col+1)*cell/6.f,y+(row+1)*cell/6.f,color);
+        }};
+    bool projectFailed=false;
+    bool maskClear=true;
+    if(occluded)maskClear=SUCCEEDED(shadowNativeClear(dev,0,nullptr,D3DCLEAR_TARGET,0,1.f,0));
+    const bool pixelSample=occluded&&wristdepth::pixelWitness.Start(dev,Rd(g_equipmentHudTrace)!=0);
+    if(pixelSample)for(int eye=0;eye<2;++eye){
+        const auto& n=depthCorners[0][eye][0];const auto& f=depthCorners[1][eye][0];
+        Log("wrist HUD projection: frame=%u eye=%d xrUV=%.6f,%.6f nativeUV=%.6f,%.6f worldZ=%.9g fgZ=%.9g rhw=%.9g",wristdepth::state.frame,eye,projected[eye][0].u,projected[eye][0].v,n.u*2-eye,n.v,n.z,f.z,n.rhw);
+    }
+    int drew=0;
+    for(int eye=0;eye<2;++eye){
+        const auto* p=projected[eye];
+        D3DRECT clip{(LONG)(eye*desc.Width/2),0,(LONG)((eye+1)*desc.Width/2),(LONG)desc.Height};
+        dev->SetScissorRect(reinterpret_cast<const RECT*>(&clip));
+        auto vertex=[&](float x,float y,DWORD color){
+            if(occluded){wristdepth::Projected q;
+                if(!projectDepth(0,eye,x,y,q)){projectFailed=true;return V{};}
+                return V{q.x,q.y,q.z,q.rhw,color};
+            }
+            const float u=(1-x)*(1-y)*p[0].u+x*(1-y)*p[1].u+(1-x)*y*p[2].u+x*y*p[3].u;
+            const float v=(1-x)*(1-y)*p[0].v+x*(1-y)*p[1].v+(1-x)*y*p[2].v+x*y*p[3].v;
+            return V{(eye+u)*desc.Width*.5f,v*desc.Height,0.f,1.f,color};};
+        if(eye==0){
+        quad(0,0,1,1,0xFF10181Cu);quad(.015f,.02f,.985f,.98f,0xFF213036u);
+        quad(.015f,.02f,.985f,.027f,0xFF6B7776u);
+        quad(.015f,.973f,.985f,.98f,0xFF10191Cu);
+        quad(.018f,.03f,.027f,.97f,0xFF526164u);
+        quad(.973f,.03f,.982f,.97f,0xFF0C1418u);
+        for(float screwX:{.032f,.951f})for(float screwY:{.045f,.94f}){
+            quad(screwX,screwY,screwX+.016f,screwY+.025f,0xFF6E7771u);
+            quad(screwX+.005f,screwY+.009f,screwX+.011f,screwY+.015f,0xFF162126u);
+        }
+        quad(.035f,.12f,.965f,.13f,0xAA9B6936u);
+        const bool pl=Rd(g_equipmentHudPolish)!=0;
+        label("KATORGA-12",.05f,.04f,.032f,0xFFB7C9C9u);
+        label(pl?"STAN":"STATUS",.72f,.04f,.032f,0xFFB7C9C9u);
+        char buf[48];
+        if(values.health){
+            label(pl?"ZDROWIE":"HEALTH",.055f,.20f,.032f,0xFFFF8C7Au);
+            std::snprintf(buf,sizeof(buf),"%d/%d",(int)std::lround(values.hp),(int)std::lround(values.maxHp));
+            label(buf,.69f,.20f,.032f,0xFFFFB5A7u);
+            const int cells=wristhud::Cells(values.hp,values.maxHp);
+            for(int i=0;i<10;++i)quad(.055f+i*.089f,.32f,.129f+i*.089f,.38f,
+                i<cells?(values.hp/values.maxHp<=.25f?0xFFE54536u:0xFFBC453Au):0xFF353E40u);
+            if(values.hp/values.maxHp<=.25f)label(pl?"NISKI":"LOW",.77f,.40f,.03f,0xFFFF5944u);
+        }
+        if(values.energy){
+            label("TMD E99",.055f,.44f,.032f,0xFF7BC9D3u);
+            std::snprintf(buf,sizeof(buf),"%d/%d",(int)std::lround(values.tmd),(int)std::lround(values.maxTmd));
+            label(buf,.69f,.44f,.032f,0xFF9AE2E7u);
+            const int cells=wristhud::Cells(values.tmd,values.maxTmd);
+            for(int i=0;i<10;++i)quad(.055f+i*.089f,.56f,.129f+i*.089f,.62f,
+                i<cells?0xFF4AAABD:0xFF35464Au);
+        }
+        if(values.tech){std::snprintf(buf,sizeof(buf),"E99 TECH %d",values.e99Tech);
+            label(buf,.055f,.69f,.035f,0xFF9AE2E7u);}
+        if(values.packs){std::snprintf(buf,sizeof(buf),"%s %d",pl?"APTECZKA":"MEDKIT",values.healthPacks);
+            label(buf,.055f,.83f,.03f,0xFFCDD6D2u);}
+        if(values.vials){std::snprintf(buf,sizeof(buf),"%s %d",pl?"FIOLKA":"VIAL",values.e99Vials);
+            label(buf,.55f,.83f,.03f,0xFF9AE2E7u);}
+        }
+        if(overflow)break;
+        unsigned n=0;
+        for(unsigned i=0;i<nq;++i){
+            const auto& q=quads[i];
+            verts[n++]=vertex(q.x0,q.y0,q.color);verts[n++]=vertex(q.x1,q.y0,q.color);
+            verts[n++]=vertex(q.x0,q.y1,q.color);verts[n++]=vertex(q.x1,q.y0,q.color);
+            verts[n++]=vertex(q.x1,q.y1,q.color);verts[n++]=vertex(q.x0,q.y1,q.color);
+        }
+        if(pixelSample)wristdepth::pixelWitness.Begin(0,eye);
+        if(n&&maskClear&&!projectFailed&&SUCCEEDED(g_origDrawPrimUP(dev,D3DPT_TRIANGLELIST,n/3,verts,sizeof(V))))drew|=1<<eye;
+        if(pixelSample)wristdepth::pixelWitness.End(0,eye);
+    }
+    if(occluded&&drew==3){
+        // The mask contains only world-visible HUD pixels. Reproject that
+        // screen-aligned mask through the native foreground Z test so gloves,
+        // weapon and native carried magazines also occlude it.
+        drew=0;
+        dev->SetDepthStencilSurface(nullptr);
+        bool bound=SUCCEEDED(g_origSetRenderTarget(dev,0,back))&&
+            SUCCEEDED(dev->SetDepthStencilSurface(wristdepth::state.foreground));
+        dev->SetViewport(&vp);
+        dev->SetTexture(0,wristdepth::state.mask);
+        dev->SetTextureStageState(0,D3DTSS_COLORARG1,D3DTA_TEXTURE);
+        dev->SetTextureStageState(0,D3DTSS_ALPHAARG1,D3DTA_TEXTURE);
+        dev->SetTextureStageState(0,D3DTSS_TEXCOORDINDEX,0);
+        dev->SetTextureStageState(0,D3DTSS_TEXTURETRANSFORMFLAGS,D3DTTFF_DISABLE);
+        dev->SetSamplerState(0,D3DSAMP_MINFILTER,D3DTEXF_POINT);
+        dev->SetSamplerState(0,D3DSAMP_MAGFILTER,D3DTEXF_POINT);
+        dev->SetSamplerState(0,D3DSAMP_MIPFILTER,D3DTEXF_NONE);
+        dev->SetSamplerState(0,D3DSAMP_SRGBTEXTURE,FALSE);
+        dev->SetSamplerState(0,D3DSAMP_ADDRESSU,D3DTADDRESS_CLAMP);
+        dev->SetSamplerState(0,D3DSAMP_ADDRESSV,D3DTADDRESS_CLAMP);
+        dev->SetRenderState(D3DRS_ALPHABLENDENABLE,TRUE);
+        dev->SetFVF(D3DFVF_XYZRHW|D3DFVF_TEX1);
+        if(pixelSample){dev->SetRenderState(D3DRS_ALPHATESTENABLE,TRUE);
+            dev->SetRenderState(D3DRS_ALPHAFUNC,D3DCMP_GREATER);dev->SetRenderState(D3DRS_ALPHAREF,0);}
+        for(int eye=0;eye<2&&bound;++eye){
+            if(pixelSample)wristdepth::pixelWitness.Begin(1,eye);
+            if(SUCCEEDED(wristdepth::CompositeEye(dev,g_origDrawPrimUP,eye,desc.Width,desc.Height,
+                depthCorners[0][eye],depthCorners[1][eye])))drew|=1<<eye;
+            if(pixelSample)wristdepth::pixelWitness.End(1,eye);
+        }
+        dev->SetTexture(0,nullptr);
+    }
+    g_wristState->Apply();dev->SetDepthStencilSurface(nullptr);
+    g_origSetRenderTarget(dev,0,old);dev->SetDepthStencilSurface(depth);
+    for(unsigned i=0;i<3;++i){g_origSetRenderTarget(dev,i+1,mrt[i]);if(mrt[i])mrt[i]->Release();}
+    dev->SetViewport(&previousViewport);
+    wristdepth::state.internal=false;
+    if(old)old->Release();if(depth)depth->Release();back->Release();
+    InterlockedExchange(&g_equipmentHudVisible,drew==3?1:0);
+    if(drew==3)EquipmentGateReceipt(6,occluded?
+        "occluded candidate submitted both eyes; world+foreground Z, physical acceptance PENDING":
+        "preview submitted both eyes; world occlusion NOT validated");
+    if(wristhud::MaySuppress(drew==3,values.health,Rd(g_equipmentHudPreviewNoDepth)!=0,
+                            depthEvidence))InterlockedExchange(&g_equipmentHudDrew,3);
+}
+
 void DrawHealthPlate(IDirect3DDevice9* dev) {
+    if(wristhud::SuppressLegacy(Rd(g_equipmentHudSuppress)!=0,
+       (Rd(g_equipmentHudDrew)&1)!=0,(Rd(g_equipmentHudDrew)&2)!=0,true))return;
     if(handhud::HideHealth(Rd(g_twoHandActive)!=0)){g_hbShown=false;return;}
     if(g_centurionPhysicalPolish){
         CenturionVisual visual;
@@ -33002,6 +33595,18 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
     static unsigned shadowTraceStable=0;
     shadowTraceStable=shadowTraceReady?std::min(shadowTraceStable+1,30u):0;
     PollGameplayHotPath(shadowTraceStable>=15);
+    if(Rd(g_equipmentHudTrace)||wristtrace::active){
+    EquipmentWristPose tracePose;
+    if(TryAcquireSRWLockShared(&g_equipmentWristLock)){
+        tracePose=g_equipmentWrist;ReleaseSRWLockShared(&g_equipmentWristLock);
+    }
+    const ULONGLONG traceNow=GetTickCount64();
+    wristtrace::Boundary(s,Rd(g_equipmentHudTrace)!=0,
+        shadowTraceStable>=15&&Rd(g_equipmentHudVisible)&&tracePose.valid&&tracePose.pawn==g_playerPawn&&
+        wristhud::Current(tracePose.sampled,traceNow)&&wristhud::Current(tracePose.controllerSample,traceNow)&&
+        !Rd(g_gamePaused)&&!Rd(g_inCinematic)&&!Rd(g_vrUiMenu)&&!Rd(g_panelOpen),
+        (unsigned)Rd(g_armPaletteFrameToken));
+    }
     if(shadowtrace::Boundary(s,shadowTraceStable>=15,g_logPath)){
         SaveBackbufferCapture(s,true); // Completed SBS scene, before menu/diagnostic overlays.
         nativefx::DumpWitness();
@@ -36248,6 +36853,7 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
         desktop_mirror::PresentBackbufferScope captureScope(s,
             mirrored && Rd(g_steamCaptureBackbuffer) != 0);
         presentResult = g_origPresent(s, a, b, c, d);
+        wristdepth::state.NewFrame(s);
     }
     static double realPresentSum=0, realPresentMax=0;
     static unsigned realPresentSamples=0;
@@ -37250,6 +37856,25 @@ void LoadIniSettings() {
         Rd(g_vrMenuLaser),laserOpacity,laserWidth,Rd(g_vrShadows),Rd(g_vrTranslationStabilization));
     Log("shadow sampling: ShadowMode=%ld (0=full split 1=mono sample 2=drop sample 3=protect light-space; hub ADVANCED page)",Rd(g_shadowMode));
     g_wristHealth = GetPrivateProfileIntA("Render", "WristHealth", 1, path) ? 1 : 0;
+    InterlockedExchange(&g_equipmentHud,GetPrivateProfileIntA("Render","EquipmentWristHud",0,path)?1:0);
+    InterlockedExchange(&g_equipmentHudTrace,GetPrivateProfileIntA("Diagnostic","EquipmentWristTrace",0,path)?1:0);
+    InterlockedExchange(&g_equipmentHudPreviewNoDepth,GetPrivateProfileIntA("Render","EquipmentWristPreviewNoDepth",0,path)?1:0);
+    InterlockedExchange(&g_equipmentHudEnergy,GetPrivateProfileIntA("Render","EquipmentWristEnergy",0,path)?1:0);
+    InterlockedExchange(&g_equipmentHudTech,GetPrivateProfileIntA("Render","EquipmentWristTech",0,path)?1:0);
+    InterlockedExchange(&g_equipmentHudSupplies,GetPrivateProfileIntA("Render","EquipmentWristSupplies",0,path)?1:0);
+    InterlockedExchange(&g_equipmentHudSuppress,GetPrivateProfileIntA("Render","EquipmentWristSuppressHealth",0,path)?1:0);
+    InterlockedExchange(&g_equipmentHudPolish,GetPrivateProfileIntA("Render","EquipmentWristPolish",0,path)?1:0);
+    InterlockedExchange(&g_equipmentHudNormalSign,GetPrivateProfileIntA("Render","EquipmentWristNormalSign",1,path)<0?-1:1);
+    InterlockedExchange(&g_equipmentHudScalePct,std::clamp((LONG)GetPrivateProfileIntA("Render","EquipmentWristScalePct",100,path),60L,150L));
+    InterlockedExchange(&g_equipmentHudOcclusion,GetPrivateProfileIntA("Render","EquipmentWristOcclusion",0,path)?1:0);
+    wristdepth::state.enabled=Rd(g_equipmentHud)&&Rd(g_equipmentHudOcclusion);
+    InterlockedExchange(&g_equipmentHudTextQuarterTurn,GetPrivateProfileIntA("Render","EquipmentWristTextQuarterTurn",1,path)?1:0);
+    InterlockedExchange(&g_equipmentHudOffsetMm[0],std::clamp((LONG)GetPrivateProfileIntA("Render","EquipmentWristOffsetXmm",-25,path),-80L,80L));
+    InterlockedExchange(&g_equipmentHudOffsetMm[1],std::clamp((LONG)GetPrivateProfileIntA("Render","EquipmentWristOffsetYmm",-80,path),-80L,80L));
+    InterlockedExchange(&g_equipmentHudOffsetMm[2],std::clamp((LONG)GetPrivateProfileIntA("Render","EquipmentWristOffsetZmm",0,path),-80L,80L));
+    InterlockedExchange(&g_equipmentHudAngleDeg[0],std::clamp((LONG)GetPrivateProfileIntA("Render","EquipmentWristYawDeg",0,path),-90L,90L));
+    InterlockedExchange(&g_equipmentHudAngleDeg[1],std::clamp((LONG)GetPrivateProfileIntA("Render","EquipmentWristPitchDeg",0,path),-90L,90L));
+    InterlockedExchange(&g_equipmentHudAngleDeg[2],std::clamp((LONG)GetPrivateProfileIntA("Render","EquipmentWristRollDeg",0,path),-90L,90L));
     InterlockedExchange(&g_healthPlate,
         GetPrivateProfileIntA("Render", "HealthPlateEnabled", 0, path) ? 1 : 0);
     {
@@ -38051,6 +38676,9 @@ HRESULT STDMETHODCALLTYPE Hook_CreateDevice(IDirect3D9* self, UINT ad, D3DDEVTYP
         // SetRenderTarget at 37 and DrawPrimitive at 81 - these two sit between them and need no
         // separate verification. Both only RECORD; see the note on DpgRecord.
         g_origClear       = (PFN_Clear)PatchVTable(*out, 43, (void*)&Hook_Clear);
+        // SDK IDirect3DDevice9 slot 39; only the selected scene DS is redirected.
+        wristdepth::state.native=(wristdepth::SetDepth)PatchVTable(*out,39,(void*)&Hook_WristDepthBind);
+        g_origWristCreateDepth=(PFN_WristCreateDepth)PatchVTable(*out,29,(void*)&Hook_WristCreateDepth);
         g_origSetViewport = (PFN_SetViewport)PatchVTable(*out, 47, (void*)&Hook_SetViewport);
         // 83/84 = the user-pointer draw forms, VERIFIED against d3d9.h rather than from memory:
         // enumerating IDirect3DDevice9's declarations and anchoring on the slots already known to

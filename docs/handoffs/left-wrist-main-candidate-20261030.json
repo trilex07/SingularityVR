@@ -1,0 +1,22 @@
+{
+  "sourceCommit": "278cdfd12f14f37a31765bae5fe29fbbae9f0996",
+  "branch": "integration/left-wrist-hud-retained-hd",
+  "dllSha256": "71F7254B871EE8C079196A6D02AAC3DB26A9D8517BDE6F255D780F4F4B42AEB2",
+  "iniSha256": "FB58219E802795F081965CABF193C3074E08471E9A3353207AAB020D1A916CE9",
+  "build": "x86 PE32 /O2; clean source",
+  "backup": "deployment/install-backups/20261030-084736",
+  "deploymentReport": "deployment/install-reports/20261030-084737.json",
+  "preview": true,
+  "legacyHealthSuppression": false,
+  "trace": "EquipmentWristTrace=1; one frame after visible both-eye wrist preview",
+  "protectedFilesUnchanged": 45,
+  "iniDeltaKeys": 8,
+  "offline": "PASS HUD policy/pose, D3D9 and D3D9Ex trace/state/Reset, mounted ammo HUD pixels, hands/haptics/TMD/OLED/WeaponLocker, HD Kasimov/Centurion",
+  "steamDeployment": "PASS exact hashes and backup preimages; retained without timer",
+  "gameplay": "NOT RUN",
+  "physicalAcceptance": "PENDING",
+  "productionOcclusion": "PENDING actual focused stereo depth/pose trace; fail closed",
+  "liveData": "natural observers implemented; real health/energy/max/E99/item validation PENDING",
+  "performance": "UNMEASURED; diagnostic frame excluded",
+  "existingCandidate": "Retained HD follow-up + PR70 + scoped PR71 preserved"
+}

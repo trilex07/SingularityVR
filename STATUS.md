@@ -1,3 +1,31 @@
+## 2026-10-30 — Wrist/Centurion physical failure follow-up
+
+- Physical `3FE6FE8E`: wrist HUD BROKEN (invisible), carried Centurion cylinder flickers, Centurion firing crashes in XAudio2_5.dll +4DE73. Reload/native ammunition acknowledgement works. Save ownership is not a proven cause.
+- Proven malformed Centurion Vorbis header repaired without changing audio samples; native decoder -133 -> 0, independent package roundtrip and identical PCM PASS. Crash resolution remains PENDING.
+- Corrected screen-mask double perspective interpolation; retained-resource cylinder index validation replaces the exhausted pointer-change budget. D3D9/D3D9Ex pixel/cache tests PASS; physical fixes not yet established.
+- One bounded asynchronous GPU visibility receipt distinguishes the remaining wrist depth/projection hypotheses. No guessed pose changes, health suppression or saves changed.
+- Evidence and grouped acceptance: `docs/handoffs/wrist-centurion-followup-20261030.md`. No gameplay launch or physical PASS this turn.
+- Clean source `ab5a83e1`, x86 `/O2` DLL `A2D9042A…` and repaired Centurion bank `502AAEC0…` installed with verified backups. INI `2793671F…` and 45 other assets unchanged; candidate retained, no timer/launch. Exact build/test/install identity: `docs/handoffs/wrist-centurion-followup-candidate-20261030.json`. Physical acceptance remains PENDING.
+
+## 2026-10-30 — MAIN wrist orientation / retained world + foreground depth candidate
+
+- Physical preview: visible; text orientation and glove/magazine overlap FAILED. Session log archived with exact SHA.
+- Implemented opt-in exact-scene depth-attachment split, two native projection families, same-frame wrist gate, opaque backing and quarter-turn text. No controller/grip/reload changes.
+- D3D9/D3D9Ex occlusion pixel fixtures and HUD/gameplay/OLED/WeaponLocker regressions PASS. This does not establish headset occlusion or performance.
+- Source SVNC/SVTG measurement yields candidate panel-only normal offset -62 mm; no hand pose offsets are changed.
+- Legacy health suppression remains OFF. Optional live E99/supplies/energy and final depth-aware physical acceptance remain PENDING.
+- Installed controlled candidate `3FE6FE8E…`, source `c5c3b11c`; verified backup `20261030-102916` and 45 protected files unchanged. No launch, timer, promotion or merge.
+- Details: `docs/handoffs/left-wrist-occlusion-20261030.md`; exact identities: `docs/handoffs/left-wrist-occlusion-candidate-20261030.json`.
+
+## 2026-10-30 — MAIN PR73 wrist HUD integration on retained HD + PR71
+
+- Branch `integration/left-wrist-hud-retained-hd`, pinned SIDE `ce163a15`; existing PR70, HD follow-up and MenuDrawTrace default OFF preserved.
+- Fixed unreachable stereo preview, missing moved=3 assembly ride and both-eye publication gate; no reload/grip/input changes.
+- Added bounded one-frame read-only depth/pose trace and bounded live-value/natural maximum receipts. No depth copies or speculative production occlusion.
+- Preview keeps the legacy health display. Production depth/live-data/PSVR2/performance remain PENDING until the specific focused stereo trace and final overlap check.
+- Installed preview DLL `71F7254B871EE8C079196A6D02AAC3DB26A9D8517BDE6F255D780F4F4B42AEB2`; exact backup preimages verified; 45 protected files unchanged. No gameplay launch or physical PASS.
+- Details and consolidated physical dependency: `docs/handoffs/left-wrist-main-integration-20261030.md`. Exact candidate/install identity follows in its JSON receipt; older blocks below are historical.
+
 ## 2026-10-30 — PR71 scoped CPU optimization in retained HD candidate
 
 - Latest installed DLL: `0AAEAFAC7B230C80F922BD2EC533FDF711258524BD2BF35CAC4013F11E56DE0C`; source `e7e7b5f1267c3c1aefa3fcc124a39a6009d238e0`. Exact backup/verification in `docs/handoffs/hd-physical-followup-pr71-candidate-20261030.json`; supersedes 63CCFF6A, keeps all 16 assets and INI unchanged.
