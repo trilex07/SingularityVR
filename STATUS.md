@@ -1,3 +1,13 @@
+## 2026-11-09 — Shotgun installer published; offline GOG/disc prerequisites
+
+- Follow-up: GOG has5 languages /2 configured EXEs. Spanish, French and Italian share byte-identical English EXE; Spanish has168 LOC_ESN packages plus1 size sidecar and its copyright movie. Language audit PASS.
+- German native input/menu/mouse/TMD profiles implemented from12 unique code-block matches and24 references to7 globals; real EN/DE contract/mutation fixtures and x86 /O2 build PASS. DE runtime remains disabled pending locker/inventory/scale/RTTI consumers. Context/gamepad checks PASS; historical menu-profile script FAIL (expects72, unchanged INI100). See docs/handoffs/gog-languages-input-20261109.md.
+
+- Shotgun bank repair shipped in unchanged installer-1.1.0 URL, signed catalog1.1.6. Producer/core tests and isolated install/repair/restore PASS; remote digests verified. Player crash clearance remains UNKNOWN.
+- GOG EN core-map and 9 native signature prerequisites L1_PASS; all7 audio source pins and actual installer recipe reconstructions PASS. Guarded core selector x86 PE32 /O2 build L2_PASS; candidate not deployed/published.
+- GOG DE core map measured but runtime-disabled until remaining native consumers are mapped. Protected retail disk fixture refuses; official patched retail EXE not recovered. Full edition runtime/physical support UNKNOWN, NOT RUN.
+- Evidence and boundaries: docs/handoffs/gog-disc-offline-followup-20261109.md.
+
 ## 2026-11-03 — Cinema bootstrap/caption correction, physical PENDING
 
 - One-shot 59171C58 capture succeeded. User sees captions only in RIGHT eye. Mono anchor bypassed stereo fitting; native-camera upload return bypassed the established caption witness.

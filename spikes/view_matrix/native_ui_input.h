@@ -169,7 +169,7 @@ static bool UpdateMenu() {
  LockerVrLoadout::TryInstallEarly();
  if (LockerRetainOrdinary::Enabled()) LockerRetainOrdinary::TryInstall();
  // Exact native GetFocusMovie body at 0x00D7C2C0; read only, no native call needed.
- const uintptr_t engine=ReadPointer(0x01CF8778u);
+ const uintptr_t engine=ReadPointer(gamebuild::Input().engine);
  const uintptr_t record=ReadPointer(engine ? engine+0x148u:0);
  const uintptr_t movie=ReadPointer(record ? record+0x50u:0);
  if(movie!=cachedMovie) {
@@ -303,9 +303,10 @@ static int __fastcall GetX(void* self,void*){int x,y;return Coordinates(self,x,y
 static int __fastcall GetY(void* self,void*){int x,y;return Coordinates(self,x,y)?y:originalY(self);}
 static void __fastcall GetPos(void* self,void*,POINT* out){int x,y;if(out&&Coordinates(self,x,y)){out->x=x;out->y=y;}else originalPos(self,out);}
 static bool BindViewport() {
- if(!Readable((void*)0x01D1FCC4u,8))return false;
- const uintptr_t data=ReadPointer(0x01D1FCC4u);
- const int count=*reinterpret_cast<int*>(0x01D1FCC8u);
+ const auto& layout=gamebuild::Input();
+ if(!Readable((void*)layout.viewports,8))return false;
+ const uintptr_t data=ReadPointer(layout.viewports);
+ const int count=*reinterpret_cast<int*>(layout.viewports+4);
  if(count<1||count>8||!data||!Readable((void*)data,4))return false;
  const uintptr_t platform=ReadPointer(data);
  if(!platform||!Readable((void*)platform,0x70))return false;
@@ -314,10 +315,10 @@ static bool BindViewport() {
  void** vt=*reinterpret_cast<void***>(selected);
  if(!Readable(vt,19*4))return false;
  // Fail closed for an unknown executable/viewport class. Do not patch unrelated interfaces.
- if(vt[15]!=(void*)0x011CFC10u && vt[15]!=(void*)&GetX)return false;
+ if(vt[15]!=(void*)layout.cursor[0] && vt[15]!=(void*)&GetX)return false;
  if(!originalX) {
   originalX=(CursorFn)vt[15];originalY=(CursorFn)vt[16];originalPos=(CursorPosFn)vt[17];
-  if(vt[16]!=(void*)0x011CFC40u||vt[17]!=(void*)0x011CFC70u)return false;
+  if(vt[16]!=(void*)layout.cursor[1]||vt[17]!=(void*)layout.cursor[2])return false;
   if(!PatchVTable(selected,15,(void*)&GetX)||!PatchVTable(selected,16,(void*)&GetY)||!PatchVTable(selected,17,(void*)&GetPos)) {
    PatchVTable(selected,15,(void*)originalX);PatchVTable(selected,16,(void*)originalY);PatchVTable(selected,17,(void*)originalPos);
    originalX=originalY=nullptr;originalPos=nullptr;return false;
@@ -333,7 +334,8 @@ static void Drain(float dt) {
  const uintptr_t client=ReadPointer((uintptr_t)viewport+0x1Cu); // platform+0x20
  if(!client||!Readable((void*)client,4))return;
  void** vt=*reinterpret_cast<void***>(client);
- if(!Readable(vt,15*4)||!Readable((void*)0x01CF566Cu,0x30))return;
+ const auto& layout=gamebuild::Input();
+ if(!Readable(vt,15*4)||!Readable((void*)layout.mouseX,0x30))return;
  const bool menu=InterlockedCompareExchange(&g_vrUiMenu,0,0)!=0;
  if(InterlockedCompareExchange(&g_panelOpen,0,0)) {
   // The VR settings panel is owned by the mod-rendered hit-test path. Do not
@@ -342,8 +344,8 @@ static void Drain(float dt) {
   return;
  }
  int x,y;const bool valid=menu&&Coordinates(viewport,x,y);
- const Name mouseX=*reinterpret_cast<Name*>(0x01CF566Cu),mouseY=*reinterpret_cast<Name*>(0x01CF5674u);
- const Name left=*reinterpret_cast<Name*>(0x01CF568Cu);
+ const Name mouseX=*reinterpret_cast<Name*>(layout.mouseX),mouseY=*reinterpret_cast<Name*>(layout.mouseY);
+ const Name left=*reinterpret_cast<Name*>(layout.leftButton);
  // Original platform code uses these same InputAxis/InputKey interfaces, controller0/gamepad0.
  if(valid) {
   ((MoveFn)vt[14])((void*)client,viewport,x,y); // verified WM_MOUSEMOVE dispatch vtable+0x38
@@ -411,7 +413,7 @@ static void __fastcall Poll(void* self,void*,float dt) {
   originalPoll(self,dt); // original guarded missing-mouse path preserves keyboard/XInput/OpenXR
  }
  Drain(dt); // engine UI calls stay on the game's original input thread
- const auto engine=ReadPointer(0x01CF8778u);
+ const auto engine=ReadPointer(gamebuild::Input().engine);
  const auto focusedRecord=engine?ReadPointer(engine+0x148u):0;
  LONG consumedU=0,consumedV=0;
  NativeContextCursor::Update(focusedRecord?ReadPointer(focusedRecord+0x50u):0,
@@ -421,8 +423,9 @@ static void __fastcall Poll(void* self,void*,float dt) {
 static void Install() {
  if(InterlockedCompareExchange(&installs,1,0)!=0)return;
  if((uintptr_t)GetModuleHandleW(nullptr)!=0x00400000u){Log("VR UI native input hook rejected: unsupported image base");return;}
- const uintptr_t p=0x011D31C0u;
- const unsigned char prologue[]={0x55,0x8b,0xec,0x6a,0xff,0x68,0x8a,0x76,0x70,0x01};
+ const uintptr_t p=gamebuild::Input().poll;
+ unsigned char prologue[]={0x55,0x8b,0xec,0x6a,0xff,0x68,0,0,0,0};
+ const uint32_t handler=(uint32_t)gamebuild::Input().pollHandler;memcpy(prologue+6,&handler,4);
  if(!Readable((void*)p,sizeof(prologue))||memcmp((void*)p,prologue,sizeof(prologue))){Log("VR UI native input hook rejected: exact prologue");return;}
  const MH_STATUS a=MH_CreateHook((void*)p,(void*)&Poll,(void**)&originalPoll);
  const MH_STATUS b=a==MH_OK?MH_EnableHook((void*)p):a;

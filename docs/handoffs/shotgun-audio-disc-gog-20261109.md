@@ -1,5 +1,9 @@
 # Shotgun player crash: confirmed bank defect; disc/GOG compatibility audit
 
+Follow-up: [published installer and completed GOG extraction/audit](gog-disc-offline-followup-20261109.md).
+The installer-pending and GOG-not-extracted statements below describe the initial
+investigation; the follow-up supersedes them. Player crash acceptance is still open.
+
 Player reports crash after receiving shotgun, no supplied log/dump. Screenshot
 shows D:\SteamLibrary\steamapps\common\Singularity\Binaries, including a 4,111 KB
 d3d9.dll, texture_override.log, native codec DLLs. Directory alone establishes

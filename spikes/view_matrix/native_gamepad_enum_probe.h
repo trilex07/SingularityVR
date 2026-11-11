@@ -1,4 +1,5 @@
 #pragma once
+#include "game_build_input.h"
 #include "input_enum_throttle.h"
 #include "input_enum_cache.h"
 #include <cfgmgr32.h>
@@ -17,7 +18,7 @@ static InputEnumerationCache cache;
 static HCMNOTIFICATION notification=nullptr;
 static bool busy=false,recording=false;
 static DWORD ReadIdentity(){
- const void* address=(void*)0x01D1FC7Cu;
+ const void* address=(void*)gamebuild::Input().padIdentity;
  return Readable((void*)address,sizeof(DWORD))?*(const DWORD*)address:0;
 }
 static DWORD (*interfaceIdentity)()=&ReadIdentity;
@@ -80,20 +81,23 @@ static DWORD __cdecl Observe() {
 static void Install() {
  static bool tried=false;if(tried)return;tried=true;
  if((uintptr_t)GetModuleHandleW(nullptr)!=0x00400000u)return;
- const uintptr_t address=0x011D2FC0u;
- const unsigned char signature[]={0xa1,0x7c,0xfc,0xd1,0x01,0x85,0xc0,0x74,0x13,
+ const auto& layout=gamebuild::Input();
+ const uintptr_t address=layout.padEnum;
+ unsigned char signature[]={0xa1,0x7c,0xfc,0xd1,0x01,0x85,0xc0,0x74,0x13,
   0x8b,0x08,0x8b,0x51,0x10,0x6a,0x01,0x6a,0x00,0x68,0x80,0x21,0x1d,0x01,
   0x6a,0x04,0x50,0xff,0xd2,0xc3};
+ const uint32_t identity=(uint32_t)layout.padIdentity,callback=(uint32_t)layout.padCallback;
+ memcpy(signature+1,&identity,4);memcpy(signature+19,&callback,4);
  if(!Readable((void*)address,sizeof(signature))||memcmp((void*)address,signature,sizeof(signature))) {
   Log("native gamepad enumeration probe: exact loaded-code signature rejected");return;
  }
  // Full callback fingerprint from the same owned live-text snapshot; COFF listing
  // addresses are offsets into .text, not VAs (base 00402000).
- const uintptr_t callbackAddress=0x011D2180u;
+ const uintptr_t callbackAddress=layout.padCallback;
  if(!Readable((void*)callbackAddress,0x313u))return;
  unsigned fingerprint=2166136261u;
  for(unsigned i=0;i<0x313u;++i)fingerprint=(fingerprint^((const unsigned char*)callbackAddress)[i])*16777619u;
- if(fingerprint!=0x8735998Eu){Log("input enum cache: callback signature rejected");return;}
+ if(fingerprint!=layout.callbackHash){Log("input enum cache: callback signature rejected");return;}
  HMODULE cm=GetModuleHandleW(L"cfgmgr32.dll");if(!cm)cm=LoadLibraryW(L"cfgmgr32.dll");
  using Register=CONFIGRET(WINAPI*)(PCM_NOTIFY_FILTER,PVOID,PCM_NOTIFY_CALLBACK,PHCMNOTIFICATION);
  using Unregister=CONFIGRET(WINAPI*)(HCMNOTIFICATION);
