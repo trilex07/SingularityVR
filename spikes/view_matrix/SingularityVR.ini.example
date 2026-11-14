@@ -1116,6 +1116,8 @@ SwapSticks=0
 RecenterChord=1
 
 [Diagnostic]
+; Read-only gesture witness: left Grip behind right shoulder. Does not cast.
+DeadlockGestureProbe=0
 ; These are test-only switches. Normal Steam/PSVR2 use must leave them off.
 ForceDesktopVr=0
 DesktopCapture=0

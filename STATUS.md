@@ -1,3 +1,12 @@
+## 2026-11-14 — Deadlock cross-shoulder input
+
+- Gesture policy L1_PASS: a fresh left Grip at the right shoulder followed by
+  forward motion on release. Invalid tracking, a held/busy grip and stationary
+  release cannot produce an intent. See MODLOG.md.
+- Native cast BLOCKED: need an observed original, unlocked use to prove the
+  input/charge/release contract. `[Diagnostic] DeadlockGestureProbe=1` logs only;
+  it does not reserve Grip, play haptics or call the power. Steam untouched.
+
 ## 2026-11-03 — Cinema bootstrap/caption correction, physical PENDING
 
 - One-shot 59171C58 capture succeeded. User sees captions only in RIGHT eye. Mono anchor bypassed stereo fitting; native-camera upload return bypassed the established caption witness.

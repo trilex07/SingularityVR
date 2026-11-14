@@ -1,119 +1,13 @@
-# Reverse-engineering journal
+# Deadlock cross-shoulder gesture
 
-2026-10-21 physical CD571D46: event bridge had zero invocations; existing cinema
-ON/OFF nevertheless occurred. User distinguishes visible cinematic hands from
-free tracked hands during subsequent escape. EPlayerHandsStatus has no bound
-entry (only Nothing/TMD/Weapon/MAX). No blanket post-cinema restraint policy.
-Old two-Outer log reported TheWorld, not the actual package. Read-only witness
-now follows a cycle-checked16-ancestor chain to Package and named native hand
-component/mesh/animation-root identities, behind existing default-OFF probe.
-Exact audio receipts for lookup speaker_guess=kathryn:95 replaced,167 retained,
-1 uncovered (263 total); staged WAV/native_replaced tags are not delivery proof.
-RT1_2008/2005 require unsafe2.29/2.20 tempo; do not crop or silently speed them.
-Seven hand/source guards and four coverage tests PASS; live fix remains OPEN.
-2026-10-21 NIS: inherited cropEyes now means menuFlat, excluding real gameplay.
-Changed classification to captured simultaneous SBS and per-eye submission.
-Fixed shader/config/group-size mismatch and full-SBS filter seam support by
-isolating eye SRVs. Same-res sharpening + strength in both VR settings layouts.
-Synthetic WARP readback proves RGB/seam/bounds and strength-dependent pixels;
-not a game/PSVR2 result. Details: docs/nis-sharpen-repair.md.
-2026-10-21 native TMD: primary +440 GetAimVectors has two out FVectors/ret8,
-119-byte complete body19B6BABB20248999; owner getter7/940DBEC1332B5EEE reads+98.
-Secondary aging interface at+1E0 slot+C has59/73C3C6D548B0AF74, copies its cached
-source and nests primary+440 for direction. Replaced shared-aim proposal with
-default-OFF local getter outputs tied to actual BuildTmdC. Details/falsifiers:
-docs/tmd-native-aim.md. Native ABI proof is offline; no Steam/physical claim.
- 
+Base: installed renderer source `ee6947ab`. The original Deadlock is TMD
+power index 3. Existing reflection identifies the power and held prop; it
+does not establish the accepted native input sequence or launch lifecycle.
+The historical decoded executable archive is absent and the retail .text
+does not match the already audited constructor.
 
-2026-10-21: RvGame.u export11870 SetPlayerCinematicMode is a49-byte script
-delegate to SetCinematicMode with six bool parameters, not a native wrapper.
-OnToggleCinematicModeNative consumes one object; never read it as a bool.
-New default-OFF outer-event bridge uses exact local-owner and reflected six-word
-ABI gates; no engine writes. CPU40/source5 PASS; scene invocation/pixels pending.
-XTTS native26-bank delivery staged with independent package decoder receipts;
-session asset atomic replacement passes isolated fake-install tests. No Steam
-mutation; audio or bound-hand physical acceptance must not be inferred.
-2026-10-16 native continuation: offline registration identifier -> initializer ->
-exec wrapper -> class constructor/vtable -> native AttemptReload method proved.
-Wrapper is no-param thiscall, whole EAX bool, derived slot0x4C4 in archived image.
-Original Active.BeginFire calls AttemptReload on the empty-fire branch and has
-WaitingForTriggerRelease refusal fallback. New OFF/observe/guard experiment
-requires live reflection + wrapper/method-shape validation, player identity and
-short-lived context, and grants one close-token before forwarding native call.
-No native ammo writes, ProcessInternal misuse or Steam access. Reproducer and
-falsifiers: docs/centurion-native-reload.md. Runtime/animation acceptance OPEN.
-
-2026-10-16: Centurion `ch_inview_alt_pistol_mesh.psk`: measured 5799 wedges,
-79 bones; rigid `clip` subtree yields 1067 UV vertices / 1252 triangles and
-zero crossing triangles. Read-only native reload observation added; no direct
-Reload ABI inferred from exported names. Evidence, hashes, falsifiers and
-remaining gates: [Centurion reload](docs/centurion-manual-reload.md).
-
-Continuation: inspected all three orthographic views of the private clip cache:
-six-chamber cylinder. Validated RvGame exports name the pistol-cylinder component
-and shared weapon Reload state/functions. Added read-only per-weapon UFunction
-binding identity, shared-interpreter discriminator and ammo-change records;
-no direct native ABI/call or inventory write inferred. Synchronized current
-MAIN db4a261 into this own branch, preserving both sides of documentation conflicts.
-
-Continuation: original Alt_pistol Reload PSA is 53 frames /24 Hz; clip local
-motion returns to bind-relative start. Track 54 differs from PSK bone 57;
-name-map through original parent cog_alt_pistol, never PSA placeholder parents.
-Original mesh resolves material AR_Pistol and d/n/s/rim textures; offline parent
-shader imports remain missing, so no claim of complete native material parity.
-Validated Reload notification array has AnimNotify_RefillClip at 1.47052908 s;
-RvGame names its owner RvSharedPawn. Added player-pawn-only read-only observation,
-not a direct call or inventory write. Bounded PSA/tag readers + synthetic tests
-and exact asset roundtrip; private original assets/reports remain ignored.
-HUD freshness/identity/capacity guards and physical-left ownership strengthened;
-360000 deterministic lifecycle frames pass, without Steam or headset claims.
-
-PR37 base advanced during continuation. Merged its committed f0b96ad only into
-own branch; resolved one input conflict preserving both left-grip arbitration
-and MAIN's new knife impulse attack window. No accepted-source rollback:
-canonical INI, knife, cinema and muzzle policy files match new base exactly.
-Clean 9c164eb /O2 x86 PE32 rebuilt and candidate hash verified; receipt in doc.
-
-Continuation: independent OFF CenturionClipPreview renders measured original
-cylinder/albedo while Carrying only. No native cylinder removal, animation or
-inventory writes. Original UV/albedo CPU preview inspected and exact cache
-pair loaded; BGRA/alpha preserved. Existing knife renderer reused with explicit
-albedo API, legacy default unchanged; SYSTEMMEM->DEFAULT upload/private depth,
-Reset and nested state restoration. Authored controller mount is NOT UE3 socket
-proof. 100 ms pawn/weapon snapshot gate and 50653 quaternion test cases added.
-
-# Native cuff correction — SIDE, 2026-10-16
-
-Branch fix/native-glove-cuffs from origin/main 644be25. No Steam operations.
-Route: existing native hand draw; original wedge/skin/material retained, only
-full finger-connected cuff indices and cap triangles substituted. Evidence,
-rejected unconstrained triangulation, source hashes and test route are in
-docs/native-glove-cuffs.md. Private geometry/report/preview:
-build/gloves/cuff-repair; extracted assets/cache never committed.
-
-# MAIN rifle carry/shot follow-up — 2026-10-19
-
-Valkyrie native refill now physically works, but user reports wrong shot origin,
-missing rifle VFX, magazine inside glove. Code proves AIM+6cm mount had no palm
-witness and SingleLineCheck moved Start without End. Original PSKs independently
-name muzzle_flash; three wrist fits have zero intersecting triangles (sampled
-containment also checked). Default-OFF native wrist replay/whole-ray translation
-implemented, with draw/restore-qualified identity/age guards. Native rifle FX
-pair is still UNKNOWN; original looping emitter differs from pistol capture.
-No speculative shader expansion or Steam write. Evidence and falsifiers:
-docs/weapon-carry-ray-followup.md; private original assets stay local.
-# 2026-10-19 — wheel/Volk/NPC follow-up (physical pending)
-
-Added opt-in observed native wheel cycling (no proposed-order pulse guessing),
-XR Y conversion, and original authored shotgun grip preservation. Prepared an
-offline NPC-name-only font-height patch with exact-field identity and native
-decoder roundtrip. No Steam deployment or accepted-build promotion. Details:
-docs/wheel-shotgun-npc-followup.md.
-
-# 2026-10-21 — Kathryn native audio delivery / scene witness
-
-Physical captive-scene failure recorded, not promoted. Found overlay/native-bank
-delivery mismatch;26 offline bank candidates independently decoded, unsafe takes
-retain accepted audio. Added default-OFF bounded scene/wrapper witness, not an
-unproven cinema classifier. Accepted installation rehashed restored. Details and
-falsifier: docs/kathryn-captive-followup.md. No new Steam launch/deployment.
+Hypothesis: a new left-grip edge behind the right shoulder followed by
+forward motion on release can be distinguished from reload/support.
+Falsifier: the witness arms on a held/busy grip, or reports a throw after
+tracking loss, a stationary release or head-only movement. First experiment:
+default-off pose/gesture witness, no synthetic button or native power call.

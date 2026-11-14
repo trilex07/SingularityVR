@@ -1,11 +1,14 @@
 ﻿#include "two_hand_grip.h"
 #include "tmd_gravity_grip.h"
+#include "deadlock_gesture.h"
 #include "tmd_visual_audit.h"
 static bool g_tmdVisualAudit=false;
 static tmdvisualaudit::Schedule g_tmdVisualSchedule;
 static tmdvisualaudit::Scene g_tmdVisualScene=tmdvisualaudit::Scene::None;
 static bool g_tmdGravityGrip=true;
 static tmdgravity::Grip g_tmdGravityLatch;
+static bool g_deadlockGestureProbe=false;
+static deadlockgesture::Gesture g_deadlockGesture;
 #include "support_grip_probe.h"
 #include "dual_weapon_tmd_policy.h"
 #include "tmd_support_gauntlet.h"
@@ -11203,6 +11206,7 @@ void SyncXRInput(XrTime displayTime) {
         InterlockedExchange(&g_twoHandActive, 0);
         g_supportLatch.Reset();
         g_tmdGravityLatch.power=false; // require release after sync/focus interruption
+        g_deadlockGesture={};
         g_handPositionValid[0] = g_handPositionValid[1] = false;
         InterlockedExchange(&g_padBtns, 0);
         InterlockedExchange(&g_padLStick, PackStick(0, 0));
@@ -11259,15 +11263,16 @@ void SyncXRInput(XrTime displayTime) {
                st.isActive && st.currentState;
     };
 
-    auto getGrip = [&](int hand) -> bool {
+    auto getGrip = [&](int hand, bool* active=nullptr) -> bool {
         if (g_actGrip == XR_NULL_HANDLE || pollOff) return false;
         XrActionStateGetInfo gi{ XR_TYPE_ACTION_STATE_GET_INFO };
         gi.action = g_actGrip;
         gi.subactionPath = g_handSubPath[hand];
         XrActionStateBoolean st{ XR_TYPE_ACTION_STATE_BOOLEAN };
         g_hotPathSampler.count(hotpath::Counter::xr_action_state);
-        return XR_SUCCEEDED(xrGetActionStateBoolean(g_xrSession, &gi, &st)) &&
-               st.isActive && st.currentState;
+        const bool available=XR_SUCCEEDED(xrGetActionStateBoolean(g_xrSession, &gi, &st)) && st.isActive;
+        if(active)*active=available;
+        return available && st.currentState;
     };
 
     float mx, my, tx, ty;
@@ -11555,7 +11560,8 @@ void SyncXRInput(XrTime displayTime) {
     bool panelHeld = false;
     WORD panelMask = 0;
     const bool primaryGrip = getGrip(AimHand());
-    const bool rawSupportGrip = getGrip(OffHand());
+    bool supportGripTracked=false;
+    const bool rawSupportGrip = getGrip(OffHand(),&supportGripTracked);
     bool sampledButtons[kPadButtonCount]{};
     for(int i=0;i<kPadButtonCount;++i)sampledButtons[i]=getBool(g_padButtons[i].action);
     InterlockedExchange(&g_rawImpulsePressed,
@@ -12117,6 +12123,25 @@ void SyncXRInput(XrTime displayTime) {
         g_nextOwnsGrip||g_nextBlockFire||g_centurionOwnsGrip||
         (g_centurionReload&&centurionreload::Active(g_centurionState.phase))||
         hipknife::Reserves(g_hipKnifeState,0);
+    if(g_deadlockGestureProbe){
+        const auto& le=g_eyePose[0].position;
+        const auto& re=g_eyePose[1].position;
+        const auto& left=g_handLastPos[0];
+        hipknife::V head{};
+        const bool headOk=g_haveEyes&&g_eyePositionsValid&&
+            centurionreload::HeadCentre({le.x,le.y,le.z},{re.x,re.y,re.z},head);
+        const bool eligible=gravityEligible&&supportGripTracked&&g_handTracked[0]&&headOk&&
+            !gravityReserved&&!triangleHeld&&!Rd(g_inCinematic);
+        const auto event=g_deadlockGesture.Update({eligible,rawSupportGrip,head,
+            {left.x,left.y,left.z},g_headYawRad,GetTickCount64()});
+        static unsigned receipts=0;
+        if(event!=deadlockgesture::Event::None&&receipts<32){
+            ++receipts;
+            Log("Deadlock gesture probe: %s [left hand, right shoulder; input unchanged]",
+                event==deadlockgesture::Event::Armed?"armed":
+                event==deadlockgesture::Event::ThrowIntent?"throw-intent":"cancelled");
+        }
+    }
     const bool gravityDown=g_tmdGravityLatch.Update(g_tmdGravityGrip,
         gravityHeld,gravityEligible,gravityReserved);
     static bool healthWasDown = false;
@@ -38736,6 +38761,7 @@ void LoadIniSettings() {
     g_trackedDepthSourcePose=GetPrivateProfileIntA("Render","TrackedDepthSourcePose",0,path)!=0;
     g_tmdTrackedMuzzle=GetPrivateProfileIntA("Render","TmdTrackedMuzzle",0,path)!=0;
     g_tmdVisualAudit=GetPrivateProfileIntA("Diagnostic","TmdVisualAudit",0,path)!=0;
+    g_deadlockGestureProbe=GetPrivateProfileIntA("Diagnostic","DeadlockGestureProbe",0,path)!=0;
     g_tmdGravityDecalFix=GetPrivateProfileIntA("Render","TmdGravityDecalFix",0,path)!=0;
     Log("ini: TmdGravityDecalFix=%d (exact PS 2132/9CE7CA1D and captured modulate draw gate, default OFF)",g_tmdGravityDecalFix?1:0);
     g_dropDecalLocalTangent=GetPrivateProfileIntA("Diagnostic","DropDecalLocalTangent",0,path)!=0;
