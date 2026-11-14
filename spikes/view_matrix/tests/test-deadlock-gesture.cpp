@@ -43,4 +43,24 @@ int main() {
     Arm(g,560);
     auto invalid=Sample(590,false);invalid.hand.x=std::numeric_limits<float>::quiet_NaN();
     assert(g.Update(invalid)==Event::Cancelled);
+    assert(g.ArmPulse(591)==0.f);
+
+    // Mirrored: TMD in right hand, left shoulder arms; right shoulder is for ammo.
+    const auto mirror = [](std::uint64_t t, bool grip, V hand={-.22f,-.13f,.12f}) {
+        return Frame{true,grip,{},hand,0,t,true};
+    };
+    Gesture m;
+    assert(m.Update(mirror(1000,false))==Event::None);
+    assert(m.Update(mirror(1010,true,{.22f,-.13f,.12f}))==Event::None);
+    assert(m.ArmPulse(1010)==0.f);
+    assert(m.Update(mirror(1020,true))==Event::None);
+    assert(m.Update(mirror(1030,false))==Event::None);
+    assert(m.Update(mirror(1040,true))==Event::Armed);
+    assert(m.ArmPulse(1039)==0.f);
+    assert(m.ArmPulse(1040)==.22f);
+    assert(m.ArmPulse(1084)==.22f);
+    assert(m.ArmPulse(1085)==0.f);
+    assert(m.Update(mirror(1075,true,{-.16f,-.14f,-.02f}))==Event::None);
+    assert(m.Update(mirror(1080,false,{-.10f,-.14f,-.24f}))==Event::ThrowIntent);
+    assert(m.ArmPulse(1080)==0.f);
 }

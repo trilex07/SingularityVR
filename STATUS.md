@@ -1,5 +1,9 @@
 ## 2026-11-14 — Remaining gameplay controls candidate
 
+- Left-handed mode now draws the wheel against the weapon hand's tracking.
+  Deadlock uses the TMD hand behind the opposite shoulder in either layout.
+  Optional TMD haptics give a brief local grip cue before the native throw.
+
 - Integrated the left-handed candidate with the current tracked-support
   continuity and right-handed Deadlock experiment. Off-hand trigger/grip
   arbitration follows the active role during reload.

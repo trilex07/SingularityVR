@@ -12134,15 +12134,16 @@ void SyncXRInput(XrTime displayTime) {
     if(g_deadlockGestureProbe||g_tmdDeadlockGesture){
         const auto& le=g_eyePose[0].position;
         const auto& re=g_eyePose[1].position;
-        const auto& left=g_handLastPos[0];
+        const int tmdHand=OffHand();
+        const auto& hand=g_handLastPos[tmdHand];
         hipknife::V head{};
         const bool headOk=g_haveEyes&&g_eyePositionsValid&&
             centurionreload::HeadCentre({le.x,le.y,le.z},{re.x,re.y,re.z},head);
-        const bool eligible=AimHand()==1&&gravityEligible&&supportGripTracked&&g_handTracked[0]&&headOk&&
+        const bool eligible=gravityEligible&&supportGripTracked&&g_handTracked[tmdHand]&&headOk&&
             !gravityReserved&&!g_tmdGravityLatch.power&&!triangleHeld&&!Rd(g_inCinematic);
         const auto now=GetTickCount64();
         const auto event=g_deadlockGesture.Update({eligible,rawSupportGrip,head,
-            {left.x,left.y,left.z},g_headYawRad,now});
+            {hand.x,hand.y,hand.z},g_headYawRad,now,g_leftHanded!=0});
         if(g_tmdDeadlockGesture){
             deadlockReserved=g_deadlockGesture.Active();
             NativeDeadlock::Publish(eligible,g_playerPawn,now,event==deadlockgesture::Event::ThrowIntent);
@@ -12150,9 +12151,10 @@ void SyncXRInput(XrTime displayTime) {
         static unsigned receipts=0;
         if(g_deadlockGestureProbe&&event!=deadlockgesture::Event::None&&receipts<32){
             ++receipts;
-            Log("Deadlock gesture probe: %s [left hand, right shoulder]",
+            Log("Deadlock gesture probe: %s [%s]",
                 event==deadlockgesture::Event::Armed?"armed":
-                event==deadlockgesture::Event::ThrowIntent?"throw-intent":"cancelled");
+                event==deadlockgesture::Event::ThrowIntent?"throw-intent":"cancelled",
+                tmdHand==0?"left hand, right shoulder":"right hand, left shoulder");
         }
     }
     const bool gravityDown=g_tmdGravityLatch.Update(g_tmdGravityGrip,
@@ -12948,6 +12950,10 @@ void SyncXRInput(XrTime displayTime) {
                     !Rd(g_inCinematic) && !uiMenu && !Rd(g_panelOpen) &&
                     g_xrSessionState == XR_SESSION_STATE_FOCUSED;
                 overlay = NativeTmdHaptics::Overlay(tmdGates);
+                if (tmdGates && g_tmdDeadlockGesture && Rd(g_tmdPulses)) {
+                    const float arm = g_deadlockGesture.ArmPulse(GetTickCount64());
+                    if (arm > overlay) overlay = arm;
+                }
             }
             const LONG lvl = Rd(g_hapticLevel) < 0 ? 0 : (Rd(g_hapticLevel) > 2 ? 2 : Rd(g_hapticLevel));
             if (hand == AimHand() && (Rd(g_weaponShotHaptics) ||
@@ -32445,7 +32451,7 @@ static int DrawUiRemasterWheelPair(IDirect3DDevice9* dev,const wheel_layout::Met
 }
 void DrawWeaponWheel(IDirect3DDevice9* dev) {
     if (!dev || !VrModeOn() || !Rd(g_dupDraws) || !Rd(g_weaponWheelOpen) ||
-        !g_handPositionValid[1] || !g_haveEyes || !g_origSetRenderTarget) return;
+        !g_handPositionValid[AimHand()] || !g_haveEyes || !g_origSetRenderTarget) return;
     if (Rd(g_katorgaHud) && InterlockedCompareExchange(&g_hudAtlasState, 0, 0) == 0)
         MaybeLoadHudAtlas(dev);
     IDirect3DSurface9* back = nullptr;

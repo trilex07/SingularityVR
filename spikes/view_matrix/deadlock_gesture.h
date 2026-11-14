@@ -10,6 +10,7 @@ struct Frame {
     V head{}, hand{};
     float yaw = 0;
     std::uint64_t ms = 0;
+    bool leftHanded = false;
 };
 
 class Gesture {
@@ -25,6 +26,11 @@ class Gesture {
 
 public:
     bool Active() const { return armed; }
+
+    // Local grip acknowledgement, separate from any native power response.
+    float ArmPulse(std::uint64_t now) const {
+        return armed && now >= started && now - started < 45 ? .22f : 0.f;
+    }
 
     Event Update(const Frame& f) {
         if (!f.eligible || !hipknife::Finite(f.head) || !hipknife::Finite(f.hand)
@@ -60,7 +66,7 @@ public:
         // Tracking space is +X right and +Z behind. Lock launch direction at
         // acquisition so rotating the head alone cannot generate a throw.
         const hipknife::Q yaw{0, std::sin(f.yaw * .5f), 0, std::cos(f.yaw * .5f)};
-        const V shoulder = f.head + hipknife::Rotate(yaw, {.22f, -.13f, .12f});
+        const V shoulder = f.head + hipknife::Rotate(yaw, {f.leftHanded ? -.22f : .22f, -.13f, .12f});
         if (hipknife::Length(f.hand - shoulder) > .14f) return Event::None;
         forward = hipknife::Rotate(yaw, {0, 0, -1});
         start = previous = anchor = f.hand;

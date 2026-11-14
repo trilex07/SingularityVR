@@ -115,7 +115,7 @@ static void Tick(){
     const auto now=GetTickCount64();
     const bool game=VrModeOn()&&InGameplay()&&!Rd(g_gamePaused)&&!Rd(g_vrMenuClass)&&
         !Rd(g_vrUiMenu)&&!Rd(g_panelOpen)&&!Rd(g_weaponWheelOpen)&&!Rd(g_inCinematic)&&
-        !CutsceneNativeCameraArmed()&&!g_leftHanded;
+        !CutsceneNativeCameraArmed();
     if(!pending.power&&(!game||!Fresh(sample.request,now)||!Fresh(sample.sample,now)))return;
     Owner o{};
     if(!Resolve(pending.power?pending.pawn:sample.pawn,o)||
