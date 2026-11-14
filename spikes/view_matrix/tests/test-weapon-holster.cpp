@@ -20,6 +20,15 @@ int main() {
         const V3 rotated = HipPoint(c, yaw);
         assert(close(DistanceSq(rotated, rotated), 0.0f));
         assert(NearHip(rotated, rotated, c));
+        const V3 left=HipPoint(c,yaw,true);
+        const float cy=std::cos(yaw), sy=std::sin(yaw);
+        assert(close(left.x*cy+left.y*sy,c.fwd));
+        assert(close(-left.x*sy+left.y*cy,-c.right));
+        assert(close(left.z,c.up));
+        State l;
+        assert(Update(l,true,true,true,52,rotated,left,c)==Event::None);
+        assert(Update(l,true,true,true,52,left,left,c)==Event::Stored);
+        assert(Update(l,true,true,true,52,left,left,c)==Event::Drawn);
     }
 
     assert(Update(s, false, true, true, 52, hip, hip, c) == Event::None);

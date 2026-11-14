@@ -8,6 +8,8 @@ int main(){
     const unsigned meshes[]{5799,11387,8297,11389};
     const char* names[]{"CENTURION","VALKYRIE","VOLK S4","KASIMOV SNV-E99"};
     for(auto language:{vrtutorial::Language::Polish,vrtutorial::Language::English}){
+        assert(std::strstr(vrtutorial::GetStep(language,5,true).line[1],"L2"));
+        assert(std::strstr(vrtutorial::GetStep(language,5).line[1],"R2"));
         for(unsigned i=0;i<4;++i){
             const int page=vrtutorial::ReloadStep(meshes[i]);
             assert(page>=0&&page<vrtutorial::kStepCount);

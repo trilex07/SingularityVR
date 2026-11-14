@@ -213,8 +213,10 @@ static bool VrUiProjectPointerPoint(int eye,uipointer::V point,uipointer::Screen
     return settingspanel::EyeUv(u/1000000.f,v/1000000.f,g_vrMenuPanel.plane.inset,out.u,out.v);
 }
 static void DrawVrMenuLaser(IDirect3DDevice9* dev,const D3DSURFACE_DESC& d,uipointer::V B) {
-    if(!Rd(g_vrMenuLaser)||!Rd(g_vrUiValid)||!g_handPositionValid[1]||!g_origDrawPrimUP)return;
-    const uipointer::V A{g_handLastPos[1].x,g_handLastPos[1].y,g_handLastPos[1].z};
+    const int hand=AimHand();
+    if(!Rd(g_vrMenuLaser)||!Rd(g_vrUiValid)||!g_handPositionValid[hand]||!g_origDrawPrimUP)return;
+    const auto& origin=g_handLastPos[hand];
+    const uipointer::V A{origin.x,origin.y,origin.z};
     const float halfW=(float)d.Width*.5f;
     dev->SetTexture(0,nullptr);dev->SetVertexShader(nullptr);dev->SetPixelShader(nullptr);
     dev->SetFVF(D3DFVF_XYZRHW|D3DFVF_DIFFUSE);
@@ -365,7 +367,8 @@ static void DrawPauseVrSettingsRow(IDirect3DDevice9* dev,const D3DSURFACE_DESC& 
         ClearRects(dev, text, n, hovered ? 0xFFFFFFFF : 0xFF50FF90);
     }
 }
-void UpdateVrUiPointer(float,bool available) {
+void UpdateVrUiPointer(bool available) {
+    const int hand=AimHand();
     // The in-game GFx menu and the mod-owned VR Settings panel share one
     // controller ray.  The panel is deliberately not marked as g_vrUiMenu
     // (that flag suppresses native menu capture), so include it explicitly or
@@ -379,7 +382,7 @@ void UpdateVrUiPointer(float,bool available) {
     const unsigned long long token=VrMenuStateToken();
     if(token!=pointerToken){pointerToken=token;PublishVrUiPair(500000,500000);InterlockedExchange(&g_vrUiEverHit,0);}
     if(menu&&Rd(g_vrUiDesktopProbe))return; // Explicit debugger-controlled test coordinates; never staged for headset use.
-    if(!available || !menu || !g_handPoseValid[1] || !g_handPositionValid[1] || !g_haveEyes || g_targetTanX<=0 || g_targetTanY<=0) {
+    if(!available || !menu || !g_handPoseValid[hand] || !g_handPositionValid[hand] || !g_haveEyes || g_targetTanX<=0 || g_targetTanY<=0) {
         if(!available || !menu)g_vrMenuPanelValid=false;
         InterlockedExchange(&g_vrUiValid,0);InterlockedExchange(&g_vrUiDown,0);
         if(!menu&&Rd(g_vrUiEverHit))InterlockedExchange(&g_vrUiEverHit,0);
@@ -389,7 +392,7 @@ void UpdateVrUiPointer(float,bool available) {
     const auto& q=g_eyePose[0].orientation;
     uipointer::V head{(g_eyePose[0].position.x+g_eyePose[1].position.x)*.5f,(g_eyePose[0].position.y+g_eyePose[1].position.y)*.5f,(g_eyePose[0].position.z+g_eyePose[1].position.z)*.5f};
     uipointer::Hit hit;
-    const auto& pos=g_handLastPos[1];
+    const auto& pos=g_handLastPos[hand];
     float inset=Rd(g_menuInsetPct)/100.f;
     const LONG menuClass=Rd(g_vrMenuClass);
     if (!panel && menuClass == 1) inset = ClassBackbufferScale(1, true, (int)Rd(g_menuInsetPct));
@@ -420,7 +423,7 @@ void UpdateVrUiPointer(float,bool available) {
         g_vrMenuPanel.canvas = uipointer::CanvasMap{};
     }
     const uipointer::V rayOrigin{pos.x,pos.y,pos.z};
-    const uipointer::V rayDirection=VrUiRotate(g_handAimOrientation[1],{0,0,-1});
+    const uipointer::V rayDirection=VrUiRotate(g_handAimOrientation[hand],{0,0,-1});
     bool valid=g_vrMenuPanelValid && g_vrMenuPanel.Ray(rayOrigin,rayDirection,hit);
     // The loadout sits beside the native GFx canvas. Extend the ray only for
     // an actual loadout target, never for the native game's menu dispatch.

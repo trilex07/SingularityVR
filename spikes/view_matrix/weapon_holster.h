@@ -36,11 +36,14 @@ inline bool NearHip(V3 hand, V3 hip, const Config& c) {
     return DistanceSq(hand, hip) <= c.radius * c.radius;
 }
 
-inline V3 HipPoint(const Config& c, float bodyYawRad) {
-    const float cy = std::cos(bodyYawRad), sy = std::sin(bodyYawRad);
-    return {c.fwd * cy - c.right * sy,
-            c.fwd * sy + c.right * cy,
-            c.up};
+inline V3 BodyPoint(float forward,float lateral,float up,float bodyYawRad,bool leftHanded) {
+    const float cy=std::cos(bodyYawRad),sy=std::sin(bodyYawRad);
+    const float side=leftHanded?-lateral:lateral;
+    return {forward*cy-side*sy,forward*sy+side*cy,up};
+}
+
+inline V3 HipPoint(const Config& c,float bodyYawRad,bool leftHanded=false) {
+    return BodyPoint(c.fwd,c.right,c.up,bodyYawRad,leftHanded);
 }
 
 // A grip rising edge near the hip toggles the current weapon.  A weapon or

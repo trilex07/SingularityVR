@@ -113,6 +113,8 @@ inline Step GetStep(Language language, int index, bool leftHanded=false) {
     if(index==3||index==6||index==7)s.line[1]=polish?
         "PRAWYM CHWYTEM WEZ NOWY ZZA PRAWEGO BARKU":
         "RIGHT GRIP: GRAB ONE BEHIND RIGHT SHOULDER";
+    if(index==5)s.line[1]=polish?
+        "U\xC5\xBBYJ LASERA I L2, ABY WYBRA\xC4\x86 OPCJ\xC4\x98":"AIM THE LASER AND PRESS L2 TO SELECT";
     if(index==4)s.line[2]=polish?"WEZ NOWY BEBEN ZZA PRAWEGO BARKU":
         "GET A FRESH DRUM BEHIND RIGHT SHOULDER";
     return s;

@@ -8,10 +8,16 @@ OVERLAY = (ROOT / "spikes/view_matrix/vr_menu_overlay.h").read_text(encoding="ut
 
 
 class SettingsPanelTests(unittest.TestCase):
-    def test_aggregate_trigger_and_right_hand_selection(self):
+    def test_aggregate_trigger_and_weapon_hand_selection(self):
         self.assertIn("ReadPanelTrigger(g_actFire, pollOff)", SOURCE)
         self.assertIn("ReadPanelTrigger(g_actAltFire, pollOff)", SOURCE)
-        self.assertIn("panelFireHand == 1 ? panelRt : panelLt", SOURCE)
+        self.assertIn("const bool panelPointerHeld = panelRt > 0.5f", SOURCE)
+        self.assertIn("const bool selectPressed=primaryGate.selectPressed", SOURCE)
+        self.assertIn("const int fireHand = AimHand()", SOURCE)
+        self.assertIn("g_handLastPos[hand]", OVERLAY)
+        self.assertIn("g_handAimOrientation[hand]", OVERLAY)
+        self.assertNotIn("g_handLastPos[1]", OVERLAY)
+        self.assertNotIn("g_handAimOrientation[1]", OVERLAY)
         self.assertIn("panelClick.Update(true, panelPointerHeld)", SOURCE)
         self.assertIn("panelClick.Update(false, false)", SOURCE)
 

@@ -7205,7 +7205,7 @@ volatile LONG g_captureRequested=0;
 // Fix-G/perf off-switch: the spike reporter below costs nothing when idle, but the user
 // asked it off until the menu/hand round lands. Default 0.
 volatile LONG g_frameSpikeReport=0;
-void UpdateVrUiPointer(float rightTrigger,bool available);
+void UpdateVrUiPointer(bool available);
 bool VrPanelHitNormalized(LONG u, LONG v, int* rowIndex);
 void CaptureVrMenuTarget(IDirect3DDevice9* dev);
 void DrawVrMenuPointer(IDirect3DDevice9* dev);
@@ -11187,7 +11187,7 @@ void SyncXRInput(XrTime displayTime) {
         g_weaponSteadyFilter[0]={};g_weaponSteadyFilter[1]={};
         CancelCenturionInput();
         g_hipKnifeState={};g_hipKnifeVisible=false;
-        UpdateVrUiPointer(0,false);
+        UpdateVrUiPointer(false);
         ++g_syncFailFrames;
         InterlockedExchange(&g_twoHandActive, 0);
         g_supportLatch.Reset();
@@ -11841,10 +11841,9 @@ void SyncXRInput(XrTime displayTime) {
         const float uuPerCm = MetresToUU() * 0.01f;
         if(uuPerCm>0&&(g_holsterTrimFcm!=0||g_holsterTrimRcm!=0||g_holsterTrimUcm!=0)){
             const float tyr = g_baseYaw * (6.2831853f / 65536.0f);
-            const float tcy = cosf(tyr), tsy = sinf(tyr);
-            holsterHip[0] += (g_holsterTrimFcm*tcy - g_holsterTrimRcm*tsy) * uuPerCm;
-            holsterHip[1] += (g_holsterTrimFcm*tsy + g_holsterTrimRcm*tcy) * uuPerCm;
-            holsterHip[2] += g_holsterTrimUcm * uuPerCm;
+            const auto trim=weaponholster::BodyPoint(float(g_holsterTrimFcm),float(g_holsterTrimRcm),
+                float(g_holsterTrimUcm),tyr,g_leftHanded!=0);
+            holsterHip[0]+=trim.x*uuPerCm;holsterHip[1]+=trim.y*uuPerCm;holsterHip[2]+=trim.z*uuPerCm;
         }
     }
     const float handX = (float)Rd(g_handOffX) / kHandFixed;
@@ -12456,12 +12455,11 @@ void SyncXRInput(XrTime displayTime) {
 
         // The panel is a mod-rendered screen, so it must use the same controller
         // ray as native GFx.  The old false/invalid call made this path stick-only.
-        const int panelFireHand = AimHand();
         const float panelRt = ReadPanelTrigger(g_actFire, pollOff);
         const float panelLt = ReadPanelTrigger(g_actAltFire, pollOff);
-        const bool panelPointerHeld = (panelFireHand == 1 ? panelRt : panelLt) > 0.5f || getBool(g_actUiSelect);
+        const bool panelPointerHeld = panelRt > 0.5f || getBool(g_actUiSelect);
         const bool panelPointerPressed = panelClick.Update(true, panelPointerHeld);
-        UpdateVrUiPointer(panelPointerHeld ? 1.0f : 0.0f, true);
+        UpdateVrUiPointer(true);
         InterlockedExchange(&g_vrUiDown, panelPointerHeld ? 1 : 0);
         if (Rd(g_vrUiValid)) {
             int hitRow = -1;
@@ -12827,25 +12825,25 @@ void SyncXRInput(XrTime displayTime) {
         rt=g_nextReloadTrigger[fireHand].Update(g_nextBlockFire,rt);
         lt=g_nextReloadTrigger[altHand].Update(g_nextOwnsGrip&&altHand==OffHand(),lt);
     }
-    UpdateVrUiPointer(fireHand==1?rt:lt,true);
+    UpdateVrUiPointer(true);
     const auto primaryGate=g_vrUiTrigger[fireHand].Update(uiMenu?uipointer::Context::Menu:uipointer::Context::Gameplay,true,rt>(uiMenu?.5f:.1f),Rd(g_vrUiValid)!=0);
     const auto alternateGate=g_vrUiTrigger[altHand].Update(uiMenu?uipointer::Context::Menu:uipointer::Context::Gameplay,true,lt>(uiMenu?.5f:.1f),Rd(g_vrUiValid)!=0);
     if(uiMenu) {
         static settingspanel::Click lockerLoadoutClick;
-        const bool selectPressed=fireHand==1?primaryGate.selectPressed:alternateGate.selectPressed;
+        const bool selectPressed=primaryGate.selectPressed;
         const bool lockerUi=Rd(g_lockerVrLoadout)&&Rd(g_vrUiWeaponLocker)&&LockerVrLoadoutPublish::CanInteract();
         LONG pointerU=500000,pointerV=500000;
         if(Rd(g_vrUiValid))ReadVrUiPair(pointerU,pointerV);
         const float pointerUf=pointerU/1000000.0f,pointerVf=pointerV/1000000.0f;
         const bool lockerTarget=lockerUi&&Rd(g_vrUiValid)&&
             LockerVrLoadout::PointerHitsModTarget(pointerUf,pointerVf);
-        const bool menuPointerHeld=(fireHand==1?rt:lt)>0.5f||getBool(g_actUiSelect);
+        const bool menuPointerHeld=rt>0.5f||getBool(g_actUiSelect);
         const bool lockerPressed=lockerUi&&lockerLoadoutClick.Update(lockerTarget,menuPointerHeld&&lockerTarget);
         bool lockerConsumed=false;
         if(lockerPressed)lockerConsumed=LockerVrLoadout::OnPointerSelect(pointerUf,pointerVf);
         if(!lockerUi)lockerLoadoutClick.Update(false,false);
         if(selectPressed&&!lockerConsumed&&!lockerTarget)InterlockedExchange(&g_vrUiDown,1);
-        else if((fireHand==1?rt:lt)<=.5f||!Rd(g_vrUiValid)||lockerConsumed||lockerTarget)
+        else if(rt<=.5f||!Rd(g_vrUiValid)||lockerConsumed||lockerTarget)
             InterlockedExchange(&g_vrUiDown,0);
         rt=lt=0; // Menu selection cannot publish gameplay trigger state.
         btns&=~WORD(XI_A|XI_B);
@@ -17789,7 +17787,7 @@ static void BuildGunTransform(float C[4][4], const float p[3],
 // the player looks around, then add the existing 6-DOF head offset when rendering.
 static void HolsterHipWorld(float H[3], bool includeHmdOffset) {
     const float y = g_baseYaw * (6.2831853f / 65536.0f);
-    const weaponholster::V3 hip = weaponholster::HipPoint(g_holsterConfig, y);
+    const weaponholster::V3 hip = weaponholster::HipPoint(g_holsterConfig,y,g_leftHanded!=0);
     H[0] = hip.x; H[1] = hip.y; H[2] = hip.z;
     if (includeHmdOffset && g_gunHeadOffset) {
         H[0] += g_hmdOffset[0];
