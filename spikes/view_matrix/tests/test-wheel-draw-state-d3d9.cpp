@@ -3,6 +3,7 @@
 #include <d3d9.h>
 #include "../wheel_draw_state.h"
 #include "../ui_remaster_runtime.h"
+#include "../seeker_wheel_texture.h"
 #include <array>
 #include <cassert>
 #include <cstdio>
@@ -52,7 +53,7 @@ static int Run(bool ex) {
         if(poison==5){d->SetRenderState(D3DRS_ALPHATESTENABLE,TRUE);d->SetRenderState(D3DRS_ALPHAFUNC,D3DCMP_NEVER);}
         if(poison==6)d->SetRenderState(D3DRS_COLORWRITEENABLE,0);
     };
-    const auto render=[&](unsigned poison,bool fixed,bool abort)->Pixels {
+    const auto render=[&](unsigned poison,bool fixed,bool abort,IDirect3DTexture9* icon=nullptr)->Pixels {
         inherited(poison);d->SetTexture(0,atlas);d->SetViewport(&outer);
         assert(SUCCEEDED(saved->Capture()));
         d->SetRenderTarget(0,back);d->Clear(0,nullptr,D3DCLEAR_TARGET,0xff203040,1,0);
@@ -69,10 +70,11 @@ static int Run(bool ex) {
             d->SetRenderState(D3DRS_SRCBLENDALPHA,D3DBLEND_ONE);d->SetRenderState(D3DRS_DESTBLENDALPHA,D3DBLEND_INVSRCALPHA);
             d->SetTextureStageState(0,D3DTSS_COLORARG1,D3DTA_TEXTURE);d->SetTextureStageState(0,D3DTSS_ALPHAARG1,D3DTA_TEXTURE);
         }
-        d->SetTexture(0,atlas);d->SetFVF(D3DFVF_XYZRHW|D3DFVF_TEX1);
+        d->SetTexture(0,icon?icon:atlas);d->SetFVF(D3DFVF_XYZRHW|D3DFVF_TEX1);
         uiremaster::Vertex q[4]{};uiremaster::BuildQuad({4,4,28,28},{0,0,1,1},q);
         assert(SUCCEEDED(d->BeginScene()));assert(SUCCEEDED(d->DrawPrimitiveUP(D3DPT_TRIANGLESTRIP,2,q,sizeof(q[0]))));
-        const D3DRECT text{14,14,18,18};d->Clear(1,&text,D3DCLEAR_TARGET,0xffffffff,1,0);
+        const D3DRECT text{14,14,18,18};
+        if(!icon)d->Clear(1,&text,D3DCLEAR_TARGET,0xffffffff,1,0);
         assert(SUCCEEDED(d->EndScene()));
         assert(SUCCEEDED(d->SetRenderTarget(0,back)));assert(SUCCEEDED(d->SetViewport(&outer)));
         if(!abort){
@@ -103,8 +105,26 @@ static int Run(bool ex) {
         assert(correct==baseline);render(p,true,true);
         printf("wheel D3D9%s poison=%u oldDiff=%d corrected=bit-identical stereo; state/abort restored\n",ex?"Ex":"",p,int(broken!=baseline));
     }
+    IDirect3DTexture9* seeker=nullptr;
+    assert(seekericon::UploadTexture(d,&seeker));
+    const auto icon=render(0,true,false,seeker);
+    unsigned painted=0;
+    for(int y=0;y<64;++y)for(int x=0;x<64;++x){
+        const DWORD p=icon[y*128+x];
+        assert(p==icon[y*128+x+64]);
+        if(p!=0x203040){
+            assert(x>=20&&x<44&&y>=28&&y<36); // art and transparent gutter
+            ++painted;
+        }
+    }
+    assert(painted>40&&painted<200);
+    printf("wheel D3D9%s embedded Seeker pixels/alpha: %u painted per eye\n",ex?"Ex":"",painted);
+    seeker->Release();
     d->SetTexture(0,nullptr);saved->Release();read->Release();stage->Release();scratch->Release();atlas->Release();back->Release();
     assert(SUCCEEDED(d->Reset(&pp)));assert(wheelstate::Prepare(d,wheelstate::Pass::Atlas));
+    seeker=nullptr;
+    assert(seekericon::UploadTexture(d,&seeker));
+    seeker->Release();
     d->Release();api->Release();DestroyWindow(w);return 0;
 }
 int main(){int r=Run(false);return r?r:Run(true);}
