@@ -76,6 +76,7 @@ static unsigned g_startupTimeoutMs=5000,g_startupMinVisibleMs=3000;
 #include "wheel_draw_state.h"
 #include "weapon_wheel_atlas.h"
 #include "seeker_wheel_icon.h"
+#include "seeker_wheel_texture.h"
 #include "locker_loadout_icons.h"
 #include "weapon_wheel_layout.h"
 #include "health_gesture.h"
@@ -29749,11 +29750,15 @@ static IDirect3DTexture9* g_uiRemasterNeutral=nullptr;
 static IDirect3DTexture9* g_uiRemasterPl=nullptr;
 static IDirect3DTexture9* g_uiRemasterEn=nullptr;
 static IDirect3DTexture9* g_uiRemasterWheelStage=nullptr;
+static IDirect3DTexture9* g_seekerWheelSprite=nullptr;
+static bool g_seekerWheelSpriteAttempted=false;
 static UINT g_uiRemasterWheelStageSide=0;
 static bool g_uiRemasterWheelStageUnsupported=false;
 static LONG g_uiRemasterPlState=0,g_uiRemasterEnState=0;
 static IDirect3DStateBlock9* g_uiRemasterSaved=nullptr;
 static void ReleaseUiRemasterResources(){
+    if(g_seekerWheelSprite){g_seekerWheelSprite->Release();g_seekerWheelSprite=nullptr;}
+    g_seekerWheelSpriteAttempted=false;
     if(g_uiRemasterWheelStage){g_uiRemasterWheelStage->Release();g_uiRemasterWheelStage=nullptr;}
     g_uiRemasterWheelStageSide=0;
     g_uiRemasterWheelStageUnsupported=false;
@@ -32324,7 +32329,33 @@ static bool ReadWheelHeldAmmo(int& clip,int& reserve){
     reserve=*reinterpret_cast<const int32_t*>(hud+offReserve);
     return clip>=0&&clip<=999&&reserve>=0&&reserve<=9999;
 }
-static bool DrawSeekerWheelIcon(IDirect3DDevice9* dev,float x,float y,float half) {
+static bool DrawSeekerWheelIcon(IDirect3DDevice9* dev,float x,float y,float half,bool atlasPass=false) {
+    if(!g_seekerWheelSpriteAttempted){
+        g_seekerWheelSpriteAttempted=true;
+        if(!seekericon::UploadTexture(dev,&g_seekerWheelSprite))
+            Log("weapon wheel: Seeker remaster icon unavailable; using vector fallback");
+    }
+    if(g_seekerWheelSprite){
+        const float l=x-half-.5f,t=y-half-.5f,r=x+half-.5f,b=y+half-.5f;
+        const uiremaster::Vertex v[]={{l,t,0,1,0,0},{r,t,0,1,1,0},{l,b,0,1,0,1},{r,b,0,1,1,1}};
+        const bool drawn=SUCCEEDED(dev->SetRenderState(D3DRS_ALPHABLENDENABLE,TRUE))&&
+            SUCCEEDED(dev->SetTextureStageState(0,D3DTSS_COLOROP,D3DTOP_SELECTARG1))&&
+            SUCCEEDED(dev->SetTextureStageState(0,D3DTSS_ALPHAOP,D3DTOP_SELECTARG1))&&
+            SUCCEEDED(dev->SetTextureStageState(0,D3DTSS_COLORARG1,D3DTA_TEXTURE))&&
+            SUCCEEDED(dev->SetTextureStageState(0,D3DTSS_ALPHAARG1,D3DTA_TEXTURE))&&
+            SUCCEEDED(dev->SetFVF(D3DFVF_XYZRHW|D3DFVF_TEX1))&&
+            SUCCEEDED(dev->SetTexture(0,g_seekerWheelSprite))&&
+            SUCCEEDED(g_origDrawPrimUP(dev,D3DPT_TRIANGLESTRIP,2,v,sizeof(v[0])));
+        if(!atlasPass){
+            // Rounded legacy draws may start the second eye with diffuse geometry.
+            dev->SetTexture(0,nullptr);
+            dev->SetTextureStageState(0,D3DTSS_COLORARG1,D3DTA_DIFFUSE);
+            dev->SetTextureStageState(0,D3DTSS_ALPHAARG1,D3DTA_DIFFUSE);
+            dev->SetFVF(D3DFVF_XYZRHW|D3DFVF_DIFFUSE);
+            dev->SetRenderState(D3DRS_ALPHABLENDENABLE,FALSE);
+        }
+        if(drawn)return true;
+    }
     struct Vertex {float x,y,z,rhw;DWORD color;};
     Vertex triangles[_countof(seekericon::Parts)*18];
     unsigned n=0;
@@ -32335,7 +32366,7 @@ static bool DrawSeekerWheelIcon(IDirect3DDevice9* dev,float x,float y,float half
                 const auto p=part.points[k];
                 triangles[n++]={x+(p.x-50)*scale-.5f,y+(p.y-28)*scale-.5f,0,1,part.color};
             }
-    // This last icon pass needs no atlas. The wheel restores all device state.
+    // The vector remains available when the device cannot upload the sprite.
     if(FAILED(dev->SetTexture(0,nullptr))||
        FAILED(dev->SetTextureStageState(0,D3DTSS_COLOROP,D3DTOP_SELECTARG1))||
        FAILED(dev->SetTextureStageState(0,D3DTSS_ALPHAOP,D3DTOP_SELECTARG1))||
@@ -32382,7 +32413,7 @@ static bool DrawUiRemasterWheelEye(IDirect3DDevice9* dev,int eye,int cx,int cy,
     }
     const uiremaster::Rect hub{cx-m.innerR,cy-m.innerR,cx+m.innerR,cy+m.innerR};
     good &= DrawUiRemasterSprite(dev,lang,hub,uiremaster::wheelHub);
-    if(seeker)good &= DrawSeekerWheelIcon(dev,(float)seekerX,(float)seekerY,(float)m.iconHalf);
+    if(seeker)good &= DrawSeekerWheelIcon(dev,(float)seekerX,(float)seekerY,(float)m.iconHalf,true);
     // Only the held weapon has an authoritative HUD count. Unknown values stay blank.
     if(clip>=0&&reserve>=0){
         char label[32]{};_snprintf_s(label,sizeof(label),_TRUNCATE,"%d / %d",clip,reserve);
