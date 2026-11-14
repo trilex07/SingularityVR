@@ -3,6 +3,18 @@
 Branch: `side/final-seeker-20261026`, based on `71728b5d7e2712d1640fa18fa58e48bd6dc708ee`.
 No runtime behavior, weapon pose, zone, inventory, ammunition, input, or projectile math changed here. No Steam access or game launch.
 
+## 2026-11-14 candidate follow-up
+
+The optional `[Input] SeekerBackSlot=1` uses the weapon hand and mirrors the
+zone to the lower-left back in left-handed mode. The zone now follows the
+live headset position while retaining the recentered body yaw; walking in
+tracking space no longer leaves it at the old position. No change to radius
+or to Seeker's native projectile or ownership contracts. Grip must be
+released in valid tracking and gameplay before another attempt. A pending
+native selection cannot be toggled twice before acknowledgement or timeout.
+Follow the physical protocol below using the appropriate side for this build.
+Save/load and physical acceptance remain pending.
+
 ## Decision
 
 The current source already includes the proven cooked-Y correction and post-native projectile witness. Existing evidence does **not** justify another pose/accuracy patch. Seeker is **NOT physically accepted**: current AB348E06 acceptance did not include Seeker, and the last Seeker session never reaches an accepted back-zone Grip. Native retention and selection cannot be labeled working from `ready` alone.

@@ -56,5 +56,16 @@ int main(){
     s.Update(true,false,false,0,0,520);
     r=s.Update(true,false,false,std::numeric_limits<float>::quiet_NaN(),1,540);
     assert(!r.jump);
+    NativeFallback f;
+    assert(!f.Update(true,true,true,1,2,1000)); // recipe owns Circle
+    assert(f.Update(true,false,true,1,2,1010));
+    assert(f.Update(true,false,false,1,2,1050));
+    assert(!f.Update(true,false,false,1,3,1060)); // never reload the next weapon
+    assert(!f.Update(true,false,false,1,2,1070));
+    assert(f.Update(true,false,true,1,2,1100));
+    assert(!f.Update(false,false,false,1,2,1110)); // pause / focus loss
+    assert(!f.Update(true,false,false,1,2,1120));
+    assert(f.Update(true,false,true,1,2,1130));
+    assert(!f.Update(true,false,false,1,2,1250));
     std::puts("reload controls L1 PASS: Cross health/Circle release/stick jump/pulse/neutral/context/NaN");
 }

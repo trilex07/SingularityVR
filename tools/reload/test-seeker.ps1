@@ -8,7 +8,7 @@ $out=Join-Path $root 'build/seeker-private/tests'
 New-Item -ItemType Directory -Force $out | Out-Null
 # Use the real production name registry: synthetic offsets must not hide
 # unregistered names (the PR60 ownership gate defect).
-$source=Get-Content (Join-Path $root 'spikes/view_matrix/d3d9.cpp') -Raw
+$source=Get-Content (Join-Path $root 'spikes/view_matrix/native_wanted_names.h') -Raw
 $start=$source.IndexOf('g_wantNames[]')
 if($start -lt 0){throw 'Missing production name registry'}
 $end=$source.IndexOf('const int kWantNameCount',$start)

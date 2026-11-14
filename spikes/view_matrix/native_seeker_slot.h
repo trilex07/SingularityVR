@@ -28,8 +28,8 @@ static void Receipt(const seekerslot::Snapshot& s,bool forced=false){
     Log("Seeker back gate: stage=%s pawn=%08X current=%08X ownedSeeker=%08X count=%u valid=%d hook=%p available=%08X thread=%lu",
         stage,s.pawn,s.current,state.seeker,s.count,s.valid,(void*)heavyTarget,(unsigned)Rd(g_seekerBackAvailable),GetCurrentThreadId());
 }
-static bool Gameplay(){return VrModeOn()&&!Rd(g_gamePaused)&&!Rd(g_inCinematic)&&
-    !Rd(g_vrMenuClass)&&!Rd(g_vrUiMenu)&&!Rd(g_panelOpen);}
+static bool Gameplay(){return VrModeOn()&&InGameplay()&&!Rd(g_gamePaused)&&!Rd(g_inCinematic)&&
+    !Rd(g_vrMenuClass)&&!Rd(g_vrUiMenu)&&!Rd(g_panelOpen)&&!CutsceneNativeCameraArmed();}
 static bool Read(seekerslot::Snapshot& s){
     using namespace NativeOwnedInventory;
     s={};
@@ -121,7 +121,8 @@ static void Poll(){
     const LONG wheelRequest=InterlockedExchange(&g_seekerWheelRequest,0);
     const LONG backRequest=InterlockedExchange(&g_seekerBackRequest,0);
     const LONG requested=wheelRequest?wheelRequest:backRequest;
-    if(!Rd(g_seekerBackSlot)){InterlockedExchange(&g_seekerBackAvailable,0);state={};return;}
+    if(!Rd(g_seekerBackSlot)){InterlockedExchange(&g_seekerBackAvailable,0);state={};pendingPawn=pendingTarget=0;return;}
+    if(!Gameplay()){InterlockedExchange(&g_seekerBackAvailable,0);pendingPawn=pendingTarget=0;return;}
     static ULONGLONG next=0;const auto now=GetTickCount64();
     if(!requested&&now<next)return;next=now+100;
     __try {
@@ -141,6 +142,7 @@ static void Poll(){
             stage=!ready?stage:(uint32_t)requested!=s.pawn?"request-pawn-changed":"request-context";
             Receipt(s,true);return;
         }
+        if(pendingTarget){stage="selection-busy";Receipt(s,true);return;}
         const auto target=wheelRequest?state.seeker:state.ToggleTarget(s);if(!target){stage="no-toggle-target";Receipt(s,true);return;}
         if(wheelRequest&&target==s.current)return; // selecting Seeker again never toggles it away
         using namespace NativeOwnedInventory;

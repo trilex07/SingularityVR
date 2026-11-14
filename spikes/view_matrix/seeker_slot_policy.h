@@ -41,12 +41,17 @@ inline const char* Name(GripGate g){
     case GripGate::Unavailable:return "unavailable";case GripGate::Outside:return "outside";
     default:return "accept";}
 }
+inline bodyequipment::Zone BackZone(hipknife::V head,float bodyYaw,bool leftHanded){
+    bodyequipment::Layout layout;
+    if(leftHanded)layout.heavy.x=-layout.heavy.x;
+    return layout.At(bodyequipment::Slot::Heavy,head,bodyYaw);
+}
 inline GripGate BackGripGate(bool edge,bool context,bool tracked,bool busy,bool available,
-                     hipknife::V hand,hipknife::V head,float yaw){
+                     hipknife::V hand,hipknife::V head,float yaw,bool leftHanded=false){
     if(!edge)return GripGate::NoEdge;if(!context)return GripGate::Context;
     if(!tracked)return GripGate::Tracking;if(busy)return GripGate::Busy;
     if(!available)return GripGate::Unavailable;
-    const auto z=bodyequipment::Layout{}.At(bodyequipment::Slot::Heavy,head,yaw);
+    const auto z=BackZone(head,yaw,leftHanded);
     return bodyequipment::Pick(hand,&z,1)==bodyequipment::Slot::Heavy?GripGate::Accept:GripGate::Outside;
 }
 inline bool BackGrip(bool edge,bool context,bool tracked,bool busy,bool available,

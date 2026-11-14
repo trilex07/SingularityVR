@@ -10,6 +10,8 @@ static bool g_tmdGravityGrip=true;
 static tmdgravity::Grip g_tmdGravityLatch;
 static bool g_deadlockGestureProbe=false;
 static bool g_tmdDeadlockGesture=false;
+static bool g_seekerGripNeutral=false,g_seekerOwnsPrimaryGrip=false;
+static bool g_circleNativeReload=false;
 static deadlockgesture::Gesture g_deadlockGesture;
 #include "support_grip_probe.h"
 #include "dual_weapon_tmd_policy.h"
@@ -2326,6 +2328,7 @@ static SRWLOCK g_centurionNativeLock=SRWLOCK_INIT;
 static centurionnative::Gate g_centurionNativeGate;
 static volatile LONG g_centurionNativeTarget=0,g_centurionNativeSlot=0;
 static reloadcontrols::State g_reloadControls;
+static reloadcontrols::NativeFallback g_reloadFallback;
 int g_centurionClipPreview=0,g_centurionReloadMarkers=0;
 static int g_centurionCylinderAnimation=0;
 static int g_centurionVisualFollowup=0; // default-OFF native material/depth replay
@@ -2533,7 +2536,7 @@ static void CancelCenturionInput(){
     const bool owned=g_centurionOwnsGrip;
     g_centurionState={};g_centurionState.ownsGrip=owned;
     g_centurionShellBurst={};
-    g_centurionTap.Cancel();g_reloadControls={};
+    g_centurionTap.Cancel();g_reloadControls={};g_reloadFallback={};
     if(TryAcquireSRWLockExclusive(&g_centurionNativeLock)){
         g_centurionNativeGate.Clear();ReleaseSRWLockExclusive(&g_centurionNativeLock);
     }
@@ -11186,6 +11189,8 @@ void SyncXRInput(XrTime displayTime) {
         InterlockedExchange(&g_twoHandActive, 0);
         g_supportLatch.Reset();
         g_tmdGravityLatch.power=false; // require release after sync/focus interruption
+        g_seekerGripNeutral=g_seekerOwnsPrimaryGrip=false;
+        InterlockedExchange(&g_seekerBackRequest,0);
         g_deadlockGesture={};
         if(g_tmdDeadlockGesture)NativeDeadlock::Publish(false);
         g_handPositionValid[0] = g_handPositionValid[1] = false;
@@ -11541,7 +11546,8 @@ void SyncXRInput(XrTime displayTime) {
     tSt = Now();
     bool panelHeld = false;
     WORD panelMask = 0;
-    const bool primaryGrip = getGrip(AimHand());
+    bool primaryGripTracked=false;
+    const bool primaryGrip = getGrip(AimHand(),&primaryGripTracked);
     bool supportGripTracked=false;
     const bool rawSupportGrip = getGrip(OffHand(),&supportGripTracked);
     bool sampledButtons[kPadButtonCount]{};
@@ -11555,7 +11561,10 @@ void SyncXRInput(XrTime displayTime) {
     const bool reloadLayout=g_reloadControlLayout&&!Rd(g_swapSticks);
     const bool reloadInputContext=feedGame&&VrModeOn()&&InGameplay()&&!uiMenu&&!Rd(g_gamePaused)&&
         !Rd(g_panelOpen)&&!Rd(g_weaponWheelOpen)&&!CutsceneNativeCameraArmed()&&
-        g_xrSessionState==XR_SESSION_STATE_FOCUSED&&!sampledButtons[3]; // R3/wheel owns stick
+        g_xrSessionState==XR_SESSION_STATE_FOCUSED&&
+        !(g_leftHanded?getBool(g_actL3):sampledButtons[3]); // weapon-hand wheel owns stick
+    const bool triangleHeld=getBool(g_actTriangle);
+    const bool physicalL3=getBool(g_actL3),physicalR3=getBool(g_actR3);
     const auto reloadActions=g_reloadControls.Update(reloadLayout&&reloadInputContext,
         sampledButtons[0],sampledButtons[1],reloadStickX,reloadStickY,GetTickCount64());
     // Refresh native ownership before the reload dispatcher reads the knife
@@ -11839,27 +11848,43 @@ void SyncXRInput(XrTime displayTime) {
     const float handY = (float)Rd(g_handOffY) / kHandFixed;
     const float handZ = (float)(g_gunSignPosZ * Rd(g_handOffZ)) / kHandFixed;
     const auto& backHand=g_handLastPos[AimHand()];
-    const auto backGate=seekerslot::BackGripGate(primaryGripRising,
-        feedGame&&!uiMenu&&!Rd(g_gamePaused)&&!Rd(g_inCinematic)&&AimHand()==1,
-        g_handPositionValid[AimHand()]&&g_handPoseValid[AimHand()],
+    const auto& backEyeL=g_eyePose[0].position;
+    const auto& backEyeR=g_eyePose[1].position;
+    hipknife::V backHead{};
+    const bool backHeadValid=g_haveEyes&&g_eyePositionsValid&&g_haveCentrePos&&
+        centurionreload::HeadCentre({backEyeL.x,backEyeL.y,backEyeL.z},
+                                    {backEyeR.x,backEyeR.y,backEyeR.z},backHead);
+    const bool backTracked=primaryGripTracked&&g_handTracked[AimHand()]&&
+        g_handPositionValid[AimHand()]&&g_handPoseValid[AimHand()]&&backHeadValid;
+    const bool backContext=feedGame&&VrModeOn()&&InGameplay()&&!uiMenu&&!Rd(g_gamePaused)&&
+        !Rd(g_panelOpen)&&!Rd(g_inCinematic)&&!triangleHeld&&!CutsceneNativeCameraArmed()&&
+        g_xrSessionState==XR_SESSION_STATE_FOCUSED;
+    if(!backContext||!backTracked)g_seekerGripNeutral=false;
+    else if(!primaryGrip)g_seekerGripNeutral=true;
+    const bool seekerEdge=primaryGripRising&&g_seekerGripNeutral;
+    if(primaryGrip)g_seekerGripNeutral=false;
+    const LONG backOwner=Rd(g_seekerBackAvailable);
+    const auto backGate=seekerslot::BackGripGate(seekerEdge,backContext,backTracked,
         Rd(g_weaponHolstered)||Rd(g_twoHandActive)||g_nextOwnsGrip||g_centurionOwnsGrip||
-            g_nextBlockFire||g_hipKnifeState.held>=0||Rd(g_weaponWheelOpen),
-        Rd(g_seekerBackSlot)&&Rd(g_seekerBackAvailable),
-        {backHand.x,backHand.y,backHand.z},{g_centrePos[0],g_centrePos[1],g_centrePos[2]},g_centreYaw);
+            g_nextBlockFire||g_hipKnifeState.held>=0||Rd(g_weaponWheelOpen)||
+            physicalL3||physicalR3,
+        Rd(g_seekerBackSlot)&&backOwner&&(uintptr_t)(uint32_t)backOwner==g_playerPawn,
+        {backHand.x,backHand.y,backHand.z},backHead,g_centreYaw,g_leftHanded!=0);
     const bool backGrip=backGate==seekerslot::GripGate::Accept;
     if(primaryGripRising&&Rd(g_seekerBackSlot)){
         static unsigned backReceipts=0;
         if(backReceipts++<48){
-            const auto zone=bodyequipment::Layout{}.At(bodyequipment::Slot::Heavy,
-                {g_centrePos[0],g_centrePos[1],g_centrePos[2]},g_centreYaw);
+            const auto zone=seekerslot::BackZone(backHead,g_centreYaw,g_leftHanded!=0);
             Log("Seeker back grip: gate=%s hand=%d tracked=%d availablePawn=%08X handPos=(%.3f %.3f %.3f) zone=(%.3f %.3f %.3f) distance=%.3f radius=%.3f busy[hip=%d support=%d next=%d centurion=%d fire=%d knife=%d wheel=%d]",
-                seekerslot::Name(backGate),AimHand(),g_handPositionValid[AimHand()]&&g_handPoseValid[AimHand()],
-                (unsigned)Rd(g_seekerBackAvailable),backHand.x,backHand.y,backHand.z,
+                seekerslot::Name(backGate),AimHand(),backTracked,
+                (unsigned)backOwner,backHand.x,backHand.y,backHand.z,
                 zone.centre.x,zone.centre.y,zone.centre.z,hipknife::Length(hipknife::V{backHand.x,backHand.y,backHand.z}-zone.centre),zone.radius,
                 Rd(g_weaponHolstered),Rd(g_twoHandActive),g_nextOwnsGrip,g_centurionOwnsGrip,g_nextBlockFire,g_hipKnifeState.held,Rd(g_weaponWheelOpen));
         }
     }
-    if(backGrip)InterlockedExchange(&g_seekerBackRequest,Rd(g_seekerBackAvailable));
+    if(backGrip)InterlockedExchange(&g_seekerBackRequest,backOwner);
+    if(!primaryGrip||!backContext||!backTracked)g_seekerOwnsPrimaryGrip=false;
+    else if(backGrip)g_seekerOwnsPrimaryGrip=true;
     const weaponholster::Event holsterEvent = weaponholster::Update(
         g_holsterState, primaryGripRising && !backGrip && !uiMenu && !Rd(g_gamePaused), holsterValid, feedGame,
         (uint32_t)holsterIdentity, {handX, handY, handZ},
@@ -11913,8 +11938,6 @@ void SyncXRInput(XrTime displayTime) {
         InterlockedExchange(&g_holsterRollUU, 0);
         Log("weapon holster: RESET (tracking/gameplay/weapon gate)");
     }
-    const bool triangleHeld = getBool(g_actTriangle);
-    const bool physicalL3 = getBool(g_actL3), physicalR3 = getBool(g_actR3);
     const bool l3Held = handedness::WheelVeto(g_leftHanded!=0,physicalL3,physicalR3);
     bool r3Held = handedness::WheelButton(g_leftHanded!=0,physicalL3,physicalR3);
     if (InterlockedCompareExchange(&g_forceDesktopAutomation, 0, 0))
@@ -12153,7 +12176,7 @@ void SyncXRInput(XrTime displayTime) {
             down=dualPowerLatch[dualPower].Update(dualOwnsPower,dualPowerReserved,down);
         // R1 = the existing primary Use/grip action. Consume only in the
         // scoped two-hand context; never emit native use/reload while steadying.
-        if(steadyAimHeld&&i==2)down=false;
+        if((steadyAimHeld||g_seekerOwnsPrimaryGrip)&&i==2)down=false;
         if((g_centurionOwnsGrip||g_nextOwnsGrip)&&(i==g_impulseBtnIdx))down=false;
         // During a transaction, reserve the shared Use/reload bit as well:
         // an accidental primary squeeze must not reload before insertion.
@@ -12764,6 +12787,20 @@ void SyncXRInput(XrTime displayTime) {
             Log("hip knife: injected XI_RSHOULDER (melee attack) into game btns, held=%d", g_hipKnifeState.held);
     }
     if (Rd(g_weaponHolstered) && !uiMenu) rt = 0.0f;
+    if(g_circleNativeReload&&reloadLayout){
+        // Keep configured physical recipes in charge even if a socket or asset is unavailable.
+        const auto kind=NextKind(Rd(g_gunVerts));
+        const auto idx=weaponreload::Index(kind);
+        const bool hasRecipe=(Rd(g_gunVerts)==5799&&g_centurionReload&&g_centurionConfig.cylinderGestures)||
+            (idx<3&&g_nextReload[idx]);
+        const auto object=(uint32_t)Rd(g_weaponObj);
+        const bool ready=reloadInputContext&&!triangleHeld&&!r3Held&&!r3Released&&
+            !Rd(g_weaponWheelOpen)&&!Rd(g_weaponHolstered)&&WeaponPresentationInHands()&&
+            !g_seekerOwnsPrimaryGrip&&!g_nextOwnsGrip&&!g_nextBlockFire&&!g_centurionOwnsGrip&&
+            g_hipKnifeState.held<0&&rt<.1f;
+        if(g_reloadFallback.Update(ready,hasRecipe,reloadActions.releaseCylinder,(uint32_t)g_playerPawn,
+                           object,GetTickCount64()))btns|=XI_X;
+    }
     if(g_centurionReload){
         const bool valid=g_centurionNativeTap&&feedGame&&!uiMenu&&!Rd(g_gamePaused)&&
             !Rd(g_panelOpen)&&!Rd(g_weaponWheelOpen)&&!CutsceneNativeCameraArmed()&&
@@ -12771,9 +12808,9 @@ void SyncXRInput(XrTime displayTime) {
             g_handPositionValid[0]&&g_handPoseValid[0]&&g_handPositionValid[1]&&g_handPoseValid[1]&&
             g_xrSessionState==XR_SESSION_STATE_FOCUSED;
         if(g_centurionTap.Update(valid,false,GetTickCount64()))btns|=XI_X;
-        rt=g_centurionTrigger[fireHand].Update((g_centurionOwnsGrip&&fireHand==0)||
+        rt=g_centurionTrigger[fireHand].Update((g_centurionOwnsGrip&&fireHand==OffHand())||
             (g_centurionConfig.cylinderGestures&&centurionreload::Active(g_centurionState.phase)),rt);
-        lt=g_centurionTrigger[altHand].Update(g_centurionOwnsGrip&&altHand==0,lt);
+        lt=g_centurionTrigger[altHand].Update(g_centurionOwnsGrip&&altHand==OffHand(),lt);
     }
     if(NextReloadEnabled()){
         const bool valid=g_nextBlockFire&&feedGame&&!uiMenu&&!Rd(g_gamePaused)&&
@@ -12783,7 +12820,7 @@ void SyncXRInput(XrTime displayTime) {
             g_xrSessionState==XR_SESSION_STATE_FOCUSED;
         if(g_nextReloadTap.Update(valid,false,GetTickCount64()))btns|=XI_X;
         rt=g_nextReloadTrigger[fireHand].Update(g_nextBlockFire,rt);
-        lt=g_nextReloadTrigger[altHand].Update(g_nextOwnsGrip&&altHand==0,lt);
+        lt=g_nextReloadTrigger[altHand].Update(g_nextOwnsGrip&&altHand==OffHand(),lt);
     }
     UpdateVrUiPointer(fireHand==1?rt:lt,true);
     const auto primaryGate=g_vrUiTrigger[fireHand].Update(uiMenu?uipointer::Context::Menu:uipointer::Context::Gameplay,true,rt>(uiMenu?.5f:.1f),Rd(g_vrUiValid)!=0);
@@ -38781,6 +38818,7 @@ void LoadIniSettings() {
     g_trackedDepthSourcePose=GetPrivateProfileIntA("Render","TrackedDepthSourcePose",0,path)!=0;
     g_tmdTrackedMuzzle=GetPrivateProfileIntA("Render","TmdTrackedMuzzle",0,path)!=0;
     g_tmdVisualAudit=GetPrivateProfileIntA("Diagnostic","TmdVisualAudit",0,path)!=0;
+    g_circleNativeReload=GetPrivateProfileIntA("Input","CircleNativeReloadFallback",0,path)!=0;
     g_tmdDeadlockGesture=GetPrivateProfileIntA("Input","TmdDeadlockGesture",0,path)!=0;
     g_deadlockGestureProbe=GetPrivateProfileIntA("Diagnostic","DeadlockGestureProbe",0,path)!=0;
     g_tmdGravityDecalFix=GetPrivateProfileIntA("Render","TmdGravityDecalFix",0,path)!=0;

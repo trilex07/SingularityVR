@@ -49,6 +49,15 @@ take a fresh magazine from behind your left shoulder, insert it into the gun
 and release grip. No closing flick or manual bolt operation in this variant.
 Check the ammo counter and firing.
 
+## Opcjonalne przeładowanie broni bez fizycznej procedury
+
+Przy `[Input] ReloadControlLayout=1` i `CircleNativeReloadFallback=1`
+naciśnięcie kółka dla broni bez włączonej procedury fizycznej wysyła
+oryginalne polecenie Use/Reload. Gra decyduje, czy przeładować; ustawienie
+domyślnie pozostaje wyłączone. Włączona procedura fizyczna zachowuje
+kółko także przy braku modelu lub danych gniazda. W układzie leworęcznym
+instrukcje w goglach pokazują prawy bark i prawą dłoń dla amunicji.
+
 ## In-game integration
 
 VR Settings Tutorial has a named page for each weapon in both languages.

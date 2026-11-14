@@ -1,3 +1,15 @@
+## 2026-11-14 — Remaining gameplay controls candidate
+
+- Integrated the left-handed candidate with the current tracked-support
+  continuity and right-handed Deadlock experiment. Off-hand trigger/grip
+  arbitration follows the active role during reload.
+- Seeker back holster: mirrored hand/zone, live headset translation and
+  original body yaw; uses the existing owned weapon/inventory path. Equip
+  and save/load still need a legitimate Seeker save and PSVR2 acceptance.
+- Optional Circle fallback invokes the game's existing Use/Reload input for
+  weapons without an enabled physical recipe. It does not add a fifth
+  physical reload or replace the four configured recipes.
+
 ## 2026-11-14 — Deadlock cross-shoulder input
 
 - Gesture policy L1_PASS: a fresh left Grip at the right shoulder followed by

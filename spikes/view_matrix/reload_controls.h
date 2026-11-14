@@ -35,4 +35,16 @@ struct State {
         return {cross&&!crossBlocked,edge,now<jumpUntil};
     }
 };
+// Native X uses a short held interval, cancelled on weapon/pawn change.
+struct NativeFallback {
+    std::uint32_t pawn=0,weapon=0;
+    std::uint64_t start=0;
+    bool active=false;
+    bool Update(bool ready,bool hasRecipe,bool edge,std::uint32_t p,std::uint32_t w,std::uint64_t now){
+        if(!ready||hasRecipe||!p||!w){active=false;return false;}
+        if(active&&(p!=pawn||w!=weapon||now<start||now-start>=120))active=false;
+        if(edge&&!active){pawn=p;weapon=w;start=now;active=true;}
+        return active;
+    }
+};
 } // namespace reloadcontrols

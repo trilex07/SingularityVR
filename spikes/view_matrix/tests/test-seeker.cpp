@@ -64,6 +64,12 @@ int main(int argc,char** argv){
         const hipknife::V head{1,1.2f,-2};
         const auto at=bodyequipment::Layout{}.At(bodyequipment::Slot::Heavy,head,yaw).centre;
         assert(BackGrip(true,true,true,false,true,at,head,yaw));
+        const auto left=BackZone(head,yaw,true).centre;
+        assert(BackGripGate(true,true,true,false,true,left,head,yaw,true)==GripGate::Accept);
+        assert(BackGripGate(true,true,true,false,true,at,head,yaw,true)==GripGate::Outside);
+        const hipknife::V step{.45f,-.20f,.60f};
+        assert(BackGripGate(true,true,true,false,true,left+step,head+step,yaw,true)==GripGate::Accept);
+        assert(BackGripGate(true,true,true,false,true,left+step,head,yaw,true)==GripGate::Outside);
         assert(BackGripGate(true,true,true,false,false,at,head,yaw)==GripGate::Unavailable);
         assert(BackGripGate(true,false,true,false,true,at,head,yaw)==GripGate::Context);
         assert(BackGripGate(true,true,false,false,true,at,head,yaw)==GripGate::Tracking);

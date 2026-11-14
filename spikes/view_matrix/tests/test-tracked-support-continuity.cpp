@@ -27,12 +27,12 @@ int main(){
     blocked=c;blocked.nativeAnimation=true;Check(!dualaction::Eligible(blocked),"native animation still refused");
     blocked=c;blocked.gameplay=false;Check(!dualaction::Eligible(blocked),"menu still refused");
     blocked=c;blocked.holstered=true;Check(!dualaction::Eligible(blocked),"holster still refused");
-    blocked=c;blocked.rightHanded=false;Check(!dualaction::Eligible(blocked),"unsupported handedness refused");
+    blocked=c;blocked.supportedLayout=false;Check(!dualaction::Eligible(blocked),"unsupported handedness refused");
     for(unsigned mask=0;mask<512;++mask){
         dualaction::Context x{bool(mask&1),bool(mask&2),bool(mask&4),bool(mask&8),
             bool(mask&16),bool(mask&32),bool(mask&64),bool(mask&128),bool(mask&256)};
         const bool legacy=x.enabled&&x.dual&&x.tracked&&x.gameplay&&!x.nativeAnimation&&
-            !x.holstered&&!x.support&&!x.carrying&&x.rightHanded;
+            !x.holstered&&!x.support&&!x.carrying&&x.supportedLayout;
         Check(dualaction::Eligible(x)==legacy,"all flag-OFF contexts exactly preserve baseline");
     }
     const auto& bind=armnatural::TmdBind();Check(bind.ready,"actual native bind ready");

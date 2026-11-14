@@ -13,6 +13,8 @@ volatile LONG g_gamePaused=0,g_inCinematic=0,g_vrMenuClass=0,g_vrUiMenu=0,g_pane
 constexpr unsigned OBJ_CLASS=32;
 static LONG Rd(volatile LONG& p){return InterlockedCompareExchange(&p,0,0);}
 static bool VrModeOn(){return true;}
+static bool InGameplay(){return true;}
+static bool CutsceneNativeCameraArmed(){return false;}
 static void Log(const char*,...){}
 alignas(16) static unsigned char pawn[4096]{},manager[1024]{},seeker[1024]{},rifle[1024]{},controller[1024]{},unrelated[1024]{};
 static uintptr_t Ptr(void* p){return (uintptr_t)p;}
@@ -165,6 +167,7 @@ int main(){
     Request();assert(fields[Ptr(pawn)+0x3d4]==Ptr(rifle));
     // A selector returning is not proof of equip. Keep pending until observed.
     selectorCompletes=false;Request();assert(NativeSeekerSlot::pendingTarget==Ptr(seeker));
+    const auto beforePending=selected;Request();assert(selected==beforePending);
     NativeSeekerSlot::pendingUntil=0;NativeSeekerSlot::Poll();
     // Poll is normally throttled; force a fresh engine sample without acquisition.
     Sleep(110);NativeSeekerSlot::Poll();assert(!NativeSeekerSlot::pendingTarget);
