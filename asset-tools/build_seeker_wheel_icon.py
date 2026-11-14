@@ -70,7 +70,10 @@ def main():
     sprite = make_sprite(MASTER, SIDE, SIDE, content_height=36)
     for path, payload in ((SPRITE, png(sprite)), (HEADER, embed(sprite)), (PREVIEW, png(preview(sprite)))):
         if args.check:
-            if path.read_bytes() != payload:
+            current = path.read_bytes()
+            if path == HEADER:
+                current = current.replace(b"\r\n", b"\n")
+            if current != payload:
                 raise SystemExit(f"outdated: {path.relative_to(ROOT)}")
         else:
             path.write_bytes(payload)
