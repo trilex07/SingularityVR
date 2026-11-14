@@ -74,6 +74,7 @@ static unsigned g_startupTimeoutMs=5000,g_startupMinVisibleMs=3000;
 #include "ui_remaster_runtime.h"
 #include "wheel_draw_state.h"
 #include "weapon_wheel_atlas.h"
+#include "seeker_wheel_icon.h"
 #include "locker_loadout_icons.h"
 #include "weapon_wheel_layout.h"
 #include "health_gesture.h"
@@ -32312,6 +32313,26 @@ static bool ReadWheelHeldAmmo(int& clip,int& reserve){
     reserve=*reinterpret_cast<const int32_t*>(hud+offReserve);
     return clip>=0&&clip<=999&&reserve>=0&&reserve<=9999;
 }
+static bool DrawSeekerWheelIcon(IDirect3DDevice9* dev,float x,float y,float half) {
+    struct Vertex {float x,y,z,rhw;DWORD color;};
+    Vertex triangles[_countof(seekericon::Parts)*18];
+    unsigned n=0;
+    const float scale=half*.019f;
+    for(const auto& part:seekericon::Parts)
+        for(unsigned i=1;i+1<part.count;++i)
+            for(const auto k:{0u,i,i+1}){
+                const auto p=part.points[k];
+                triangles[n++]={x+(p.x-50)*scale-.5f,y+(p.y-28)*scale-.5f,0,1,part.color};
+            }
+    // This last icon pass needs no atlas. The wheel restores all device state.
+    if(FAILED(dev->SetTexture(0,nullptr))||
+       FAILED(dev->SetTextureStageState(0,D3DTSS_COLOROP,D3DTOP_SELECTARG1))||
+       FAILED(dev->SetTextureStageState(0,D3DTSS_ALPHAOP,D3DTOP_SELECTARG1))||
+       FAILED(dev->SetTextureStageState(0,D3DTSS_COLORARG1,D3DTA_DIFFUSE))||
+       FAILED(dev->SetTextureStageState(0,D3DTSS_ALPHAARG1,D3DTA_DIFFUSE))||
+       FAILED(dev->SetFVF(D3DFVF_XYZRHW|D3DFVF_DIFFUSE)))return false;
+    return SUCCEEDED(g_origDrawPrimUP(dev,D3DPT_TRIANGLELIST,n/3,triangles,sizeof(Vertex)));
+}
 static bool DrawUiRemasterWheelEye(IDirect3DDevice9* dev,int eye,int cx,int cy,
                                    const wheel_layout::Metrics& m,int slots,int selected,
                                    const long* verts,const bool* named,int clip,int reserve,
@@ -32325,12 +32346,12 @@ static bool DrawUiRemasterWheelEye(IDirect3DDevice9* dev,int eye,int cx,int cy,
     const uiremaster::Rect chassis{cx-m.outerR,cy-m.outerR,cx+m.outerR,cy+m.outerR};
     if(!uiremaster::Valid(chassis,eye,half,backW,backH))return false;
     for(int i=0;i<slots;++i){
-        if(verts[i]==12444){if(!g_hudAtlasTex||!hud_atlas::Find(g_hudAtlas,"dev-seeker"))return false;}
-        else if(!uiremaster::SpriteValid(uiremaster::WheelIcon(verts[i])))return false;
+        if(verts[i]!=12444&&!uiremaster::SpriteValid(uiremaster::WheelIcon(verts[i])))return false;
     }
     if(!wheelstate::Prepare(dev,wheelstate::Pass::Atlas))return false;
     dev->SetFVF(D3DFVF_XYZRHW|D3DFVF_TEX1);
     bool good=DrawUiRemasterSprite(dev,g_uiRemasterNeutral,chassis,uiremaster::wheelChassis);
+    int seekerX=0,seekerY=0;bool seeker=false;
     for(int i=0;i<slots;++i){
         if(!named[i])continue;
         float ix=0,iy=0;
@@ -32340,9 +32361,7 @@ static bool DrawUiRemasterWheelEye(IDirect3DDevice9* dev,int eye,int cx,int cy,
         const uiremaster::Rect icon{x-m.iconHalf,y-m.iconHalf,x+m.iconHalf,y+m.iconHalf};
         if(!uiremaster::Valid(icon,eye,half,backW,backH))return false;
         if(verts[i]==12444){
-            const auto* r=hud_atlas::Find(g_hudAtlas,"dev-seeker");
-            good &= DrawUiRemasterSprite(dev,g_hudAtlasTex,icon,
-                uiremaster::Atlas(r->x,r->y,r->w,r->h,g_hudAtlas.width,g_hudAtlas.height));
+            seekerX=x;seekerY=y;seeker=true;
         }else good &= DrawUiRemasterSprite(dev,g_uiRemasterNeutral,icon,uiremaster::WheelIcon(verts[i]));
         if(i==selected){
             const uiremaster::Rect ring{x-m.iconHalf-5,y-m.iconHalf-5,
@@ -32352,6 +32371,7 @@ static bool DrawUiRemasterWheelEye(IDirect3DDevice9* dev,int eye,int cx,int cy,
     }
     const uiremaster::Rect hub{cx-m.innerR,cy-m.innerR,cx+m.innerR,cy+m.innerR};
     good &= DrawUiRemasterSprite(dev,lang,hub,uiremaster::wheelHub);
+    if(seeker)good &= DrawSeekerWheelIcon(dev,(float)seekerX,(float)seekerY,(float)m.iconHalf);
     // Only the held weapon has an authoritative HUD count. Unknown values stay blank.
     if(clip>=0&&reserve>=0){
         char label[32]{};_snprintf_s(label,sizeof(label),_TRUNCATE,"%d / %d",clip,reserve);
@@ -32488,7 +32508,7 @@ void DrawWeaponWheel(IDirect3DDevice9* dev) {
         !g_wwCatalog.sectors.empty();
     // Round layout needs DrawPrimitiveUP; without it fall back to squares.
     const bool roundOn = Rd(g_wwRound) && g_origDrawPrimUP != nullptr;
-    // Katorga icon path: every drawn slot resolves an atlas icon, else the
+    // Katorga icon path: every atlas-backed slot resolves an icon, else the
     // whole frame falls back to squares (never a mix, never a hole).
     const hud_atlas::Rect* slotIcons[8]{};
     bool katorgaIcons = Rd(g_katorgaHud) &&
@@ -32510,6 +32530,7 @@ void DrawWeaponWheel(IDirect3DDevice9* dev) {
         for (int i = 0; i < slots && i < 8; ++i) {
             const int ci = (gunOrder && wheelOrder[i] < (int)g_wwCatalog.sectors.size())
                 ? wheelOrder[i] : i;
+            if(ci<(int)g_wwCatalog.sectors.size()&&g_wwCatalog.sectors[ci].verts==12444)continue;
             const char* iconId = (ci < (int)g_wwCatalog.sectors.size())
                 ? g_wwCatalog.sectors[ci].atlas.c_str() : nullptr;
             slotIcons[i] = hud_atlas::Find(g_hudAtlas, iconId);
@@ -32643,6 +32664,7 @@ void DrawWeaponWheel(IDirect3DDevice9* dev) {
              PolishLocalization::PL().IsPolishEnabled()?"pl":"en");}}
     if(remasterResult<0){static bool once=false;if(!once){once=true;
         Log("M02 wheel: two-eye composite failed; native overlay withheld for this frame");}}
+    int seekerSquare=-1;
     for (int eye = 0; eye < 2; ++eye) {
         if(remasterRendered)continue;
         if(!roundOn&&!projected[eye])continue;
@@ -32771,6 +32793,11 @@ void DrawWeaponWheel(IDirect3DDevice9* dev) {
                 dev->SetFVF(D3DFVF_XYZRHW | D3DFVF_DIFFUSE);
                 dev->SetRenderState(D3DRS_ALPHABLENDENABLE, FALSE);
             }
+            for(int i=0;i<slots;++i)if(slotVerts[i]==12444&&slotNamed[i]){
+                float ix=0,iy=0;
+                wheel_layout::WedgePoint(fx,fy,(float)m.iconR,wheel_layout::SectorCenter(i,slots),ix,iy);
+                DrawSeekerWheelIcon(dev,ix,iy,(float)m.iconHalf);
+            }
             // Sector labels near the rim: catalog names only for owned weapons
             // (held or verifiably seen); unowned sectors stay icon-only, and
             // the W# fallback applies only without a catalog (orientation aid).
@@ -32810,6 +32837,12 @@ void DrawWeaponWheel(IDirect3DDevice9* dev) {
             const float a = -pi * 0.5f + 2.0f * pi * (float)i / (float)slots;
             const int x = (int)lroundf(cx + cosf(a) * radius);
             const int y = (int)lroundf(cy + sinf(a) * radius);
+            if(slotVerts[i]==12444&&slotNamed[i]&&g_origDrawPrimUP){
+                D3DRECT tile{x-card,y-card,x+card,y+card};
+                ClearRects(dev,&tile,1,i==selected?0xFF80501F:0xFF182B3E);
+                seekerSquare=i;
+                continue;
+            }
             if (katorgaIcons && i < 8 && slotIcons[i]) {
                 // Same footprint as the square below; icon tint marks selection.
                 const hud_atlas::Rect* ir = slotIcons[i];
@@ -32840,6 +32873,13 @@ void DrawWeaponWheel(IDirect3DDevice9* dev) {
                                     x - tw / 2, y - th / 2, px, label);
             ClearRects(dev, text, n, i == selected ? 0xFF101010 : 0xFFE8EEF8);
         }
+    }
+    if(seekerSquare>=0){
+        const int radius=std::max(32,(int)(d.Height*.070f));
+        const int card=std::max(18,(int)(d.Height*.026f));
+        const float a=wheel_layout::SectorCenter(seekerSquare,slots);
+        for(int eye=0;eye<2;++eye)if(projected[eye])
+            DrawSeekerWheelIcon(dev,wheelCx[eye]+sinf(a)*radius,wheelCy[eye]-cosf(a)*radius,(float)card);
     }
     static bool said = false;
     if (!said) {
