@@ -10,6 +10,9 @@
 - Seeker back holster: mirrored hand/zone, live headset translation and
   original body yaw; uses the existing owned weapon/inventory path. Equip
   and save/load still need a legitimate Seeker save and PSVR2 acceptance.
+- Opt-in `[Diagnostic] SeekerNativeAmmoProbe=1` watches the game's original
+  reload and logs before/after clip and reserve through audited getters. A
+  legitimately stocked Seeker save is still required to prove ammo transfer.
 - Optional Circle fallback invokes the game's existing Use/Reload input for
   weapons without an enabled physical recipe. It does not add a fifth
   physical reload or replace the four configured recipes.

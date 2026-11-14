@@ -9,6 +9,7 @@ static tmdvisualaudit::Scene g_tmdVisualScene=tmdvisualaudit::Scene::None;
 static bool g_tmdGravityGrip=true;
 static tmdgravity::Grip g_tmdGravityLatch;
 static bool g_deadlockGestureProbe=false;
+static bool g_seekerNativeAmmoProbe=false;
 static bool g_tmdDeadlockGesture=false;
 static bool g_seekerGripNeutral=false,g_seekerOwnsPrimaryGrip=false;
 static bool g_circleNativeReload=false;
@@ -27072,6 +27073,7 @@ int       g_funcOffset = -1;
 
 // Both defined further down, with the census they belong to. Declared here because the probe has
 // to reset them when it moves the hook.
+static void PollSeekerNativeAmmo(void* self);
 void __fastcall Hook_ProcessEvent(void* self, void* edx, void* Stack, void* Result);
 extern volatile LONG g_peSeen, g_peUnnamed;
 
@@ -28949,6 +28951,7 @@ void __fastcall Hook_ProcessEvent(void* self, void* edx, void* Stack, void* Resu
         if (!NativeOwnedInventory::InvokeRetained(self,edx,Stack,Result,fnIdx,(int)Rd(g_nodeOffset),g_origProcessEvent))
             g_origProcessEvent(self, edx, Stack, Result);
     }
+    if(g_seekerNativeAmmoProbe)PollSeekerNativeAmmo(self);
     if(localDamage&&damageBefore>0&&damagedPawn==g_playerPawn&&
        Readable(self,OBJ_CLASS+sizeof(uintptr_t))&&
        *reinterpret_cast<const uintptr_t*>(damagedPawn+OBJ_CLASS)==g_playerPawnClass&&
@@ -31349,6 +31352,7 @@ struct CenturionRefillNative {
 #include "native_tmd_beam.inl"
 #include "native_scope_pip.inl"
 #include "native_seeker_projectile.inl"
+#include "seeker_ammo_probe.inl"
 static int __fastcall Hook_CenturionAttemptReload(void* self,void*){
     const auto object=(uint32_t)reinterpret_cast<uintptr_t>(self);
     const auto weapon=(uint32_t)Rd(g_weaponObj),pawn=(uint32_t)g_playerPawn;
@@ -31463,7 +31467,8 @@ static int __fastcall Hook_CenturionAttemptReload(void* self,void*){
     }
     // This is forwarding an existing native call, NOT calling ProcessInternal
     // with invented parameters. No exception masking or ammo modification.
-    const int result=g_origCenturionAttemptReload(self);
+    const int result=g_seekerNativeAmmoProbe&&object==weapon&&seekergeometry::Vertices(Rd(g_gunVerts))
+        ?ObserveSeekerNativeAttempt(self):g_origCenturionAttemptReload(self);
     if(note)Log("%s native guard: %s self=%08X pawn=%08X return=%08X result=%d lockMiss=%d t=%llu (result is not ammo proof)",owner,
         decision==centurionnative::Decision::Permit?"PERMIT":
         decision==centurionnative::Decision::Observe?"OBSERVE":"FORWARD",
@@ -31471,7 +31476,7 @@ static int __fastcall Hook_CenturionAttemptReload(void* self,void*){
     return result;
 }
 static void TryInstallCenturionNativeGuard(uintptr_t object,uintptr_t wrapper,const char* owner){
-    if((!g_centurionNativeGuardMode&&!NextReloadEnabled())||Rd(g_centurionNativeTarget)||strcmp(owner,"RvWeaponShared")||
+    if((!g_centurionNativeGuardMode&&!NextReloadEnabled()&&!g_seekerNativeAmmoProbe)||Rd(g_centurionNativeTarget)||strcmp(owner,"RvWeaponShared")||
        object!=(uintptr_t)(uint32_t)Rd(g_weaponObj)||wrapper<g_textLo||wrapper>=g_textHi||
        g_textHi-wrapper<centurionnative::WrapperBytes||!Readable((void*)wrapper,centurionnative::WrapperBytes))return;
     uint32_t slot=0;
@@ -35204,7 +35209,7 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
     // guard on the hot path is what makes it survivable. It is switchable for exactly that reason:
     // `CutsceneAuto=0` restores the old behaviour with no rebuild, and this is the first thing to
     // suspect if a launch starts misbehaving.
-    if(g_centurionReloadProbe||g_centurionNativeGuardMode||NextReloadEnabled()){
+    if(g_centurionReloadProbe||g_centurionNativeGuardMode||NextReloadEnabled()||g_seekerNativeAmmoProbe){
         // Resolve missing reload names even if the cinematic watch resolved its
         // own earlier. Probe-only observes the existing interpreter hook. The
         // independent native guard is resolved/validated lazily from the binding.
@@ -35216,11 +35221,12 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
         const bool next=NextReloadEnabled();
         bool missing=false;
         for(int i=kFnReloadFirst;i<=kFnReloadLast;++i)if(FnIdx(i)<0)missing=true;
-        if(next&&(g_funcOffset<0||!g_hudObject))missing=true;
+        if((next||g_seekerNativeAmmoProbe)&&g_funcOffset<0)missing=true;
+        if(next&&!g_hudObject)missing=true;
         if(g_startupPrewarm?early.Due(GetTickCount64(),g_camera!=0,missing):
            (missing&&attempts<12&&++tick%240==0&&g_camera)){
             ++attempts;ResolveScriptNames();
-            if(next&&g_funcOffset<0)FindProcessInternal(); // votes layout only
+            if((next||g_seekerNativeAmmoProbe)&&g_funcOffset<0)FindProcessInternal(); // votes layout only
             if(next&&!g_hudObject)FindHudObject(true); // bounded, bypass nested miss throttle
             Log("centurion reload probe: name attempt=%u existing script hook=%p (zero events is NOT proof of no reload)",
                 attempts,g_origProcessEvent);
@@ -35228,6 +35234,8 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
                 attempts,g_funcOffset,(unsigned)g_hudObject);
         }
     }
+    if(g_seekerNativeAmmoProbe&&!Rd(g_centurionNativeTarget)&&seekergeometry::Vertices(Rd(g_gunVerts)))
+        ObserveCenturionReloadBindings((uint32_t)Rd(g_weaponObj));
     if (Rd(g_keepAcquiredWeapons) && (!g_origProcessEvent || !g_processInternal || g_hookedAt!=g_processInternal)) {
         static startup::Retry ownedHookRetry;
         if (ownedHookRetry.Due(GetTickCount64(),g_camera!=0,true)) {
@@ -38867,6 +38875,7 @@ void LoadIniSettings() {
     g_circleNativeReload=GetPrivateProfileIntA("Input","CircleNativeReloadFallback",0,path)!=0;
     g_tmdDeadlockGesture=GetPrivateProfileIntA("Input","TmdDeadlockGesture",0,path)!=0;
     g_deadlockGestureProbe=GetPrivateProfileIntA("Diagnostic","DeadlockGestureProbe",0,path)!=0;
+    g_seekerNativeAmmoProbe=GetPrivateProfileIntA("Diagnostic","SeekerNativeAmmoProbe",0,path)!=0;
     g_tmdGravityDecalFix=GetPrivateProfileIntA("Render","TmdGravityDecalFix",0,path)!=0;
     Log("ini: TmdGravityDecalFix=%d (exact PS 2132/9CE7CA1D and captured modulate draw gate, default OFF)",g_tmdGravityDecalFix?1:0);
     g_dropDecalLocalTangent=GetPrivateProfileIntA("Diagnostic","DropDecalLocalTangent",0,path)!=0;
