@@ -1115,6 +1115,11 @@ SwapSticks=0
 ; toggled by the screenshot/recentre chord.
 RecenterChord=1
 
+[Input]
+; Right-handed mode: left Grip behind right shoulder, swing forward and release.
+; Experimental native Deadlock; enable only for supported executable builds.
+TmdDeadlockGesture=0
+
 [Diagnostic]
 ; Read-only gesture witness: left Grip behind right shoulder. Does not cast.
 DeadlockGestureProbe=0

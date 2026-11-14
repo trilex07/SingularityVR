@@ -24,6 +24,8 @@ class Gesture {
     }
 
 public:
+    bool Active() const { return armed; }
+
     Event Update(const Frame& f) {
         if (!f.eligible || !hipknife::Finite(f.head) || !hipknife::Finite(f.hand)
             || !std::isfinite(f.yaw)) return Cancel();

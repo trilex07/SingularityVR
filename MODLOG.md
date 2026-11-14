@@ -131,3 +131,15 @@ forward motion on release can be distinguished from reload/support.
 Falsifier: the witness arms on a held/busy grip, or reports a throw after
 tracking loss, a stationary release or head-only movement. First experiment:
 default-off pose/gesture witness, no synthetic button or native power call.
+
+The owned unpacked GOG EN executable matches the archived Steam full Deadlock
+handler (1504 bytes) and existing Start/Stop contracts. The original per-power
+dispatcher (0x100E100) is used for the perk gate and Start path. The Deadlock
+handler (vtable +0x128, 0x1D press) reuses its held prop or spawns one on authority,
+handles motion, then calls Stop and the original energy debit. The mod requires
+reflected local campaign ownership, authority, matched function bodies and
+confirmation in mFiringPowers. A release is one request; a native throw is never
+replayed. Hypothesis: a completed VR throw produces one native cast with original
+energy and unlock checks. Falsifier: repeat with the power locked, then unlocked
+and during cooldown; verify one effect/debit per accepted gesture and no effect
+on cancellation. Steam installation unchanged.

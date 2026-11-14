@@ -12,6 +12,7 @@
 #include "native_seeker_slot.h"
 #include "native_dual_tmd_gun_scale.h"
 #include "native_tmd_haptics.h"
+#include "native_deadlock.h"
 #include "locker_virtual_runtime.h"
 #include "locker_native_trace.h"
 #include "locker_availability_trace.h"
@@ -410,6 +411,7 @@ static void __fastcall Poll(void* self,void*,float dt) {
   hotpath::scope inputScope(g_hotPathSampler,hotpath::Family::native_input_poll);
   originalPoll(self,dt); // original guarded missing-mouse path preserves keyboard/XInput/OpenXR
  }
+ NativeDeadlock::Poll(); // consume an XR throw only on the original engine input thread
  Drain(dt); // engine UI calls stay on the game's original input thread
  const auto engine=ReadPointer(0x01CF8778u);
  const auto focusedRecord=engine?ReadPointer(engine+0x148u):0;

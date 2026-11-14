@@ -3,9 +3,12 @@
 - Gesture policy L1_PASS: a fresh left Grip at the right shoulder followed by
   forward motion on release. Invalid tracking, a held/busy grip and stationary
   release cannot produce an intent. See MODLOG.md.
-- Native cast BLOCKED: need an observed original, unlocked use to prove the
-  input/charge/release contract. `[Diagnostic] DeadlockGestureProbe=1` logs only;
-  it does not reserve Grip, play haptics or call the power. Steam untouched.
+- Experimental native cast: opt in with `[Input] TmdDeadlockGesture=1`.
+  Verified original activation, perk gate, launch and energy path offline in the
+  unpacked GOG executable; the Deadlock handler and Start/Stop match previous
+  Steam contracts. The mod uses only the live local campaign TMD.
+  `[Diagnostic] DeadlockGestureProbe=1` still logs the gesture separately.
+  Steam/PSVR2 acceptance is pending.
 
 ## 2026-11-03 — Cinema bootstrap/caption correction, physical PENDING
 
