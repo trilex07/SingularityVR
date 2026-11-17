@@ -5563,6 +5563,9 @@ int    g_engineObjectFrames = 0;
 // an average alone would exonerate it exactly the way it deserves not to be. Run 252's mistake was
 // picking the suspect; the mistake available HERE is picking the wrong summary of it.
 double g_msGameplayHooks = 0.0, g_msGameplayPeak = 0.0;
+bool g_gameplayHookTimingExtra=false; // default OFF, existing bucket coverage only
+static double g_extraHookMs[2]{},g_extraHookPeak[2]{};
+static unsigned g_extraHookCalls[2]{};
 double g_msResolveOff = 0.0, g_msResolveOffPeak = 0.0;
 int    g_gameplayHookFrames = 0;
 
@@ -35694,12 +35697,20 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
         // the belief that this block was periodic. **Nothing added here may call Log() unconditionally.**
         //
         // Run 201, read only, and OFF by default since run 202 - it is internally rate-limited by time.
-        ReportEyeHeight();
+        #define TIME_EXTRA_HOOK(idx, call) do { \
+            if(g_gameplayHookTimingExtra) { \
+                const auto tExtra=Now(); call; const double elapsed=MsSince(tExtra); \
+                g_extraHookMs[idx]+=elapsed; ++g_extraHookCalls[idx]; \
+                if(elapsed>g_extraHookPeak[idx])g_extraHookPeak[idx]=elapsed; \
+            } else { call; } \
+        } while(0)
+        TIME_EXTRA_HOOK(0, ReportEyeHeight());
         // Run 189: suppress the first-person muzzle flash and barrel smoke. Cheap enough for a per-frame
         // call because it only ACTS on a change of state - a few interlocked reads while nothing is
         // happening, and a GObjects walk only when the cached objects stop validating (a weapon swap).
         TIME_HOOK(3, ApplyMuzzleFxSuppression());
-        NativeRifleFx::Install();
+        TIME_EXTRA_HOOK(1, NativeRifleFx::Install());
+        #undef TIME_EXTRA_HOOK
         #undef TIME_HOOK
         {
             const double dGp = MsSince(tGp);
@@ -36350,6 +36361,12 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
                         kHookPartName[3], g_msHookPart[3], g_msHookPartPeak[3]);
                 }
                 for (int i = 0; i < 4; ++i) g_msHookPart[i] = g_msHookPartPeak[i] = 0.0;
+                if(g_gameplayHookTimingExtra && (g_extraHookCalls[0] || g_extraHookCalls[1])) {
+                    Log("    gameplay hook extra (total ms / WORST call / calls): ReportEyeHeight %.3f/%.3f/%u | NativeRifleFxInstall %.3f/%.3f/%u; nested in gameplay hooks, NOT additive",
+                        g_extraHookMs[0],g_extraHookPeak[0],g_extraHookCalls[0],
+                        g_extraHookMs[1],g_extraHookPeak[1],g_extraHookCalls[1]);
+                    for(int i=0;i<2;++i) { g_extraHookMs[i]=g_extraHookPeak[i]=0;g_extraHookCalls[i]=0; }
+                }
                 g_msGameplayHooks = g_msGameplayPeak = 0.0;
                 g_msResolveOff = g_msResolveOffPeak = 0.0;
                 g_gameplayHookFrames = 0;
@@ -39196,6 +39213,8 @@ void LoadIniSettings() {
     // that is an A/B of TimeOurWork=0 against =1 at a fixed spot - and note that the instrument cannot
     // measure its own cost, which is exactly the class of error that let SSW halve every frame-rate
     // number for thirty runs.
+    g_gameplayHookTimingExtra=GetPrivateProfileIntA("Diagnostic","GameplayHookTimingExtra",0,path)!=0;
+    Log("ini: GameplayHookTimingExtra=%d (CPU wall timing of existing unbucketed gameplay helpers only)",int(g_gameplayHookTimingExtra));
     g_timeOurWork = GetPrivateProfileIntA("Render", "TimeOurWork", 0, path) ? 1 : 0;
     Log("ini: TimeOurWork=%d (%s)", g_timeOurWork,
         g_timeOurWork ? "time StereoPair and the mesh matchers per frame, reported beside the frame"

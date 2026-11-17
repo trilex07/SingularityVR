@@ -1,3 +1,14 @@
+## 2026-11-17 - Player AMD hook attribution candidate
+
+- IMPLEMENTED_NOT_VERIFIED: optional `[Diagnostic] GameplayHookTimingExtra=1`
+  measures ReportEyeHeight and NativeRifleFx::Install inside the existing
+  gameplay hook bucket. Default OFF; no changes to rendering or native hooks.
+- Optimized x86 build and PE/provenance checked offline. Runtime/AMD/headset
+  NOT RUN; not installed, merged or packaged. No FPS gain claimed.
+- Full player log shows startup SolvePropertyLayout=199.4 ms, steady gameplay
+  ~53-72 FPS after transition, and a separate 67.11-ms block peak whose
+  currently printed subscopes do not account for it. More attribution needed.
+
 ## 2026-11-14 — Remaining gameplay controls candidate
 
 - Left-handed mode now draws the wheel against the weapon hand's tracking.

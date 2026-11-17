@@ -954,3 +954,17 @@ north amplitude is a hypothesis pending raw controller evidence; no root cause
 or headset fix is claimed. This does not change the separate VDXR startup path.
 Offline tests/build PASS; runtime NOT RUN. Activation, limits and validation:
 docs/PICO-MOVEMENT-STICK-RANGE-20261117.md.
+
+
+## Player AMD performance attribution gap (2026-11-17)
+
+Full supplied view_matrix.log confirms SolvePropertyLayout 199.4/199.4 ms
+at startup, followed by ~0.03 ms steady gameplay hooks. A second block peak
+67.11 ms exceeds the four individually timed helper totals. Source inspection
+finds ReportEyeHeight and NativeRifleFx::Install inside that block but outside
+those four timing scopes. Native rifle hook arming is logged in the same
+reporting window; causality is unproven (wall time includes scheduling).
+[Diagnostic] GameplayHookTimingExtra=0 default, 1 adds total/peak/call counts
+for these two existing calls. No hook target or rendering behavior changed.
+Mean/peak are nested inside existing gameplay hooks, never additive. This
+is an attribution probe, not an FPS fix. Runtime/remote AMD NOT RUN.
