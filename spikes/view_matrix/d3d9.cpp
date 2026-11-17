@@ -72,6 +72,7 @@ static unsigned g_startupTimeoutMs=5000,g_startupMinVisibleMs=3000;
 #include "weapon_wheel_catalog_load.h"
 #include "weapon_wheel_seek.h"
 #include "settings_panel.h"
+#include "movement_stick_range.h"
 #include "ui_remaster_runtime.h"
 #include "wheel_draw_state.h"
 #include "weapon_wheel_atlas.h"
@@ -10170,6 +10171,8 @@ int g_leftHandedPending = 0;
 // [TextureQuality] Quality. Read once at startup by the texture injector;
 // the PENDING/APPLIED pair follows the LEFT HANDED precedent (restart marker).
 int g_texQuality = 0, g_texQualityApplied = 0;
+static int g_movementStickOuterPercent=0;
+static bool g_movementStickProbe=false;
 volatile LONG g_swapSticks = 0;          // ini [Input] SwapSticks - live, on the CONTROLLER page
 
 // Which hand the gun and aim follow. The only thing the four aim sites need to know.
@@ -10624,6 +10627,10 @@ bool InitXRInput() {
             // Pending VR-panel edits take effect together before XR bindings attach.
             g_leftHanded = g_leftHandedPending =
                 GetPrivateProfileIntA("Input", "LeftHanded", 0, path) ? 1 : 0;
+    g_movementStickOuterPercent=trilex::input::ClampOuterPercent(static_cast<int>(
+        GetPrivateProfileIntA("Input","MoveStickOuterDeadzonePercent",0,path)));
+    g_movementStickProbe=GetPrivateProfileIntA("Diagnostics","MovementStickProbe",0,path)!=0;
+    Log("movement stick range: outer=%d%% (0=unchanged), probe=%d",g_movementStickOuterPercent,int(g_movementStickProbe));
             InterlockedExchange(&g_swapSticks,
                 GetPrivateProfileIntA("Input", "SwapSticks", 0, path) ? 1 : 0);
             if (g_leftHanded)
@@ -11285,6 +11292,13 @@ void SyncXRInput(XrTime displayTime) {
         tx = sx; ty = sy;
     }
 
+    const float rawMoveX=mx,rawMoveY=my;
+    trilex::input::CalibrateMovementStick(mx,my,g_movementStickOuterPercent);
+    static trilex::input::MovementStickProbe movementProbe;
+    if(g_movementStickProbe && movementProbe.Observe(rawMoveX,rawMoveY,GetTickCount64()))
+        Log("movement stick range: raw %.3f %.3f mapped %.3f %.3f outer=%d peaks F/B/L/R %.3f %.3f %.3f %.3f",
+            rawMoveX,rawMoveY,mx,my,g_movementStickOuterPercent,movementProbe.peakForward,
+            movementProbe.peakBack,movementProbe.peakLeft,movementProbe.peakRight);
     // DesktopAutomation is also the deterministic no-headset input harness.  Keep the
     // controller action override here, after the optional stick swap, so the synthetic
     // right-stick direction always means the same wheel sector as a real right Sense stick.

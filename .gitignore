@@ -160,3 +160,6 @@ offline-deliverables/
 /captures/user-headset-20261110/
 /build/tracked-support-cpu/
 /build/artifact-support-final/
+
+# Generated movement-stick host tests
+/tests/movement_stick_range_test.exe
