@@ -39,3 +39,18 @@ These rules apply to all work in this repository and override generic skill defa
 - Repo-local Codex/OpenCode skills live under `.agents/skills/<name>/SKILL.md`; keep their required `name` and `description` front matter and preserve source licenses. See `docs/AGENT_SKILLS_MANIFEST.md` for the workflow index. (`docs/AGENT_SKILLS.md` does not exist; the manifest is the index.)
 - Prefer fixes for P0 lifecycle/performance, P1 stereo/render correctness, P2 hands/weapons, and P3 contextual interaction before optional polish.
 - Protect the user's existing working tree. Make focused changes and report exact evidence and remaining limits.
+
+
+<!-- trilex-toolkit:start -->
+## Shared Trilex agent toolkit
+
+Use the version and profile in .trilex-agents.json. Search and summarize locally first,
+reuse confirmed findings and load only task-relevant skills and tools. When the toolkit
+is installed, run doctor.ps1 -ProjectRoot <checkout> to locate that checkout's skills.
+For setup, updates and rollback, follow the central toolkit's README:
+https://github.com/trilex07/trilexAgents
+
+Only authorized MAIN with the project lab lease may attach to or modify the actual
+Steam game installation. SIDE works from source, captures, dumps or isolated environments.
+Use the toolkit handoff format and work on dedicated branches.
+<!-- trilex-toolkit:end -->
