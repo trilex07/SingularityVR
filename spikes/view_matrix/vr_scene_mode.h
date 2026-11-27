@@ -43,6 +43,11 @@ inline Mode RecoveryFrameMode(Mode completed, bool recovering, unsigned splitDra
         Mode::CutsceneFlat : completed;
 }
 
+// A stable list from the last cinematic frame can survive the transition into gameplay.
+inline bool GameplayMeshCensus(Mode recorded, Mode current) {
+    return recorded == Mode::GameplayStereo && current == Mode::GameplayStereo;
+}
+
 inline bool FrontendMenuPresentation(bool enabled, int menuClass, bool focus,
                                      bool cinematic = false, bool paused = false) {
     // SPIIS boot (class1) also has Start/Quit labels. A native cinematic bit

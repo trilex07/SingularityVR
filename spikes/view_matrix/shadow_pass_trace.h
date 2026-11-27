@@ -72,6 +72,32 @@ struct DrawEvent {
     unsigned type=0,vertices=0,primitives=0;
 };
 static DrawEvent events[kDraws];static unsigned operations=0;
+// A pipeline group can contain several meshes. Its first set of matrices and
+// buffers does not necessarily describe the wreck, even when the shader matches.
+struct WreckDraw {
+    unsigned draw, group;
+    D3DVIEWPORT9 viewport;
+    UINT offset, stride;
+    IDirect3DVertexBuffer9* vb;
+    IDirect3DIndexBuffer9* ib;
+    HRESULT viewportRead, vbRead, ibRead, constantsRead;
+    float constants[9][4];
+};
+constexpr unsigned kWreckDraws=16;
+static WreckDraw wreckDraws[kWreckDraws];
+static unsigned wreckCount=0, wreckOverflow=0;
+
+inline void RecordWreckDraw(IDirect3DDevice9* dev, unsigned group) {
+    if (wreckCount == kWreckDraws) { ++wreckOverflow; return; }
+    auto& record = wreckDraws[wreckCount++];
+    record = {};
+    record.draw = draws;
+    record.group = group;
+    record.viewportRead = dev->GetViewport(&record.viewport);
+    record.vbRead = dev->GetStreamSource(0, &record.vb, &record.offset, &record.stride);
+    record.ibRead = dev->GetIndices(&record.ib);
+    record.constantsRead = dev->GetVertexShaderConstantF(0, record.constants[0], 9);
+}
 struct Copy { IDirect3DSurface9* src=nullptr;IDirect3DSurface9* dst=nullptr;unsigned draw=0,op=0;
     RECT from{},to{};bool fromRect=false,toRect=false;D3DTEXTUREFILTERTYPE filter{};HRESULT hr=E_FAIL; };
 struct Clear { IDirect3DSurface9* rt=nullptr;IDirect3DSurface9* depth=nullptr;unsigned draw=0,op=0;
@@ -89,6 +115,11 @@ inline void NoteClear(IDirect3DDevice9* dev,DWORD rects,DWORD flags,DWORD colour
     dev->GetDepthStencilSurface(&c.depth);c.draw=draws;c.rects=rects;c.flags=flags;c.colour=colour;c.z=z;c.stencil=stencil;c.hr=hr;
 }
 inline void Release() {
+    for (unsigned i=0; i<wreckCount; ++i) {
+        if (wreckDraws[i].vb) wreckDraws[i].vb->Release();
+        if (wreckDraws[i].ib) wreckDraws[i].ib->Release();
+    }
+    wreckCount = wreckOverflow = 0;
  for(unsigned i=0;i<mapPixelCount;++i)if(mapPixels[i].texture)mapPixels[i].texture->Release();
  mapPixelCount=0;if(mapStaging){mapStaging->Release();mapStaging=nullptr;}
     for(unsigned i=0;i<copyCount;++i){if(copies[i].src)copies[i].src->Release();if(copies[i].dst)copies[i].dst->Release();}
@@ -136,6 +167,8 @@ inline int Before(IDirect3DDevice9* dev,unsigned type,unsigned verts,unsigned pr
     }
     auto& g=groups[i];++g.count;g.last=draws;
     events[draws-1].group=i;
+    if (type == D3DPT_TRIANGLELIST && verts == 3440 && prims == 4093)
+        RecordWreckDraw(dev, i);
     // First and last volume draws can have different matrix semantics despite
     // identical COM state. Read only these small repeated volumes, <=128/frame.
     if(g.count>1 && verts==8 && prims==12 && tailReads<128) {
@@ -166,6 +199,18 @@ inline void WriteShader(FILE* f,IUnknown* shader,bool pixel) {
 inline void Dump(const char* path) {
     FILE* f=nullptr;if(fopen_s(&f,path,"wb")||!f)return;
     fprintf(f,"shadow-pass-trace-v1 draws=%u groups=%u overflow=%u\n",draws,count,overflow);
+    fprintf(f,"wreck-draw-count=%u overflow=%u\n", wreckCount, wreckOverflow);
+    for (unsigned i=0; i<wreckCount; ++i) {
+        const auto& w = wreckDraws[i];
+        fprintf(f,"wreck-draw=%u group=%u VB=%p IB=%p offset=%u stride=%u vp=%lu,%lu,%lu,%lu viewportRead=%08lX vbRead=%08lX ibRead=%08lX constantsRead=%08lX\n",
+                w.draw,w.group,w.vb,w.ib,w.offset,w.stride,w.viewport.X,w.viewport.Y,
+                w.viewport.Width,w.viewport.Height,w.viewportRead,w.vbRead,w.ibRead,w.constantsRead);
+        if (SUCCEEDED(w.constantsRead)) for (unsigned r=0; r<9; ++r) {
+            const float* v = w.constants[r];
+            fprintf(f,"wreck-constant draw=%u reg=%u VS=%.9g,%.9g,%.9g,%.9g\n",
+                    w.draw,r,v[0],v[1],v[2],v[3]);
+        }
+    }
     for(unsigned i=0;i<mapPixelCount;++i){const auto& m=mapPixels[i];const auto& v=m.stats;
         fprintf(f,"map-pixels index=%u group=%u beforeDraw=%u texture=%p hr=%08lX finite=%u nonfinite=%u zero=%u one=%u min=%.9g max=%.9g\n",i,m.group,m.draw,m.texture,m.hr,v.finite,v.nonfinite,v.zero,v.one,v.minimum,v.maximum);
         if(SUCCEEDED(m.hr))for(unsigned y=0;y<16;++y){fprintf(f,"map-grid index=%u row=%u",i,y);for(unsigned x=0;x<16;++x)fprintf(f," %.9g",v.grid[y*16+x]);fputc('\n',f);}

@@ -10,6 +10,13 @@ using vrscene::Mode;
 using vrscene::Signals;
 
 int main() {
+    assert(vrscene::GameplayMeshCensus(Mode::GameplayStereo,Mode::GameplayStereo));
+    const Mode nonGameplay[] = {Mode::CutsceneFlat,Mode::VideoFlat,Mode::MenuFlat,Mode::Unknown};
+    for (Mode mode : nonGameplay) {
+        assert(!vrscene::GameplayMeshCensus(mode,mode));
+        assert(!vrscene::GameplayMeshCensus(mode,Mode::GameplayStereo));
+        assert(!vrscene::GameplayMeshCensus(Mode::GameplayStereo,mode));
+    }
     assert(vrscene::CompletedFrameMode(Mode::CutsceneFlat,Mode::GameplayStereo)==Mode::CutsceneFlat);
     assert(vrscene::CompletedFrameMode(Mode::GameplayStereo,Mode::CutsceneFlat)==Mode::GameplayStereo);
     assert(vrscene::CompletedFrameMode(Mode::GameplayStereo,Mode::VideoFlat)==Mode::VideoFlat);

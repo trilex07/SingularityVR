@@ -6253,7 +6253,7 @@ void DrawHipKnife(IDirect3DDevice9* dev);
 void DrawVfxOverlay(IDirect3DDevice9* dev);    // VFX host, Present/backbuffer path
 void DrawVrContextPrompt(IDirect3DDevice9* dev); // PS icon overlay for a detected native context prompt
 static void StartupReadinessFrame(IDirect3DDevice9* dev);
-static void SaveBackbufferCapture(IDirect3DDevice9* dev, bool submittedBackbuffer = false);
+static void SaveBackbufferCapture(IDirect3DDevice9* dev, bool submittedBackbuffer = false, unsigned traceSequence = 0);
 static volatile LONG g_pauseCaptureRequested = 0;
 static bool g_xrCaptureOpaqueAlpha=false;
 static void PrepareXrCaptureAlpha(IDirect3DDevice9*,IDirect3DSurface9*);
@@ -17039,6 +17039,8 @@ volatile LONG g_fgSigCount = 0;
 // gameplay frame because it is replaced wholesale every frame rather than accumulated.
 volatile LONG g_fgStableVerts[kFgSigMax] = {};
 volatile LONG g_fgStableCount = 0;
+static volatile LONG g_fgStableScene = static_cast<LONG>(vrscene::Mode::Unknown);
+static bool g_gameplayOnlyMeshLatch = false;
 // ⭐ run 232: budget for the change-triggered census. Bounded because firing adds muzzle-flash
 // geometry to the pass, so a busy fight is a legitimate source of many real changes.
 int g_fgCensusBudget = 400;      // ini [Render] FgCensusBudget
@@ -20594,7 +20596,17 @@ void UpdateFgLatch() {
         }
     }
 
-    if (n >= kFgSigMax) return; // Saturated census includes scene geometry: no role inference.
+    static LONG candGun = 0, candArms = 0;
+    static int steady = 0;
+    if ((!gun || !arms) && g_gameplayOnlyMeshLatch && VrModeOn() &&
+        !vrscene::GameplayMeshCensus(static_cast<vrscene::Mode>(Rd(g_fgStableScene)), g_sceneMode.Current())) {
+        steady = 0;
+        return;
+    }
+    if (n >= kFgSigMax) {
+        if (g_gameplayOnlyMeshLatch && VrModeOn()) steady = 0;
+        return; // Saturated census includes scene geometry.
+    }
 
     if (gun && arms) {
         if (n == 0) return;                       // nothing being drawn: no evidence either way
@@ -20684,8 +20696,6 @@ void UpdateFgLatch() {
     }
 
     // Not latched. Wait for the top two to settle before believing them.
-    static LONG candGun = 0, candArms = 0;
-    static int  steady = 0;
     if (n < 2) { steady = 0; return; }
     // ---- 💥 run 216: the roles were POSITIONAL, and the scope changes the draw order ----
     //
@@ -30138,10 +30148,11 @@ bool VrPanelHitNormalized(LONG uInt, LONG vInt, int* rowIndex) {
 // briefly (expect a visible hitch on the capture frame) - that is the price of
 // GetRenderTargetData, not a bug. Multisampled or exotic formats are skipped, never
 // forced. Render thread only; touches no device state, only reads target 0.
-static void SaveBackbufferCapture(IDirect3DDevice9* dev, bool submittedBackbuffer) {
+static void SaveBackbufferCapture(IDirect3DDevice9* dev, bool submittedBackbuffer, unsigned traceSequence) {
     static ULONGLONG lastMs = 0;
     const ULONGLONG now = GetTickCount64();
-    if (now - lastMs < 3000) return;
+    // A completed frame trace has one opportunity to read its matching pixels.
+    if (!traceSequence && now - lastMs < 3000) return;
     lastMs = now;
     IDirect3DSurface9* rt = nullptr;
     const HRESULT sourceResult = submittedBackbuffer
@@ -30175,9 +30186,16 @@ static void SaveBackbufferCapture(IDirect3DDevice9* dev, bool submittedBackbuffe
     if (dirlen >= sizeof(path) - 64) dirlen = 0;
     memcpy(path, logp, dirlen);
     SYSTEMTIME st{}; GetLocalTime(&st);
-    _snprintf_s(path + dirlen, sizeof(path) - dirlen, _TRUNCATE,
+    if (traceSequence) {
+        _snprintf_s(path + dirlen, sizeof(path) - dirlen, _TRUNCATE,
+                    "capture_%04u-%02u-%02u_%02u-%02u-%02u_%lu_%u.bmp",
+                    st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond,
+                    GetCurrentProcessId(), traceSequence);
+    } else {
+        _snprintf_s(path + dirlen, sizeof(path) - dirlen, _TRUNCATE,
                 "capture_%04u-%02u-%02u_%02u-%02u-%02u.bmp",
                 st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond);
+    }
     const uint32_t rowBytes = (uint32_t)d.Width * 4u;
     const uint32_t imgBytes = rowBytes * (uint32_t)d.Height;
 #pragma pack(push, 1)
@@ -30195,7 +30213,7 @@ static void SaveBackbufferCapture(IDirect3DDevice9* dev, bool submittedBackbuffe
         // BMP is bottom-up: last row first. Pitch may exceed row bytes - copy packed.
         for (int32_t y = (int32_t)d.Height - 1; y >= 0 && ok; --y)
             ok = fwrite((const char*)lr.pBits + (size_t)y * (size_t)lr.Pitch, rowBytes, 1, f) == 1;
-        fclose(f);
+        if (fclose(f) != 0) ok = false;
     }
     sys->UnlockRect();
     sys->Release(); rt->Release();
@@ -34278,7 +34296,7 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
         (unsigned)Rd(g_armPaletteFrameToken));
     }
     if(shadowtrace::Boundary(s,shadowTraceStable>=15,g_logPath)){
-        SaveBackbufferCapture(s,true); // Completed SBS scene, before menu/diagnostic overlays.
+        SaveBackbufferCapture(s,true,shadowtrace::sequence); // Completed SBS scene, before overlays.
         nativefx::DumpWitness();
         if(g_tmdVisualScene!=tmdvisualaudit::Scene::None) {
             Log("tmd-visual-audit: completed=%s sequence=%u frame=%ld hands=%ld gravityInput=%d; inspect matching SBS pixels and shader dump, not counters alone",
@@ -37451,6 +37469,7 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
                 for (LONG i = 0; i < kFgSigMax; ++i)
                     InterlockedExchange(&g_fgStableVerts[i],
                         i < sc ? InterlockedCompareExchange(&g_fgSigVerts[i], 0, 0) : 0);
+                InterlockedExchange(&g_fgStableScene, static_cast<LONG>(g_scenePresentMode));
                 InterlockedExchange(&g_fgStableCount, sc);
                 if (sc > 0) InterlockedExchange(&g_fgSeenMs, (LONG)GetTickCount());   // ⭐ run 238
 
@@ -39044,6 +39063,8 @@ void LoadIniSettings() {
     // Measured 3 with a weapon (gun, arms, fragment) and 2 without. An ini value rather than a constant
     // because 3 came from one pistol - if a weapon never latches, this is the number to lower.
     g_minFgMeshes = GetPrivateProfileIntA("Render", "MinFgMeshes", 3, path);
+    g_gameplayOnlyMeshLatch = GetPrivateProfileIntA("Render", "GameplayOnlyMeshLatch", 0, path) != 0;
+    Log("ini: GameplayOnlyMeshLatch=%d", g_gameplayOnlyMeshLatch ? 1 : 0);
     if (g_minFgMeshes < 2)  g_minFgMeshes = 2;
     if (g_minFgMeshes > 8)  g_minFgMeshes = 8;
     Log("ini: MinFgMeshes=%d (the first-person pass must hold this many meshes before the gun/arms roles"
