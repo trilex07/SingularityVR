@@ -10,7 +10,7 @@ using Copy = HRESULT (STDMETHODCALLTYPE *)(IDirect3DDevice9*, IDirect3DSurface9*
     const RECT*, IDirect3DSurface9*, const RECT*, D3DTEXTUREFILTERTYPE);
 
 struct Request {
-    bool valid = false, depth = false;
+    bool valid = false, depth = false, nativePrime = false;
     unsigned x[kPoints]{}, y[kPoints]{};
 };
 
@@ -23,6 +23,7 @@ inline Request ReadRequest(const char* path) {
                                 &request.x[1], &request.y[1], mode, unsigned(sizeof(mode)));
     request.valid = fields >= 4;
     request.depth = fields == 5 && strcmp(mode,"depth") == 0;
+    request.nativePrime = fields == 5 && strcmp(mode,"native") == 0;
     fclose(file);
     return request;
 }
@@ -128,6 +129,7 @@ inline void ObserveDraw(IDirect3DDevice9* dev, unsigned op, unsigned draw, unsig
 
 inline void Dump(FILE* file, IDirect3DDevice9* dev) {
     if (!sample.valid) return;
+    if (sample.nativePrime) fprintf(file, "tmd-native-prime-frame=1\n");
     fprintf(file, "pixel-history sample=%u,%u;%u,%u active=%d backbuffer=%08lX rejected=%u\n",
             sample.x[0], sample.y[0], sample.x[1], sample.y[1], copyPixels != nullptr, lastDescribe, rejected);
     if (!copyPixels) return;

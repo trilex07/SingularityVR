@@ -21565,6 +21565,25 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
                                                      // rewrites the camera slots, so the bones persist
                                                      // across both eye draws
     int rideTo = isGun ? 1 : RideTargetFor(numVertices,startIndex,primCount);
+    if (shadowtrace::active && shadowcolor::sample.valid && rideTo==2 && !Rd(g_inForeground) &&
+        t==D3DPT_TRIANGLELIST && numVertices==4 && primCount==2) {
+        DWORD writes=~0u, depthWrites=0;
+        if (SUCCEEDED(dev->GetRenderState(D3DRS_COLORWRITEENABLE,&writes)) && !writes &&
+            SUCCEEDED(dev->GetRenderState(D3DRS_ZWRITEENABLE,&depthWrites)) && depthWrites &&
+            tmddepthwitness::MatchPair(dev,136,0x37DE15B0u,372,0x24717B60u)) {
+            IDirect3DVertexBuffer9* vb=nullptr;
+            IDirect3DIndexBuffer9* ib=nullptr;
+            UINT offset=0,stride=0;
+            dev->GetStreamSource(0,&vb,&offset,&stride);
+            dev->GetIndices(&ib);
+            const bool native=shadowcolor::sample.nativePrime;
+            Log("tmd-prime-witness: frame=%ld idx=%ld native=%d vb=%p ib=%p base=%d min=%u first=%u stride=%u streamOffset=%u",
+                Rd(g_sceneModeFrame),Rd(g_frameDrawIdx),native?1:0,vb,ib,baseVertex,minIndex,startIndex,stride,offset);
+            if(vb)vb->Release();
+            if(ib)ib->Release();
+            if(native)rideTo=0;
+        }
+    }
     if(!isGun && rideTo==2 && g_tmdShortGauntlet && g_independentHands &&
        Rd(g_gloveIsolate)==2 && (!Rd(g_twoHandActive) || TmdSupportAssemblyEnabled()) && !g_boundShaderLayout.shadow &&
        Rd(g_rtIsScene) && FgMatchWindow() && startIndex==0 && minIndex==0 &&

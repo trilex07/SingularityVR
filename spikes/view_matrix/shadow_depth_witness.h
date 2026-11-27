@@ -53,14 +53,18 @@ template<class Shader> inline bool KnownCode(Shader* shader,UINT expected,uint32
     return hash==fingerprint;
 }
 
-inline bool Match(IDirect3DDevice9* dev) {
+inline bool MatchPair(IDirect3DDevice9* dev,UINT psBytes,uint32_t psCode,UINT vsBytes,uint32_t vsCode) {
     IDirect3DPixelShader9* ps=nullptr;
     IDirect3DVertexShader9* vs=nullptr;
-    const bool checked=SUCCEEDED(dev->GetPixelShader(&ps))&&KnownCode(ps,2736,0xBF50BD06u)&&
-        SUCCEEDED(dev->GetVertexShader(&vs))&&KnownCode(vs,1116,0xBFAB5B3Eu);
+    const bool checked=SUCCEEDED(dev->GetPixelShader(&ps))&&KnownCode(ps,psBytes,psCode)&&
+        SUCCEEDED(dev->GetVertexShader(&vs))&&KnownCode(vs,vsBytes,vsCode);
     if(ps)ps->Release();
     if(vs)vs->Release();
     return checked;
+}
+
+inline bool Match(IDirect3DDevice9* dev) {
+    return MatchPair(dev,2736,0xBF50BD06u,1116,0xBFAB5B3Eu);
 }
 
 inline void Sample(IDirect3DDevice9* dev,unsigned draw,unsigned op,unsigned group,
