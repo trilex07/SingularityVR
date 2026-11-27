@@ -35121,14 +35121,21 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
 
     // BACKSPACE: the whole mod on or off in one key. See SetVrMode.
     //
-    // ⚠️ THE ONE KEY THAT IS NOT GATED (run 157). Deliberately raw GetAsyncKeyState, not DebugKey.
+    // Deliberately bypasses DebugKey. Backspace is also used in desktop
+    // applications, so dispatch its rising edge only while the game has focus.
     // Everything else is developer scaffolding that can be recovered by turning DEBUGGING back on
     // from the panel; switching in and out of VR is not scaffolding, and gating it would mean a
-    // Debug=0 launch could never enter VR at all, since the cold start is flat by design and there
-    // is no ENABLE VR setting yet. Remove this exemption only once that setting exists.
+    // Debug=0 launch needs this key to enter VR when the cold start is flat.
     static bool pBack = false;
     bool kBack = (GetAsyncKeyState(VK_BACK) & 0x8000) != 0;
-    if (kBack && !pBack) SetVrMode(InterlockedCompareExchange(&g_dupDraws, 0, 0) == 0);
+    if (kBack && !pBack) {
+        DWORD foregroundPid = 0;
+        const HWND foreground = GetForegroundWindow();
+        if (foreground) GetWindowThreadProcessId(foreground, &foregroundPid);
+        if (foregroundPid == GetCurrentProcessId()) {
+            SetVrMode(InterlockedCompareExchange(&g_dupDraws, 0, 0) == 0);
+        }
+    }
     pBack = kBack;
 
     // ---- ⭐ run 133: arm the cutscene watch WITHOUT a keypress ----
