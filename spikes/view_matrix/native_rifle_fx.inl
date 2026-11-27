@@ -186,11 +186,14 @@ static void InstallTracer(){
        !Code(getter,156,0xDC2F29F0817B2902ull)){
         Log("rifle native tracer: REFUSE exact wrapper/method/interface contracts");return;
     }
+    const LARGE_INTEGER hookStart = g_gameplayHookTimingExtra ? Now() : LARGE_INTEGER{};
     auto status=MH_CreateHook((void*)getter,(void*)&SourceHook,(void**)&sourceOriginal);
     if(status!=MH_OK){sourceOriginal=nullptr;return;}
     tracerCaller=tracer+0x8e;
     status=MH_EnableHook((void*)getter);
     if(status!=MH_OK){MH_RemoveHook((void*)getter);sourceOriginal=nullptr;tracerCaller=0;return;}
+    if(g_gameplayHookTimingExtra)
+        Log("rifle setup timing: tracer create and enable %.3f ms", MsSince(hookStart));
     Log("rifle native tracer: source-only hook armed; impact/spread/endpoint untouched");
 }
 static void MaintainTick(){
@@ -353,8 +356,10 @@ static void Install(){
     static unsigned attempts=0;static ULONGLONG next=0;
     if(attempts>=3||GetTickCount64()<next)return;
     ++attempts;next=GetTickCount64()+2000;
+    const LARGE_INTEGER setupStart = g_gameplayHookTimingExtra ? Now() : LARGE_INTEGER{};
     if(g_nativeRifleMuzzle==3&&!BindMovement()){
         Log("rifle native pose: refused exact SetLocation/SetRotation contracts; no movement hook");return;}
+    const double bindMs = g_gameplayHookTimingExtra ? MsSince(setupStart) : 0;
     const auto wrapper=Function(g_weaponFxClass,"PlayMuzzleFX");
     // Full wrapper proves the vector-reference + UBOOL stack order and ret8.
     if(!Code(wrapper,197,0x1153B073558EDE80ull)||
@@ -384,6 +389,7 @@ static void Install(){
             }
         }
     }
+    const double validationMs = g_gameplayHookTimingExtra ? MsSince(setupStart) - bindMs : 0;
     if(g_nativeWeaponMuzzleDirection&&!spawnOriginal){
         const auto spawn=PauseRttProbe::Pointer(PauseRttProbe::Pointer(object)+0x130);
         if(!Code(spawn,431,0x7D212C7E3EE26640ull)){
@@ -396,11 +402,15 @@ static void Install(){
         if(s!=MH_OK){MH_RemoveHook((void*)spawn);spawnOriginal=nullptr;spawnCaller=0;return;}
         Log("native-fx direction: audited 431-byte spawn ret2C; exact local first-person caller armed");
     }
+    const double directionMs = g_gameplayHookTimingExtra ? MsSince(setupStart) - bindMs - validationMs : 0;
     auto status=MH_CreateHook((void*)method,(void*)&Hook,(void**)&original);
     if(status!=MH_OK){original=nullptr;Log("rifle native emitter: CreateHook=%d",int(status));return;}
     status=MH_EnableHook((void*)method);
     if(status!=MH_OK){MH_RemoveHook((void*)method);original=nullptr;Log("rifle native emitter: EnableHook=%d",int(status));return;}
     hooked=method;
+    if(g_gameplayHookTimingExtra)
+        Log("rifle setup timing: movement contracts %.3f ms | emitter contracts %.3f ms | direction hook %.3f ms | emitter hook %.3f ms",
+            bindMs, validationMs, directionMs, MsSince(setupStart) - bindMs - validationMs - directionMs);
     Log("rifle native emitter: audited hook armed mode=%d [not visual proof]",g_nativeRifleMuzzle);
 }
 }
