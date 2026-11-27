@@ -14,7 +14,8 @@ class NativeCinemaTests(unittest.TestCase):
             self.assertIn(token,body)
         for token in ('memcpy(', 'WriteProcessMemory','FindClassByName','kGObjects','SetCutsceneMode'):
             self.assertNotIn(token,body)
-        registered=SOURCE.split('WantedName g_wantNames[] = {',1)[1].split('};',1)[0]
+        self.assertIn('#include "native_wanted_names.h"',SOURCE)
+        registered=(ROOT/'spikes/view_matrix/native_wanted_names.h').read_text(encoding="utf-8").split('WantedName g_wantNames[] = {',1)[1].split('};',1)[0]
         self.assertIn('{ "PCOwner", -1 }',registered)
         self.assertLess(body.index('g_upChildren!=0x4c'),body.index('ReadNativeLocalPlayer('))
         self.assertNotIn('pawn!=g_playerPawn',body)

@@ -8,6 +8,7 @@
 #include <cstdio>
 #include <cstdint>
 #include <map>
+#include "../native_wanted_names.h"
 volatile LONG g_seekerBackSlot=1,g_seekerBackRequest=0,g_seekerBackAvailable=0,g_seekerWheelRequest=0;
 volatile LONG g_gamePaused=0,g_inCinematic=0,g_vrMenuClass=0,g_vrUiMenu=0,g_panelOpen=0;
 constexpr unsigned OBJ_CLASS=32;
@@ -45,9 +46,11 @@ static bool NameFromIndex(int i,char* out,size_t n){
     const char* text=i==10?"ARSteerable":i==20?"ARRifle":i==30?"UnrelatedWeapon":nullptr;
     if(!text)return false;strcpy_s(out,n,text);return true;
 }
-#include "seeker_registered_names.h"
 struct MemberCache {int Get(uintptr_t,const char* n){
-    bool registered=false;for(auto name:productionNames)if(!strcmp(name,n))registered=true;
+    bool registered=false;
+    for(const auto& field : g_wantNames) {
+        if(!strcmp(field.s,n)) { registered=true; break; }
+    }
     if(!registered)return -1;
     if(!strcmp(n,"InvManager"))return 0x3d0;if(!strcmp(n,"Weapon"))return 0x3d4;
     if(!strcmp(n,"InventoryChain")||!strcmp(n,"Inventory"))return 0x1e0;

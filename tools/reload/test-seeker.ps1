@@ -6,15 +6,6 @@ $vs=& $vswhere -latest -products * -requires Microsoft.VisualStudio.Component.VC
 $vc=Join-Path $vs 'VC/Auxiliary/Build/vcvarsall.bat'
 $out=Join-Path $root 'build/seeker-private/tests'
 New-Item -ItemType Directory -Force $out | Out-Null
-# Use the real production name registry: synthetic offsets must not hide
-# unregistered names (the PR60 ownership gate defect).
-$source=Get-Content (Join-Path $root 'spikes/view_matrix/d3d9.cpp') -Raw
-$start=$source.IndexOf('g_wantNames[]')
-if($start -lt 0){throw 'Missing production name registry'}
-$end=$source.IndexOf('const int kWantNameCount',$start)
-$names=[regex]::Matches($source.Substring($start,$end-$start),'\{\s*"([^"]+)"\s*,\s*-1\s*\}')
-$literal=($names | ForEach-Object { '"'+$_.Groups[1].Value+'"' }) -join ','
-('static const char* productionNames[]={' + $literal + '};') | Set-Content (Join-Path $out 'seeker_registered_names.h') -Encoding ascii
 Push-Location $out
 try {
     foreach($name in @('test-native-property-list','test-seeker','test-seeker-native-adapter','test-seeker-projectile-adapter')){
