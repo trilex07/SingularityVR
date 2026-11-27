@@ -34338,7 +34338,10 @@ static void StartupReadinessFrame(IDirect3DDevice9* dev){
     if(!restored){drawFault=true;Log("startup loading: state restore failed; curtain disabled for this session");}
 }
 
+#include "vr_audio_focus.h"
 HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const RECT* b, HWND c, const RGNDATA* d) {
+    vraudiofocus::Update(VrModeOn() && g_xrRunning &&
+        (g_xrSessionState == XR_SESSION_STATE_FOCUSED || g_xrSessionState == XR_SESSION_STATE_VISIBLE));
     shadowfix::Poll(g_logPath);
     worldshadowfix::Poll(g_logPath);
     projectorfix::Poll();
@@ -38864,6 +38867,7 @@ void LoadIniSettings() {
     // Migrate its intent without suppressing unrelated decals. An explicit new value wins.
     const int legacyGravityFilter = GetPrivateProfileIntA("Diagnostic", "DropDecalLocalTangent", 0, path);
     g_tmdWorldPrimeFix = GetPrivateProfileIntA("Render","TmdWorldPrimeFix",1,path) != 0;
+    vraudiofocus::enabled=GetPrivateProfileIntA("Audio","KeepVrAudioInBackground",1,path)!=0;
     g_tmdGravityDecalFix = GetPrivateProfileIntA("Render", "TmdGravityDecalFix", legacyGravityFilter, path) != 0;
     Log("ini: TmdGravityDecalFix=%d (captured TMD draw only, legacy setting=%d)",
         g_tmdGravityDecalFix ? 1 : 0, legacyGravityFilter);
