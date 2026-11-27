@@ -390,27 +390,56 @@ static void Install(){
         }
     }
     const double validationMs = g_gameplayHookTimingExtra ? MsSince(setupStart) - bindMs : 0;
+    void* directionTarget = nullptr;
     if(g_nativeWeaponMuzzleDirection&&!spawnOriginal){
         const auto spawn=PauseRttProbe::Pointer(PauseRttProbe::Pointer(object)+0x130);
         if(!Code(spawn,431,0x7D212C7E3EE26640ull)){
             Log("native-fx direction: REFUSE full spawn contract");return;
         }
-        auto s=MH_CreateHook((void*)spawn,(void*)&SpawnHook,(void**)&spawnOriginal);
+        directionTarget = (void*)spawn;
+        auto s=MH_CreateHook(directionTarget,(void*)&SpawnHook,(void**)&spawnOriginal);
         if(s!=MH_OK){spawnOriginal=nullptr;return;}
         spawnCaller=method+0x1e3; // exact +130 CALL return, verified full parent body
-        s=MH_EnableHook((void*)spawn);
-        if(s!=MH_OK){MH_RemoveHook((void*)spawn);spawnOriginal=nullptr;spawnCaller=0;return;}
-        Log("native-fx direction: audited 431-byte spawn ret2C; exact local first-person caller armed");
     }
-    const double directionMs = g_gameplayHookTimingExtra ? MsSince(setupStart) - bindMs - validationMs : 0;
     auto status=MH_CreateHook((void*)method,(void*)&Hook,(void**)&original);
-    if(status!=MH_OK){original=nullptr;Log("rifle native emitter: CreateHook=%d",int(status));return;}
-    status=MH_EnableHook((void*)method);
-    if(status!=MH_OK){MH_RemoveHook((void*)method);original=nullptr;Log("rifle native emitter: EnableHook=%d",int(status));return;}
+    const bool emitterCreated = status == MH_OK;
+    const double preparationMs = g_gameplayHookTimingExtra ? MsSince(setupStart) - bindMs - validationMs : 0;
+    if(emitterCreated){
+        if(directionTarget){
+            status=MH_QueueEnableHook(directionTarget);
+            if(status==MH_OK) status=MH_QueueEnableHook((void*)method);
+            if(status==MH_OK) status=MH_ApplyQueued();
+        }else{
+            status=MH_EnableHook((void*)method);
+        }
+    }
+    if(status!=MH_OK){
+        // A queued apply can stop after its first target. Remove only entries
+        // created in this attempt, including a queued or partially enabled one.
+        const auto emitterCleanup = emitterCreated ? MH_RemoveHook((void*)method) : MH_OK;
+        if(emitterCleanup==MH_OK) original=nullptr;
+        auto directionCleanup = MH_OK;
+        if(directionTarget){
+            directionCleanup=MH_RemoveHook(directionTarget);
+            if(directionCleanup==MH_OK){
+                spawnOriginal=nullptr;
+                spawnCaller=0;
+            }
+        }
+        // A failed removal may leave an active callback. Keep its trampoline
+        // and stop retrying rather than resetting a pointer it can still use.
+        if(emitterCleanup!=MH_OK || directionCleanup!=MH_OK) attempts=3;
+        Log("rifle native emitter: setup failed status=%d cleanup emitter=%d direction=%d",
+            int(status),int(emitterCleanup),int(directionCleanup));
+        return;
+    }
     hooked=method;
+    if(directionTarget)
+        Log("native-fx direction: audited 431-byte spawn ret2C; exact local first-person caller armed");
     if(g_gameplayHookTimingExtra)
-        Log("rifle setup timing: movement contracts %.3f ms | emitter contracts %.3f ms | direction hook %.3f ms | emitter hook %.3f ms",
-            bindMs, validationMs, directionMs, MsSince(setupStart) - bindMs - validationMs - directionMs);
+        Log("rifle setup timing: movement contracts %.3f ms | emitter contracts %.3f ms | hook preparation %.3f ms | activation %.3f ms | targets %d",
+            bindMs, validationMs, preparationMs, MsSince(setupStart) - bindMs - validationMs - preparationMs,
+            directionTarget ? 2 : 1);
     Log("rifle native emitter: audited hook armed mode=%d [not visual proof]",g_nativeRifleMuzzle);
 }
 }
