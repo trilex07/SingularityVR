@@ -34358,6 +34358,19 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
         g_handPositionValid[0] && g_handPositionValid[1];
     static unsigned shadowTraceStable=0;
     shadowTraceStable=shadowTraceReady?std::min(shadowTraceStable+1,30u):0;
+    if (g_tmdVisualAudit && shadowTraceStable >= 15 && InGameplay() && Rd(g_camPosValid) &&
+        !Rd(g_gamePaused) && !Rd(g_inCinematic) && !Rd(g_vrUiMenu)) {
+        static ULONGLONG nextPosition = 0;
+        static unsigned positions = 0;
+        const ULONGLONG now = GetTickCount64();
+        if (positions < 240 && now >= nextPosition) {
+            nextPosition = now + 500;
+            ++positions;
+            Log("tmd-lift-route: frame=%ld POV=(%.1f,%.1f,%.1f) facing=(%.4f,%.4f,%.4f)",
+                Rd(g_sceneModeFrame), g_povPos[0], g_povPos[1], g_povPos[2],
+                g_camFwd[0], g_camFwd[1], g_camFwd[2]);
+        }
+    }
     const uintptr_t grabbedActor = shadowTraceStable >= 15 ? AuditNativeGravityGrab() : 0;
     const auto auditScene=g_tmdVisualSchedule.Update(g_tmdVisualAudit,
         shadowTraceStable>=15 && Rd(g_haveTMD)==1 && InGameplay() &&
