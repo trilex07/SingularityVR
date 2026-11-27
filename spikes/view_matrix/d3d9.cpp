@@ -2,6 +2,7 @@
 #include "tmd_gravity_grip.h"
 #include "tmd_visual_audit.h"
 static bool g_tmdVisualAudit=false;
+static bool g_wreckPoseLossTrace=false;
 static bool g_tmdLiftBracket=false;
 static bool g_tmdAuditManual=false;
 static tmdvisualaudit::Schedule g_tmdVisualSchedule;
@@ -34518,11 +34519,18 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
     shadowcleargate::Poll(g_logPath);
     fpshadowfix::Poll(g_logPath);
     NativeGamepadEnumProbe::Poll(g_logPath);
-    const bool shadowTraceReady=g_playerPawn && VrModeOn() && Rd(g_vrMenuClass)==0 &&
-        g_xrSessionState==XR_SESSION_STATE_FOCUSED && g_handPoseValid[0] && g_handPoseValid[1] &&
-        g_handPositionValid[0] && g_handPositionValid[1];
+    const bool shadowTraceContext = g_playerPawn && VrModeOn() && Rd(g_vrMenuClass)==0 &&
+        g_xrSessionState==XR_SESSION_STATE_FOCUSED && g_handPoseValid[1] && g_handPositionValid[1];
+    const bool shadowTraceReady = shadowTraceContext && g_handPoseValid[0] && g_handPositionValid[0];
     static unsigned shadowTraceStable=0;
     shadowTraceStable=shadowTraceReady?std::min(shadowTraceStable+1,30u):0;
+    // The wreck experiment requests a read-only trace even when the left
+    // controller has no position. Keep the original gate for all other probes.
+    const bool wreckTraceReady = g_wreckPoseLossTrace && shadowTraceContext && InGameplay() &&
+        Rd(g_camPosValid) && !Rd(g_gamePaused) && !Rd(g_inCinematic) && !Rd(g_vrUiMenu) && !Rd(g_panelOpen);
+    static unsigned wreckTraceStable = 0;
+    wreckTraceStable = wreckTraceReady ? std::min(wreckTraceStable + 1, 30u) : 0;
+    const bool captureShadowTrace = shadowTraceStable >= 15 || wreckTraceStable >= 15;
     if (g_tmdVisualAudit && shadowTraceStable >= 15 && InGameplay() && Rd(g_camPosValid) &&
         !Rd(g_gamePaused) && !Rd(g_inCinematic) && !Rd(g_vrUiMenu)) {
         static ULONGLONG nextPosition = 0;
@@ -34568,7 +34576,7 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
         !Rd(g_gamePaused)&&!Rd(g_inCinematic)&&!Rd(g_vrUiMenu)&&!Rd(g_panelOpen),
         (unsigned)Rd(g_armPaletteFrameToken));
     }
-    if(shadowtrace::Boundary(s,shadowTraceStable>=15,g_logPath)){
+    if(shadowtrace::Boundary(s,captureShadowTrace,g_logPath)){
         SaveBackbufferCapture(s,true,shadowtrace::sequence); // Completed SBS scene, before overlays.
         nativefx::DumpWitness();
         if (g_tmdLiftBracket) CompleteLiftBracket(bracketActor);
@@ -37824,8 +37832,8 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
         g_haveLastWrittenYaw = false;   // stale reference once we stop steering
     }
     const LARGE_INTEGER realPresentBegin = Now();
-    if(shadowtrace::pending && shadowTraceStable>=15 && g_xrSessionState==XR_SESSION_STATE_FOCUSED &&
-       g_handPositionValid[0] && g_handPositionValid[1]) {
+    if(shadowtrace::pending && captureShadowTrace && g_xrSessionState==XR_SESSION_STATE_FOCUSED &&
+       g_handPositionValid[1] && (g_handPositionValid[0] || wreckTraceStable >= 15)) {
         shadowtrace::pending=false;
         Log("shadow-pass focus context session=%d handPosition=%d,%d",(int)g_xrSessionState,
             g_handPositionValid[0]?1:0,g_handPositionValid[1]?1:0);
@@ -39056,6 +39064,7 @@ void LoadIniSettings() {
     g_trackedDepthSourcePose=GetPrivateProfileIntA("Render","TrackedDepthSourcePose",0,path)!=0;
     g_tmdTrackedMuzzle=GetPrivateProfileIntA("Render","TmdTrackedMuzzle",0,path)!=0;
     g_tmdVisualAudit=GetPrivateProfileIntA("Diagnostic","TmdVisualAudit",0,path)!=0;
+    g_wreckPoseLossTrace=GetPrivateProfileIntA("Diagnostic","WreckPoseLossTrace",0,path)!=0;
     g_tmdLiftBracket = g_tmdVisualAudit &&
         GetPrivateProfileIntA("Diagnostic", "TmdLiftBracket", 0, path) != 0;
     // Installer 1.1.5 enabled the old family-wide diagnostic in portable settings.
