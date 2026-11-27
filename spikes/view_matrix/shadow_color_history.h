@@ -10,7 +10,7 @@ using Copy = HRESULT (STDMETHODCALLTYPE *)(IDirect3DDevice9*, IDirect3DSurface9*
     const RECT*, IDirect3DSurface9*, const RECT*, D3DTEXTUREFILTERTYPE);
 
 struct Request {
-    bool valid = false;
+    bool valid = false, depth = false;
     unsigned x[kPoints]{}, y[kPoints]{};
 };
 
@@ -18,8 +18,11 @@ inline Request ReadRequest(const char* path) {
     Request request;
     FILE* file = nullptr;
     if (fopen_s(&file, path, "rb") || !file) return request;
-    request.valid = fscanf_s(file, "%u %u %u %u", &request.x[0], &request.y[0],
-                             &request.x[1], &request.y[1]) == 4;
+    char mode[8]{};
+    const int fields = fscanf_s(file, "%u %u %u %u %7s", &request.x[0], &request.y[0],
+                                &request.x[1], &request.y[1], mode, unsigned(sizeof(mode)));
+    request.valid = fields >= 4;
+    request.depth = fields == 5 && strcmp(mode,"depth") == 0;
     fclose(file);
     return request;
 }

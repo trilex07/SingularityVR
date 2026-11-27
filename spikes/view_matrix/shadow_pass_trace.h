@@ -1,6 +1,7 @@
 #pragma once
 #include "shadow_depth_stats.h"
 #include "shadow_color_history.h"
+#include "shadow_depth_witness.h"
 // Default-OFF, read-only FINAL driver-call census. One requested gameplay frame.
 // No bytecode query, allocation or disk logging in the draw path. COM references
 // retained only for bounded unique groups and released by Present/reset.
@@ -120,6 +121,7 @@ inline void NoteClear(IDirect3DDevice9* dev,DWORD rects,DWORD flags,DWORD colour
 }
 inline void Release() {
     shadowcolor::Release();
+    tmddepthwitness::Release();
     for (unsigned i=0; i<wreckCount; ++i) {
         if (wreckDraws[i].vb) wreckDraws[i].vb->Release();
         if (wreckDraws[i].ib) wreckDraws[i].ib->Release();
@@ -186,6 +188,25 @@ inline int Before(IDirect3DDevice9* dev,unsigned type,unsigned verts,unsigned pr
     if(verts==8 && prims==12)ReadMap(dev,i);
     return (int)i;
 }
+inline int MatchBoardDepth(IDirect3DDevice9* dev,int group,unsigned verts,unsigned prims) {
+    if(group<0||verts!=4||prims!=2||!tmddepthwitness::active||tmddepthwitness::failed)return -1;
+    const auto& g=groups[group];
+    if(g.depthDesc.Format!=D3DFMT_D24S8||g.key.phase!=0||
+       g.vp.X!=0||g.vp.Y!=0||g.vp.MinZ!=0||g.vp.MaxZ!=1||
+       g.vp.Width!=shadowcolor::width||g.vp.Height!=shadowcolor::height)return -1;
+    for(unsigned i=0;i<shadowcolor::kPoints;++i){
+        const LONG x=LONG(shadowcolor::sample.x[i]), y=LONG(shadowcolor::sample.y[i]);
+        if(x<g.key.sc.left||x>=g.key.sc.right||y<g.key.sc.top||y>=g.key.sc.bottom)continue;
+        if(tmddepthwitness::Match(dev))return int(i);
+        break;
+    }
+    return -1;
+}
+inline void SampleBoardDepth(IDirect3DDevice9* dev,int group,int point,bool after) {
+    if(point>=0&&!tmddepthwitness::failed)
+        tmddepthwitness::Sample(dev,draws,operations,unsigned(group),unsigned(point),after?1u:0u,
+            shadowcolor::sample.x[point],shadowcolor::sample.y[point]);
+}
 inline void After(IDirect3DDevice9* dev,int i,HRESULT hr){
     if(i<0)return;
     if(FAILED(hr))++groups[i].failed;
@@ -210,6 +231,7 @@ inline void Dump(IDirect3DDevice9* dev,const char* path) {
     FILE* f=nullptr;if(fopen_s(&f,path,"wb")||!f)return;
     fprintf(f,"shadow-pass-trace-v1 draws=%u groups=%u overflow=%u\n",draws,count,overflow);
     shadowcolor::Dump(f,dev);
+    tmddepthwitness::Dump(f);
     fprintf(f,"wreck-draw-count=%u overflow=%u\n", wreckCount, wreckOverflow);
     for (unsigned i=0; i<wreckCount; ++i) {
         const auto& w = wreckDraws[i];
@@ -291,9 +313,10 @@ inline void Dump(IDirect3DDevice9* dev,const char* path) {
     }
     fclose(f);
 }
-inline void Arm(IDirect3DDevice9* dev,shadowcolor::Copy copy) {
+inline void Arm(IDirect3DDevice9* dev,shadowcolor::Copy copy,tmddepthwitness::Calls native) {
     Release();bound={};
     shadowcolor::Arm(dev,copy);
+    tmddepthwitness::Arm(dev,shadowcolor::sample.depth,native);
     mapStagingHr=dev->CreateOffscreenPlainSurface(512,512,D3DFMT_R32F,D3DPOOL_SYSTEMMEM,&mapStaging,nullptr);
     dev->GetVertexShader(&bound.vs);if(bound.vs)bound.vs->Release();
     dev->GetPixelShader(&bound.ps);if(bound.ps)bound.ps->Release();

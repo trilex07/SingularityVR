@@ -14876,7 +14876,12 @@ static HRESULT STDMETHODCALLTYPE ShadowTraceIndexed(IDirect3DDevice9* dev,D3DPRI
     worldshadowfix::Scope worldFix(dev,Rd(g_rtIsScene)!=0,verts,prims,(unsigned)g_thisDrawMoved);
     fpshadowfix::Scope firstFix(dev,Rd(g_rtIsScene)!=0,verts,prims,(unsigned)g_thisDrawMoved);
     const int id=shadowtrace::Before(dev,(unsigned)t,verts,prims,(unsigned)Rd(g_inForeground),(unsigned)g_thisDrawMoved,(unsigned)Rd(g_fgDrawCount));
-    const HRESULT hr=hotpath::forward_draw(g_hotPathSampler,[&]{return shadowNativeIndexed(dev,t,base,min,verts,start,prims);});shadowtrace::After(dev,id,hr);NativeScopeReceipt(hr);return hr;
+    const int depthPoint=shadowtrace::MatchBoardDepth(dev,id,verts,prims);
+    shadowtrace::SampleBoardDepth(dev,id,depthPoint,false);
+    const HRESULT hr=hotpath::forward_draw(g_hotPathSampler,[&]{return shadowNativeIndexed(dev,t,base,min,verts,start,prims);});
+    shadowtrace::After(dev,id,hr);
+    if(SUCCEEDED(hr))shadowtrace::SampleBoardDepth(dev,id,depthPoint,true);
+    NativeScopeReceipt(hr);return hr;
 }
 static HRESULT STDMETHODCALLTYPE ShadowTraceUP(IDirect3DDevice9* dev,D3DPRIMITIVETYPE t,UINT prims,const void* data,UINT stride) {
     nativefx::PathObserve(2,g_nativeFxStereoPairDepth!=0);
@@ -37774,7 +37779,7 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
         shadowtrace::pending=false;
         Log("shadow-pass focus context session=%d handPosition=%d,%d",(int)g_xrSessionState,
             g_handPositionValid[0]?1:0,g_handPositionValid[1]?1:0);
-        shadowtrace::Arm(s,shadowOriginalStretch);
+        shadowtrace::Arm(s,shadowOriginalStretch,{shadowNativeUP,g_origSetVS,shadowOriginalPS});
         if(g_tmdVisualAudit)for(unsigned side=0;side<2;++side) {
             const auto& aim=g_handLastPos[side];const auto& q=g_handAimOrientation[side];
             const auto& grip=g_glovePose[side];
