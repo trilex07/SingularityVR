@@ -21,6 +21,7 @@ static deadlockgesture::Gesture g_deadlockGesture;
 #include "hand_anchor_probe.h"
 #include "dual_hand_pose_probe.h"
 #include "hand_anchor_math.h"
+#include "free_hand_orientation.h"
 #include "tracked_grip_wrist.h"
 #include "two_hand_spread.h"
 #include "texture_bridge_contract.h"
@@ -4889,6 +4890,7 @@ static bool GazeEyePixel(const float (&d)[3],const XrPosef* poses,const XrFovf& 
 }
 static LONG g_cutsceneWorldScreen=0; // default-OFF world-space presentation experiment
 static LONG g_menuWorldScreen=0;     // default-OFF anchored cinema screen for main menu
+static LONG g_nativeMenuTargetSizeFix=0;
 static LONG g_cutsceneScreenDistanceMm=2000;
 static XrTime g_cinemaReferenceChangeTime=0;
 static bool g_eyePositionsValid=false;
@@ -6817,6 +6819,11 @@ int  g_triggerGate = -1;                      // ini [Input] TriggerTouchGate, r
 
 XrAction g_actHandPose = XR_NULL_HANDLE;
 XrSpace  g_handSpace[2] = { XR_NULL_HANDLE, XR_NULL_HANDLE };
+static bool g_preferAimPose = false;
+static bool g_alignFreeHands = false;
+static bool g_pointingTracked[2]{};
+static XrAction g_pointingPose = XR_NULL_HANDLE;
+static XrSpace g_pointingSpace[2]{};
 XrQuaternionf g_handAimOrientation[2]={{0,0,0,1},{0,0,0,1}};
 // SIDE: separate grip-pose/analog consumer. Never writes the accepted gun/hand
 // pose, input buttons, holster state, or native skeletal palettes.
@@ -10822,6 +10829,12 @@ bool InitXRInput() {
         aci.subactionPaths = g_handSubPath;
         if (XR_FAILED(xrCreateAction(g_actionSet, &aci, &g_actHandPose)))
             g_actHandPose = XR_NULL_HANDLE;   // poses only; the rest of input carries on
+        if (g_preferAimPose) {
+            strcpy_s(aci.actionName, "pointing_pose");
+            strcpy_s(aci.localizedActionName, "Controller pointing direction");
+            if (XR_FAILED(xrCreateAction(g_actionSet, &aci, &g_pointingPose)))
+                g_pointingPose = XR_NULL_HANDLE;
+        }
     }
 
     if(g_gloveExperiment) {
@@ -10871,6 +10884,7 @@ bool InitXRInput() {
                                     + 2                  // trigtouch
                                     + 2                  // sticktouch
                                     + 4                  // hand poses: aim + grip for each hand
+                                    + 2                  // independent pointing pose
                                     + 4                  // optional glove analog + grip pose (two hands)
                                     + 2;                 // per-profile extras (Index trackpad/touch)
     XrActionSuggestedBinding binds[kMaxBinds]{};
@@ -11062,6 +11076,11 @@ bool InitXRInput() {
             add(g_actGlovePose,"/user/hand/right/input/grip/pose",false,false);
         }
 
+        const uint32_t legacyBindingCount = nb;
+        if (g_pointingPose != XR_NULL_HANDLE && prof.map == TouchBindingPath) {
+            add(g_pointingPose, pp[0], false, false);
+            add(g_pointingPose, pp[1], false, false);
+        }
         if (overflow) {
             // Cannot happen with the table as it stands - kMaxBinds is spelled one term per site.
             // It is here so that the NEXT row added fails on this line instead of on the stack.
@@ -11079,6 +11098,11 @@ bool InitXRInput() {
         sb.suggestedBindings = binds;
         sb.countSuggestedBindings = nb;
         XrResult sr = xrSuggestInteractionProfileBindings(g_xrInstance, &sb);
+        if (XR_FAILED(sr) && nb != legacyBindingCount) {
+            nb = legacyBindingCount;
+            sb.countSuggestedBindings = nb;
+            sr = xrSuggestInteractionProfileBindings(g_xrInstance, &sb);
+        }
         if(XR_FAILED(sr)&&g_gloveExperiment) {
             // Suggestions fail atomically. If a runtime refuses a new optional
             // source, retry the EXACT original action list and abandon gloves,
@@ -11129,6 +11153,16 @@ bool InitXRInput() {
         }
     }
 
+    if (g_pointingPose != XR_NULL_HANDLE) {
+        for (int i = 0; i < 2; ++i) {
+            XrActionSpaceCreateInfo sci{XR_TYPE_ACTION_SPACE_CREATE_INFO};
+            sci.action = g_pointingPose;
+            sci.subactionPath = g_handSubPath[i];
+            sci.poseInActionSpace.orientation.w = 1.0f;
+            if (XR_FAILED(xrCreateActionSpace(g_xrSession, &sci, &g_pointingSpace[i])))
+                g_pointingSpace[i] = XR_NULL_HANDLE;
+        }
+    }
     g_xrInputReady = true;
     if(g_gloveExperiment && g_actGlovePose!=XR_NULL_HANDLE) {
         for(int i=0;i<2;++i) {
@@ -11423,7 +11457,8 @@ void SyncXRInput(XrTime displayTime) {
         g_handPositionValid[i] = false;
         g_handTracked[i] = false;
         g_handActionActive[i] = false;
-        if (g_handSpace[i] == XR_NULL_HANDLE) continue;
+        g_pointingTracked[i] = false;
+        if (!g_handSpace[i] && !g_pointingSpace[i]) continue;
         if (probePoseActivity && g_actHandPose != XR_NULL_HANDLE) {
             XrActionStateGetInfo pgi{ XR_TYPE_ACTION_STATE_GET_INFO };
             pgi.action = g_actHandPose;
@@ -11436,7 +11471,21 @@ void SyncXRInput(XrTime displayTime) {
         // handTime, not displayTime - see the run-190 note above. With PoseLeadFrames=0 these are equal,
         // so the old behaviour is bit-identical and the A/B is honest.
         g_hotPathSampler.count(i == 0 ? hotpath::Counter::xr_locate_left : hotpath::Counter::xr_locate_right);
-        if (XR_FAILED(xrLocateSpace(g_handSpace[i], g_xrSpace, handTime, &loc))) continue;
+        // The legacy action accepts aim and grip. OpenXR does not select a pose
+        // by suggestion order. Use a separate aim-only sample when fully tracked.
+        constexpr XrSpaceLocationFlags trackedPose = XR_SPACE_LOCATION_ORIENTATION_VALID_BIT |
+            XR_SPACE_LOCATION_ORIENTATION_TRACKED_BIT | XR_SPACE_LOCATION_POSITION_VALID_BIT |
+            XR_SPACE_LOCATION_POSITION_TRACKED_BIT;
+        const bool pointing = g_pointingSpace[i] &&
+            XR_SUCCEEDED(xrLocateSpace(g_pointingSpace[i], g_xrSpace, handTime, &loc));
+        g_pointingTracked[i] = pointing && (loc.locationFlags & trackedPose) == trackedPose;
+        if (!g_pointingTracked[i]) {
+            XrSpaceLocation legacy{XR_TYPE_SPACE_LOCATION};
+            if (g_handSpace[i] &&
+                XR_SUCCEEDED(xrLocateSpace(g_handSpace[i], g_xrSpace, handTime, &legacy)) &&
+                (legacy.locationFlags & XR_SPACE_LOCATION_ORIENTATION_VALID_BIT)) loc = legacy;
+            else if (!pointing) continue;
+        }
         if (g_hotPathSampler.active())
             InterlockedExchange64(i == 0 ? &g_hotLeftPoseFrame : &g_hotRightPoseFrame,
                 static_cast<LONG64>(g_hotPathSampler.frame_token()));
@@ -14929,29 +14978,10 @@ static HRESULT STDMETHODCALLTYPE ShadowTraceStretch(IDirect3DDevice9* dev,IDirec
     shadowtrace::NoteCopy(src,from,dst,to,filter,hr);return hr;
 }
 static ShadowSetPS shadowOriginalPS=nullptr;
-// [Diagnostic] DropDecalLocalTangent: default OFF distinguishing experiment for
-// the gravity black rectangles (trace 17792-3 groups 311/312, modulate decal PS
-// whose CTAB names DecalLocalBinormal/DecalLocalTangent, only in gravity frame).
-static bool g_dropDecalLocalTangent=false;
 static bool g_tmdGravityDecalFix=false;
 static bool g_tmdGravityDecalBound=false;
-static IDirect3DPixelShader9* g_decalLtCache[64]{};static bool g_decalLtMatch[64]{};static unsigned g_decalLtNext=0;
-static bool g_decalLtBound=false;static volatile LONG g_decalLtDropped=0;
-static bool DecalLocalTangentPS(IDirect3DPixelShader9* ps){
-    if(!ps)return false;
-    for(unsigned i=0;i<64;++i)if(g_decalLtCache[i]==ps)return g_decalLtMatch[i];
-    bool match=false;UINT bytes=0;
-    if(SUCCEEDED(ps->GetFunction(nullptr,&bytes))&&bytes>0&&bytes<=65536){
-        std::vector<unsigned char> code(bytes);UINT cap=bytes;
-        if(SUCCEEDED(ps->GetFunction(code.data(),&cap))){
-            static const char k[]="DecalLocalTangent";
-            match=std::search(code.begin(),code.end(),k,k+sizeof(k)-1)!=code.end();}}
-    const unsigned slot=g_decalLtNext++%64;g_decalLtCache[slot]=ps;g_decalLtMatch[slot]=match; // pointer identity only, no AddRef
-    if(match){static LONG said=0;if(!InterlockedExchange(&said,1))Log("decal-local-tangent: PS %p matched (%u bytes)",ps,bytes);}
-    return match;
-}
 static HRESULT STDMETHODCALLTYPE ShadowTraceSetPS(IDirect3DDevice9* dev,IDirect3DPixelShader9* ps) {
-    const HRESULT hr=shadowOriginalPS(dev,ps);if(SUCCEEDED(hr)){shadowtrace::bound.ps=ps;shadowfix::BindPS(ps);worldshadowfix::BindPS(ps);projectorfix::BindPS(ps);nativefx::BindPS(ps);g_decalLtBound=g_dropDecalLocalTangent&&DecalLocalTangentPS(ps);
+    const HRESULT hr=shadowOriginalPS(dev,ps);if(SUCCEEDED(hr)){shadowtrace::bound.ps=ps;shadowfix::BindPS(ps);worldshadowfix::BindPS(ps);projectorfix::BindPS(ps);nativefx::BindPS(ps);
         // Exact bytecode identity: no allocation, pointer cache or name-based overmatch.
         g_tmdGravityDecalBound=false;
         if(g_tmdGravityDecalFix&&ps){UINT n=0;unsigned char code[2132];
@@ -15088,6 +15118,15 @@ HRESULT STDMETHODCALLTYPE Hook_SetRenderTarget(IDirect3DDevice9* dev, DWORD idx,
             D3DSURFACE_DESC d{};
             if (SUCCEEDED(surf->GetDesc(&d))) {
                 if (g_srcW && g_srcH) scene = (d.Width == g_srcW && d.Height == g_srcH);
+                // RTT_UI1 can be exactly as large as the game's 720p backbuffer.
+                // ContentBind has verified the focused movie's UE3 resource, D3D
+                // surface and container texture. Its GFx canvas must stay monoscopic.
+                if (scene && g_nativeMenuTargetSizeFix && Rd(g_vrUiMenu) &&
+                    PauseRttProbe::contentBound && surf == PauseRttProbe::contentSurface &&
+                    PauseRttProbe::contentToken == VrMenuStateToken() &&
+                    (Rd(g_vrMenuClass) == 2 || Rd(g_vrMenuClass) == 4)) {
+                    scene = false;
+                }
                 if(NativeScopeRendering())scene=false;
                 if (g_diagEnabled && scene && (d.Format == D3DFMT_A8R8G8B8 || d.Format == D3DFMT_X8R8G8B8)) {
                     InterlockedExchange(&g_diagSceneW, LONG(d.Width));
@@ -18827,8 +18866,40 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
                 (float)Rd(aim?g_handOffY:g_offHandOffY)/kHandFixed,
                 (float)(g_gunSignPosZ*Rd(aim?g_handOffZ:g_offHandOffZ))/kHandFixed};
             if(g_gunHeadOffset){h.x+=g_hmdOffset[0];h.y+=g_hmdOffset[1];h.z+=g_hmdOffset[2];}
+            const float (*controller)[4] = aim ? primary : off;
+            float aligned[4][4];
+            if (g_alignFreeHands && freeWrist && !Rd(g_weaponObj) && g_pointingTracked[side]) {
+                // Slots in the verified cooked noTMD section: wrist, middle-1,
+                // index-1 and pinky-1. Use the current animation before the VR ride.
+                static constexpr unsigned slotsBySide[2][4] = {{18,26,24,29},{1,7,5,10}};
+                armik::V joints[4]{};
+                bool valid = true;
+                for (unsigned j = 0; j < 4; ++j) {
+                    const unsigned slot = slotsBySide[side][j];
+                    armbind::Mat joint;
+                    if (slot >= unsigned(slots) || !armbind::CurrentJoint(noTmdBind[sectionMap[slot]],
+                            reinterpret_cast<const float (*)[4]>(&saved[slot*3]), joint)) {
+                        valid = false;
+                        break;
+                    }
+                    joints[j] = handanchor::Point(armbind::Position(joint), local);
+                }
+                const auto& a = g_handAimOrientation[side];
+                gloves::Q q;
+                float scale;
+                if (valid && gloves::Normalize({a.x,a.y,a.z,a.w}, q) && gloves::UniformScale(controller, scale)) {
+                    const auto toWorld = [&](gloves::V axis) {
+                        const auto v = gloves::Rotate(q, axis);
+                        const auto w = vrpose::TrackingDeltaToWorldUU({v.x,v.y,v.z}, g_centreYaw,
+                            g_baseYaw*(6.2831853f/65536.f), 1.f);
+                        return armik::V{w.x,w.y,w.z};
+                    };
+                    if (freehand::Align(joints[0], joints[1], joints[2], joints[3],
+                            toWorld({0,0,-1}), toWorld({0,1,0}), scale, aligned)) controller = aligned;
+                }
+            }
             if(!handanchor::TargetWrist(targetC[side],noTmdBind[side?51:9],
-                reinterpret_cast<const float (*)[4]>(&saved[ws[side]*3]),local,aim?primary:off,h))return 0;
+                reinterpret_cast<const float (*)[4]>(&saved[ws[side]*3]),local,controller,h))return 0;
 
         }
         memcpy(primary,targetC[AimHand()],sizeof(primary));memcpy(off,targetC[OffHand()],sizeof(off));
@@ -21326,7 +21397,6 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
             return D3D_OK;
         }
     }
-    if(g_decalLtBound){const LONG n=InterlockedIncrement(&g_decalLtDropped);if(n==1||n%2000==0)Log("decal-local-tangent: dropped=%ld",n);return D3D_OK;}
     if(g_tmdShortGauntlet && gloveisolate::IsArmFleshSection(numVertices,startIndex,primCount)) {
         static LONG saidExact=0;
         if(InterlockedCompareExchange(&saidExact,1,0)==0)
@@ -38193,6 +38263,7 @@ void LoadIniSettings() {
         Rd(g_cutsceneWorldScreen),Rd(g_cutsceneScreenDistanceMm));
     g_cinemaEyeAudit=GetPrivateProfileIntA("Diagnostic","CinemaEyeAudit",0,path)!=0;
     g_menuWorldScreen=GetPrivateProfileIntA("Render","MenuWorldScreen",0,path)?1:0;
+    g_nativeMenuTargetSizeFix=GetPrivateProfileIntA("Render","NativeMenuTargetSizeFix",0,path)?1:0;
     Log("ini: MenuWorldScreen=%ld (anchored cinema screen for main menu, default OFF)", Rd(g_menuWorldScreen));
     Log("ini: VideoStereo=%ld (%s)", InterlockedCompareExchange(&g_videoStereo, 0, 0),
         InterlockedCompareExchange(&g_videoStereo, 0, 0)
@@ -38924,6 +38995,9 @@ void LoadIniSettings() {
     InterlockedExchange(&g_dualHandActionPose,GetPrivateProfileIntA("Input","DualHandActionPose",0,path)!=0);
     Log("ini: DualHandActionPose=%ld (default OFF; original material0 wrist parent, render only)",Rd(g_dualHandActionPose));
     g_trackedGripWrist=GetPrivateProfileIntA("Input","TrackedGripWrist",0,path)!=0;
+    g_preferAimPose = GetPrivateProfileIntA("Input", "PreferAimPose", 0, path) != 0;
+    g_alignFreeHands = GetPrivateProfileIntA("Render", "AlignFreeHands", 0, path) != 0;
+    Log("ini: PreferAimPose=%d (dedicated tracked aim, legacy hand fallback)", g_preferAimPose);
     g_trackedGripSupportContinuity=GetPrivateProfileIntA("Input","TrackedGripSupportContinuity",0,path)!=0;
     Log("ini: TrackedGripSupportContinuity=%d (default OFF; requires TrackedGripWrist; right correction only during support)",g_trackedGripSupportContinuity?1:0);
     Log("ini: TrackedGripWrist=%d (default OFF; original anatomy -> live grip quaternion/position; shared hand/TMD/gun ride)",g_trackedGripWrist?1:0);
@@ -38936,10 +39010,12 @@ void LoadIniSettings() {
     g_tmdDeadlockGesture=GetPrivateProfileIntA("Input","TmdDeadlockGesture",0,path)!=0;
     g_deadlockGestureProbe=GetPrivateProfileIntA("Diagnostic","DeadlockGestureProbe",0,path)!=0;
     g_seekerNativeAmmoProbe=GetPrivateProfileIntA("Diagnostic","SeekerNativeAmmoProbe",0,path)!=0;
-    g_tmdGravityDecalFix=GetPrivateProfileIntA("Render","TmdGravityDecalFix",0,path)!=0;
-    Log("ini: TmdGravityDecalFix=%d (exact PS 2132/9CE7CA1D and captured modulate draw gate, default OFF)",g_tmdGravityDecalFix?1:0);
-    g_dropDecalLocalTangent=GetPrivateProfileIntA("Diagnostic","DropDecalLocalTangent",0,path)!=0;
-    Log("ini: DropDecalLocalTangent=%d (default OFF; skip only modulate decals whose PS names DecalLocalTangent)",g_dropDecalLocalTangent?1:0);
+    // Installer 1.1.5 enabled the old family-wide diagnostic in portable settings.
+    // Migrate its intent without suppressing unrelated decals. An explicit new value wins.
+    const int legacyGravityFilter = GetPrivateProfileIntA("Diagnostic", "DropDecalLocalTangent", 0, path);
+    g_tmdGravityDecalFix = GetPrivateProfileIntA("Render", "TmdGravityDecalFix", legacyGravityFilter, path) != 0;
+    Log("ini: TmdGravityDecalFix=%d (captured TMD draw only, legacy setting=%d)",
+        g_tmdGravityDecalFix ? 1 : 0, legacyGravityFilter);
     Log("ini: TmdVisualAudit=%d (default OFF; three bounded neutral/sky/gravity-input driver traces + SBS, no visual correction)",g_tmdVisualAudit?1:0);
     g_tmdTrackedBeam=GetPrivateProfileIntA("Render","TmdTrackedBeam",0,path)!=0;
     g_tmdTrackedAgeParticles=GetPrivateProfileIntA("Render","TmdTrackedAgeParticles",0,path)!=0;
