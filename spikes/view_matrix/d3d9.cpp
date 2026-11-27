@@ -34482,7 +34482,8 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
     }
     const uintptr_t grabbedActor = shadowTraceStable >= 15 ? AuditNativeGravityGrab() : 0;
     if (shadowTraceStable >= 15 && InGameplay() && !Rd(g_inCinematic)) liftcrate::Probe(grabbedActor);
-    const uintptr_t bracketActor = g_tmdLiftBracket && g_tmdGravityLatch.power &&
+    // Native E and the VR grip both reach the same engine-held actor.
+    const uintptr_t bracketActor = g_tmdLiftBracket &&
         InGameplay() && Rd(g_handsStatus) == HANDS_TMD && !Rd(g_gamePaused) &&
         !Rd(g_inCinematic) && !Rd(g_vrUiMenu) && !Rd(g_panelOpen) ? grabbedActor : 0;
     if (g_tmdLiftBracket) RequestLiftBracket(bracketActor);
