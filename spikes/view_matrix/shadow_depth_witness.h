@@ -19,7 +19,6 @@ struct Observation {
 };
 static Observation observations[kBudget]{};
 static IDirect3DQuery9* queries[kBudget][kBins]{};
-static IDirect3DStateBlock9* state=nullptr;
 static unsigned count=0, overflow=0;
 static bool requested=false, active=false, failed=false;
 static Calls calls{};
@@ -27,8 +26,6 @@ static HRESULT setup=E_FAIL;
 
 inline void Release() {
     for(auto& row:queries)for(auto& q:row){if(q)q->Release();q=nullptr;}
-    if(state)state->Release();
-    state=nullptr;
     count=overflow=0;
     requested=active=failed=false;
     setup=E_FAIL;
@@ -37,8 +34,6 @@ inline void Release() {
 inline void Arm(IDirect3DDevice9* dev,bool enabled,Calls native) {
     requested=enabled;
     if(!enabled||!native.draw||!native.vs||!native.ps)return;
-    setup=dev->CreateStateBlock(D3DSBT_ALL,&state);
-    if(FAILED(setup))return;
     for(auto& row:queries)for(auto& query:row){
         setup=dev->CreateQuery(D3DQUERYTYPE_OCCLUSION,&query);
         if(FAILED(setup))return;
@@ -82,16 +77,29 @@ inline void Sample(IDirect3DDevice9* dev,unsigned draw,unsigned op,unsigned grou
     dev->GetRenderState(D3DRS_ALPHAREF,&row.alphaRef);
     dev->GetRenderState(D3DRS_DEPTHBIAS,&row.bias);
     dev->GetRenderState(D3DRS_SLOPESCALEDEPTHBIAS,&row.slopeBias);
-    row.capture=state->Capture();
-    if(FAILED(row.capture)){failed=true;return;}
-    bool clean=SUCCEEDED(calls.vs(dev,nullptr))&&SUCCEEDED(calls.ps(dev,nullptr))&&
-        SUCCEEDED(dev->SetFVF(D3DFVF_XYZRHW|D3DFVF_DIFFUSE));
     constexpr D3DRENDERSTATETYPE states[]={D3DRS_ZENABLE,D3DRS_ZWRITEENABLE,D3DRS_ZFUNC,
         D3DRS_COLORWRITEENABLE,D3DRS_ALPHATESTENABLE,D3DRS_STENCILENABLE,D3DRS_CULLMODE,
         D3DRS_DEPTHBIAS,D3DRS_SLOPESCALEDEPTHBIAS,D3DRS_CLIPPLANEENABLE};
     constexpr DWORD values[]={D3DZB_TRUE,FALSE,D3DCMP_LESSEQUAL,0,FALSE,FALSE,D3DCULL_NONE,0,0,0};
-    for(unsigned i=0;i<sizeof(states)/sizeof(states[0]);++i)
-        clean=SUCCEEDED(dev->SetRenderState(states[i],values[i]))&&clean;
+    constexpr unsigned stateCount=sizeof(states)/sizeof(states[0]);
+    DWORD previous[stateCount]{}, fvf=0;
+    UINT offset=0,stride=0;
+    IDirect3DVertexShader9* oldVS=nullptr;
+    IDirect3DPixelShader9* oldPS=nullptr;
+    IDirect3DVertexDeclaration9* decl=nullptr;
+    IDirect3DVertexBuffer9* stream=nullptr;
+    bool clean=SUCCEEDED(dev->GetVertexShader(&oldVS))&&SUCCEEDED(dev->GetPixelShader(&oldPS))&&
+        SUCCEEDED(dev->GetVertexDeclaration(&decl))&&SUCCEEDED(dev->GetFVF(&fvf))&&
+        SUCCEEDED(dev->GetStreamSource(0,&stream,&offset,&stride));
+    for(unsigned i=0;i<stateCount;++i)
+        clean=SUCCEEDED(dev->GetRenderState(states[i],&previous[i]))&&clean;
+    row.capture=clean?S_OK:E_FAIL;
+    if(clean){
+        clean=SUCCEEDED(calls.vs(dev,nullptr))&&SUCCEEDED(calls.ps(dev,nullptr))&&
+            SUCCEEDED(dev->SetFVF(D3DFVF_XYZRHW|D3DFVF_DIFFUSE));
+        for(unsigned i=0;i<stateCount;++i)
+            clean=SUCCEEDED(dev->SetRenderState(states[i],values[i]))&&clean;
+    }
     if(clean){
         const float left=float(x)-.5f, right=float(x)+.5f, top=float(y)-.5f, bottom=float(y)+.5f;
         for(unsigned i=0;i<kBins;++i){
@@ -106,9 +114,22 @@ inline void Sample(IDirect3DDevice9* dev,unsigned draw,unsigned op,unsigned grou
             row.gpu[i]=FAILED(drawHr)?drawHr:endHr;
         }
     }
-    // The capture does not touch RT or DS. Restore original shaders, state and
-    // stream inputs before forwarding the game's next draw.
-    row.restore=state->Apply();
+    // Restore just the registers touched by the probe. The ALL state block
+    // can replay camera constants through the game's hooked setters.
+    if(SUCCEEDED(row.capture)) {
+        bool restored=SUCCEEDED(calls.vs(dev,oldVS));
+        restored=SUCCEEDED(calls.ps(dev,oldPS))&&restored;
+        const auto vertexState=fvf?dev->SetFVF(fvf):dev->SetVertexDeclaration(decl);
+        restored=SUCCEEDED(vertexState)&&restored;
+        restored=SUCCEEDED(dev->SetStreamSource(0,stream,offset,stride))&&restored;
+        for(unsigned i=0;i<stateCount;++i)
+            restored=SUCCEEDED(dev->SetRenderState(states[i],previous[i]))&&restored;
+        row.restore=restored?S_OK:E_FAIL;
+    }
+    if(stream)stream->Release();
+    if(decl)decl->Release();
+    if(oldPS)oldPS->Release();
+    if(oldVS)oldVS->Release();
     failed=!clean||FAILED(row.restore);
 }
 
