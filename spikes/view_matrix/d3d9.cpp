@@ -39917,6 +39917,8 @@ static bool SelectLabOpenXrRuntime() {
            SetEnvironmentVariableW(L"DVR_XRSIM_DIR", directory);
 }
 
+#include "lab_documents.h"
+
 BOOL APIENTRY DllMain(HMODULE m, DWORD reason, LPVOID) {
     if (reason == DLL_PROCESS_ATTACH) {
         DisableThreadLibraryCalls(m);
@@ -39934,6 +39936,11 @@ BOOL APIENTRY DllMain(HMODULE m, DWORD reason, LPVOID) {
         PhysXPreflight();
         if (!SelectLabOpenXrRuntime()) {
             Log("tmd-lift-lab: required process-local simulator unavailable");
+            TerminateProcess(GetCurrentProcess(), ERROR_INVALID_DATA);
+            return FALSE;
+        }
+        if (!lab_documents::Install()) {
+            Log("lab-documents: isolated checkpoint profile unavailable");
             TerminateProcess(GetCurrentProcess(), ERROR_INVALID_DATA);
             return FALSE;
         }
