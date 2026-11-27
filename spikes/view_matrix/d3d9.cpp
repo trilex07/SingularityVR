@@ -34382,6 +34382,8 @@ static uintptr_t AuditNativeGravityGrab() {
     return actor;
 }
 
+#include "tmd_lift_crate_audit.inl"
+
 // Local lab only. Collect off/on/off from the same held actor and device.
 static struct {
     uintptr_t actor = 0;
@@ -34468,6 +34470,7 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
         }
     }
     const uintptr_t grabbedActor = shadowTraceStable >= 15 ? AuditNativeGravityGrab() : 0;
+    if (shadowTraceStable >= 15 && InGameplay() && !Rd(g_inCinematic)) liftcrate::Probe(grabbedActor);
     const uintptr_t bracketActor = g_tmdLiftBracket && g_tmdGravityLatch.power &&
         InGameplay() && Rd(g_handsStatus) == HANDS_TMD && !Rd(g_gamePaused) &&
         !Rd(g_inCinematic) && !Rd(g_vrUiMenu) && !Rd(g_panelOpen) ? grabbedActor : 0;
