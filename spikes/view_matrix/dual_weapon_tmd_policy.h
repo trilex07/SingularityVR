@@ -7,8 +7,10 @@ inline bool Context(bool enabled, bool vr, bool gameplay, bool owned,
                     bool nativeHands, bool menu, bool paused, bool rightHanded) {
     return enabled && vr && gameplay && owned && !nativeHands && !menu && !paused && rightHanded;
 }
-inline bool Weapon(bool nativeWeapon, bool context, bool equipped, int hands) {
-    return nativeWeapon || (context && equipped && hands == 1);
+inline bool Weapon(bool nativeWeapon, bool context, bool equipped, int hands, bool knownUnarmed) {
+    // During the intro, mPlayerHandsStatus can keep the cinematic weapon
+    // pose after Pawn.Weapon has already become null.
+    return !knownUnarmed && (nativeWeapon || (context && equipped && hands == 1));
 }
 inline bool MeleeWindow(bool context, bool knifeHeld) { return !context || knifeHeld; }
 

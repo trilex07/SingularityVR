@@ -17310,7 +17310,8 @@ static bool DualWeaponTmdContext() {
         Rd(g_vrUiMenu)!=0||Rd(g_panelOpen)!=0,Rd(g_gamePaused)!=0,AimHand()==1);
 }
 static bool WeaponPresentationInHands() {
-    return dualtmd::Weapon(WeaponInHands(),DualWeaponTmdContext(),Rd(g_weaponObj)!=0,(int)Rd(g_handsStatus));
+    return dualtmd::Weapon(WeaponInHands(), DualWeaponTmdContext(), Rd(g_weaponObj) != 0,
+                          (int)Rd(g_handsStatus), PlayerArmed() == ARMED_NO);
 }
 
 inline void ArmMeleeWindowFromKnife() {

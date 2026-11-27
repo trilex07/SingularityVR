@@ -12,6 +12,7 @@ class Wiring(unittest.TestCase):
         self.assertIn('inline bool WeaponInHands()  { return Rd(g_handsStatus) == HANDS_WEAPON; }',CPP)
         helper=CPP[CPP.index('static bool WeaponPresentationInHands() {'):].split('\n}',1)[0]
         self.assertIn('dualtmd::Weapon(WeaponInHands()',helper)
+        self.assertIn('PlayerArmed() == ARMED_NO',helper)
         self.assertNotIn('InterlockedExchange',helper)
     def test_no_tmd_melee_window(self):
         self.assertEqual(CPP.count('dualtmd::MeleeWindow(dualContext,g_hipKnifeState.held>=0)'),2)

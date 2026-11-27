@@ -13,8 +13,9 @@ int main(){
     }
     for(int hands=-1;hands<=3;++hands)for(int context=0;context<2;++context)
         for(int equipped=0;equipped<2;++equipped){
-            assert(Weapon(hands==2,context,equipped,hands)==
+            assert(Weapon(hands==2,context,equipped,hands,false)==
                 (hands==2||(context&&equipped&&hands==1)));
+            assert(!Weapon(hands==2,context,equipped,hands,true));
         }
     assert(!MeleeWindow(true,false));assert(MeleeWindow(true,true));
     assert(MeleeWindow(false,false));assert(MeleeWindow(false,true));
