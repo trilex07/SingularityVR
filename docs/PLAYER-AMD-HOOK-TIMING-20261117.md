@@ -26,3 +26,7 @@ physical headset NOT RUN. Source status IMPLEMENTED_NOT_VERIFIED. No local
 Steam install, release or installer changes. Before a remote trial preserve
 working DLL/INI, compare exact hashes, then toggle this single diagnostic;
 restore 0 and the original DLL afterward. This is tooling, not a mod fix.
+
+### Eye-height diagnostic polling, November 27
+
+With EyeHeightLog enabled the throttle previously counted from the last emitted line. Once the pawn had a stable base height, the helper sampled it every frame after the two-second interval expired. A missing pawn also retried every frame. A deterministic x86 harness exercised the production function over 375 frames at 16 ms intervals. The original sampled 251 times for stable height, 375 times without a pawn and 127 times after one height change. Timing from the last sample bounds each of those cases to three reads over six seconds. The respective emitted height lines stayed at one, zero and two. The disabled case made zero reads in both versions. The AMD player's supplied log had no EyeHeightLog enable marker. This finding applies to optional diagnostics; the reported AMD frame spike remains open.

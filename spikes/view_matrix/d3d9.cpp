@@ -3039,6 +3039,7 @@ void ReportEyeHeight() {
     static ULONGLONG lastMs = 0;
     const ULONGLONG nowMs = GetTickCount64();
     if (lastMs && nowMs - lastMs < 2000) return;
+    lastMs = nowMs;
     const uintptr_t p = FindPlayerPawn();
     if (!p) return;
     if (!Readable((void*)(p + g_offBaseEyeHeight), 4) || !Readable((void*)(p + g_offEyeHeight), 4)) return;
@@ -3051,7 +3052,6 @@ void ReportEyeHeight() {
     static float lastBase = -1e9f;
     if (fabsf(baseUU - lastBase) < 0.5f) return;
     lastBase = baseUU;
-    lastMs = nowMs;
 
     // Our own vertical offset, in the SAME units, because it is the likelier cause of a height that feels
     // wrong and the two are indistinguishable from inside the headset. g_hmdOffset is already in UU and
