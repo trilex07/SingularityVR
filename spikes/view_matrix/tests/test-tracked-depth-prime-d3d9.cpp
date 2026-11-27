@@ -41,6 +41,32 @@ static void SourceOrderingPixels(IDirect3DDevice9* d,bool ex){
     makeBuffers(4,2,&gunVb,&gunIb);makeBuffers(7444,4402,&gloveVb,&gloveIb);
     auto bind=[&](bool glove){assert(SUCCEEDED(d->SetStreamSource(0,glove?gloveVb:gunVb,0,sizeof(V))));assert(SUCCEEDED(d->SetIndices(glove?gloveIb:gunIb)));};
     auto draw=[&](bool glove){return d->DrawIndexedPrimitive(D3DPT_TRIANGLELIST,0,0,glove?7444:4,0,glove?4402:2);};
+    // Deliberately give different buffers the same draw-range label. Only the
+    // original VB/IB and stream layout may inherit the proven glove pose.
+    trackedprime::GlovePrime siblings;
+    auto freeGlove=glovePrime;
+    freeGlove.key.verts=3314;
+    freeGlove.key.prims=4830;
+    bind(true);
+    d->SetRenderState(D3DRS_ZWRITEENABLE,TRUE);
+    d->SetRenderState(D3DRS_COLORWRITEENABLE,15);
+    siblings.Record(d,owner,freeGlove);
+    assert(!siblings.Matches(d,owner,freeGlove));
+    d->SetRenderState(D3DRS_COLORWRITEENABLE,0);
+    siblings.Record(d,owner,freeGlove);
+    assert(siblings.Matches(d,owner,freeGlove));
+    auto otherPawn=owner; ++otherPawn.pawn;
+    assert(!siblings.Matches(d,otherPawn,freeGlove));
+    d->SetIndices(gunIb);
+    assert(!siblings.Matches(d,owner,freeGlove));
+    bind(true);
+    d->SetStreamSource(0,gunVb,0,sizeof(V));
+    assert(!siblings.Matches(d,owner,freeGlove));
+    bind(true);
+    auto differentSection=freeGlove; ++differentSection.key.startIndex;
+    assert(!siblings.Matches(d,owner,differentSection));
+    siblings.Reset();
+    assert(!siblings.Matches(d,owner,freeGlove));
     auto world=[&](const armbind::Mat& m){D3DMATRIX v;memcpy(&v,m.m,sizeof(v));assert(SUCCEEDED(d->SetTransform(D3DTS_WORLD,&v)));};
     const auto identity=Identity();world(identity);
     D3DVIEWPORT9 full{0,0,128,64,0,1};assert(SUCCEEDED(d->SetViewport(&full)));
