@@ -3,6 +3,16 @@
 #include <cstdio>
 int main(int argc,char** argv){
     using namespace tmdgravitydecal;
+    // The wreck uses the same depth shaders as the misrouted TMD quads.
+    // Its hull and rotor draws must fail the geometry gate even with those shaders bound.
+    assert(WorldDepthQuad(4, 4, 2));
+    assert(!WorldDepthQuad(4, 3440, 4093)); // Huey hull, trace 35252, draws 27–28.
+    assert(!WorldDepthQuad(4, 1345, 1422)); // Rotor blades, draws 755–756.
+    assert(!WorldDepthQuad(5, 4, 2));
+    assert(!WorldDepthQuad(4, 4, 3));
+    assert(!WorldDepthQuad(4, 5, 2));
+    puts("World depth quad and captured wreck exclusions PASS");
+
     const Draw captured{true,true,4,12,0,5161,6,15,0,1,9,1,0,1,1,4,1,1,2,1};
     assert(Drop(captured));
     auto d=captured;d.triangles=64;assert(Drop(d));
