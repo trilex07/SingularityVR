@@ -14929,29 +14929,10 @@ static HRESULT STDMETHODCALLTYPE ShadowTraceStretch(IDirect3DDevice9* dev,IDirec
     shadowtrace::NoteCopy(src,from,dst,to,filter,hr);return hr;
 }
 static ShadowSetPS shadowOriginalPS=nullptr;
-// [Diagnostic] DropDecalLocalTangent: default OFF distinguishing experiment for
-// the gravity black rectangles (trace 17792-3 groups 311/312, modulate decal PS
-// whose CTAB names DecalLocalBinormal/DecalLocalTangent, only in gravity frame).
-static bool g_dropDecalLocalTangent=false;
 static bool g_tmdGravityDecalFix=false;
 static bool g_tmdGravityDecalBound=false;
-static IDirect3DPixelShader9* g_decalLtCache[64]{};static bool g_decalLtMatch[64]{};static unsigned g_decalLtNext=0;
-static bool g_decalLtBound=false;static volatile LONG g_decalLtDropped=0;
-static bool DecalLocalTangentPS(IDirect3DPixelShader9* ps){
-    if(!ps)return false;
-    for(unsigned i=0;i<64;++i)if(g_decalLtCache[i]==ps)return g_decalLtMatch[i];
-    bool match=false;UINT bytes=0;
-    if(SUCCEEDED(ps->GetFunction(nullptr,&bytes))&&bytes>0&&bytes<=65536){
-        std::vector<unsigned char> code(bytes);UINT cap=bytes;
-        if(SUCCEEDED(ps->GetFunction(code.data(),&cap))){
-            static const char k[]="DecalLocalTangent";
-            match=std::search(code.begin(),code.end(),k,k+sizeof(k)-1)!=code.end();}}
-    const unsigned slot=g_decalLtNext++%64;g_decalLtCache[slot]=ps;g_decalLtMatch[slot]=match; // pointer identity only, no AddRef
-    if(match){static LONG said=0;if(!InterlockedExchange(&said,1))Log("decal-local-tangent: PS %p matched (%u bytes)",ps,bytes);}
-    return match;
-}
 static HRESULT STDMETHODCALLTYPE ShadowTraceSetPS(IDirect3DDevice9* dev,IDirect3DPixelShader9* ps) {
-    const HRESULT hr=shadowOriginalPS(dev,ps);if(SUCCEEDED(hr)){shadowtrace::bound.ps=ps;shadowfix::BindPS(ps);worldshadowfix::BindPS(ps);projectorfix::BindPS(ps);nativefx::BindPS(ps);g_decalLtBound=g_dropDecalLocalTangent&&DecalLocalTangentPS(ps);
+    const HRESULT hr=shadowOriginalPS(dev,ps);if(SUCCEEDED(hr)){shadowtrace::bound.ps=ps;shadowfix::BindPS(ps);worldshadowfix::BindPS(ps);projectorfix::BindPS(ps);nativefx::BindPS(ps);
         // Exact bytecode identity: no allocation, pointer cache or name-based overmatch.
         g_tmdGravityDecalBound=false;
         if(g_tmdGravityDecalFix&&ps){UINT n=0;unsigned char code[2132];
@@ -21326,7 +21307,6 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
             return D3D_OK;
         }
     }
-    if(g_decalLtBound){const LONG n=InterlockedIncrement(&g_decalLtDropped);if(n==1||n%2000==0)Log("decal-local-tangent: dropped=%ld",n);return D3D_OK;}
     if(g_tmdShortGauntlet && gloveisolate::IsArmFleshSection(numVertices,startIndex,primCount)) {
         static LONG saidExact=0;
         if(InterlockedCompareExchange(&saidExact,1,0)==0)
@@ -38936,10 +38916,12 @@ void LoadIniSettings() {
     g_tmdDeadlockGesture=GetPrivateProfileIntA("Input","TmdDeadlockGesture",0,path)!=0;
     g_deadlockGestureProbe=GetPrivateProfileIntA("Diagnostic","DeadlockGestureProbe",0,path)!=0;
     g_seekerNativeAmmoProbe=GetPrivateProfileIntA("Diagnostic","SeekerNativeAmmoProbe",0,path)!=0;
-    g_tmdGravityDecalFix=GetPrivateProfileIntA("Render","TmdGravityDecalFix",0,path)!=0;
-    Log("ini: TmdGravityDecalFix=%d (exact PS 2132/9CE7CA1D and captured modulate draw gate, default OFF)",g_tmdGravityDecalFix?1:0);
-    g_dropDecalLocalTangent=GetPrivateProfileIntA("Diagnostic","DropDecalLocalTangent",0,path)!=0;
-    Log("ini: DropDecalLocalTangent=%d (default OFF; skip only modulate decals whose PS names DecalLocalTangent)",g_dropDecalLocalTangent?1:0);
+    // Installer 1.1.5 enabled the old family-wide diagnostic in portable settings.
+    // Migrate its intent without suppressing unrelated decals. An explicit new value wins.
+    const int legacyGravityFilter = GetPrivateProfileIntA("Diagnostic", "DropDecalLocalTangent", 0, path);
+    g_tmdGravityDecalFix = GetPrivateProfileIntA("Render", "TmdGravityDecalFix", legacyGravityFilter, path) != 0;
+    Log("ini: TmdGravityDecalFix=%d (captured TMD draw only, legacy setting=%d)",
+        g_tmdGravityDecalFix ? 1 : 0, legacyGravityFilter);
     Log("ini: TmdVisualAudit=%d (default OFF; three bounded neutral/sky/gravity-input driver traces + SBS, no visual correction)",g_tmdVisualAudit?1:0);
     g_tmdTrackedBeam=GetPrivateProfileIntA("Render","TmdTrackedBeam",0,path)!=0;
     g_tmdTrackedAgeParticles=GetPrivateProfileIntA("Render","TmdTrackedAgeParticles",0,path)!=0;

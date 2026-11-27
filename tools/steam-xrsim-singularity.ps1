@@ -150,7 +150,7 @@ function Save-Backup {
 
 function Restore-Backup {
     $manifestPath = Join-Path $backupDir 'manifest.json'
-    if (-not (Test-Path -LiteralPath $manifestPath)) { return }
+    if (-not (Test-Path -LiteralPath $manifestPath)) { throw "Missing backup manifest: $manifestPath" }
     $manifest = Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json
     Assert-GameClosed
     foreach ($name in @('d3d9.dll','SingularityVR.ini','SingularityVfx.dll')) {
@@ -302,7 +302,7 @@ $report = [ordered]@{
     candidate = $candidateLabel
     candidate_dir = $candidateDir
     launch_mode = if ($LaunchViaSteam) { 'Steam' } else { 'direct' }
-    requested_windowed = [bool]$Windowed
+    requested_windowed = [bool]($Windowed -or -not $LaunchViaSteam)
     window_resolution = "${WindowWidth}x${WindowHeight}"
     game_exe = $gameExe
     dll_before = if (Test-Path -LiteralPath $dllPath) { (Get-FileHash $dllPath -Algorithm SHA256).Hash } else { $null }
@@ -392,7 +392,7 @@ try {
             $steamLaunchProcess = Start-Process -FilePath $steamExe -WorkingDirectory $SteamRoot -ArgumentList $steamArguments -PassThru
             Write-Runner "Started Steam applaunch 42670 (launcher PID $($steamLaunchProcess.Id)); windowed=$([bool]$Windowed) resolution=${WindowWidth}x${WindowHeight}."
         } else {
-            $gameProcess = Start-Process -FilePath $gameExe -WorkingDirectory $gameDir -ArgumentList @('-windowed','-ResX=1280','-ResY=720') -PassThru
+            $gameProcess = Start-Process -FilePath $gameExe -WorkingDirectory $gameDir -ArgumentList @('-windowed', "-ResX=$WindowWidth", "-ResY=$WindowHeight") -PassThru
             Write-Runner "Started Singularity PID $($gameProcess.Id) with dvr-xrsim."
         }
         $report.launched = $true
@@ -463,15 +463,23 @@ try {
     Write-ReportFile
     Write-Runner "Cleanup report written"
     if (-not $UseInstalled -and -not $KeepCandidate -and -not $NoRestore -and (Test-Path -LiteralPath $backupDir)) {
-        try { Restore-Backup; $report.restored = $true }
+        try {
+            if ($report.launched -and $gameProcess -and -not $gameProcess.HasExited) {
+                if ($gameProcess.Path -ne $gameExe) { throw 'Unexpected process path before rollback.' }
+                if (-not $gameProcess.CloseMainWindow() -or -not $gameProcess.WaitForExit(10000)) {
+                    throw "Game PID $($gameProcess.Id) must close before restoring from $backupDir"
+                }
+            }
+            Restore-Backup
+            $report.restored = $true
+            Write-Runner "Cleanup restore complete"
+        }
         catch { $report.restore_error = $_.Exception.Message; Write-Runner "Restore error: $($_.Exception.Message)" }
-    }
-    if (-not $UseInstalled -and -not $KeepCandidate -and -not $NoRestore -and (Test-Path -LiteralPath $backupDir)) {
-        Write-Runner "Cleanup restore complete"
     } else {
-        Write-Runner "Cleanup restore skipped by -NoRestore or -KeepCandidate"
+        Write-Runner "No cleanup restore requested or available"
     }
     $report.finished = (Get-Date).ToString('o')
     Write-ReportFile
 }
+if ($report.restore_error) { throw "Restore failed: $($report.restore_error)" }
 
