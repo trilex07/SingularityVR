@@ -39860,6 +39860,21 @@ void PhysXPreflight() {
         "Singularity VR - PhysX missing", MB_OK | MB_ICONERROR);
 }
 
+// Private emulator build. Keep the choice scoped to Singularity so Steam's
+// environment and any background physical runtime do not need to be restarted.
+static bool SelectLabOpenXrRuntime() {
+    wchar_t directory[MAX_PATH]{}, manifest[MAX_PATH]{};
+    const DWORD length = GetTempPathW(MAX_PATH, directory);
+    if (!length || length >= MAX_PATH ||
+        wcscat_s(directory, L"Singularity-Quest2-20261127\\xr") != 0 ||
+        wcscpy_s(manifest, directory) != 0 ||
+        wcscat_s(manifest, L"\\grip-test-runtime.json") != 0) return false;
+    const DWORD attributes = GetFileAttributesW(manifest);
+    if (attributes == INVALID_FILE_ATTRIBUTES || (attributes & FILE_ATTRIBUTE_DIRECTORY)) return false;
+    return SetEnvironmentVariableW(L"XR_RUNTIME_JSON", manifest) &&
+           SetEnvironmentVariableW(L"DVR_XRSIM_DIR", directory);
+}
+
 BOOL APIENTRY DllMain(HMODULE m, DWORD reason, LPVOID) {
     if (reason == DLL_PROCESS_ATTACH) {
         DisableThreadLibraryCalls(m);
@@ -39875,6 +39890,12 @@ BOOL APIENTRY DllMain(HMODULE m, DWORD reason, LPVOID) {
         }
         if (!LoadReal()) { Log("FATAL: real d3d9.dll not loadable"); return FALSE; }
         PhysXPreflight();
+        if (!SelectLabOpenXrRuntime()) {
+            Log("tmd-lift-lab: required process-local simulator unavailable");
+            TerminateProcess(GetCurrentProcess(), ERROR_INVALID_DATA);
+            return FALSE;
+        }
+        Log("tmd-lift-lab: process-local simulator selected");
         InstallAutoResolution();
         // Earliest possible attempt, for the same reason the command line needs one: if UE3
         // enumerates input devices during startup and caches "no pad", a hook installed at the
