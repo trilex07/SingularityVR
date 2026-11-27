@@ -67,7 +67,10 @@ inline void ReadMap(IDirect3DDevice9* dev,unsigned group){
  const bool parsed=shadowdepth::Read(locked.pBits,locked.Pitch,512,512,result.stats);
  result.hr=mapStaging->UnlockRect();if(!parsed)result.hr=E_FAIL;
 }
-struct DrawEvent {unsigned op=0,group=~0u,fgCount=0;};
+struct DrawEvent {
+    unsigned op=0,group=~0u,fgCount=0;
+    unsigned type=0,vertices=0,primitives=0;
+};
 static DrawEvent events[kDraws];static unsigned operations=0;
 struct Copy { IDirect3DSurface9* src=nullptr;IDirect3DSurface9* dst=nullptr;unsigned draw=0,op=0;
     RECT from{},to{};bool fromRect=false,toRect=false;D3DTEXTUREFILTERTYPE filter{};HRESULT hr=E_FAIL; };
@@ -103,7 +106,7 @@ inline void Release() {
 inline int Before(IDirect3DDevice9* dev,unsigned type,unsigned verts,unsigned prims,unsigned phase,unsigned moved=0,unsigned fgCount=0) {
     if(!active || draws>=kDraws) { if(active)++overflow; return -1; }
     ++draws;
-    events[draws-1]={++operations,~0u,fgCount};
+    events[draws-1]={++operations,~0u,fgCount,type,verts,prims};
     Key key=bound; // Shader/resource identities tracked at successful setters.
     key.phase=phase;
     key.moved=moved;
@@ -167,7 +170,11 @@ inline void Dump(const char* path) {
         fprintf(f,"map-pixels index=%u group=%u beforeDraw=%u texture=%p hr=%08lX finite=%u nonfinite=%u zero=%u one=%u min=%.9g max=%.9g\n",i,m.group,m.draw,m.texture,m.hr,v.finite,v.nonfinite,v.zero,v.one,v.minimum,v.maximum);
         if(SUCCEEDED(m.hr))for(unsigned y=0;y<16;++y){fprintf(f,"map-grid index=%u row=%u",i,y);for(unsigned x=0;x<16;++x)fprintf(f," %.9g",v.grid[y*16+x]);fputc('\n',f);}
     }
-    for(unsigned i=0;i<draws;++i)fprintf(f,"event op=%u draw=%u group=%u fgCount=%u\n",events[i].op,i+1,events[i].group,events[i].fgCount);
+    for(unsigned i=0;i<draws;++i) {
+        const auto& e=events[i];
+        fprintf(f,"event op=%u draw=%u group=%u fgCount=%u type=%u verts=%u prims=%u\n",
+                e.op,i+1,e.group,e.fgCount,e.type,e.vertices,e.primitives);
+    }
     for(unsigned i=0;i<copyCount;++i){const auto& c=copies[i];IDirect3DTexture9* src=nullptr;IDirect3DTexture9* dst=nullptr;
         if(c.src)c.src->GetContainer(__uuidof(IDirect3DTexture9),(void**)&src);
         if(c.dst)c.dst->GetContainer(__uuidof(IDirect3DTexture9),(void**)&dst);
