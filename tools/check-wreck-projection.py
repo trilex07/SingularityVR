@@ -45,7 +45,9 @@ def project(point, regs, viewport):
     if not all(map(math.isfinite, clip)) or clip[3] <= 0:
         raise ValueError("Mesh extends outside the supported front-facing comparison")
     x, y, w, h = viewport
-    return (x + .5 * w * (1 + clip[0] / clip[3]), y + .5 * h * (1 - clip[1] / clip[3]))
+    return (x + .5 * w * (1 + clip[0] / clip[3]),
+            y + .5 * h * (1 - clip[1] / clip[3]),
+            clip[2] / clip[3])
 
 
 def compare(path, points):
@@ -94,12 +96,16 @@ def compare(path, points):
         color, b = eyes[eye]["color"]
         if int(depth["wreck-draw"]) >= int(color["wreck-draw"]):
             raise ValueError("Depth did not precede color")
-        distances = [math.dist(p,q) for p,q in zip(a,b)]
+        distances = [math.hypot(p[0]-q[0], p[1]-q[1]) for p,q in zip(a,b)]
+        # A shift along the view ray can preserve XY and still change occlusion.
+        # This is vertex output before viewport depth mapping and raster depth bias.
+        depth_deltas = [abs(p[2]-q[2]) for p,q in zip(a,b)]
         result[eye] = {"depth_draw":int(depth["wreck-draw"]), "color_draw":int(color["wreck-draw"]),
                        "same_ib":depth["IB"]==color["IB"], "same_vb":depth["VB"]==color["VB"],
                        "same_stream_layout":(depth["offset"],depth["stride"])==(color["offset"],color["stride"]),
                        "points":len(points), "median_delta_px":statistics.median(distances),
-                       "max_delta_px":max(distances)}
+                       "max_delta_px":max(distances),
+                       "max_abs_delta_ndc_z":max(depth_deltas)}
     return result
 
 
