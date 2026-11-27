@@ -6817,6 +6817,9 @@ int  g_triggerGate = -1;                      // ini [Input] TriggerTouchGate, r
 
 XrAction g_actHandPose = XR_NULL_HANDLE;
 XrSpace  g_handSpace[2] = { XR_NULL_HANDLE, XR_NULL_HANDLE };
+static bool g_preferAimPose = false;
+static XrAction g_pointingPose = XR_NULL_HANDLE;
+static XrSpace g_pointingSpace[2]{};
 XrQuaternionf g_handAimOrientation[2]={{0,0,0,1},{0,0,0,1}};
 // SIDE: separate grip-pose/analog consumer. Never writes the accepted gun/hand
 // pose, input buttons, holster state, or native skeletal palettes.
@@ -10822,6 +10825,12 @@ bool InitXRInput() {
         aci.subactionPaths = g_handSubPath;
         if (XR_FAILED(xrCreateAction(g_actionSet, &aci, &g_actHandPose)))
             g_actHandPose = XR_NULL_HANDLE;   // poses only; the rest of input carries on
+        if (g_preferAimPose) {
+            strcpy_s(aci.actionName, "pointing_pose");
+            strcpy_s(aci.localizedActionName, "Controller pointing direction");
+            if (XR_FAILED(xrCreateAction(g_actionSet, &aci, &g_pointingPose)))
+                g_pointingPose = XR_NULL_HANDLE;
+        }
     }
 
     if(g_gloveExperiment) {
@@ -10871,6 +10880,7 @@ bool InitXRInput() {
                                     + 2                  // trigtouch
                                     + 2                  // sticktouch
                                     + 4                  // hand poses: aim + grip for each hand
+                                    + 2                  // independent pointing pose
                                     + 4                  // optional glove analog + grip pose (two hands)
                                     + 2;                 // per-profile extras (Index trackpad/touch)
     XrActionSuggestedBinding binds[kMaxBinds]{};
@@ -11062,6 +11072,11 @@ bool InitXRInput() {
             add(g_actGlovePose,"/user/hand/right/input/grip/pose",false,false);
         }
 
+        const uint32_t legacyBindingCount = nb;
+        if (g_pointingPose != XR_NULL_HANDLE && prof.map == TouchBindingPath) {
+            add(g_pointingPose, pp[0], false, false);
+            add(g_pointingPose, pp[1], false, false);
+        }
         if (overflow) {
             // Cannot happen with the table as it stands - kMaxBinds is spelled one term per site.
             // It is here so that the NEXT row added fails on this line instead of on the stack.
@@ -11079,6 +11094,11 @@ bool InitXRInput() {
         sb.suggestedBindings = binds;
         sb.countSuggestedBindings = nb;
         XrResult sr = xrSuggestInteractionProfileBindings(g_xrInstance, &sb);
+        if (XR_FAILED(sr) && nb != legacyBindingCount) {
+            nb = legacyBindingCount;
+            sb.countSuggestedBindings = nb;
+            sr = xrSuggestInteractionProfileBindings(g_xrInstance, &sb);
+        }
         if(XR_FAILED(sr)&&g_gloveExperiment) {
             // Suggestions fail atomically. If a runtime refuses a new optional
             // source, retry the EXACT original action list and abandon gloves,
@@ -11129,6 +11149,16 @@ bool InitXRInput() {
         }
     }
 
+    if (g_pointingPose != XR_NULL_HANDLE) {
+        for (int i = 0; i < 2; ++i) {
+            XrActionSpaceCreateInfo sci{XR_TYPE_ACTION_SPACE_CREATE_INFO};
+            sci.action = g_pointingPose;
+            sci.subactionPath = g_handSubPath[i];
+            sci.poseInActionSpace.orientation.w = 1.0f;
+            if (XR_FAILED(xrCreateActionSpace(g_xrSession, &sci, &g_pointingSpace[i])))
+                g_pointingSpace[i] = XR_NULL_HANDLE;
+        }
+    }
     g_xrInputReady = true;
     if(g_gloveExperiment && g_actGlovePose!=XR_NULL_HANDLE) {
         for(int i=0;i<2;++i) {
@@ -11423,7 +11453,7 @@ void SyncXRInput(XrTime displayTime) {
         g_handPositionValid[i] = false;
         g_handTracked[i] = false;
         g_handActionActive[i] = false;
-        if (g_handSpace[i] == XR_NULL_HANDLE) continue;
+        if (!g_handSpace[i] && !g_pointingSpace[i]) continue;
         if (probePoseActivity && g_actHandPose != XR_NULL_HANDLE) {
             XrActionStateGetInfo pgi{ XR_TYPE_ACTION_STATE_GET_INFO };
             pgi.action = g_actHandPose;
@@ -11436,7 +11466,20 @@ void SyncXRInput(XrTime displayTime) {
         // handTime, not displayTime - see the run-190 note above. With PoseLeadFrames=0 these are equal,
         // so the old behaviour is bit-identical and the A/B is honest.
         g_hotPathSampler.count(i == 0 ? hotpath::Counter::xr_locate_left : hotpath::Counter::xr_locate_right);
-        if (XR_FAILED(xrLocateSpace(g_handSpace[i], g_xrSpace, handTime, &loc))) continue;
+        // The legacy action accepts aim and grip. OpenXR does not select a pose
+        // by suggestion order. Use a separate aim-only sample when fully tracked.
+        constexpr XrSpaceLocationFlags trackedPose = XR_SPACE_LOCATION_ORIENTATION_VALID_BIT |
+            XR_SPACE_LOCATION_ORIENTATION_TRACKED_BIT | XR_SPACE_LOCATION_POSITION_VALID_BIT |
+            XR_SPACE_LOCATION_POSITION_TRACKED_BIT;
+        const bool pointing = g_pointingSpace[i] &&
+            XR_SUCCEEDED(xrLocateSpace(g_pointingSpace[i], g_xrSpace, handTime, &loc));
+        if (!pointing || (loc.locationFlags & trackedPose) != trackedPose) {
+            XrSpaceLocation legacy{XR_TYPE_SPACE_LOCATION};
+            if (g_handSpace[i] &&
+                XR_SUCCEEDED(xrLocateSpace(g_handSpace[i], g_xrSpace, handTime, &legacy)) &&
+                (legacy.locationFlags & XR_SPACE_LOCATION_ORIENTATION_VALID_BIT)) loc = legacy;
+            else if (!pointing) continue;
+        }
         if (g_hotPathSampler.active())
             InterlockedExchange64(i == 0 ? &g_hotLeftPoseFrame : &g_hotRightPoseFrame,
                 static_cast<LONG64>(g_hotPathSampler.frame_token()));
@@ -38904,6 +38947,8 @@ void LoadIniSettings() {
     InterlockedExchange(&g_dualHandActionPose,GetPrivateProfileIntA("Input","DualHandActionPose",0,path)!=0);
     Log("ini: DualHandActionPose=%ld (default OFF; original material0 wrist parent, render only)",Rd(g_dualHandActionPose));
     g_trackedGripWrist=GetPrivateProfileIntA("Input","TrackedGripWrist",0,path)!=0;
+    g_preferAimPose = GetPrivateProfileIntA("Input", "PreferAimPose", 0, path) != 0;
+    Log("ini: PreferAimPose=%d (dedicated tracked aim, legacy hand fallback)", g_preferAimPose);
     g_trackedGripSupportContinuity=GetPrivateProfileIntA("Input","TrackedGripSupportContinuity",0,path)!=0;
     Log("ini: TrackedGripSupportContinuity=%d (default OFF; requires TrackedGripWrist; right correction only during support)",g_trackedGripSupportContinuity?1:0);
     Log("ini: TrackedGripWrist=%d (default OFF; original anatomy -> live grip quaternion/position; shared hand/TMD/gun ride)",g_trackedGripWrist?1:0);
