@@ -14893,15 +14893,30 @@ static HRESULT STDMETHODCALLTYPE ShadowTraceStretch(IDirect3DDevice9* dev,IDirec
 }
 static ShadowSetPS shadowOriginalPS=nullptr;
 static bool g_tmdGravityDecalFix=false;
-static bool g_tmdGravityDecalBound=false;
 static HRESULT STDMETHODCALLTYPE ShadowTraceSetPS(IDirect3DDevice9* dev,IDirect3DPixelShader9* ps) {
-    const HRESULT hr=shadowOriginalPS(dev,ps);if(SUCCEEDED(hr)){shadowtrace::bound.ps=ps;shadowfix::BindPS(ps);worldshadowfix::BindPS(ps);projectorfix::BindPS(ps);nativefx::BindPS(ps);
-        // Exact bytecode identity: no allocation, pointer cache or name-based overmatch.
-        g_tmdGravityDecalBound=false;
-        if(g_tmdGravityDecalFix&&ps){UINT n=0;unsigned char code[2132];
-            if(SUCCEEDED(ps->GetFunction(nullptr,&n))&&n==sizeof(code)&&SUCCEEDED(ps->GetFunction(code,&n)))
-                g_tmdGravityDecalBound=tmdgravitydecal::Shader(code,n);
-        }}return hr;
+    const HRESULT hr = shadowOriginalPS(dev, ps);
+    if (SUCCEEDED(hr)) {
+        shadowtrace::bound.ps = ps;
+        shadowfix::BindPS(ps);
+        worldshadowfix::BindPS(ps);
+        projectorfix::BindPS(ps);
+        nativefx::BindPS(ps);
+    }
+    return hr;
+}
+static bool IsBoundTmdGravityDecal(IDirect3DDevice9* dev) {
+    // A successful SetPixelShader can record state for later application.
+    // Read the actual shader only on the captured geometry in TMD gameplay.
+    IDirect3DPixelShader9* shader = nullptr;
+    const HRESULT bound = dev->GetPixelShader(&shader);
+    if (!shader) return false;
+    UINT size = 0;
+    unsigned char code[2132];
+    const bool matches = SUCCEEDED(bound) && SUCCEEDED(shader->GetFunction(nullptr, &size)) &&
+        size == sizeof(code) && SUCCEEDED(shader->GetFunction(code, &size)) &&
+        tmdgravitydecal::Shader(code, size);
+    shader->Release();
+    return matches;
 }
 // Fix-I/menu census: wire the dormant MenuDrawTrace recorder into the four draw hooks
 // (calls below) with path masks in StereoPairBody (1) and HudStereoPair (2); provider
@@ -21273,7 +21288,10 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
     hotpath::scope hotScope(g_hotPathSampler, hotpath::Family::draw_hook);
     MenuDrawTraceRecord(dev,1,t,primCount,numVertices,startIndex,minIndex,baseVertex,nullptr,0);   // fix-I census
     InterlockedIncrement(&g_frameDrawIdx);
-    if(g_tmdGravityDecalBound&&g_tmdGravityDecalFix){
+    if(g_tmdGravityDecalFix && tmdgravitydecal::CapturedGeometry((unsigned)t,numVertices,primCount) &&
+        VrModeOn() && InGameplay() && Rd(g_haveTMD)==1 && Rd(g_handsStatus)==HANDS_TMD &&
+        !Rd(g_gamePaused) && !Rd(g_vrUiMenu) && !Rd(g_panelOpen) && !Rd(g_inCinematic) &&
+        Rd(g_rtIsScene) && IsBoundTmdGravityDecal(dev)){
         DWORD state[13]{};const D3DRENDERSTATETYPE ids[]={D3DRS_COLORWRITEENABLE,D3DRS_ZWRITEENABLE,
             D3DRS_ALPHABLENDENABLE,D3DRS_SRCBLEND,D3DRS_DESTBLEND,D3DRS_STENCILENABLE,D3DRS_BLENDOP,
             D3DRS_ZENABLE,D3DRS_ZFUNC,D3DRS_SEPARATEALPHABLENDENABLE,D3DRS_SRCBLENDALPHA,
@@ -21281,9 +21299,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
         bool valid=true;for(unsigned i=0;i<13;++i)valid=SUCCEEDED(dev->GetRenderState(ids[i],&state[i]))&&valid;
         IDirect3DVertexBuffer9* vb=nullptr;UINT offset=0,stride=0;
         valid=SUCCEEDED(dev->GetStreamSource(0,&vb,&offset,&stride))&&valid;if(vb)vb->Release();
-        const bool context=VrModeOn()&&InGameplay()&&Rd(g_haveTMD)==1&&Rd(g_handsStatus)==HANDS_TMD&&
-            !Rd(g_gamePaused)&&!Rd(g_vrUiMenu)&&!Rd(g_panelOpen)&&!Rd(g_inCinematic)&&Rd(g_rtIsScene);
-        if(tmdgravitydecal::Drop({valid,context,(unsigned)t,stride,offset,numVertices,primCount,
+        if(tmdgravitydecal::Drop({valid,true,(unsigned)t,stride,offset,numVertices,primCount,
                 state[0],state[1],state[2],state[3],state[4],state[5],state[6],
                 state[7],state[8],state[9],state[10],state[11],state[12]})){
             static unsigned receipts=0;if(receipts++<4)Log("tmd-gravity-decal: exact captured pass suppressed PS=9CE7CA1D verts=%u prims=%u",numVertices,primCount);
@@ -37741,7 +37757,6 @@ HRESULT STDMETHODCALLTYPE Hook_ResetDevice(IDirect3DDevice9* dev, D3DPRESENT_PAR
     InterlockedIncrement(&g_diagResetCount);
     if(pp){InterlockedExchange(&g_diagResetRequestW,LONG(pp->BackBufferWidth));InterlockedExchange(&g_diagResetRequestH,LONG(pp->BackBufferHeight));}
     if (pp && dev) GuardResetSize(pp);
-    g_tmdGravityDecalBound=false;
     ReleaseWristResources();
     g_cinemaWasActive=false;g_cinemaStereoToken=~0u;memset(g_cinemaNativeValid,0,sizeof g_cinemaNativeValid);
     ReleaseCutsceneMonoResources(); // DEFAULT-pool compose surface; rebuilt lazily
@@ -37752,7 +37767,6 @@ HRESULT STDMETHODCALLTYPE Hook_ResetDeviceEx(IDirect3DDevice9Ex* dev, D3DPRESENT
     InterlockedIncrement(&g_diagResetCount);
     if(pp){InterlockedExchange(&g_diagResetRequestW,LONG(pp->BackBufferWidth));InterlockedExchange(&g_diagResetRequestH,LONG(pp->BackBufferHeight));}
     if (pp && dev) GuardResetSize(pp);
-    g_tmdGravityDecalBound=false;
     ReleaseWristResources();
     g_cinemaWasActive=false;g_cinemaStereoToken=~0u;memset(g_cinemaNativeValid,0,sizeof g_cinemaNativeValid);
     ReleaseCutsceneMonoResources(); // DEFAULT-pool compose surface; rebuilt lazily
