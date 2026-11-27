@@ -1080,6 +1080,17 @@ DWORD WINAPI Hook_XInputGetState(DWORD idx, XiState* st) {
 
     st->dwPacketNumber = g_padPacket;
     st->Gamepad = g;
+    if (g_tmdLiftBracket) {
+        static bool previous = false;
+        static unsigned edges = 0;
+        const bool gripOutput = (g.wButtons & XI_RTHUMB) != 0;
+        if (gripOutput != previous && edges < 96) {
+            ++edges;
+            Log("tmd-warehouse-xinput: ms=%llu caller=%p port=%lu packet=%lu buttons=%04X antiGrav=%d",
+                GetTickCount64(), _ReturnAddress(), idx, st->dwPacketNumber, unsigned(g.wButtons), gripOutput ? 1 : 0);
+        }
+        previous = gripOutput;
+    }
     g_msInHook += MsSince(tHook);
     DiagXi(true, diagStart);
     return kXiOk;

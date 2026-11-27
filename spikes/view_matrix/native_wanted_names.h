@@ -38,6 +38,10 @@ inline WantedName g_wantNames[] = {
     { "mCurAgingActor", -1 },
     { "mMaxGrabDist", -1 },
     { "mRange", -1 },
+    { "mAntiGravityElapsedTime", -1 },
+    { "mObjResistingGrab", -1 },
+    { "mUpgradeFlags", -1 },
+    { "mRequiredGrabbingPower", -1 },
     // Read-only scene witness: actual native hand components and their assets.
     { "mArmMeshComponent", -1 }, { "mInviewMesh", -1 }, { "Mesh", -1 },
     { "SkeletalMesh", -1 }, { "Animations", -1 },

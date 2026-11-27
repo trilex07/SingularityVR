@@ -71,6 +71,13 @@ static float ReadFloat(uintptr_t object, const char* name) {
     return std::isfinite(value) ? value : -1.0f;
 }
 
+static int ReadPower(uintptr_t component) {
+    if (!component) return -1;
+    const int offset = PropOffsetInChain(Pointer(component + OBJ_CLASS), "mRequiredGrabbingPower");
+    if (offset < 0 || !Readable((const void*)(component + offset), 1)) return -1;
+    return *reinterpret_cast<const uint8_t*>(component + offset);
+}
+
 static void Probe(uintptr_t grabbed) {
     if (!g_tmdLiftBracket || !g_playerPawn || g_offTMD < 0 || !g_upChildren || !g_upNext ||
         !g_upOffset || g_povPos[0] < 36900 || g_povPos[0] > 39200 ||
@@ -101,12 +108,12 @@ static void Probe(uintptr_t grabbed) {
     static ULONGLONG nextSample = 0;
     static unsigned samples = 0;
     const auto now = GetTickCount64();
-    if (samples >= 100 || now < nextSample) return;
+    if (samples >= 1000 || now < nextSample) return;
     nextSample = now + 350;
     ++samples;
     const uintptr_t tmd = Pointer(g_playerPawn + g_offTMD);
-    static uintptr_t aimClass = 0, agingClass = 0;
-    static int aimOffset = -1, agingOffset = -1;
+    static uintptr_t aimClass = 0, agingClass = 0, resistClass = 0;
+    static int aimOffset = -1, agingOffset = -1, resistOffset = -1;
     const uintptr_t aim = SceneObjectProperty(tmd, "mAimAtActorCache", aimClass, aimOffset);
     const uintptr_t age = SceneObjectProperty(tmd, "mCurAgingActor", agingClass, agingOffset);
     static uintptr_t previousAim = 0, previousAge = 0, previousComponent = 0;
@@ -129,5 +136,14 @@ static void Probe(uintptr_t grabbed) {
         Rd(g_sceneModeFrame), (void*)crate, (void*)component, can, ReadFloat(component, "mMaxGrabDist"),
         ReadFloat(tmd, "mRange"), cursor, count, power, aimOffset, agingOffset, (void*)aim, aimName,
         aimType, (void*)age, (void*)grabbed);
+    if (tmd && component && power) {
+        const uintptr_t resisting = SceneObjectProperty(tmd, "mObjResistingGrab", resistClass, resistOffset);
+        const int flagsOffset = PropOffsetInChain(Pointer(tmd + OBJ_CLASS), "mUpgradeFlags");
+        int32_t flags = -1;
+        if (flagsOffset >= 0) TryLoadAlignedI32(tmd + flagsOffset, &flags);
+        Log("tmd-warehouse-power: ms=%llu frame=%ld flags=%08X required=%d elapsed=%.3f resisting=%p",
+            now, Rd(g_sceneModeFrame), uint32_t(flags), ReadPower(component),
+            ReadFloat(tmd, "mAntiGravityElapsedTime"), (void*)resisting);
+    }
 }
 } // namespace liftcrate
