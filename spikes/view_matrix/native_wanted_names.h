@@ -33,6 +33,7 @@ inline WantedName g_wantNames[] = {
     // property with `NameOf`, so it can see names the lookup is structurally blind to. That is why they
     // disagreed, and it is worth knowing before trusting a "not found" from this resolver again.
     { "mPlayerHandsStatus", -1 }, { "mTMD", -1 },
+    { "mCurrentGrabbedActor", -1 },
     // Read-only scene witness: actual native hand components and their assets.
     { "mArmMeshComponent", -1 }, { "mInviewMesh", -1 }, { "Mesh", -1 },
     { "SkeletalMesh", -1 }, { "Animations", -1 },

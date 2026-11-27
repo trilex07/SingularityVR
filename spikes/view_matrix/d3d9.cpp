@@ -34291,6 +34291,45 @@ static void StartupReadinessFrame(IDirect3DDevice9* dev){
     if(!restored){drawFault=true;Log("startup loading: state restore failed; curtain disabled for this session");}
 }
 
+// Private lab observation of RvTMD.mCurrentGrabbedActor. No writes to the TMD
+// or the grabbed actor. Input without a native actor cannot trigger this capture.
+static uintptr_t AuditNativeGravityGrab() {
+    if (!g_tmdVisualAudit || !g_playerPawn || g_offTMD < 0 ||
+        !Readable((void*)(g_playerPawn + g_offTMD), sizeof(uintptr_t))) return 0;
+    const uintptr_t tmd = *reinterpret_cast<const uintptr_t*>(g_playerPawn + g_offTMD);
+    if (!tmd || !Readable((void*)(tmd + OBJ_CLASS), sizeof(uintptr_t))) return 0;
+    const uintptr_t cls = *reinterpret_cast<const uintptr_t*>(tmd + OBJ_CLASS);
+    if (!cls) return 0;
+
+    static uintptr_t cachedClass = 0;
+    static int offset = -1;
+    static ULONGLONG nextLookup = 0;
+    const ULONGLONG now = GetTickCount64();
+    if (cls != cachedClass || (offset < 0 && now >= nextLookup)) {
+        cachedClass = cls;
+        nextLookup = now + 1000;
+        offset = PropOffsetInChain(cls, "mCurrentGrabbedActor");
+        if (offset >= 0) Log("tmd-lift-audit: resolved mCurrentGrabbedActor +0x%03X", offset);
+    }
+    if (offset < 0 || !Readable((void*)(tmd + offset), sizeof(uintptr_t))) return 0;
+    const uintptr_t actor = *reinterpret_cast<const uintptr_t*>(tmd + offset);
+    if (actor && !Readable((void*)(actor + OBJ_CLASS), sizeof(uintptr_t))) return 0;
+
+    static bool sampled = false;
+    static uintptr_t previous = 0;
+    static unsigned notes = 0;
+    if ((!sampled || previous != actor) && notes < 24) {
+        sampled = true;
+        previous = actor;
+        ++notes;
+        char objectName[96] = "none";
+        if (actor && !NameOf(actor, objectName, sizeof(objectName))) strcpy_s(objectName, "unknown");
+        Log("tmd-lift-audit: frame=%ld tmd=%p actor=%p name=%s gravityInput=%d",
+            Rd(g_sceneModeFrame), (void*)tmd, (void*)actor, objectName, g_tmdGravityLatch.power ? 1 : 0);
+    }
+    return actor;
+}
+
 HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const RECT* b, HWND c, const RGNDATA* d) {
     shadowfix::Poll(g_logPath);
     worldshadowfix::Poll(g_logPath);
@@ -34303,16 +34342,18 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
         g_handPositionValid[0] && g_handPositionValid[1];
     static unsigned shadowTraceStable=0;
     shadowTraceStable=shadowTraceReady?std::min(shadowTraceStable+1,30u):0;
+    const uintptr_t grabbedActor = shadowTraceStable >= 15 ? AuditNativeGravityGrab() : 0;
     const auto auditScene=g_tmdVisualSchedule.Update(g_tmdVisualAudit,
         shadowTraceStable>=15 && Rd(g_haveTMD)==1 && InGameplay() &&
         (!Rd(g_dualHandActionPose)||!DualWeaponTmdContext()||dualhandreference::Right((unsigned)Rd(g_gunVerts))) &&
         !Rd(g_inCinematic)&&!Rd(g_panelOpen)&&!Rd(g_vrUiMenu)&&!Rd(g_gamePaused),
         shadowtrace::active||shadowtrace::pending,shadowtrace::sequence,
-        g_handPitchRad[0],g_tmdGravityLatch.power,GetTickCount64());
+        g_handPitchRad[0],g_tmdGravityLatch.power && grabbedActor != 0,GetTickCount64());
     if(auditScene!=tmdvisualaudit::Scene::None) {
         g_tmdVisualScene=auditScene;shadowtrace::pending=true;
-        Log("tmd-visual-audit: request=%s frame=%ld hands=%ld gravityInput=%d pitch=%.6g; input is not proof of native target acquisition",
-            tmdvisualaudit::Name(auditScene),Rd(g_sceneModeFrame),Rd(g_handsStatus),g_tmdGravityLatch.power?1:0,g_handPitchRad[0]);
+        Log("tmd-visual-audit: request=%s frame=%ld hands=%ld gravityInput=%d pitch=%.6g grabbedActor=%p",
+            tmdvisualaudit::Name(auditScene),Rd(g_sceneModeFrame),Rd(g_handsStatus),g_tmdGravityLatch.power?1:0,
+            g_handPitchRad[0], (void*)grabbedActor);
     }
     PollGameplayHotPath(shadowTraceStable>=15);
     if(Rd(g_equipmentHudTrace)||wristtrace::active){
@@ -34331,8 +34372,9 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
         SaveBackbufferCapture(s,true,shadowtrace::sequence); // Completed SBS scene, before overlays.
         nativefx::DumpWitness();
         if(g_tmdVisualScene!=tmdvisualaudit::Scene::None) {
-            Log("tmd-visual-audit: completed=%s sequence=%u frame=%ld hands=%ld gravityInput=%d; inspect matching SBS pixels and shader dump, not counters alone",
-                tmdvisualaudit::Name(g_tmdVisualScene),shadowtrace::sequence,Rd(g_sceneModeFrame),Rd(g_handsStatus),g_tmdGravityLatch.power?1:0);
+            Log("tmd-visual-audit: completed=%s sequence=%u frame=%ld hands=%ld gravityInput=%d grabbedActor=%p",
+                tmdvisualaudit::Name(g_tmdVisualScene),shadowtrace::sequence,Rd(g_sceneModeFrame),
+                Rd(g_handsStatus),g_tmdGravityLatch.power?1:0,(void*)grabbedActor);
             g_tmdVisualScene=tmdvisualaudit::Scene::None;
         }
     }
