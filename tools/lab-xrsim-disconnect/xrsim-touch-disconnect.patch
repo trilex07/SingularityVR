@@ -1,0 +1,217 @@
+diff --git a/src/tools/xrsim/xrsim_actions.cpp b/src/tools/xrsim/xrsim_actions.cpp
+index 07a1cc15c..ff44b0e0b 100644
+--- a/src/tools/xrsim/xrsim_actions.cpp
++++ b/src/tools/xrsim/xrsim_actions.cpp
+@@ -263,6 +263,9 @@ float control_float(const Rig& rig, VirtualControl c) {
+
+ bool control_bool(const Rig& rig, VirtualControl c) {
+     switch (c) {
++    case VC_TRIGGER_L: case VC_TRIGGER_R:
++    case VC_SQUEEZE_L: case VC_SQUEEZE_R:
++        return control_float(rig, c) > 0.5f;
+     case VC_BTN_A: return rig.btnA;
+     case VC_BTN_B: return rig.btnB;
+     case VC_BTN_X: return rig.btnX;
+@@ -424,6 +427,10 @@ static XrResult impl_SuggestInteractionProfileBindings(
+
+         // The touch profile is the one the mod actually runs on; no other
+         // profile's suggestion may overwrite a resolved control.
++        if (a->type == XR_ACTION_TYPE_BOOLEAN_INPUT && e->hand >= 0 && e->hand < 2) {
++            auto& slot = a->booleanControls[e->hand];
++            if (pe->authoritative || slot == VC_NONE) slot = e->control;
++        }
+         if (pe->authoritative || a->control == VC_NONE) {
+             a->control = e->control;
+             a->hand = e->hand;
+@@ -465,7 +472,7 @@ static XrResult impl_AttachSessionActionSets(XrSession session,
+     return XR_SUCCESS;
+ }
+
+-static XrResult impl_GetCurrentInteractionProfile(XrSession session, XrPath,
++static XrResult impl_GetCurrentInteractionProfile(XrSession session, XrPath userPath,
+                                                   XrInteractionProfileState* state) noexcept {
+     if (!session_valid(session)) return XR_ERROR_HANDLE_INVALID;
+     if (!state) return XR_ERROR_VALIDATION_FAILURE;
+@@ -475,7 +482,13 @@ static XrResult impl_GetCurrentInteractionProfile(XrSession session, XrPath,
+         g_profileTouch = path_intern("/interaction_profiles/oculus/touch_controller");
+     if (g_profileSimple == XR_NULL_PATH)
+         g_profileSimple = path_intern("/interaction_profiles/khr/simple_controller");
+-    state->interactionProfile = g_useSimpleProfile ? g_profileSimple : g_profileTouch;
++    const char* user = path_str(userPath);
++    const auto& rig = committed_rig();
++    const bool absent = user &&
++        ((!strcmp(user, "/user/hand/left") && !rig.handConnected[0]) ||
++         (!strcmp(user, "/user/hand/right") && !rig.handConnected[1]));
++    state->interactionProfile = absent ? XR_NULL_PATH :
++        (g_useSimpleProfile ? g_profileSimple : g_profileTouch);
+     return XR_SUCCESS;
+ }
+
+@@ -525,10 +538,21 @@ static XrResult impl_GetActionStateBoolean(XrSession session, const XrActionStat
+     if (a->type != XR_ACTION_TYPE_BOOLEAN_INPUT) return XR_ERROR_ACTION_TYPE_MISMATCH;
+
+     const Rig& rig = committed_rig();
+-    const bool live = inputs_live() && a->control != VC_NONE;
++    const char* subpath = info->subactionPath != XR_NULL_PATH ? path_str(info->subactionPath) : nullptr;
++    const bool aggregate = info->subactionPath == XR_NULL_PATH;
++    bool bound = false, pressed = false;
++    for (int h = 0; h < 2; ++h) {
++        if (!rig.handConnected[h]) continue;
++        const char* handPath = h == 0 ? "/user/hand/left" : "/user/hand/right";
++        if (!aggregate && (!subpath || std::strcmp(subpath, handPath))) continue;
++        const auto channel = a->booleanControls[h];
++        bound |= channel != VC_NONE;
++        pressed |= control_bool(rig, channel);
++    }
++    const bool live = inputs_live() && bound;
+     state->type = XR_TYPE_ACTION_STATE_BOOLEAN;
+     state->isActive = live ? XR_TRUE : XR_FALSE;
+-    state->currentState = live && control_bool(rig, a->control) ? XR_TRUE : XR_FALSE;
++    state->currentState = live && pressed ? XR_TRUE : XR_FALSE;
+     state->changedSinceLastSync = XR_FALSE;
+     state->lastChangeTime = snapshot().displayTime;
+     return XR_SUCCESS;
+@@ -543,7 +567,8 @@ static XrResult impl_GetActionStateFloat(XrSession session, const XrActionStateG
+     if (a->type != XR_ACTION_TYPE_FLOAT_INPUT) return XR_ERROR_ACTION_TYPE_MISMATCH;
+
+     const Rig& rig = committed_rig();
+-    const bool live = inputs_live() && a->control != VC_NONE;
++    const bool live = inputs_live() && a->control != VC_NONE &&
++        (a->hand < 0 || rig.handConnected[a->hand]);
+     state->type = XR_TYPE_ACTION_STATE_FLOAT;
+     state->isActive = live ? XR_TRUE : XR_FALSE;
+     state->currentState = live ? control_float(rig, a->control) : 0.0f;
+@@ -561,8 +586,9 @@ static XrResult impl_GetActionStateVector2f(XrSession session, const XrActionSta
+     if (a->type != XR_ACTION_TYPE_VECTOR2F_INPUT) return XR_ERROR_ACTION_TYPE_MISMATCH;
+
+     const Rig& rig = committed_rig();
+-    const bool live = inputs_live() && (a->control == VC_STICK_L || a->control == VC_STICK_R);
+     const int hand = (a->control == VC_STICK_R) ? 1 : 0;
++    const bool live = inputs_live() && rig.handConnected[hand] &&
++        (a->control == VC_STICK_L || a->control == VC_STICK_R);
+     state->type = XR_TYPE_ACTION_STATE_VECTOR2F;
+     state->isActive = live ? XR_TRUE : XR_FALSE;
+     // Raw, pre-deadzone. The mod applies its own radial deadzone and would
+@@ -584,7 +610,8 @@ static XrResult impl_GetActionStatePose(XrSession session, const XrActionStateGe
+
+     const Rig& rig = committed_rig();
+     const int hand = (a->hand == 1) ? 1 : 0;
+-    const bool live = inputs_live() && control_is_pose(a->control) && rig.handValid[hand];
++    const bool live = inputs_live() && control_is_pose(a->control) &&
++        rig.handConnected[hand] && rig.handValid[hand];
+     state->type = XR_TYPE_ACTION_STATE_POSE;
+     state->isActive = live ? XR_TRUE : XR_FALSE;
+     return XR_SUCCESS;
+diff --git a/src/tools/xrsim/xrsim_common.h b/src/tools/xrsim/xrsim_common.h
+index e65c68724..8bafddad8 100644
+--- a/src/tools/xrsim/xrsim_common.h
++++ b/src/tools/xrsim/xrsim_common.h
+@@ -139,6 +139,7 @@ struct Rig {
+     Pose grip[2];   // 0 = left, 1 = right
+     Pose aim[2];
+     bool handValid[2];
++    bool handConnected[2] = {true, true};
+     bool handFollowsHead[2];
+     Vec3 handOffset[2];   // head-local (right, up, forward) when following
+     float aimTrimPitch[2];
+diff --git a/src/tools/xrsim/xrsim_compositor.cpp b/src/tools/xrsim/xrsim_compositor.cpp
+index b97ec9d89..94f3f9ab8 100644
+--- a/src/tools/xrsim/xrsim_compositor.cpp
++++ b/src/tools/xrsim/xrsim_compositor.cpp
+@@ -788,10 +788,11 @@ std::string build_json(const SimSubmission& sub, const std::vector<LayerStat>& s
+         float y, p, rr;
+         quat_to_ypr(sub.snap.aimWorld[h2].q, y, p, rr);
+         sprintf_s(buf, "  \"hand%s\": {\"grip\": [%.5f, %.5f, %.5f], \"aimYpr\": [%.3f, %.3f, %.3f], "
+-                       "\"valid\": %s},\n",
++                       "\"valid\": %s, \"connected\": %s},\n",
+                   h2 == 0 ? "L" : "R", sub.snap.gripWorld[h2].p.x, sub.snap.gripWorld[h2].p.y,
+                   sub.snap.gripWorld[h2].p.z, rad2deg(y), rad2deg(p), rad2deg(rr),
+-                  r.handValid[h2] ? "true" : "false");
++                  r.handConnected[h2] && r.handValid[h2] ? "true" : "false",
++                  r.handConnected[h2] ? "true" : "false");
+         out += buf;
+     }
+
+diff --git a/src/tools/xrsim/xrsim_control.cpp b/src/tools/xrsim/xrsim_control.cpp
+index e0c22f1f1..9469346d2 100644
+--- a/src/tools/xrsim/xrsim_control.cpp
++++ b/src/tools/xrsim/xrsim_control.cpp
+@@ -299,6 +299,12 @@ void apply_line(const char* line) {
+             rig.aimTrimPitch[h] = a.f(4);
+         } else if (a.is(2, "valid")) {
+             rig.handValid[h] = !a.is(3, "off");
++        } else if (a.is(2, "connected")) {
++            if (!a.is(3, "on") && !a.is(3, "off")) {
++                set_error("hand connected needs on or off");
++                return;
++            }
++            rig.handConnected[h] = a.is(3, "on");
+         } else if (a.is(2, "to")) {
+             // hand <h> to grip|aim <x> <y> <z> <yaw> <pitch> <roll> <ms>
+             //
+@@ -671,10 +677,11 @@ void write_state_json() {
+         float y, p, rr;
+         quat_to_ypr(snap.gripWorld[h].q, y, p, rr);
+         fprintf(f, "  \"hand%s\": {\"pos\": [%.4f, %.4f, %.4f], \"ypr\": [%.2f, %.2f, %.2f], "
+-                   "\"valid\": %s, \"followsHead\": %s},\n",
++                   "\"valid\": %s, \"connected\": %s, \"followsHead\": %s},\n",
+                 h == 0 ? "L" : "R", snap.gripWorld[h].p.x, snap.gripWorld[h].p.y,
+                 snap.gripWorld[h].p.z, rad2deg(y), rad2deg(p), rad2deg(rr),
+-                r.handValid[h] ? "true" : "false", r.handFollowsHead[h] ? "true" : "false");
++                r.handConnected[h] && r.handValid[h] ? "true" : "false",
++                r.handConnected[h] ? "true" : "false", r.handFollowsHead[h] ? "true" : "false");
+     }
+
+     fprintf(f, "  \"controls\": {\"a\": %s, \"b\": %s, \"x\": %s, \"y\": %s, \"menu\": %s, "
+diff --git a/src/tools/xrsim/xrsim_frame.cpp b/src/tools/xrsim/xrsim_frame.cpp
+index a06695bcb..a23d3c624 100644
+--- a/src/tools/xrsim/xrsim_frame.cpp
++++ b/src/tools/xrsim/xrsim_frame.cpp
+@@ -104,8 +104,20 @@ const Rig& committed_rig() { return g_snapshot.rig; }
+
+ // The single write of the rig, from the control channel's commit point.
+ void snapshot_set_rig(const Rig& rig) {
+-    std::lock_guard<std::mutex> lock(g_snapMutex);
+-    g_snapshot.rig = rig;
++    bool connectionChanged;
++    {
++        std::lock_guard<std::mutex> lock(g_snapMutex);
++        connectionChanged = rig.handConnected[0] != g_snapshot.rig.handConnected[0] ||
++                            rig.handConnected[1] != g_snapshot.rig.handConnected[1];
++        g_snapshot.rig = rig;
++    }
++    if (connectionChanged && actions_attached()) {
++        XrEventDataBuffer buf{};
++        auto* ev = reinterpret_cast<XrEventDataInteractionProfileChanged*>(&buf);
++        ev->type = XR_TYPE_EVENT_DATA_INTERACTION_PROFILE_CHANGED;
++        ev->session = current_session_handle();
++        if (ev->session != XR_NULL_HANDLE) queue_event(buf);
++    }
+ }
+
+ void recenter_local_space() {
+diff --git a/src/tools/xrsim/xrsim_internal.h b/src/tools/xrsim/xrsim_internal.h
+index f3490de47..e158e19e8 100644
+--- a/src/tools/xrsim/xrsim_internal.h
++++ b/src/tools/xrsim/xrsim_internal.h
+@@ -61,6 +61,7 @@ struct SimAction {
+     XrActionType type = XR_ACTION_TYPE_BOOLEAN_INPUT;
+     char name[XR_MAX_ACTION_NAME_SIZE] = {};
+     VirtualControl control = VC_NONE;  // resolved at suggest-binding time
++    VirtualControl booleanControls[2] = {VC_NONE, VC_NONE};
+     int hand = -1;
+ };
+
+diff --git a/src/tools/xrsim/xrsim_session.cpp b/src/tools/xrsim/xrsim_session.cpp
+index e7fcd9e90..8e6ddff29 100644
+--- a/src/tools/xrsim/xrsim_session.cpp
++++ b/src/tools/xrsim/xrsim_session.cpp
+@@ -426,7 +426,7 @@ bool space_pose(const SimSpace& space, const FrameSnapshot& snap, Pose& out, boo
+         SimAction* act = nullptr;
+         if (space.actionIndex < kMaxActions) act = action_get_by_index(space.actionIndex);
+         const bool isAim = act && (act->control == VC_POSE_AIM_L || act->control == VC_POSE_AIM_R);
+-        if (!snap.rig.handValid[h]) {
++        if (!snap.rig.handConnected[h] || !snap.rig.handValid[h]) {
+             tracked = false;
+             out = pose_identity();
+             return false;
