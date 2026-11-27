@@ -25,6 +25,7 @@ struct Key {
 };
 struct Group {
     Key key; D3DVIEWPORT9 vp{}; IDirect3DSurface9* depth=nullptr;
+    D3DSURFACE_DESC depthDesc{};
     unsigned first=0,last=0,count=0,failed=0,type=0,verts=0,minPrims=~0u,maxPrims=0;
     float vsConstants[32][4]{},psConstants[32][4]{};
     HRESULT vsRead=E_FAIL,psRead=E_FAIL;
@@ -158,6 +159,7 @@ inline int Before(IDirect3DDevice9* dev,unsigned type,unsigned verts,unsigned pr
         if(key.vs)key.vs->AddRef(); if(key.ps)key.ps->AddRef(); if(key.rt)key.rt->AddRef();
         for(auto t:key.tex)if(t)t->AddRef();
         dev->GetViewport(&g.vp);dev->GetDepthStencilSurface(&g.depth);
+        if(g.depth)g.depth->GetDesc(&g.depthDesc);
         dev->GetStreamSource(0,&g.vb,&g.offset,&g.stride);dev->GetIndices(&g.ib);
         g.vsRead=dev->GetVertexShaderConstantF(0,&g.vsConstants[0][0],32);
         g.psRead=dev->GetPixelShaderConstantF(0,&g.psConstants[0][0],32);
@@ -277,6 +279,8 @@ inline void Dump(IDirect3DDevice9* dev,const char* path) {
         for(unsigned r=0;r<32;++r)fprintf(f,"constant group=%u reg=%u VS=%.9g,%.9g,%.9g,%.9g PS=%.9g,%.9g,%.9g,%.9g\n",
             i,r,g.vsConstants[r][0],g.vsConstants[r][1],g.vsConstants[r][2],g.vsConstants[r][3],
             g.psConstants[r][0],g.psConstants[r][1],g.psConstants[r][2],g.psConstants[r][3]);
+        if(g.depth)fprintf(f,"depth group=%u id=%p format=%u size=%ux%u usage=%08lX\n",
+            i,g.depth,g.depthDesc.Format,g.depthDesc.Width,g.depthDesc.Height,g.depthDesc.Usage);
         IUnknown* candidates[]={g.key.vs,g.key.ps};
         for(unsigned stage=0;stage<2;++stage) {
             auto s=candidates[stage];if(!s)continue;

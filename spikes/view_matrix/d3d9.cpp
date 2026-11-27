@@ -3,6 +3,7 @@
 #include "tmd_visual_audit.h"
 static bool g_tmdVisualAudit=false;
 static bool g_tmdLiftBracket=false;
+static bool g_tmdAuditManual=false;
 static tmdvisualaudit::Schedule g_tmdVisualSchedule;
 static tmdvisualaudit::Scene g_tmdVisualScene=tmdvisualaudit::Scene::None;
 static bool g_tmdGravityGrip=true;
@@ -34487,7 +34488,7 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
         InGameplay() && Rd(g_handsStatus) == HANDS_TMD && !Rd(g_gamePaused) &&
         !Rd(g_inCinematic) && !Rd(g_vrUiMenu) && !Rd(g_panelOpen) ? grabbedActor : 0;
     if (g_tmdLiftBracket) RequestLiftBracket(bracketActor);
-    const auto auditScene=g_tmdVisualSchedule.Update(g_tmdVisualAudit && !g_tmdLiftBracket,
+    const auto auditScene=g_tmdVisualSchedule.Update(g_tmdVisualAudit && !g_tmdLiftBracket && !g_tmdAuditManual,
         shadowTraceStable>=15 && Rd(g_haveTMD)==1 && InGameplay() &&
         (!Rd(g_dualHandActionPose)||!DualWeaponTmdContext()||dualhandreference::Right((unsigned)Rd(g_gunVerts))) &&
         !Rd(g_inCinematic)&&!Rd(g_panelOpen)&&!Rd(g_vrUiMenu)&&!Rd(g_gamePaused),
@@ -39004,6 +39005,7 @@ void LoadIniSettings() {
         GetPrivateProfileIntA("Diagnostic", "TmdLiftBracket", 0, path) != 0;
     // Installer 1.1.5 enabled the old family-wide diagnostic in portable settings.
     // Migrate its intent without suppressing unrelated decals. An explicit new value wins.
+    g_tmdAuditManual = g_tmdVisualAudit && GetPrivateProfileIntA("Diagnostic", "TmdAuditManual", 0, path) != 0;
     const int legacyGravityFilter = GetPrivateProfileIntA("Diagnostic", "DropDecalLocalTangent", 0, path);
     g_tmdGravityDecalFix = GetPrivateProfileIntA("Render", "TmdGravityDecalFix", legacyGravityFilter, path) != 0;
     Log("ini: TmdGravityDecalFix=%d (captured TMD draw only, legacy setting=%d)",
