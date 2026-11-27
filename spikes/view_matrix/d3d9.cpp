@@ -2,6 +2,7 @@
 #include "tmd_gravity_grip.h"
 #include "tmd_visual_audit.h"
 static bool g_tmdVisualAudit=false;
+static bool g_tmdLiftBracket=false;
 static tmdvisualaudit::Schedule g_tmdVisualSchedule;
 static tmdvisualaudit::Scene g_tmdVisualScene=tmdvisualaudit::Scene::None;
 static bool g_tmdGravityGrip=true;
@@ -34346,6 +34347,66 @@ static uintptr_t AuditNativeGravityGrab() {
     return actor;
 }
 
+// Local lab only. Collect off/on/off from the same held actor and device.
+static struct {
+    uintptr_t actor = 0;
+    unsigned steady = 0, completed = 0, expectedSequence = 0;
+    bool original = false, done = false;
+} g_liftBracket;
+
+static void FinishLiftBracket(bool success) {
+    auto& trial = g_liftBracket;
+    g_tmdGravityDecalFix = trial.original;
+    trial.done = true;
+    trial.expectedSequence = 0;
+    Log("tmd-lift-bracket: %s completed=%u restored=%d",
+        success ? "complete" : "aborted", trial.completed, trial.original ? 1 : 0);
+}
+
+static void RequestLiftBracket(uintptr_t actor) {
+    auto& trial = g_liftBracket;
+    if (trial.done || shadowtrace::active) return;
+    if (trial.expectedSequence) {
+        if (actor == trial.actor && shadowtrace::pending) return;
+        shadowtrace::pending = false;
+        FinishLiftBracket(false);
+        return;
+    }
+    if (trial.completed && actor != trial.actor) {
+        FinishLiftBracket(false);
+        return;
+    }
+    if (trial.actor != actor) {
+        trial.actor = actor;
+        trial.steady = 0;
+    }
+    if (!actor || shadowtrace::pending || shadowtrace::sequence + 3 - trial.completed > 4) return;
+    if (!trial.completed) {
+        if (++trial.steady < 20) return;
+        trial.original = g_tmdGravityDecalFix;
+    }
+    g_tmdGravityDecalFix = trial.completed == 1;
+    trial.expectedSequence = shadowtrace::sequence + 1;
+    shadowtrace::pending = true;
+    Log("tmd-lift-bracket: request step=%u sequence=%u actor=%p filter=%d",
+        trial.completed + 1, trial.expectedSequence, (void*)actor, g_tmdGravityDecalFix ? 1 : 0);
+}
+
+static void CompleteLiftBracket(uintptr_t actor) {
+    auto& trial = g_liftBracket;
+    if (!trial.expectedSequence) return;
+    if (shadowtrace::sequence != trial.expectedSequence || !actor || actor != trial.actor) {
+        FinishLiftBracket(false);
+        return;
+    }
+    trial.expectedSequence = 0;
+    ++trial.completed;
+    Log("tmd-lift-bracket: captured step=%u sequence=%u frame=%ld actor=%p filter=%d",
+        trial.completed, shadowtrace::sequence, Rd(g_sceneModeFrame), (void*)actor,
+        g_tmdGravityDecalFix ? 1 : 0);
+    if (trial.completed == 3) FinishLiftBracket(true);
+}
+
 HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const RECT* b, HWND c, const RGNDATA* d) {
     shadowfix::Poll(g_logPath);
     worldshadowfix::Poll(g_logPath);
@@ -34372,7 +34433,11 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
         }
     }
     const uintptr_t grabbedActor = shadowTraceStable >= 15 ? AuditNativeGravityGrab() : 0;
-    const auto auditScene=g_tmdVisualSchedule.Update(g_tmdVisualAudit,
+    const uintptr_t bracketActor = g_tmdLiftBracket && g_tmdGravityLatch.power &&
+        InGameplay() && Rd(g_handsStatus) == HANDS_TMD && !Rd(g_gamePaused) &&
+        !Rd(g_inCinematic) && !Rd(g_vrUiMenu) && !Rd(g_panelOpen) ? grabbedActor : 0;
+    if (g_tmdLiftBracket) RequestLiftBracket(bracketActor);
+    const auto auditScene=g_tmdVisualSchedule.Update(g_tmdVisualAudit && !g_tmdLiftBracket,
         shadowTraceStable>=15 && Rd(g_haveTMD)==1 && InGameplay() &&
         (!Rd(g_dualHandActionPose)||!DualWeaponTmdContext()||dualhandreference::Right((unsigned)Rd(g_gunVerts))) &&
         !Rd(g_inCinematic)&&!Rd(g_panelOpen)&&!Rd(g_vrUiMenu)&&!Rd(g_gamePaused),
@@ -34400,6 +34465,7 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
     if(shadowtrace::Boundary(s,shadowTraceStable>=15,g_logPath)){
         SaveBackbufferCapture(s,true,shadowtrace::sequence); // Completed SBS scene, before overlays.
         nativefx::DumpWitness();
+        if (g_tmdLiftBracket) CompleteLiftBracket(bracketActor);
         if(g_tmdVisualScene!=tmdvisualaudit::Scene::None) {
             Log("tmd-visual-audit: completed=%s sequence=%u frame=%ld hands=%ld gravityInput=%d grabbedActor=%p",
                 tmdvisualaudit::Name(g_tmdVisualScene),shadowtrace::sequence,Rd(g_sceneModeFrame),
@@ -38877,6 +38943,8 @@ void LoadIniSettings() {
     g_trackedDepthSourcePose=GetPrivateProfileIntA("Render","TrackedDepthSourcePose",0,path)!=0;
     g_tmdTrackedMuzzle=GetPrivateProfileIntA("Render","TmdTrackedMuzzle",0,path)!=0;
     g_tmdVisualAudit=GetPrivateProfileIntA("Diagnostic","TmdVisualAudit",0,path)!=0;
+    g_tmdLiftBracket = g_tmdVisualAudit &&
+        GetPrivateProfileIntA("Diagnostic", "TmdLiftBracket", 0, path) != 0;
     // Installer 1.1.5 enabled the old family-wide diagnostic in portable settings.
     // Migrate its intent without suppressing unrelated decals. An explicit new value wins.
     const int legacyGravityFilter = GetPrivateProfileIntA("Diagnostic", "DropDecalLocalTangent", 0, path);
