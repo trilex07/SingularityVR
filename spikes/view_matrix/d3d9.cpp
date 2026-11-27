@@ -4875,6 +4875,7 @@ static bool GazeEyePixel(const float (&d)[3],const XrPosef* poses,const XrFovf& 
 }
 static LONG g_cutsceneWorldScreen=0; // default-OFF world-space presentation experiment
 static LONG g_menuWorldScreen=0;     // default-OFF anchored cinema screen for main menu
+static LONG g_nativeMenuTargetSizeFix=0;
 static LONG g_cutsceneScreenDistanceMm=2000;
 static XrTime g_cinemaReferenceChangeTime=0;
 static bool g_eyePositionsValid=false;
@@ -15029,6 +15030,15 @@ HRESULT STDMETHODCALLTYPE Hook_SetRenderTarget(IDirect3DDevice9* dev, DWORD idx,
             D3DSURFACE_DESC d{};
             if (SUCCEEDED(surf->GetDesc(&d))) {
                 if (g_srcW && g_srcH) scene = (d.Width == g_srcW && d.Height == g_srcH);
+                // RTT_UI1 can be exactly as large as the game's 720p backbuffer.
+                // ContentBind has verified the focused movie's UE3 resource, D3D
+                // surface and container texture. Its GFx canvas must stay monoscopic.
+                if (scene && g_nativeMenuTargetSizeFix && Rd(g_vrUiMenu) &&
+                    PauseRttProbe::contentBound && surf == PauseRttProbe::contentSurface &&
+                    PauseRttProbe::contentToken == VrMenuStateToken() &&
+                    (Rd(g_vrMenuClass) == 2 || Rd(g_vrMenuClass) == 4)) {
+                    scene = false;
+                }
                 if(NativeScopeRendering())scene=false;
                 if (g_diagEnabled && scene && (d.Format == D3DFMT_A8R8G8B8 || d.Format == D3DFMT_X8R8G8B8)) {
                     InterlockedExchange(&g_diagSceneW, LONG(d.Width));
@@ -38004,6 +38014,7 @@ void LoadIniSettings() {
         Rd(g_cutsceneWorldScreen),Rd(g_cutsceneScreenDistanceMm));
     g_cinemaEyeAudit=GetPrivateProfileIntA("Diagnostic","CinemaEyeAudit",0,path)!=0;
     g_menuWorldScreen=GetPrivateProfileIntA("Render","MenuWorldScreen",0,path)?1:0;
+    g_nativeMenuTargetSizeFix=GetPrivateProfileIntA("Render","NativeMenuTargetSizeFix",0,path)?1:0;
     Log("ini: MenuWorldScreen=%ld (anchored cinema screen for main menu, default OFF)", Rd(g_menuWorldScreen));
     Log("ini: VideoStereo=%ld (%s)", InterlockedCompareExchange(&g_videoStereo, 0, 0),
         InterlockedCompareExchange(&g_videoStereo, 0, 0)

@@ -45,6 +45,7 @@ static CursorPosFn originalPos=nullptr;
 static void* viewport=nullptr;
 static uintptr_t cachedMovie=0;
 static bool cachedMenu=false, held=false;
+static bool loadGameMovie=false;
 static int lastX=-1,lastY=-1;
 static LONG installs=0, ticks=0;
 static uintptr_t ReadPointer(uintptr_t p) {
@@ -180,6 +181,7 @@ static bool UpdateMenu() {
   if(movie && NameOf(movie,objectName,sizeof(objectName)) && strncmp(objectName,"Default__",9)
      && cls && NameOf(cls,className,sizeof(className)))cachedMenu=MenuClass(className);
   const LONG kind=!cachedMenu?0:!strcmp(className,"RvUIGFxMovie_IIS")?1:!strcmp(className,"RvUIGFxMovie_Main")?2:!strcmp(className,"RvUIGFxMovie_Pause")?3:4;
+  loadGameMovie=kind==4 && !strcmp(className,"RvUIGFxMovie_LoadGame");
   InterlockedExchange(&g_vrUiStationMovie,cachedMenu&&StationMovieClass(className)?1:0);
   NativeContextCursor::Configure(movie,cls,(int)kind);
   const bool directCanvas=kind==4&&ExactDirectDialogPath(movie,cls);
@@ -275,7 +277,8 @@ static bool UpdateMenu() {
  }
  PauseRttProbe::Observe(movie,cachedMenu &&
      (InterlockedCompareExchange(&g_vrMenuClass,0,0)==2 ||
-      InterlockedCompareExchange(&g_vrMenuClass,0,0)==3));
+      InterlockedCompareExchange(&g_vrMenuClass,0,0)==3 ||
+      (g_nativeMenuTargetSizeFix && loadGameMovie)));
  const bool menu=cachedMenu && InterlockedCompareExchange(&g_vrUiEnabled,0,0)!=0;
  InterlockedExchange(&g_vrUiMenu,menu?1:0);
  if(menu)InterlockedAnd(&g_padBtns,0x0000FCFF); // Immediate select/fire separation before this input tick.
