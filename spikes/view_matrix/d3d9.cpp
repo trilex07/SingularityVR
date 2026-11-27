@@ -27923,6 +27923,36 @@ volatile LONG g_slcRotated = 0;
 #include "cinema_mutant_aim.h"
 #include "cinema_mutant_runtime.inl"
 
+static void AuditLiftRouteShot(const char* route, void* source, const float* start,
+                              const float* end, uint32_t flags, int32_t yaw, int32_t pitch) {
+    if (!g_tmdLiftBracket || !start || !end ||
+        !Readable(start, 12) || !Readable(end, 12)) return;
+    static volatile LONG receipts = 0;
+    if (Rd(receipts) >= 144) return;
+    const float dx = end[0] - start[0], dy = end[1] - start[1], dz = end[2] - start[2];
+    const float length = sqrtf(dx*dx + dy*dy + dz*dz);
+    if (!std::isfinite(length) || length <= 512.0f ||
+        InterlockedIncrement(&receipts) > 144) return;
+
+    const uintptr_t pawn = g_playerPawn;
+    const uintptr_t node = MutantPointer(pawn, "mCombatNode");
+    const uintptr_t instigator = MutantPointer(pawn, "mCurrentNodeInstigator");
+    char nodeName[80]{};
+    char instigatorClass[80]{};
+    if (node) GuardedNameOf(node, nodeName, sizeof(nodeName));
+    uintptr_t cls = 0;
+    if (instigator && MutantRead(instigator + OBJ_CLASS, &cls, sizeof(cls)) && cls)
+        GuardedNameOf(cls, instigatorClass, sizeof(instigatorClass));
+    Log("tmd-lift-shot: ms=%llu frame=%ld route=%s pawn=%p src=%p node=%p:%s instigator=%p:%s "
+        "flags=%X depth=%ld dev=(%d,%d) start=(%.3f,%.3f,%.3f) dir=(%.6f,%.6f,%.6f) range=%.1f "
+        "POV=(%.3f,%.3f,%.3f) fwd=(%.6f,%.6f,%.6f) right=(%.6f,%.6f,%.6f)",
+        GetTickCount64(), Rd(g_sceneModeFrame), route, (void*)pawn, source, (void*)node,
+        nodeName, (void*)instigator, instigatorClass, flags, Rd(g_fireDepth), yaw, pitch,
+        start[0], start[1], start[2], dx/length, dy/length, dz/length, length,
+        g_povPos[0], g_povPos[1], g_povPos[2], g_camFwd[0], g_camFwd[1], g_camFwd[2],
+        g_camRight[0], g_camRight[1], g_camRight[2]);
+}
+
 int __fastcall Hook_SingleLineCheck(void* self, void* edx, void* hit, void* src,
                                     float* End, float* Start, uint32_t flags,
                                     void* extent, void* a7) {
@@ -27931,8 +27961,12 @@ int __fastcall Hook_SingleLineCheck(void* self, void* edx, void* hit, void* src,
     // exact native instigator instead of using the freely tracked controller.
     if(!cinemastereo::ControllerShotCorrection(CutsceneNativeCameraArmed())){
         float assistedEnd[3];
-        if(MutantAssistedEnd(src,Start,End,assistedEnd))
+        if(MutantAssistedEnd(src,Start,End,assistedEnd)) {
+            AuditLiftRouteShot("cinema-assisted", src, Start, assistedEnd, flags, 0, 0);
             return g_origSLC(self,edx,hit,src,assistedEnd,Start,flags,extent,a7);
+        }
+        if (Rd(g_fireDepth) > 0)
+            AuditLiftRouteShot("cinema-native", src, Start, End, flags, 0, 0);
         // Observe other distinct real native call sites under R2, including unknown
         // sources; never infer a shot from a nearby pawn or alter an AI trace.
         struct Site {void* caller;void* source;uint32_t flags;};
@@ -28034,6 +28068,7 @@ int __fastcall Hook_SingleLineCheck(void* self, void* edx, void* hit, void* src,
                     }
                 }
                 if(g_sniperOpticalAccuracy)NativeScopeShotReceipt(Start,End,rawDirection);
+                AuditLiftRouteShot("gameplay", src, Start, End, flags, dYaw, dPitch);
                 // Observe the ACTUAL outgoing collision ray separately from
                 // PlayTracerFX's cosmetic source. A tracer repair cannot prove
                 // hit direction, and successful smoke pose is unrelated.
@@ -34424,7 +34459,7 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
         static ULONGLONG nextPosition = 0;
         static unsigned positions = 0;
         const ULONGLONG now = GetTickCount64();
-        if (positions < 240 && now >= nextPosition) {
+        if (positions < 720 && now >= nextPosition) {
             nextPosition = now + 500;
             ++positions;
             Log("tmd-lift-route: frame=%ld POV=(%.1f,%.1f,%.1f) facing=(%.4f,%.4f,%.4f)",
