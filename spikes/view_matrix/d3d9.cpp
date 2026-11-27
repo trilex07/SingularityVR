@@ -14911,6 +14911,7 @@ static HRESULT STDMETHODCALLTYPE ShadowTraceStretch(IDirect3DDevice9* dev,IDirec
 }
 static ShadowSetPS shadowOriginalPS=nullptr;
 static bool g_tmdGravityDecalFix=false;
+static bool g_tmdWorldPrimeFix=true;
 static HRESULT STDMETHODCALLTYPE ShadowTraceSetPS(IDirect3DDevice9* dev,IDirect3DPixelShader9* ps) {
     const HRESULT hr = shadowOriginalPS(dev, ps);
     if (SUCCEEDED(hr)) {
@@ -14934,6 +14935,31 @@ static bool IsBoundTmdGravityDecal(IDirect3DDevice9* dev) {
         size == sizeof(code) && SUCCEEDED(shader->GetFunction(code, &size)) &&
         tmdgravitydecal::Shader(code, size);
     shader->Release();
+    return matches;
+}
+template <unsigned Size,class Shader>
+static bool BoundShaderMatches(Shader* shader,std::uint32_t expected) {
+    if (!shader) return false;
+    UINT size=0;
+    unsigned char code[Size];
+    return SUCCEEDED(shader->GetFunction(nullptr,&size)) && size==Size &&
+        SUCCEEDED(shader->GetFunction(code,&size)) && size==Size &&
+        tmdgravitydecal::ShaderFingerprint(code,size)==expected;
+}
+
+static bool IsTmdWorldDepthQuad(IDirect3DDevice9* dev) {
+    DWORD colorWrite=0,zWrite=0;
+    if (FAILED(dev->GetRenderState(D3DRS_COLORWRITEENABLE,&colorWrite)) || colorWrite ||
+        FAILED(dev->GetRenderState(D3DRS_ZWRITEENABLE,&zWrite)) || !zWrite) return false;
+
+    IDirect3DPixelShader9* ps=nullptr;
+    IDirect3DVertexShader9* vs=nullptr;
+    const bool matches=SUCCEEDED(dev->GetPixelShader(&ps)) &&
+        BoundShaderMatches<tmdgravitydecal::kWorldDepthPixelBytes>(ps,tmdgravitydecal::kWorldDepthPixelCode) &&
+        SUCCEEDED(dev->GetVertexShader(&vs)) &&
+        BoundShaderMatches<tmdgravitydecal::kWorldDepthVertexBytes>(vs,tmdgravitydecal::kWorldDepthVertexCode);
+    if (ps) ps->Release();
+    if (vs) vs->Release();
     return matches;
 }
 // Fix-I/menu census: wire the dormant MenuDrawTrace recorder into the four draw hooks
@@ -21565,6 +21591,11 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
                                                      // rewrites the camera slots, so the bones persist
                                                      // across both eye draws
     int rideTo = isGun ? 1 : RideTargetFor(numVertices,startIndex,primCount);
+    // Early rigid world quads can share the foreground's four-vertex count.
+    // Preserve their native VP in the depth prepass so it agrees with scene color.
+    if (g_tmdWorldPrimeFix && rideTo==2 && !Rd(g_inForeground) &&
+        tmdgravitydecal::WorldDepthQuad(unsigned(t),numVertices,primCount) && IsTmdWorldDepthQuad(dev))
+        rideTo=0;
     if (shadowtrace::active && shadowcolor::sample.valid && rideTo==2 && !Rd(g_inForeground) &&
         t==D3DPT_TRIANGLELIST && numVertices==4 && primCount==2) {
         DWORD writes=~0u, depthWrites=0;
@@ -39031,6 +39062,7 @@ void LoadIniSettings() {
     // Migrate its intent without suppressing unrelated decals. An explicit new value wins.
     g_tmdAuditManual = g_tmdVisualAudit && GetPrivateProfileIntA("Diagnostic", "TmdAuditManual", 0, path) != 0;
     const int legacyGravityFilter = GetPrivateProfileIntA("Diagnostic", "DropDecalLocalTangent", 0, path);
+    g_tmdWorldPrimeFix = GetPrivateProfileIntA("Render","TmdWorldPrimeFix",1,path) != 0;
     g_tmdGravityDecalFix = GetPrivateProfileIntA("Render", "TmdGravityDecalFix", legacyGravityFilter, path) != 0;
     Log("ini: TmdGravityDecalFix=%d (captured TMD draw only, legacy setting=%d)",
         g_tmdGravityDecalFix ? 1 : 0, legacyGravityFilter);
