@@ -2271,6 +2271,8 @@ static bool g_tmdTrackedBeam=false; // exact owned aging-beam child attachment; 
 static bool g_tmdTrackedAgeParticles=false; // exact original ageOld/ageNew attached emitters; OFF
 static bool g_tmdBeamAgeProbe=false; // bounded Square-edge component census
 static trackedprime::Cache g_trackedPrimeCache;
+static trackedprime::GlovePrime g_glovePrime;
+static bool g_glovePrimeSiblings=false;
 static dualaction::Frame g_dualActionFrame;
 static volatile LONG g_dualActionRenderThread=0;
 static dualtmd::Census g_dualTmdCensus; // render thread only
@@ -18526,7 +18528,8 @@ static bool CenturionPhysicalHandsReady(){
         g_independentHands&&Rd(g_gloveIsolate)==2&&Rd(g_noTmdPaletteFix);
 }
 static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first, UINT triangles,
-                                  float saved[135][4], float shortSleeve[45][4], bool& shortSleeveReady) {
+                                  float saved[135][4], float shortSleeve[45][4], bool& shortSleeveReady,
+                                  bool confirmedGloveSibling) {
     shortSleeveReady=false;
     g_nativeGlovePoseThisDraw=false;
     g_nativeFreeOffhandPoseThisDraw=false;
@@ -18638,7 +18641,7 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
         Rd(g_fgDrawCount) <= kFgSanePass && Rd(g_rtIsScene) && !layout.shadow;
     const bool handWindow=FgMatchWindow() ||
         (exactLatchedArmSection && Rd(g_rtIsScene) && !layout.shadow) ||
-        exactSectionWindow;
+        exactSectionWindow || (gloves && confirmedGloveSibling);
     if(!handWindow) {
         IndependentAuditCount(IHA_WINDOW,audit);
         if (audit) {
@@ -21764,8 +21767,24 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
     g_nextWristStaged={};
     g_equipmentWristStaged={};
     g_nextWristStagedFromTmd=false;
+    const bool checkGlovePrime=g_glovePrimeSiblings && t==D3DPT_TRIANGLELIST && numVertices==3314 &&
+        !baseVertex && !minIndex && !startIndex && primCount==4830 && GetCurrentThreadId()==g_mainThreadId &&
+        glovecuffs::Eligible(g_nativeCuffClosure,g_gloveExperiment&&g_nativeGloveExperiment,
+            g_nativeCuffRenderer.Ready(),g_independentHands,(int)Rd(g_gloveIsolate),
+            g_sceneMode.Current()==vrscene::Mode::GameplayStereo,g_xrSessionState==XR_SESSION_STATE_FOCUSED,
+            Rd(g_rtIsScene)!=0,g_boundShaderLayout.shadow,Rd(g_gamePaused)!=0,Rd(g_vrUiMenu)!=0,Rd(g_inCinematic)!=0);
+    trackedprime::Owner gloveOwner{};
+    trackedprime::Draw gloveDraw{};
+    bool gloveSibling=false;
+    if (checkGlovePrime) {
+        gloveOwner.pawn=g_playerPawn;
+        gloveOwner.weapon=(uintptr_t)(unsigned)Rd(g_weaponObj);
+        gloveDraw.key.verts=numVertices;
+        gloveDraw.key.prims=primCount;
+        if (!FgMatchWindow()) gloveSibling=g_glovePrime.Matches(dev,gloveOwner,gloveDraw);
+    }
     const int independentRegs=t==D3DPT_TRIANGLELIST ? PrepareIndependentLeft(dev,numVertices,startIndex,primCount,
-        independentSaved,shortSleevePalette,shortSleeveReady) : 0;
+        independentSaved,shortSleevePalette,shortSleeveReady,gloveSibling) : 0;
     const bool exactTmdSegments=nSeg==1&&segStart[0]==startIndex&&segPrims[0]==primCount;
     const auto admittedGate=tmdgauntlet::AfterPalette(shortTmdAdmitted,independentRegs!=0,exactTmdSegments);
     if(shortTmdAdmitted && admittedGate!=tmdgauntlet::Gate::Pass) {
@@ -22651,6 +22670,7 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
     g_scopeLensStaged=false;
     if(FAILED(dhr))g_scopeAperture={};
     const HRESULT lensRestore=kasimovLensChanged?g_origSetVSConstF(dev,g_boundShaderLayout.bones,kasimovLensSaved[0],3):S_OK;
+    const bool submittedGloveCuff=cuffBuffer && nativeIndices.valid;
     const HRESULT indexRestore=nativeIndices.Restore();
     const HRESULT nativeRestore=FAILED(lensRestore)?lensRestore:indexRestore;
     if(shortTmdBuffer && FAILED(dhr))
@@ -22666,6 +22686,16 @@ HRESULT STDMETHODCALLTYPE Hook_DrawIndexedPrim(IDirect3DDevice9* dev, D3DPRIMITI
         g_centurionSocket=cylinderReplay.socket;ReleaseSRWLockExclusive(&g_centurionSocketLock);
     }
     const HRESULT handRestore=independentRegs?g_origSetVSConstF(dev,5,&independentSaved[0][0],independentRegs):S_OK;
+    if (checkGlovePrime && assemblyEye==2 && submittedGloveCuff && independentRegs &&
+        SUCCEEDED(dhr) && SUCCEEDED(nativeRestore) && SUCCEEDED(handRestore)) {
+        if (!Rd(g_inForeground) && Rd(g_frameDrawIdx)<=g_fgPrimeWindow)
+            g_glovePrime.Record(dev,gloveOwner,gloveDraw);
+        if (gloveSibling) {
+            static unsigned notes=0;
+            if (notes++<4) Log("native-gloves: matched original depth-prime VB/IB for late draw outside foreground window frame=%ld faces=%u",
+                Rd(g_armPaletteFrameToken),gloveTriangles);
+        }
+    }
     if(seekerProbe)Log("Seeker glove completed: frame=%ld eyes=%u draw=%08lX ibRestore=%08lX paletteRestore=%08lX independent=%d segments=%d",
         Rd(g_armPaletteFrameToken),assemblyEye,dhr,nativeRestore,handRestore,independentRegs,nSeg);
     noteTmdRoute(shortTmdBuffer&&shortEyeDraws?1u:
@@ -30838,6 +30868,7 @@ static mirrorprobe::Probe g_mirrorPixelProbe;
 static bool g_mirrorProbeCurtain=false;
 // Reused state block: no per-frame allocation and no device state leaks.
 void ReleaseWristResources() {
+    g_glovePrime.Reset();
     g_trackedPrimeCache.Reset();
     ReleaseUiRemasterResources();
     ResetScopePip();
@@ -37436,6 +37467,7 @@ HRESULT STDMETHODCALLTYPE Hook_Present(IDirect3DDevice9* s, const RECT* a, const
             InterlockedExchange(&g_dpgCount, 0);
             InterlockedExchange(&g_frameDrawIdx, 0);
             InterlockedIncrement(&g_armPaletteFrameToken);
+            if (g_glovePrimeSiblings) g_glovePrime.Reset();
             if(Rd(g_armPaletteTraceFrames)>0)for(int i=0;i<8;++i)InterlockedExchange(&g_armPaletteUploadCoverage[i],0);
             InterlockedExchange(&g_inForeground, 0);
             InterlockedExchange(&g_fgDrawCount, 0);
@@ -38770,6 +38802,7 @@ void LoadIniSettings() {
     Log("ini: PreferAimPose=%d (dedicated tracked aim, legacy hand fallback)", g_preferAimPose);
     Log("ini: TrackedGripWrist=%d (default OFF; original anatomy -> live grip quaternion/position; shared hand/TMD/gun ride)",g_trackedGripWrist?1:0);
     g_trackedDepthPrimeFix=GetPrivateProfileIntA("Render","TrackedDepthPrimeFix",0,path)!=0;
+    g_glovePrimeSiblings=GetPrivateProfileIntA("Render","GlovePrimeSiblings",0,path)!=0;
     g_trackedDepthPrimeProbe=GetPrivateProfileIntA("Diagnostic","TrackedDepthPrimeProbe",0,path)!=0;
     g_trackedDepthSourcePose=GetPrivateProfileIntA("Render","TrackedDepthSourcePose",0,path)!=0;
     g_tmdTrackedMuzzle=GetPrivateProfileIntA("Render","TmdTrackedMuzzle",0,path)!=0;

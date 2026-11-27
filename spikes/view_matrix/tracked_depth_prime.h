@@ -53,6 +53,7 @@ class Cache {
     D3DVIEWPORT9 primeViewport{};
     bool viewportValid=false;
     D3DVIEWPORT9 lastRequested{};bool requestedValid=false;
+public:
     static void Release(fpshadow::DrawKey& k) {
         if(k.vb)static_cast<IDirect3DVertexBuffer9*>(const_cast<void*>(k.vb))->Release();
         if(k.ib)static_cast<IDirect3DIndexBuffer9*>(const_cast<void*>(k.ib))->Release();
@@ -67,6 +68,7 @@ class Cache {
         }
         k.vb=vb;k.ib=ib;k.vbOffset=offset;k.stride=stride;return true;
     }
+private:
     void OwnerNow(const Owner& o) {
         if(o.pawn!=pawn||o.weapon!=weapon){Reset();pawn=o.pawn;weapon=o.weapon;}
     }
@@ -175,6 +177,34 @@ public:
         }
         if(count<32){entries[count++]={draw.key,o.frame};return true;}
         Release(draw.key);return false;
+    }
+};
+// Lifetime is one render frame. Keep original (pre-substitution) buffer references
+// so pointer reuse cannot identify an unrelated draw as the second glove pass.
+class GlovePrime {
+    fpshadow::DrawKey source{};
+    uintptr_t pawn=0, weapon=0;
+public:
+    void Reset() { Cache::Release(source); pawn=weapon=0; }
+    void Record(IDirect3DDevice9* dev, const Owner& owner, const Draw& draw) {
+        DWORD color=~0u, depth=0;
+        if (!owner.pawn || !FreeGloveRange(draw) ||
+            FAILED(dev->GetRenderState(D3DRS_COLORWRITEENABLE,&color)) || color ||
+            FAILED(dev->GetRenderState(D3DRS_ZWRITEENABLE,&depth)) || !depth) return;
+        Reset();
+        auto key=draw.key;
+        if (!Cache::Read(dev,key)) return;
+        source=key;
+        pawn=owner.pawn;
+        weapon=owner.weapon;
+    }
+    bool Matches(IDirect3DDevice9* dev, const Owner& owner, const Draw& draw) const {
+        if (!source.vb || pawn!=owner.pawn || weapon!=owner.weapon || !FreeGloveRange(draw)) return false;
+        auto key=draw.key;
+        if (!Cache::Read(dev,key)) return false;
+        const bool same=fpshadow::SameGeometry(source,key);
+        Cache::Release(key);
+        return same;
     }
 };
 } // namespace trackedprime
