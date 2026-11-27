@@ -149,3 +149,11 @@ is specific. Default-OFF `[Diagnostic] DropDecalLocalTangent=1` skips only index
 draws whose bound PS names DecalLocalTangent. Rectangles gone = producer proven;
 still present = decal hypothesis disproved. Cache keys on PS pointer without AddRef
 (diagnostic only).
+
+## Quest 2 report, November 27
+
+All five player logs enabled the original family-wide decal filter. None recorded its first shader match or first omitted draw. One log covers four transitions into stereo gameplay and ends there. The 18:10 session ends in the menu. The original retail source at `fa4c3151` logs both milestones. An archived positive control at 23:30:58 on November 7 recorded a 2,132-byte matching shader and the first omitted draw. The supplied sessions therefore give no evidence that this filter directly omitted a draw at the wreck. A synchronized log for the player's video is still missing.
+
+In two frames of the player's recording one second apart, the black tail tip moved about 73 px left and 55 px down relative to the tip on the burning wreck, measured on a 720 px-wide image. The relative offset changes. These two landmarks cannot identify the rendering pass.
+
+Steam app 42670, installer catalog 1.1.27 (`041fa024`), Touch simulator at 72 Hz, 67.8 mm IPD and 1920×1080 backbuffer. At the burning wreck, we changed head translation, pitch, yaw and roll while holding both controller poses fixed. We then moved each controller with the head fixed. We inspected 21 distinct submitted frames in both eyes, including immediate and settled samples. Neither the second helicopter nor an extra pair of hands appeared. A final same-frame draw trace completed with 3,661 draws, 528 groups and no overflow. The missing evidence is the paired pre-submit bitmap and trace from a frame in which the affected headset shows the silhouette.
