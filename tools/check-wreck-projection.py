@@ -57,12 +57,19 @@ def compare(path, points):
     trace = shadow_trace.read_trace(path)
     if not trace["complete_budget"]:
         raise ValueError("Incomplete frame capture")
+    events = {event["draw"]: event for event in trace["events"]}
     eyes = {}
     for draw in draws:
+        event = events.get(draw["wreck-draw"], {})
+        expected = {"group": draw["group"], "type": "4", "verts": "3440", "prims": "4093"}
+        if any(event.get(key) != value for key, value in expected.items()):
+            raise ValueError("Recorded state does not belong to the expected hull draw")
         g = trace["groups"][int(draw["group"])]
         pipe = g["pipeline"]
         if any(int(draw[k],16) for k in ("viewportRead","vbRead","ibRead","constantsRead")):
             raise ValueError("Draw-state read failed")
+        if not int(draw["VB"], 16) or not int(draw["IB"], 16):
+            raise ValueError("No bound vertex or index buffer")
         if g["failed"] != "0" or pipe["valid"] != "1" or pipe["zWrite"] != "1":
             raise ValueError("Unverified submitted draw")
         stages = {("0",DEPTH_VS):"depth", ("15",COLOR_VS):"color"}
