@@ -1,5 +1,6 @@
 #pragma once
 #include "shadow_depth_stats.h"
+#include "shadow_color_history.h"
 // Default-OFF, read-only FINAL driver-call census. One requested gameplay frame.
 // No bytecode query, allocation or disk logging in the draw path. COM references
 // retained only for bounded unique groups and released by Present/reset.
@@ -103,18 +104,21 @@ struct Copy { IDirect3DSurface9* src=nullptr;IDirect3DSurface9* dst=nullptr;unsi
 struct Clear { IDirect3DSurface9* rt=nullptr;IDirect3DSurface9* depth=nullptr;unsigned draw=0,op=0;
     DWORD rects=0,flags=0,colour=0,stencil=0;float z=0;HRESULT hr=E_FAIL; };
 static Copy copies[128];static Clear clears[32];static unsigned copyCount=0,clearCount=0;
-inline void NoteCopy(IDirect3DSurface9* src,const RECT* from,IDirect3DSurface9* dst,const RECT* to,D3DTEXTUREFILTERTYPE filter,HRESULT hr) {
+inline void NoteCopy(IDirect3DDevice9* dev,IDirect3DSurface9* src,const RECT* from,IDirect3DSurface9* dst,const RECT* to,D3DTEXTUREFILTERTYPE filter,HRESULT hr) {
     if(!active)return;if(copyCount==128){++overflow;return;}
     auto& c=copies[copyCount++];c={};c.op=++operations;c.src=src;c.dst=dst;c.draw=draws;c.hr=hr;c.filter=filter;
     if(src)src->AddRef();if(dst)dst->AddRef();
     if(from){c.from=*from;c.fromRect=true;}if(to){c.to=*to;c.toRect=true;}
+    if(SUCCEEDED(hr))shadowcolor::Observe(dev,dst,c.op,draws,~0u);
 }
 inline void NoteClear(IDirect3DDevice9* dev,DWORD rects,DWORD flags,DWORD colour,float z,DWORD stencil,HRESULT hr) {
     if(!active)return;if(clearCount==32){++overflow;return;}
     auto& c=clears[clearCount++];c={};c.op=++operations;c.rt=bound.rt;if(c.rt)c.rt->AddRef();
     dev->GetDepthStencilSurface(&c.depth);c.draw=draws;c.rects=rects;c.flags=flags;c.colour=colour;c.z=z;c.stencil=stencil;c.hr=hr;
+    if(SUCCEEDED(hr)&&(flags&D3DCLEAR_TARGET))shadowcolor::ObserveDraw(dev,c.op,draws,~0u);
 }
 inline void Release() {
+    shadowcolor::Release();
     for (unsigned i=0; i<wreckCount; ++i) {
         if (wreckDraws[i].vb) wreckDraws[i].vb->Release();
         if (wreckDraws[i].ib) wreckDraws[i].ib->Release();
@@ -180,7 +184,11 @@ inline int Before(IDirect3DDevice9* dev,unsigned type,unsigned verts,unsigned pr
     if(verts==8 && prims==12)ReadMap(dev,i);
     return (int)i;
 }
-inline void After(int i,HRESULT hr){if(i>=0 && FAILED(hr))++groups[i].failed;}
+inline void After(IDirect3DDevice9* dev,int i,HRESULT hr){
+    if(i<0)return;
+    if(FAILED(hr))++groups[i].failed;
+    else shadowcolor::ObserveDraw(dev,operations,draws,static_cast<unsigned>(i));
+}
 inline void WriteShader(FILE* f,IUnknown* shader,bool pixel) {
     UINT bytes=0; HRESULT hr=pixel?static_cast<IDirect3DPixelShader9*>(shader)->GetFunction(nullptr,&bytes)
         :static_cast<IDirect3DVertexShader9*>(shader)->GetFunction(nullptr,&bytes);
@@ -196,9 +204,10 @@ inline void WriteShader(FILE* f,IUnknown* shader,bool pixel) {
     for(unsigned i=0;i<bytes/4;++i)fprintf(f,"%08lX%c",code[i],(i%16==15)?'\n':' ');
     fputc('\n',f);
 }
-inline void Dump(const char* path) {
+inline void Dump(IDirect3DDevice9* dev,const char* path) {
     FILE* f=nullptr;if(fopen_s(&f,path,"wb")||!f)return;
     fprintf(f,"shadow-pass-trace-v1 draws=%u groups=%u overflow=%u\n",draws,count,overflow);
+    shadowcolor::Dump(f,dev);
     fprintf(f,"wreck-draw-count=%u overflow=%u\n", wreckCount, wreckOverflow);
     for (unsigned i=0; i<wreckCount; ++i) {
         const auto& w = wreckDraws[i];
@@ -278,8 +287,9 @@ inline void Dump(const char* path) {
     }
     fclose(f);
 }
-inline void Arm(IDirect3DDevice9* dev) {
+inline void Arm(IDirect3DDevice9* dev,shadowcolor::Copy copy) {
     Release();bound={};
+    shadowcolor::Arm(dev,copy);
     mapStagingHr=dev->CreateOffscreenPlainSurface(512,512,D3DFMT_R32F,D3DPOOL_SYSTEMMEM,&mapStaging,nullptr);
     dev->GetVertexShader(&bound.vs);if(bound.vs)bound.vs->Release();
     dev->GetPixelShader(&bound.ps);if(bound.ps)bound.ps->Release();
@@ -287,7 +297,7 @@ inline void Arm(IDirect3DDevice9* dev) {
     for(unsigned t=0;t<8;++t){dev->GetTexture(t,&bound.tex[t]);if(bound.tex[t])bound.tex[t]->Release();}
     active=true;++sequence;
 }
-inline bool Boundary(IDirect3DDevice9*,bool gameplay,const char* logPath) {
+inline bool Boundary(IDirect3DDevice9* dev,bool gameplay,const char* logPath) {
     const bool captured=active;
     char dir[MAX_PATH]{};strncpy_s(dir,logPath,_TRUNCATE);
     char* end=strrchr(dir,'\\');if(!end)return false;end[1]=0;
@@ -295,13 +305,16 @@ inline bool Boundary(IDirect3DDevice9*,bool gameplay,const char* logPath) {
         active=false;
         char file[MAX_PATH]{};
         _snprintf_s(file,sizeof(file),_TRUNCATE,"%sshadow-pass-%lu-%u.txt",dir,GetCurrentProcessId(),sequence);
-        Dump(file);Log("shadow-pass trace finished draws=%u groups=%u overflow=%u file=%s",draws,count,overflow,file);
+        Dump(dev,file);Log("shadow-pass trace finished draws=%u groups=%u overflow=%u file=%s",draws,count,overflow,file);
         Release();
     }
     static DWORD last=0;const DWORD now=GetTickCount();
     if(!gameplay || sequence>=4 || now-last<1000)return captured;last=now;
     char request[MAX_PATH]{};_snprintf_s(request,sizeof(request),_TRUNCATE,"%sshadow-pass.request",dir);
-    if(GetFileAttributesA(request)!=INVALID_FILE_ATTRIBUTES && DeleteFileA(request)) {
+    if(GetFileAttributesA(request)!=INVALID_FILE_ATTRIBUTES) {
+        const auto pixels=shadowcolor::ReadRequest(request);
+        if(!DeleteFileA(request))return captured;
+        shadowcolor::pending=pixels;
         pending=true;Log("shadow-pass trace armed: read-only one gameplay frame, budget=%u groups/%u draws",kGroups,kDraws);
     }
     return captured;
