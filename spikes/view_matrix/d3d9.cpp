@@ -21,6 +21,7 @@ static deadlockgesture::Gesture g_deadlockGesture;
 #include "hand_anchor_probe.h"
 #include "dual_hand_pose_probe.h"
 #include "hand_anchor_math.h"
+#include "free_hand_orientation.h"
 #include "tracked_grip_wrist.h"
 #include "two_hand_spread.h"
 #include "texture_bridge_contract.h"
@@ -6818,6 +6819,8 @@ int  g_triggerGate = -1;                      // ini [Input] TriggerTouchGate, r
 XrAction g_actHandPose = XR_NULL_HANDLE;
 XrSpace  g_handSpace[2] = { XR_NULL_HANDLE, XR_NULL_HANDLE };
 static bool g_preferAimPose = false;
+static bool g_alignFreeHands = false;
+static bool g_pointingTracked[2]{};
 static XrAction g_pointingPose = XR_NULL_HANDLE;
 static XrSpace g_pointingSpace[2]{};
 XrQuaternionf g_handAimOrientation[2]={{0,0,0,1},{0,0,0,1}};
@@ -11453,6 +11456,7 @@ void SyncXRInput(XrTime displayTime) {
         g_handPositionValid[i] = false;
         g_handTracked[i] = false;
         g_handActionActive[i] = false;
+        g_pointingTracked[i] = false;
         if (!g_handSpace[i] && !g_pointingSpace[i]) continue;
         if (probePoseActivity && g_actHandPose != XR_NULL_HANDLE) {
             XrActionStateGetInfo pgi{ XR_TYPE_ACTION_STATE_GET_INFO };
@@ -11473,7 +11477,8 @@ void SyncXRInput(XrTime displayTime) {
             XR_SPACE_LOCATION_POSITION_TRACKED_BIT;
         const bool pointing = g_pointingSpace[i] &&
             XR_SUCCEEDED(xrLocateSpace(g_pointingSpace[i], g_xrSpace, handTime, &loc));
-        if (!pointing || (loc.locationFlags & trackedPose) != trackedPose) {
+        g_pointingTracked[i] = pointing && (loc.locationFlags & trackedPose) == trackedPose;
+        if (!g_pointingTracked[i]) {
             XrSpaceLocation legacy{XR_TYPE_SPACE_LOCATION};
             if (g_handSpace[i] &&
                 XR_SUCCEEDED(xrLocateSpace(g_handSpace[i], g_xrSpace, handTime, &legacy)) &&
@@ -18851,8 +18856,40 @@ static int PrepareIndependentLeft(IDirect3DDevice9* dev, UINT verts, UINT first,
                 (float)Rd(aim?g_handOffY:g_offHandOffY)/kHandFixed,
                 (float)(g_gunSignPosZ*Rd(aim?g_handOffZ:g_offHandOffZ))/kHandFixed};
             if(g_gunHeadOffset){h.x+=g_hmdOffset[0];h.y+=g_hmdOffset[1];h.z+=g_hmdOffset[2];}
+            const float (*controller)[4] = aim ? primary : off;
+            float aligned[4][4];
+            if (g_alignFreeHands && freeWrist && !Rd(g_weaponObj) && g_pointingTracked[side]) {
+                // Slots in the verified cooked noTMD section: wrist, middle-1,
+                // index-1 and pinky-1. Use the current animation before the VR ride.
+                static constexpr unsigned slotsBySide[2][4] = {{18,26,24,29},{1,7,5,10}};
+                armik::V joints[4]{};
+                bool valid = true;
+                for (unsigned j = 0; j < 4; ++j) {
+                    const unsigned slot = slotsBySide[side][j];
+                    armbind::Mat joint;
+                    if (slot >= unsigned(slots) || !armbind::CurrentJoint(noTmdBind[sectionMap[slot]],
+                            reinterpret_cast<const float (*)[4]>(&saved[slot*3]), joint)) {
+                        valid = false;
+                        break;
+                    }
+                    joints[j] = handanchor::Point(armbind::Position(joint), local);
+                }
+                const auto& a = g_handAimOrientation[side];
+                gloves::Q q;
+                float scale;
+                if (valid && gloves::Normalize({a.x,a.y,a.z,a.w}, q) && gloves::UniformScale(controller, scale)) {
+                    const auto toWorld = [&](gloves::V axis) {
+                        const auto v = gloves::Rotate(q, axis);
+                        const auto w = vrpose::TrackingDeltaToWorldUU({v.x,v.y,v.z}, g_centreYaw,
+                            g_baseYaw*(6.2831853f/65536.f), 1.f);
+                        return armik::V{w.x,w.y,w.z};
+                    };
+                    if (freehand::Align(joints[0], joints[1], joints[2], joints[3],
+                            toWorld({0,0,-1}), toWorld({0,1,0}), scale, aligned)) controller = aligned;
+                }
+            }
             if(!handanchor::TargetWrist(targetC[side],noTmdBind[side?51:9],
-                reinterpret_cast<const float (*)[4]>(&saved[ws[side]*3]),local,aim?primary:off,h))return 0;
+                reinterpret_cast<const float (*)[4]>(&saved[ws[side]*3]),local,controller,h))return 0;
 
         }
         memcpy(primary,targetC[AimHand()],sizeof(primary));memcpy(off,targetC[OffHand()],sizeof(off));
@@ -38948,6 +38985,7 @@ void LoadIniSettings() {
     Log("ini: DualHandActionPose=%ld (default OFF; original material0 wrist parent, render only)",Rd(g_dualHandActionPose));
     g_trackedGripWrist=GetPrivateProfileIntA("Input","TrackedGripWrist",0,path)!=0;
     g_preferAimPose = GetPrivateProfileIntA("Input", "PreferAimPose", 0, path) != 0;
+    g_alignFreeHands = GetPrivateProfileIntA("Render", "AlignFreeHands", 0, path) != 0;
     Log("ini: PreferAimPose=%d (dedicated tracked aim, legacy hand fallback)", g_preferAimPose);
     g_trackedGripSupportContinuity=GetPrivateProfileIntA("Input","TrackedGripSupportContinuity",0,path)!=0;
     Log("ini: TrackedGripSupportContinuity=%d (default OFF; requires TrackedGripWrist; right correction only during support)",g_trackedGripSupportContinuity?1:0);
