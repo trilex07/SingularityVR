@@ -229,6 +229,8 @@ static XrTime g_hotPredictedDisplayTime = 0;
 #include <cstdlib>
 #include <cstdarg>
 #include <initializer_list>
+#include <memory>
+#include <new>
 #ifdef STARTUP_CRASH_CAPTURE
 #include "startup_crash_capture.h"
 #endif
@@ -5697,19 +5699,47 @@ static void NisLogAdapter(const char* msg) { Log("%s", msg); }
 
 // Create the XR swapchain lazily, sized to the game's backbuffer - we are pasting the game's
 // own image, so matching its dimensions avoids any rescale on the way in.
-bool EnsureSwapchain(UINT w, UINT h) {
-    if (g_swapchain[0] != XR_NULL_HANDLE && w == g_scWidth && h == g_scHeight) return true;
-    if (g_diagEnabled) InterlockedIncrement(&g_diagSwapchainCount);
+static void ClearStereoSwapchains() {
     for (int e = 0; e < 2; ++e) {
         if (g_swapchain[e] != XR_NULL_HANDLE) { xrDestroySwapchain(g_swapchain[e]); g_swapchain[e] = XR_NULL_HANDLE; }
-        if (g_scImages[e]) { delete[] g_scImages[e]; g_scImages[e] = nullptr; }
+        delete[] g_scImages[e];
+        g_scImages[e] = nullptr;
+        g_scImageCount[e] = 0;
         g_eyeFilled[e] = false;
     }
+    g_scWidth = g_scHeight = 0;
+}
+
+bool EnsureSwapchain(UINT w, UINT h) {
+    if (w == g_scWidth && h == g_scHeight &&
+        g_swapchain[0] != XR_NULL_HANDLE && g_swapchain[1] != XR_NULL_HANDLE) return true;
+
+    // A removed graphics device can reject every allocation. Keep submitting empty
+    // XR frames while spacing retries across transient runtime failures.
+    static ULONGLONG nextRetryMs = 0;
+    if (nextRetryMs && GetTickCount64() < nextRetryMs) return false;
+    if (g_diagEnabled) InterlockedIncrement(&g_diagSwapchainCount);
+    ClearStereoSwapchains();
+
+    const auto fail = [&](const char* stage, int eye, XrResult result) {
+        const HRESULT deviceResult = g_dev11 ? g_dev11->GetDeviceRemovedReason() : S_OK;
+        Log("XR swapchain %ux%u failed at %s (eye=%d, xr=%d, device=0x%08lX)",
+            w, h, stage, eye, (int)result, (unsigned long)deviceResult);
+        ClearStereoSwapchains();
+        nextRetryMs = GetTickCount64() + 500;
+        return false;
+    };
 
     uint32_t fmtCount = 0;
-    xrEnumerateSwapchainFormats(g_xrSession, 0, &fmtCount, nullptr);
-    int64_t* fmts = new int64_t[fmtCount ? fmtCount : 1];
-    xrEnumerateSwapchainFormats(g_xrSession, fmtCount, &fmtCount, fmts);
+    XrResult result = xrEnumerateSwapchainFormats(g_xrSession, 0, &fmtCount, nullptr);
+    if (XR_FAILED(result)) return fail("format count", -1, result);
+    if (!fmtCount) return fail("empty format list", -1, XR_ERROR_RUNTIME_FAILURE);
+    const uint32_t fmtCapacity = fmtCount;
+    std::unique_ptr<int64_t[]> fmts(new (std::nothrow) int64_t[fmtCapacity]);
+    if (!fmts) return fail("format allocation", -1, XR_ERROR_OUT_OF_MEMORY);
+    result = xrEnumerateSwapchainFormats(g_xrSession, fmtCapacity, &fmtCount, fmts.get());
+    if (XR_FAILED(result)) return fail("format list", -1, result);
+    if (!fmtCount || fmtCount > fmtCapacity) return fail("invalid format count", -1, XR_ERROR_RUNTIME_FAILURE);
     // Colour space matters here. The game writes sRGB-ENCODED pixels into its backbuffer. If
     // the swapchain is declared linear (plain _UNORM), the compositor assumes the values are
     // linear and applies its own linear->sRGB conversion, encoding them a second time - which
@@ -5723,16 +5753,11 @@ bool EnsureSwapchain(UINT w, UINT h) {
         DXGI_FORMAT_R8G8B8A8_UNORM_SRGB,
         DXGI_FORMAT_B8G8R8A8_UNORM,
     };
-    int64_t chosen = fmtCount ? fmts[0] : 0;
+    int64_t chosen = fmts[0];
     bool picked = false;
     for (int p = 0; p < 3 && !picked; ++p)
         for (uint32_t i = 0; i < fmtCount; ++i)
             if (fmts[i] == prefer[p]) { chosen = fmts[i]; picked = true; break; }
-    Log("swapchain format %lld %s", (long long)chosen,
-        (chosen == DXGI_FORMAT_B8G8R8A8_UNORM_SRGB || chosen == DXGI_FORMAT_R8G8B8A8_UNORM_SRGB)
-            ? "(sRGB - correct for the game's output)" : "(LINEAR - expect washed out colours)");
-    delete[] fmts;
-
     for (int e = 0; e < 2; ++e) {
         XrSwapchainCreateInfo sci{ XR_TYPE_SWAPCHAIN_CREATE_INFO };
         sci.usageFlags = XR_SWAPCHAIN_USAGE_COLOR_ATTACHMENT_BIT | XR_SWAPCHAIN_USAGE_TRANSFER_DST_BIT;
@@ -5740,20 +5765,38 @@ bool EnsureSwapchain(UINT w, UINT h) {
         sci.sampleCount = 1;
         sci.width = w; sci.height = h;
         sci.faceCount = 1; sci.arraySize = 1; sci.mipCount = 1;
-        if (XR_FAILED(xrCreateSwapchain(g_xrSession, &sci, &g_swapchain[e]))) {
-            Log("xrCreateSwapchain failed for eye %d", e); return false;
+        XrSwapchain chain = XR_NULL_HANDLE;
+        result = xrCreateSwapchain(g_xrSession, &sci, &chain);
+        if (XR_FAILED(result)) return fail("create", e, result);
+        if (chain == XR_NULL_HANDLE) return fail("null swapchain", e, XR_ERROR_RUNTIME_FAILURE);
+        g_swapchain[e] = chain;
+
+        uint32_t count = 0;
+        result = xrEnumerateSwapchainImages(chain, 0, &count, nullptr);
+        if (XR_FAILED(result)) return fail("image count", e, result);
+        if (!count) return fail("empty image list", e, XR_ERROR_RUNTIME_FAILURE);
+        const uint32_t capacity = count;
+        std::unique_ptr<XrSwapchainImageD3D11KHR[]> images(new (std::nothrow) XrSwapchainImageD3D11KHR[capacity]);
+        if (!images) return fail("image allocation", e, XR_ERROR_OUT_OF_MEMORY);
+        for (uint32_t i = 0; i < capacity; ++i) images[i] = { XR_TYPE_SWAPCHAIN_IMAGE_D3D11_KHR };
+        result = xrEnumerateSwapchainImages(chain, capacity, &count,
+                                           reinterpret_cast<XrSwapchainImageBaseHeader*>(images.get()));
+        if (XR_FAILED(result)) return fail("image list", e, result);
+        if (!count || count > capacity) return fail("invalid image count", e, XR_ERROR_RUNTIME_FAILURE);
+        g_scImages[e] = new (std::nothrow) ID3D11Texture2D*[count];
+        if (!g_scImages[e]) return fail("texture array allocation", e, XR_ERROR_OUT_OF_MEMORY);
+        for (uint32_t i = 0; i < count; ++i) {
+            if (!images[i].texture) return fail("null image texture", e, XR_ERROR_RUNTIME_FAILURE);
+            g_scImages[e][i] = images[i].texture;
         }
-        xrEnumerateSwapchainImages(g_swapchain[e], 0, &g_scImageCount[e], nullptr);
-        XrSwapchainImageD3D11KHR* imgs = new XrSwapchainImageD3D11KHR[g_scImageCount[e]];
-        for (uint32_t i = 0; i < g_scImageCount[e]; ++i) imgs[i] = { XR_TYPE_SWAPCHAIN_IMAGE_D3D11_KHR };
-        xrEnumerateSwapchainImages(g_swapchain[e], g_scImageCount[e], &g_scImageCount[e],
-                                   reinterpret_cast<XrSwapchainImageBaseHeader*>(imgs));
-        g_scImages[e] = new ID3D11Texture2D*[g_scImageCount[e]];
-        for (uint32_t i = 0; i < g_scImageCount[e]; ++i) g_scImages[e][i] = imgs[i].texture;
-        delete[] imgs;
+        g_scImageCount[e] = count;
     }
 
+    nextRetryMs = 0;
     g_scWidth = w; g_scHeight = h;
+    Log("swapchain format %lld %s", (long long)chosen,
+        (chosen == DXGI_FORMAT_B8G8R8A8_UNORM_SRGB || chosen == DXGI_FORMAT_R8G8B8A8_UNORM_SRGB)
+            ? "(sRGB - correct for the game's output)" : "(LINEAR - expect washed out colours)");
     Log("XR swapchains (2) %ux%u fmt=%lld images=%u each", w, h, (long long)chosen, g_scImageCount[0]);
     return true;
 }
