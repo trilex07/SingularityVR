@@ -3,6 +3,8 @@
 - Steam/xrsim PID 40240 hit D3D11 texture creation errors after an NVIDIA TDR. The session kept ticking without submitting images, and the render path retried creation every frame.
 - A failed allocation now clears both eyes and defers retries for 500 ms. The failure log records the OpenXR result and D3D11 device status. Successful stereo still uses the same preferred sRGB formats.
 - L1 PASS on x86. `tools/tests/test-xr-swapchain-failure.ps1` compiles the production functions against controlled runtime responses. It verifies a failure in either eye, incomplete image enumeration, cooldown, recovery and stable-size reuse. Recreation of a device lost to a driver reset remains open.
+- L2 PASS for the production x86 PE32 `/O2` build of `be2f06fb`. SHA-256 `41C258FBB48F89B3BF330583326B19CE72B44414AE3DADC361D74437F3F04AAE`.
+- L3 PASS for a transient allocation failure in Steam with dvr-xrsim (PID 31284). The test build uses the same allocation code with private simulator and save routing. During a 2344 ms sample it advanced 215 frames, attempted four allocations and delivered zero image layers. After the runtime accepted allocations again, captures showed two views in the native Load Game menu and then in Workers’ District gameplay.
 
 ## 2026-11-03 — Cinema bootstrap/caption correction, physical PENDING
 
