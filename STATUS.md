@@ -1,3 +1,9 @@
+## 2026-11-28 — OpenXR swapchain allocation failure
+
+- Steam/xrsim PID 40240 hit D3D11 texture creation errors after an NVIDIA TDR. The session kept ticking without submitting images, and the render path retried creation every frame.
+- A failed allocation now clears both eyes and defers retries for 500 ms. The failure log records the OpenXR result and D3D11 device status. Successful stereo still uses the same preferred sRGB formats.
+- L1 PASS on x86. `tools/tests/test-xr-swapchain-failure.ps1` compiles the production functions against controlled runtime responses. It verifies a failure in either eye, incomplete image enumeration, cooldown, recovery and stable-size reuse. Recreation of a device lost to a driver reset remains open.
+
 ## 2026-11-03 — Cinema bootstrap/caption correction, physical PENDING
 
 - One-shot 59171C58 capture succeeded. User sees captions only in RIGHT eye. Mono anchor bypassed stereo fitting; native-camera upload return bypassed the established caption witness.
